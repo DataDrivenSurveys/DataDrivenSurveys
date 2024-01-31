@@ -1,0 +1,83 @@
+name: Deploy to Debian Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      remove_db:
+        description: 'Remove db container and its volume? (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        ref: main
+
+    - name: Build the Frontend
+      working-directory: frontend
+      run: |
+        npm install
+        npm run build
+
+    - name: Generate .env
+      run: |
+        echo DATABASE_URL=${{ secrets.DATABASE_URL }} > ddsurveys/.env
+        echo JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }} >> ddsurveys/.env
+        echo FRONTEND_URL="https://www.datadrivensurvey.com" >> ddsurveys/.env
+        echo APP_SURVEY_MONKEY_CLIENT_ID=${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }} >> ddsurveys/.env
+        echo APP_SURVEY_MONKEY_CLIENT_SECRET=${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }} >> ddsurveys/.env
+
+    - name: Copy the project to the server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
+        passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
+        source: "*"
+        target: "/home/admin/dds"
+
+    - name: Grant Execute Permissions to Entrypoints
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
+        passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
+        script: |
+          cd /home/admin/dds
+          sudo chmod +x ./volumes/certbot/certbot-entrypoint.sh
+          sudo chmod +x ./volumes/nginx/nginx-entrypoint.sh
+
+    - name: Stop and remove db container and its volume
+      if: ${{ github.event.inputs.remove_db == 'true' }}
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
+        passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
+        script: |
+          cd /home/admin/dds
+          sudo docker compose stop db
+          sudo docker compose rm -f db
+          sudo rm -rf ./volumes/db/*
+
+    - name: Run the project on the server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
+        passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
+        script: |
+          cd /home/admin/dds
+          sudo docker compose down
+          sudo docker compose up --build -d
+
+
