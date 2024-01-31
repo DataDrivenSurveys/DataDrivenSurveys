@@ -1,0 +1,521 @@
+{
+  "en": {
+    "translation": {
+      "api": {
+        "auth": {
+          "email_required": "Email is required",
+          "firstname_required": "First name is required",
+          "invalid_username_or_password": "Invalid username or password",
+          "lastname_required": "Last name is required",
+          "password_required": "Password is required",
+          "registered_successfully": "Registered successfully",
+          "registration_failed": "Failed to register",
+          "user_already_exists": "User already exists"
+        },
+        "custom_variables": {
+          "error": {
+            "attributes_required": "Attributes are required",
+            "data_category_required": "Data category is required",
+            "data_provider_required": "Data provider is required",
+            "filter_attr_required": "Filter attribute is required",
+            "filter_operator_required": "Filter operator is required",
+            "filter_value_required": "Filter value is required",
+            "name_required": "Variable name is required",
+            "selection_attr_required": "Selection attribute is required",
+            "selection_operator_required": "Selection operator is required",
+            "selection_required": "Selection is required",
+            "variables": {
+              "cannot_be_python_keyword": "Variable name cannot be a Python keyword",
+              "must_start_with_letter_or_underscore": "Variable name must start with a letter or underscore",
+              "only_alphanumeric_and_underscore": "Variable name can only contain alphanumeric characters and underscores"
+            }
+          },
+          "filters": {
+            "operators": {
+              "date": {
+                "is": "is",
+                "is_after": "is after",
+                "is_before": "is before",
+                "is_not": "is not",
+                "is_on_or_after": "is on or after",
+                "is_on_or_before": "is on or before"
+              },
+              "number": {
+                "is": "is",
+                "is_greater_than": "is greater than",
+                "is_greater_than_or_equal_to": "is greater than or equal to",
+                "is_less_than": "is less than",
+                "is_less_than_or_equal_to": "is less than or equal to",
+                "is_not": "is not"
+              },
+              "text": {
+                "begins_with": "begins with",
+                "contains": "contains",
+                "does_not_contain": "does not contain",
+                "ends_with": "ends with",
+                "is": "is",
+                "is_not": "is not",
+                "regexp": "regexp"
+              }
+            }
+          },
+          "used_variables": {
+            "filters": "among those where: ",
+            "selection": {
+              "max": {
+                "quantity": "One from {{data_category}} with the largest {{attribute_name}}",
+                "time": "One from {{data_category}} with the most recent {{attribute_name}}"
+              },
+              "min": {
+                "quantity": "One from {{data_category}} with the smallest {{attribute_name}}",
+                "time": "One from {{data_category}} with the earliest {{attribute_name}}"
+              },
+              "random": {
+                "random": "A random {{data_category}}"
+              }
+            }
+          }
+        },
+        "data_provider": {
+          "already_exists": "Data provider access already exists for this user, data provider and project.",
+          "connection_already_exists": "Data connection already exists",
+          "connection_deleted": "Data connection deleted successfully",
+          "connection_not_found": "Data connection not found",
+          "connection_status": "Data connection status",
+          "exchange_code_error": "Failed to get the access to the data provider.",
+          "exchange_code_error.general_error": "An unexpected error occurred while processing your request.",
+          "exchange_code_error.incomplete_scopes": "You need to grant all the permissions to continue",
+          "exchange_code_success": "Successfully exchanged the code for access token",
+          "invalid_tokens": "Invalid access token or refresh token",
+          "is_required": "Data provider is required",
+          "missing_tokens": "Access token or refresh token not provided",
+          "not_found": "Data provider not found",
+          "not_supported": "Data provider not supported",
+          "updated": "Data provider updated successfully"
+        },
+        "ddsurveys": {
+          "data_providers": {
+            "fitbit": {
+              "client_id.helper_text": "Copy paste the value in the 'OAuth 2.0 Client ID' field after opening your app in the Fitbit dev portal.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "Copy paste the value in the 'Client Secret' field after opening your app in the Fitbit dev portal.",
+              "client_secret.label": "Client Secret",
+              "instructions.helper_url": "https://dev.fitbit.com/build/reference/web-api/developer-guide/getting-started/",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            },
+            "github": {
+              "client_id.helper_text": "Copy paste the following 'Client ID:' under the 'General' tab in your app settings.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "You will need to click on 'Generate a new client secret' and then copy paste the secret value.",
+              "client_secret.label": "Client Secret",
+              "instructions.helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            },
+            "instagram": {
+              "client_id.helper_text": "You need to open your app in the Facebook developer portal, then click on > 'App Settings' > 'Basic'. Copy paste the value in the 'App ID' field.",
+              "client_id.label": "App ID",
+              "client_secret.helper_text": "You need to open your app in the Facebook developer portal, then click on > 'App Settings' > 'Basic'. Copy paste the value in the 'App secret' field.",
+              "client_secret.label": "App secret",
+              "instructions.helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            }
+          },
+          "survey_platforms": {
+            "bases": {
+              "survey_id.missing": "Missing survey ID",
+              "survey_platform_api_key.missing": "Missing survey platform API key"
+            },
+            "connection_failed": "Failed to connect to survey platform.",
+            "qualtrics": {
+              "survey_id.helper_text": "This can be obtained by opening your project in Qualtrics and copying the ID from the URL",
+              "survey_id.label": "Survey ID",
+              "survey_platform_api_key.helper_text": "For instructions on how to obtain this follow the guide here",
+              "survey_platform_api_key.label": "Survey Platform API Key"
+            },
+            "surveymonkey": {
+              "survey_id.helper_text": "This can be obtained by opening your project in SurveyMonkey and copying the ID from the URL",
+              "survey_id.label": "Survey ID",
+              "access_token.label": "Access Token",
+              "access_token.helper_text": "Your access token",
+              "authorize.label": "Authorize",
+              "re-authorize.label": "Re-authorize"
+            },
+            "unknown_survey_platform": "Unknown survey platform",
+            "variables_sync": {
+              "failed": "Failed to sync variables!",
+              "request_failed": "Failed to sync variables, please check your API key and survey ID",
+              "success": "Variables synced successfully!"
+            },
+            "exchange_code":{
+              "success": "Successfully exchanged the code for access token",
+              "error": "Failed to get the access to the survey platform."
+            }
+          }
+        },
+        "jwt": {
+          "expired_token": "Login token has expired. Please login again.",
+          "invalid_token": "Invalid token was provided",
+          "needs_fresh_token": "Fresh token required",
+          "revoked_token": "Token has been revoked",
+          "token_verification_failed": "User claims verification failed",
+          "unauthorized": "Unauthorized",
+          "user_lookup_error": "Error loading the user"
+        },
+        "projects": {
+          "failed_to_create_project": "Failed to create project",
+          "name_is_required": "Project name is required",
+          "not_found": "Project not found",
+          "project_and_collaboration_deleted_successfully": "Project and collaboration deleted successfully!",
+          "project_and_collaboration_not_found": "Project and collaboration not found",
+          "project_created_successfully": "Project created successfully!",
+          "respondents.deleted_successfully": "All project respondents deleted successfully!",
+          "updated_successfully": "Project updated successfully!"
+        },
+        "respondent": {
+          "created": "Respondent created successfully, starting survey",
+          "existing_distribution_url": "Respondent already has a distribution url, resuming survey",
+          "missing_id": "Missing respondent id",
+          "not_found": "Respondent not found",
+          "resume_failed_different_data_providers": "Some data providers are different from the previous session",
+          "resume_success": "Respondent successfully identified, resuming survey",
+          "survey.distribution_link_created": "Successfully created a unique distribution link",
+          "survey_platform.not_configured": "Survey platform not configured"
+        },
+        "survey": {
+          "create_failed": "Failed to create survey",
+          "failed_distribution_link": "Failed to create a unique distribution link",
+          "failed_to_retrieve_survey_name": "Failed to retrieve survey name, please check your API key and survey ID",
+          "missing_platform_name": "Missing survey platform name",
+          "not_active": "Survey is not active",
+          "not_found": "Survey not found",
+          "platform_not_supported": "Survey platform not supported",
+          "unknown_error_occurred": "Unknown error occurred, please check your API key and survey ID"
+        },
+        "unauthorized": "Unauthorized"
+      },
+      "ui": {
+        "auth": {
+          "button": {
+            "signin": "Sign In",
+            "signout": "Sign Out",
+            "signup": "Create New Account"
+          },
+          "error": {
+            "missing_fields": "Please fill in all the fields"
+          },
+          "field": {
+            "email": "Email",
+            "firstname": "First Name",
+            "lastname": "Last Name",
+            "password": "Password"
+          }
+        },
+        "badges": {
+          "fitbit": {
+            "alt": "Fitbit",
+            "label": "Fitbit"
+          },
+          "github": {
+            "alt": "GitHub",
+            "label": "GitHub"
+          },
+          "instagram": {
+            "alt": "Instagram",
+            "label": "Instagram"
+          },
+          "qualtrics": {
+            "alt": "Qualtrics",
+            "label": "Qualtrics"
+          },
+          "surveymonkey": {
+            "alt": "SurveyMonkey",
+            "label": "SurveyMonkey"
+          }
+        },
+        "custom_variables": {
+          "error": {
+            "attributes_required": "Attributes are required",
+            "data_category_required": "Data category is required",
+            "data_provider_required": "Data provider is required",
+            "filter_attr_required": "Filter attribute is required",
+            "filter_operator_required": "Filter operator is required",
+            "filter_value_required": "Filter value is required",
+            "must_start_with_letter_or_underscore": "Variable name must start with a letter or underscore",
+            "name_required": "Variable name is required",
+            "only_alphanumeric_and_underscore": "Variable name can only contain alphanumeric characters and underscores",
+            "selection_attr_required": "Selection attribute is required",
+            "selection_operator_required": "Selection operator is required",
+            "selection_required": "Selection is required"
+          },
+          "failed_to_add": "Failed to add custom variable",
+          "not_found": "Variable not found",
+          "selection_criterion": {
+            "selection_criterion": {
+              "date.max.label": "Oldest",
+              "date.min.label": "Newest",
+              "date.random.label": "Random",
+              "dropdown.label": "Selection Criterion",
+              "max.label": "Smallest",
+              "min.label": "Largest",
+              "random.label": "Random"
+            }
+          },
+          "variable_exists": "Variable already exists"
+        },
+        "dialog": {
+          "cancel": "Cancel",
+          "confirm": "Confirm",
+          "delete": "Delete"
+        },
+        "dialog_modal": {
+          "button": {
+            "cancel": "Cancel",
+            "confirm": "Confirm"
+          }
+        },
+        "layout": {
+          "button": {
+            "back": "Back",
+            "cancel": "Cancel",
+            "next": "Next",
+            "save": "Save"
+          }
+        },
+        "project": {
+          "button": {
+            "delete_all_respondents": "Clear DB",
+            "download_data": "Download Data",
+            "preview_survey": "Preview Survey",
+            "sync_variables": "Sync Variables"
+          },
+          "clipboard.copy.label": "Survey Distribution URL:",
+          "create": {
+            "button": {
+              "create": "Create Project"
+            },
+            "field": {
+              "project_name.helper_text": "This is the name of the project that will be uploaded to the survey",
+              "project_name.label": "Project Name"
+            },
+            "select": {
+              "error": {
+                "missing_fields": "Please fill in all the fields"
+              },
+              "survey_platform.label": "Which survey platform do you want to use?",
+              "type": {
+                "from_existing_survey": "Create from existing survey",
+                "from_scratch": "Create from scratch",
+                "label": "How do you want to create your project?"
+              }
+            },
+            "title": "Project Creation"
+          },
+          "custom_variable": {
+            "button": {
+              "delete": "Delete",
+              "edit": "Edit"
+            },
+            "create": {
+              "success": "Custom variable created successfully",
+              "title": "Create Custom Variable"
+            },
+            "data_category.label": "Data Category",
+            "data_provider.label": "Data Provider",
+            "delete": {
+              "content": "Are you sure you want to delete this custom variable?",
+              "success": "Custom variable deleted successfully",
+              "title": "Delete Custom Variable"
+            },
+            "edit": {
+              "content": "Are you sure you want to edit this custom variable?",
+              "success": "Custom variable edited successfully",
+              "title": "Edit Custom Variable"
+            },
+            "filters.title": "Match all of the following rules:",
+            "loading": "Loading...",
+            "name.helper_text": "This is the name of the variable that will be uploaded to the survey platform for use with piped text/dynamic fields.",
+            "name.label": "Variable Name",
+            "selection.part1": " Select one of {{data_category}} using: ",
+            "selection.part2": " based on: "
+          },
+          "data_providers": {
+            "add": {
+              "documentation_instructions": "Instructions for configuring the app can be found",
+              "documentation_url_text": "here",
+              "error.missing_fields": "Please fill in all the fields",
+              "general_instructions": "You will need to register an app to connect to",
+              "no_providers": "No data providers available",
+              "select_provider.instructions": "Select a data provider to add to this project",
+              "select_provider.label": "Data Provider",
+              "success": "Data provider added successfully",
+              "title": "Add Data Provider"
+            },
+            "button.add": "Data Provider",
+            "create_app": {
+              "common_fields": {
+                "application_name.label": "Application Name:",
+                "application_website_url.label": "Application Website URL:",
+                "callback_url.label": "Redirect/Callback URL:",
+                "callback_url.instructions": "Enter the following URL in the 'Callback URL' field in your app:",
+                "privacy_policy_url.label": "Privacy Policy URL:",
+                "terms_of_service_url.label": "Terms of Service URL:",
+                "instructions": "Common information needed to register an app:"
+              },
+              "instructions": "To register an app click the following link:"
+            },
+            "delete": {
+              "content": "Are you sure you want to delete this data provider?",
+              "title": "Delete Data Provider"
+            },
+            "edit": {
+              "error.missing_fields": "Please fill in all the fields",
+              "title": "Edit Data Provider: "
+            },
+            "grid": {
+              "button": {
+                "check_connection": "Check",
+                "delete": "Delete",
+                "edit": "Edit"
+              },
+              "column": {
+                "actions": "Actions",
+                "connected": "Connected",
+                "name": "Data Provider"
+              }
+            },
+            "no_data_providers": "No data providers added yet",
+            "title": "Data Providers"
+          },
+          "dialog": {
+            "delete_respondents.content": "Are you sure you want to delete all the respondent data?",
+            "delete_respondents.title": "Delete all respondent data"
+          },
+          "field.name.label": "Project Name",
+          "label.last_synced": "Last synced:",
+          "selection": {
+            "button.create": "Create New Project",
+            "grid": {
+              "column": {
+                "actions": "Actions",
+                "creation_date": "Creation Date",
+                "last_modified": "Last Modified",
+                "name": "Project Name",
+                "num_responses": "Responses",
+                "status": "Status",
+                "survey_platform_name": "Survey Platform"
+              },
+              "context": {
+                "delete": "Delete",
+                "open": "Open"
+              }
+            },
+            "no_projects": "No projects found"
+          },
+          "survey_platform": {
+            "edit.error.missing_fields": "Please fill in all the fields",
+            "edit.title": "Edit Survey Platform",
+            "grid": {
+              "button": {
+                "check_connection": "Check",
+                "edit": "Edit"
+              },
+              "column": {
+                "actions": "Actions",
+                "connected": "Connected",
+                "survey_id": "Survey ID",
+                "survey_name": "Survey Name",
+                "survey_platform_api_key": "Survey Platform API Key",
+                "survey_platform_name": "Survey Platform",
+                "survey_status": "Status"
+              },
+              "loading": "Loading...",
+              "not_connected": "Unknown"
+            },
+            "loading": "Loading...",
+            "not_connected": "Not Connected",
+            "survey.status": {
+              "active": "Active",
+              "inactive": "Inactive",
+              "loading": "Loading...",
+              "unknown": "Unknown"
+            },
+            "code_exchange": {
+              "redirecting": "Redirecting...",
+              "connection":{
+                "button": {
+                  "go_back": "Go Back"
+                }
+              }
+            },
+            "title": "Survey Platform"
+          },
+          "variables": {
+            "button.add_custom_variable": "Custom Variable",
+            "grid": {
+              "column": {
+                "actions": "Actions",
+                "category": "Category",
+                "data_provider": "Data Provider",
+                "description": "Description",
+                "enabled": "Enabled",
+                "info": "Info",
+                "test_value": "Test Value",
+                "type": "Type",
+                "variable_name": "Variable Name",
+                "variable_nature": "Builtin/Custom"
+              }
+            },
+            "missing_data_providers_info": "Please add a data provider to enable custom variables.",
+            "title": "Variables"
+          }
+        },
+        "respondent": {
+          "code_exchange.redirecting": "Redirecting...",
+          "connection": {
+            "alert": {
+              "preparing_survey": "Preparing survey...",
+              "survey_ready": {
+                "message.if_not_redirected_automatically": " if you are not redirected automatically.",
+                "message.will_be_redirected": "You will be redirected to the survey in a few seconds...",
+                "title": "Survey prepared successfully"
+              }
+            },
+            "button": {
+              "connect": "Connect",
+              "disconnect": "Disconnect",
+              "go_back": "Go Back"
+            },
+            "click_here": "Click here",
+            "click_here_to_read_privacy_policy": " to read the privacy policy and participation conditions of the study.",
+            "click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts": "Click here to see the data that this survey will collect from your accounts.",
+            "connect_to_data_providers": "Please login with and grant access to the following:",
+            "data_provider": {
+              "status.error": "This account does not match the other account(s) that were used to fill this survey.",
+              "status.warning": "This account was already used for this survey."
+            },
+            "error": {
+              "data_provider_not_found": "Data provider not found",
+              "resume_must_connect_all_previous_data_providers": "You must connect all the providers that you previously used"
+            },
+            "if_not_redirected_automatically": "If you are not redirected automatically",
+            "info": "This survey requires you to login with several platforms and to grant access to your data.",
+            "loading": "Loading project...",
+            "project_not_ready": "The survey cannot be started.",
+            "status": {
+              "error": "Some of the account do not match the ones you used previously to fill this survey.",
+              "success": "You have connected all the accounts that you used before to complete the survey.",
+              "warning": "Please connect the same accounts that you used previously to fill this survey."
+            },
+            "table": {
+              "data_origin": "Data Origin",
+              "data_provider_type": "Data Provider",
+              "type": "Variable Type",
+              "variable_description": "Description",
+              "variable_name": "Variable Name"
+            }
+          }
+        }
+      }
+    }
+  }
+}
