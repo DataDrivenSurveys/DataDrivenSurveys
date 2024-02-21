@@ -1,0 +1,86 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+- given-names: Lev
+  family-names: Velykoivanenko
+  email: lev.velykoivanenko@unil.ch
+  orcid: 'https://orcid.org/0000-0002-7343-2731'
+  affiliation: University of Lausanne
+  city: "Lausanne"
+  country: "CH"
+- given-names: Stefan
+  family-names: Teofanovic
+  email: stefan.teofanovic@heig-vd.ch
+  orcid: 'https://orcid.org/0009-0002-0205-1621'
+  affiliation: University of Applied Sciences Western Switzerland
+  city: "Yverdon-les-Bains"
+  country: "CH"
+title: "DataDrivenSurveys"
+version: 1.0.0
+repository-code: 'https://github.com/DataDrivenSurveys/DataDrivenSurveys'
+url: 'https://www.datadrivensurvey.com/'
+license: MIT
+preferred-citation:
+  type: conference-paper
+  authors:
+  - given-names: Lev
+    family-names: Velykoivanenko
+    email: lev.velykoivanenko@unil.ch
+    orcid: 'https://orcid.org/0000-0002-7343-2731'
+    affiliation: University of Lausanne
+    city: "Lausanne"
+    country: "CH"
+  - family-names: Salehzadeh Niksirat
+    given-names: Kavous
+    email: kavous.salehzadehniksirat@unil.ch
+    orcid: 'https://orcid.org/0000-0003-4438-3544'
+    affiliation: University of Lausanne & EPFL
+    city: "Lausanne"
+    country: "CH"
+  - given-names: Stefan
+    family-names: Teofanovic
+    email: stefan.teofanovic@heig-vd.ch
+    orcid: 'https://orcid.org/0009-0002-0205-1621'
+    affiliation: University of Applied Sciences Western Switzerland
+    city: "Yverdon-les-Bains"
+    country: "CH"
+  - given-names: Bertil
+    family-names: Chapuis
+    email: bertil.chapuis@heig-vd.ch
+    orcid: 'https://orcid.org/0000-0003-3168-5375'
+    affiliation: University of Applied Sciences Western Switzerland
+    city: "Yverdon-les-Bains"
+    country: "CH"
+  - given-names: Michelle L.
+    family-names: Mazurek
+    email: mmazurek@umd.edu
+    orcid: 'https://orcid.org/0000-0003-4151-6428'
+    affiliation: University of Maryland
+    city: "College Park, MD"
+    country: "US"
+  - given-names: Kévin
+    family-names: Huguenin
+    email: kevin.huguenin@unil.ch
+    orcid: 'https://orcid.org/0000-0001-7147-1828'
+    affiliation: University of Lausanne
+    city: "Lausanne"
+    country: "CH"
+  title: "Designing a Data-Driven Survey System: Leveraging Participants' Online Data to Personalize Surveys"
+  abstract: "User surveys are essential to user-centered research in many fields, including human-computer interaction (HCI). Survey personalization—specifically, adapting questionnaires to the respondents' profiles and experiences—can improve reliability and quality of responses. However, popular survey platforms lack usable mechanisms for seamlessly importing participants’ data from other systems. This paper explores the design of a data-driven survey system to fill this gap. First, we conducted formative research, including a literature review and a survey of researchers (\U0001D441 = 52), to understand researchers’ practices, experiences, needs, and interests in a data-driven survey system. Then, we designed and implemented a minimum viable product called Data-Driven Surveys (DDS), which enables including respondents’ data from online service accounts (Fitbit, Instagram, and GitHub) in survey questions, answers, and flow/logic on existing survey platforms (Qualtrics and SurveyMonkey). Our system is open source and can be extended to work with more online service accounts and survey platforms. It can enhance the survey research experience for both researchers and respondents.\nA demonstration video is available here:\nhttps://doi.org/10.17605/osf.io/vedbj"
+  doi: "10.1145/3613904.3642572"
+  year: 2024
+  keywords:
+  - artefact
+  - surveys
+  - online accounts
+  - user interfaces
+  conference:
+    name: "Proceedings of the CHI Conference on Human Factors in Computing Systems (CHI '24)"
+    city: "Honolulu"
+    region: "HI"
+    country: "US"
+    date-start: "2024-05-11"
+    date-end: "2024-05-16"
