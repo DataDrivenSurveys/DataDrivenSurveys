@@ -116,6 +116,55 @@ fitbit_mock_data = {
             "name": "Outdoor Bike"
         }
     ],
+    "activity_logs": {
+        "activities": [
+            {
+                "activityId": 90013,
+                "calories": -1,
+                "description": "Walking less than 2 mph, strolling very slowly",
+                "distance": 1.61,
+                "duration": 1178000,
+                "originalStartTime": "2023-01-01T12:00:00.000",
+                "activityName": "Walk"
+            },
+            {
+                "activityId": 15000,
+                "calories": 234,
+                "description": "",
+                "distance": 0,
+                "duration": 1228000,
+                "originalStartTime": "2023-01-10T12:00:00.000",
+                "activityName": "Sport"
+            },
+            {
+                "activityId": 1071,
+                "calories": 790,
+                "description": "",
+                "distance": 0,
+                "duration": 973000,
+                "originalStartTime": "2023-01-15T12:00:00.000",
+                "activityName": "Outdoor Bike"
+            }
+        ]
+    },
+    "activities_recent": [
+       {
+            "activityId": 90013,
+            "calories": -1,
+            "description": "Walking less than 2 mph, strolling very slowly",
+            "distance": 1.61,
+            "duration": 1178000,
+            "name": "Walk"
+        },
+        {
+            "activityId": 1071,
+            "calories": 0,
+            "description": "",
+            "distance": 0,
+            "duration": 973000,
+            "name": "Outdoor Bike"
+        }
+    ],
     "lifetime_stats": {
         "best": {
         "total": {

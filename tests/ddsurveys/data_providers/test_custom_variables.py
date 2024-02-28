@@ -89,22 +89,25 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     ctx = app.app_context()
     ctx.push()
 
-    mocker.patch.object(FitbitDataProvider, 'activities_frequent', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activities_frequent"])
+   
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
 
     # get all the attributes of the Activities class as dict
     activity = Activities.to_dict()
 
-    assert len(fitbit_data_provider.activities_frequent) == 3, "There should be 3 most frequent activities."
+    assert len(fitbit_data_provider.activity_logs["activities"]) == 3, "There should be 3 most frequent activities."
 
-    data_to_upload = fitbit_data_provider.calculate_variables(
-        project_builtin_variables=[],
-        project_custom_variables=[
-            data_category_to_custom_variable(
+    custom_vars = data_category_to_custom_variable(
                 data_category=activity,
                 data_provider_type="fitbit",
                 filters=filters,
                 selection=selection
             )
+
+    data_to_upload = fitbit_data_provider.calculate_variables(
+        project_builtin_variables=[],
+        project_custom_variables=[
+            custom_vars
         ],
     )
 
@@ -115,6 +118,9 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
             if key.endswith(key_suffix):
                 if expected_value is None: # Random selection on multiple rows
                     return
+
+                if str(expected_value) != str(value):
+                    print(f"Expected value for key '{key}' is {expected_value}, but got {value}")
 
                 assert str(value) == str(expected_value), f"Expected value for key '{key}' is {expected_value}, but got {value}"
                 return
@@ -137,7 +143,7 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
     ctx = app.app_context()
     ctx.push()
 
-    mocker.patch.object(FitbitDataProvider, 'activities_frequent', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activities_frequent"])
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
 
     custom_variable_instance = CustomVariable(
         data_provider=fitbit_data_provider,
@@ -148,7 +154,6 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
             selection=selection
         )
     )
-
 
     def assert_attribute(attribute):
         assert_has_value(attribute, 'label', "The attribute label should be set.")
