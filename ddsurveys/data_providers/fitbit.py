@@ -61,8 +61,10 @@ class Activities(DataCategory):
     }]
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        data = self.data_provider.activities_frequent
-        return data or []
+        data = self.data_provider.activity_logs
+        if 'activities' in data:
+            return data['activities']
+        return []
 
     cv_attributes = [
         CVAttribute(
@@ -107,7 +109,7 @@ class Activities(DataCategory):
         CVAttribute(
                 label="Activity Type",
                 description="The type of the activity.",
-                attribute="name",
+                attribute="activityName",
                 name="type",
                 data_type=VariableDataType.TEXT,
                 test_value_placeholder="Walk",
@@ -509,6 +511,25 @@ class FitbitDataProvider(OAuthDataProvider):
     @cached_property
     def user_badges(self):
         return []
+    
+    
+    @property
+    def activity_logs(self):
+        # Assuming you want to fetch activities before the current date in descending order
+        before_date = datetime.now().strftime('%Y-%m-%d')
+        sort_order = 'desc'  # Use 'asc' if using afterDate
+        limit = 100  # Maximum or any other preferred value
+        offset = 0  # Starting point
+
+        # Construct the URL with all required query parameters
+        url = "{0}/{1}/user/{2}/activities/list.json?beforeDate={3}&sort={4}&limit={5}&offset={6}".format(
+            *self.api_client._get_common_args(),
+            before_date,
+            sort_order,
+            limit,
+            offset
+        )
+        return self.api_client.make_request(url)
 
     @cached_property
     def lifetime_stats(self):
