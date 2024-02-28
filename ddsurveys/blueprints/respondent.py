@@ -232,137 +232,141 @@ def was_data_provider_used():
 
 @respondent.route('/prepare-survey', methods=['POST'])
 def prepare_survey():
-    with get_db() as db:
+    try:
+        with get_db() as db:
 
-        project_short_id = g.get('project_short_id')
+            project_short_id = g.get('project_short_id')
 
-        project = get_project(db, project_short_id)
+            project = get_project(db, project_short_id)
 
-        if not project:
-            logger.error(f"Project not found: {project_short_id}")
-            return jsonify({"message": {"id": "api.projects.not_found", "text": "Project not found"}}), 404
+            if not project:
+                logger.error(f"Project not found: {project_short_id}")
+                return jsonify({"message": {"id": "api.projects.not_found", "text": "Project not found"}}), 404
 
-        data = request.get_json()
+            data = request.get_json()
 
-        respondent_id = data.get('respondent_id')
+            respondent_id = data.get('respondent_id')
 
-        if not respondent_id:
-            logger.error(f"Missing respondent id.")
-            return jsonify({"message": {"id": "api.respondent.missing_id", "text": "Missing respondent id"}}), 400
+            if not respondent_id:
+                logger.error(f"Missing respondent id.")
+                return jsonify({"message": {"id": "api.respondent.missing_id", "text": "Missing respondent id"}}), 400
 
-        respondent = db.query(Respondent).filter(and_(Respondent.id == respondent_id, Respondent.project_id == project.id)).first()
+            respondent = db.query(Respondent).filter(and_(Respondent.id == respondent_id, Respondent.project_id == project.id)).first()
 
-        if not respondent:
-            logger.error(f"Respondent not found.")
-            return jsonify({"message": {"id": "api.respondent.not_found", "text": "Respondent not found"}}), 404
+            if not respondent:
+                logger.error(f"Respondent not found.")
+                return jsonify({"message": {"id": "api.respondent.not_found", "text": "Respondent not found"}}), 404
 
-        # check if the respondent already has a distribution
-        if respondent.distribution:
-            logger.info(f"Respondent already has a distribution url.")
-            # return the distribution url
-            return jsonify({
-                "message": {
-                    "id": "api.respondent.existing_distribution_url",
-                    "text": "Respondent already has a distribution url"
-                },
-                "entity": respondent.distribution.to_dict()
-            }), 200
-
-        # check if the survey is active
-        # Get the platform class
-        platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
-
-        if not platform_class:
-            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
-            return jsonify({"message": {"id": "api.survey.platform_not_supported", "text": "Survey platform not supported"}}), 400
-
-        # Create an instance of the platform
-        platform_instance = platform_class(**project.survey_platform_fields)
-
-        status, _, survey_platform_info = platform_instance.fetch_survey_platform_info()
-
-        if status != 200 and not survey_platform_info.get("active", False):
-            logger.error(f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info.")
-            return jsonify({"message": {"id": "api.survey.not_active", "text": "Survey not not active"}}), 404
-
-        data_providers = respondent.data_provider_accesses
-
-        # Create the data_to_upload dictionary outside the loop
-        data_to_upload: dict[str, Any] = {}
-
-        for data_provider in data_providers:
-
-            data_provider_type = data_provider.data_provider_type.value
-            access_token = data_provider.access_token
-            refresh_token = data_provider.refresh_token
-
-            if not access_token:
-                logger.error(f"Missing access token for data provider: {data_provider_type}")
-                return jsonify({"message": {"id": "api.data_provider.missing_tokens", "text": "Missing data provider tokens"}}), 400
-
-            # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
-            project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_type.value == data_provider_type), None)
-
-            if not project_data_connection:
-                logger.error(f"Data provider not found: {data_provider_type}")
-                return jsonify({"message": {"id": "api.data_provider.not_found", "text": "Data provider not found"}}), 404
-
-            fields = project_data_connection.fields
-
-            fields.update({
-                'access_token': access_token,
-                'refresh_token': refresh_token
-            })
-
-            user_data_provider = DataProvider.get_class_by_value(data_provider_type)(**fields)
-            data_to_upload.update(user_data_provider.calculate_variables(project.variables, project.custom_variables))
-
-            # set the data provider access tokens to Null
-            data_provider.access_token = None
-            data_provider.refresh_token = None
-
-            db.commit()
-
-
-
-        success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
-            project_short_id=project_short_id,
-            survey_platform_fields=project.survey_platform_fields,
-            embedded_data=data_to_upload
-        )
-
-        if success_preparing_survey:
-            distribution = None
-            if unique_url:
-                # create the related distribution for the respondent
-                distribution = Distribution(
-                    url = unique_url
-                )
-
-                respondent.distribution = distribution
-
-                db.add(respondent)
-
-
-            flag_modified(project, "survey_platform_fields")
-            db.commit()
-
-            if status == 200:
+            # check if the respondent already has a distribution
+            if respondent.distribution:
+                logger.info(f"Respondent already has a distribution url.")
+                # return the distribution url
                 return jsonify({
                     "message": {
-                        "id": "api.respondent.survey.distribution_link_created",
-                        "text": "Successfully created a unique distribution link"
+                        "id": "api.respondent.existing_distribution_url",
+                        "text": "Respondent already has a distribution url"
                     },
-                    "entity": distribution.to_dict()
+                    "entity": respondent.distribution.to_dict()
                 }), 200
-        else:
-            return jsonify({
-                "message": {
-                    "id": "api.respondent.survey.failed_distribution_link",
-                    "text": "Failed to create a unique distribution link"
-                }
-            }), status
 
+            # check if the survey is active
+            # Get the platform class
+            platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+
+            if not platform_class:
+                logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+                return jsonify({"message": {"id": "api.survey.platform_not_supported", "text": "Survey platform not supported"}}), 400
+
+            # Create an instance of the platform
+            platform_instance = platform_class(**project.survey_platform_fields)
+
+            status, _, survey_platform_info = platform_instance.fetch_survey_platform_info()
+
+            if status != 200 and not survey_platform_info.get("active", False):
+                logger.error(f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info.")
+                return jsonify({"message": {"id": "api.survey.not_active", "text": "Survey not not active"}}), 404
+
+            data_providers = respondent.data_provider_accesses
+
+            # Create the data_to_upload dictionary outside the loop
+            data_to_upload: dict[str, Any] = {}
+
+            for data_provider in data_providers:
+
+                data_provider_type = data_provider.data_provider_type.value
+                access_token = data_provider.access_token
+                refresh_token = data_provider.refresh_token
+
+                if not access_token:
+                    logger.error(f"Missing access token for data provider: {data_provider_type}")
+                    return jsonify({"message": {"id": "api.data_provider.missing_tokens", "text": "Missing data provider tokens"}}), 400
+
+                # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
+                project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_type.value == data_provider_type), None)
+
+                if not project_data_connection:
+                    logger.error(f"Data provider not found: {data_provider_type}")
+                    return jsonify({"message": {"id": "api.data_provider.not_found", "text": "Data provider not found"}}), 404
+
+                fields = project_data_connection.fields
+
+                fields.update({
+                    'access_token': access_token,
+                    'refresh_token': refresh_token
+                })
+
+                user_data_provider = DataProvider.get_class_by_value(data_provider_type)(**fields)
+                data_to_upload.update(user_data_provider.calculate_variables(project.variables, project.custom_variables))
+
+                # set the data provider access tokens to Null
+                data_provider.access_token = None
+                data_provider.refresh_token = None
+
+                db.commit()
+
+
+
+            success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
+                project_short_id=project_short_id,
+                survey_platform_fields=project.survey_platform_fields,
+                embedded_data=data_to_upload
+            )
+
+            if success_preparing_survey:
+                distribution = None
+                if unique_url:
+                    # create the related distribution for the respondent
+                    distribution = Distribution(
+                        url = unique_url
+                    )
+
+                    respondent.distribution = distribution
+
+                    db.add(respondent)
+
+
+                flag_modified(project, "survey_platform_fields")
+                db.commit()
+
+                if status == 200:
+                    return jsonify({
+                        "message": {
+                            "id": "api.respondent.survey.distribution_link_created",
+                            "text": "Successfully created a unique distribution link"
+                        },
+                        "entity": distribution.to_dict()
+                    }), 200
+            else:
+                return jsonify({
+                    "message": {
+                        "id": "api.respondent.survey.failed_distribution_link",
+                        "text": "Failed to create a unique distribution link"
+                    }
+                }), status
+            
+    except Exception as e:
+        logger.error(f"Error preparing survey: {traceback.format_exc()}")
+        return jsonify({"message": {"id": "api.respondent.survey.error", "text": "Error preparing survey"}}), 500
 
 
 def check_data_provider_access_tokens(project_id, data_provider_type, access_token, refresh_token):
