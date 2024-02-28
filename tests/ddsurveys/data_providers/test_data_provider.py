@@ -194,7 +194,8 @@ def test_builtin_variables(provider_name):
                 'activities_favorite': fitbit_mock_data["activities_favorite"],
                 'activities_frequent': fitbit_mock_data["activities_frequent"],
                 'activities_recent': fitbit_mock_data["activities_recent"],
-                'lifetime_stats': fitbit_mock_data["lifetime_stats"]
+                'lifetime_stats': fitbit_mock_data["lifetime_stats"],
+                'activity_logs': fitbit_mock_data["activity_logs"],
             },
             {
                 "dds.fitbit.builtin.steps.average.exists": True,

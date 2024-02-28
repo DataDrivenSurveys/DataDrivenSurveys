@@ -101,7 +101,7 @@ example_values = {
         }
     },
     "Text": {
-        "attr": "name",
+        "attr": "activityName",
         "value": "Sport",
         "expected": {
             "__eq__": {
