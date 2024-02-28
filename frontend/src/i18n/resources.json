@@ -179,7 +179,8 @@
           "resume_failed_different_data_providers": "Some data providers are different from the previous session",
           "resume_success": "Respondent successfully identified, resuming survey",
           "survey.distribution_link_created": "Successfully created a unique distribution link",
-          "survey_platform.not_configured": "Survey platform not configured"
+          "survey_platform.not_configured": "Survey platform not configured",
+          "survey.error": "Error preparing survey"
         },
         "survey": {
           "create_failed": "Failed to create survey",

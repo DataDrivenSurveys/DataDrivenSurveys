@@ -286,7 +286,9 @@ class CVFilter:
         }
 
     def __call__(self, custom_variable: CustomVariableRow):
-        print(f"CVFilter custom_variable: {custom_variable.data}")
+        if self.attribute.attribute not in custom_variable.data:
+            return False
+        
         other_value = custom_variable.data[self.attribute.attribute]
         return self.operator.get('lambda')(other_value, self.value)
 
