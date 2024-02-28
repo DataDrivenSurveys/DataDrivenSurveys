@@ -22,3 +22,4 @@ pytest-mock==3.11.1
 pytest-flask==1.2.0
 validators==0.22.0
 PyGithub==2.1.1
+surveymonkey-python==0.1.5
