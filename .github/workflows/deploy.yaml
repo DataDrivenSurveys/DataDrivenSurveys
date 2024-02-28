@@ -32,11 +32,6 @@ jobs:
         echo APP_SURVEY_MONKEY_CLIENT_ID=${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }} >> ddsurveys/.env
         echo APP_SURVEY_MONKEY_CLIENT_SECRET=${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }} >> ddsurveys/.env
 
-        echo SERVER_HOST=${{ secrets.SERVER_HOST }} > SERVER_HOST.txt
-        echo SERVER_USERNAME=${{ secrets.SERVER_USERNAME }} >> SERVER_USERNAME.txt
-        echo SERVER_SSH_KEY=${{ secrets.SERVER_SSH_KEY }} >> SERVER_SSH_KEY.txt
-        echo SERVER_SSH_KEY_PASSPHRASE=${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} >> SERVER_SSH_KEY_PASSPHRASE.txt
-
     - name: Copy the project to the server
       uses: appleboy/scp-action@master
       with:
