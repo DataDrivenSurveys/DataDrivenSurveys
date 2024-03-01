@@ -6,7 +6,9 @@
 import datetime
 import traceback
 
-from flask import Blueprint, request, jsonify, current_app, g
+from flask import Blueprint, request, jsonify, send_file, g
+from io import BytesIO
+import tempfile
 from flask.typing import ResponseReturnValue
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
@@ -457,3 +459,109 @@ def sync_variables(id):
             "id": message_id,
             "text": text_message
         }}), status
+
+
+@projects.route('/<string:id>/export_survey_responses', methods=['POST'])
+@jwt_required()
+def export_survey_responses(id):
+    logger.debug(f"Exporting survey responses for project with id: {id}")
+
+    with get_db() as db:
+        user = get_jwt_identity()
+        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        if not researcher:
+            return jsonify({"message": {
+                "id": "api.unauthorised",
+                "text": "Unauthorised"
+            }}), 401
+
+        project = db.query(Project).join(Collaboration).filter(
+            Collaboration.researcher_id == researcher.id,
+            Project.id == id
+        ).first()
+
+        if not project:
+            return jsonify({"message": {
+                "id": "api.projects.project_not_found",
+                "text": "Project not found"
+            }}), 404
+
+        platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+
+        if not platform_class:
+            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+            return jsonify({"message": {
+                "id": "api.survey.platform_not_supported",
+                "text": "Survey platform not supported"
+            }}), 400
+
+        survey_platform = platform_class(**project.survey_platform_fields)
+
+        status, message_id, text_message, content = survey_platform.handle_export_survey_responses()
+
+        # Check if an error occurred
+        if status != 200:
+            logger.error(f"Error during survey response export: {text_message}")
+            return jsonify({"message": {"id": message_id, "text": text_message}}), status
+
+        # Assuming content is the bytes of the file to be downloaded
+        if content:
+            
+
+            # Create a BytesIO object with your zip content
+            zip_in_memory = BytesIO(content)
+            
+            # Reset the cursor of the BytesIO object to the beginning
+            zip_in_memory.seek(0)
+
+            # Send the file-like object to the client
+            return send_file(zip_in_memory, 
+                            download_name=f"{project.name}_survey_responses.zip",
+                            as_attachment=True,
+                            mimetype='application/zip')
+
+        # If there is no content for some reason, return an appropriate message
+        return jsonify({"message": {
+            "id": "api.survey.export_failed",
+            "text": "Failed to export survey responses"
+        }}), 500
+    
+@projects.route('/<string:id>/preview_survey', methods=['GET'])
+@jwt_required()
+def preview_survey(id):
+    logger.debug(f"Previewing survey for project with id: {id}")
+
+    with get_db() as db:
+        user = get_jwt_identity()
+        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        if not researcher:
+            return jsonify({"message": {
+                "id": "api.unauthorised",
+                "text": "Unauthorised"
+            }}), 401
+
+        project = db.query(Project).join(Collaboration).filter(
+            Collaboration.researcher_id == researcher.id,
+            Project.id == id
+        ).first()
+
+        if not project:
+            return jsonify({"message": {
+                "id": "api.projects.project_not_found",
+                "text": "Project not found"
+            }}), 404
+
+        survey_platform_fields = project.survey_platform_fields
+
+        if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
+            return jsonify({"message": {
+                "id": "api.survey.missing_base_url_or_survey_id",
+                "text": "Missing base_url or survey_id"
+            }}), 400
+
+        base_url = survey_platform_fields["base_url"]
+        survey_id = survey_platform_fields["survey_id"]
+
+        preview_link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current"
+
+        return preview_link, 200

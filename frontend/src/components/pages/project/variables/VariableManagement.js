@@ -113,7 +113,7 @@ const FieldVariableName = ({row, onSelect}) => {
         :
 
         row.cv_attributes?.map((attr, index) => (
-          <Stack direction="row" alignItems="center">
+          <Stack direction="row" alignItems="center" key={index}>
             <Checkbox
               disabled={!row.enabled}
               checked={attr.enabled}
@@ -141,7 +141,7 @@ const FieldDescription = ({row}) => {
         </Stack>
         :
         row.cv_attributes?.map((attr, index) => (
-          <Stack justifyContent="center">
+          <Stack justifyContent="center" key={index}>
             <Typography variant="body1" key={index}>{attr.description}</Typography>
           </Stack>
         ))
@@ -161,7 +161,7 @@ const FieldDataType = ({row}) => {
         </Stack>
         :
         row.cv_attributes?.map((attr, index) => (
-          <Stack justifyContent="center">
+          <Stack justifyContent="center" key={index}>
             <Typography variant="body1" key={index}>{attr.data_type}</Typography>
           </Stack>
         ))
@@ -190,7 +190,7 @@ const FieldTestValue = ({row, onChange}) => {
         </Stack>
         :
         row.cv_attributes?.map((attr, index) => (
-          <Stack justifyContent="center">
+          <Stack justifyContent="center" key={index}>
             <ValueInput
               label={t('ui.project.variables.grid.column.test_value')}
               data_type={attr.data_type}
@@ -224,11 +224,14 @@ const FieldInfo = ({row}) => {
         </Tooltip>
         :
         row.cv_attributes?.map((attr, index) => (
-          <Tooltip title={
-            <Typography variant="body1" color="primary.contrastText">
-              {attr.info}
-            </Typography>
-          } placement="left-start">
+          <Tooltip 
+            key={index}
+            title={
+              <Typography variant="body1" color="primary.contrastText">
+                {attr.info}
+              </Typography>
+            } placement="left-start"
+          >
             <IconButton size="small">
               <InfoOutlinedIcon/>
             </IconButton>

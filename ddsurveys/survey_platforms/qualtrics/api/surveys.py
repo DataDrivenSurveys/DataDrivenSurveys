@@ -13,6 +13,7 @@ import functools
 import re
 from datetime import datetime
 from typing import Optional
+import time
 
 import requests
 
@@ -257,7 +258,113 @@ class SurveysAPI(QualtricsRequests):
             `API Documentation <https://api.qualtrics.com/be14598374903-update-flow>`_
         """
         return self.put(f"{self.endpoint}/{survey_id}/flow", json=flow)
+    
+    @survey_id_wrapper
+    def start_export_request(self, survey_id: str, format: str = "csv") -> str:
+        """
+        Initiates the export of survey responses.
 
+        Parameters
+        ----------
+        survey_id : str
+            The ID of the survey to export.
+        format : str, optional
+            The format of the export file (default is "csv").
+
+        Returns
+        -------
+        progressId : str
+            The ID used to check the progress of the export.
+        """
+        endpoint = f"{self.base_url}/surveys/{survey_id}/export-responses"
+        headers = self.headers  # Assuming your class has a property for common headers
+        data = {"format": format}
+        response = requests.post(endpoint, headers=headers, json=data)
+        response.raise_for_status()  # Raises an error for bad responses
+
+        progress_id = response.json()["result"]["progressId"]
+        return progress_id
+
+    @survey_id_wrapper
+    def check_export_progress(self, survey_id: str, progress_id: str) -> str:
+        """
+        Checks the progress of an export operation.
+
+        Parameters
+        ----------
+        survey_id : str
+            The ID of the survey being exported.
+        progress_id : str
+            The progress ID of the export operation.
+
+        Returns
+        -------
+        fileId : str
+            The ID of the file to download once the export is complete.
+        """
+        endpoint = f"{self.base_url}/surveys/{survey_id}/export-responses/{progress_id}"
+        headers = self.headers
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+
+        result = response.json()["result"]
+        if result["status"] == "complete":
+            return result["fileId"]
+        else:
+            return None
+
+    @survey_id_wrapper
+    def download_export_file(self, survey_id: str, file_id: str) -> bytes:
+        """
+        Downloads the exported file.
+
+        Parameters
+        ----------
+        survey_id : str
+            The ID of the survey.
+        file_id : str
+            The ID of the file to download.
+
+        Returns
+        -------
+        file_contents : bytes
+            The contents of the exported file.
+        """
+        endpoint = f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        headers = self.headers
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+
+        return response.content
+
+    @survey_id_wrapper
+    def export_survey_responses(self, survey_id: str, format: str = "csv") -> bytes:
+        """
+        High-level method to export survey responses, wait for completion, and download the file.
+
+        Parameters
+        ----------
+        survey_id : str
+            The ID of the survey to export.
+        format : str
+            The format of the export file.
+
+        Returns
+        -------
+        file_contents : bytes
+            The contents of the exported file.
+        """
+        progress_id = self.start_export_request(survey_id, format)
+        file_id = None
+
+        # Polling for the export progress
+        while file_id is None:
+            time.sleep(1)  # Wait for a bit before checking the progress again
+            file_id = self.check_export_progress(survey_id, progress_id)
+            if file_id:
+                break  
+
+        return self.download_export_file(survey_id, file_id)
     # @survey_id_wrapper
     # def update_flow_element_definition(self, _survey_id: str = None, flow: Union[Flow, dict, list] = None) -> requests.Response:
     #     """

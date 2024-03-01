@@ -123,8 +123,17 @@ export const DEL = async (endpoint, use_token = true) => {
   }
 };
 
+export const POST_BLOB = async (endpoint, data, use_token = true) => {
+  try {
+    const response = use_token ? await axiosInstanceWithToken.post(endpoint, data, { responseType: 'blob' }) : await axiosInstanceWithoutToken.post(endpoint, data, { responseType: 'blob' });
+    return handleResponse(response);
+  } catch (error) {
+    return handleError(error);
+  }
+};
 
 export const PUBLIC_GET = async (endpoint)         => GET(endpoint, false);
 export const PUBLIC_POST = async (endpoint, data)  => POST(endpoint, data, false);
+export const PUBLIC_POST_BLOB = async (endpoint, data)  => POST_BLOB(endpoint, data, false);
 export const PUBLIC_PUT = async (endpoint, data)   => PUT(endpoint, data, false);
 export const PUBLIC_DEL = async (endpoint)         => DEL(endpoint, false);
