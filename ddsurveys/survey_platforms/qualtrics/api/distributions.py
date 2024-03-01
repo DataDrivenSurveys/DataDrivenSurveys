@@ -138,4 +138,12 @@ class DistributionsAPI(QualtricsRequests):
         resp = self.get(f"distributions/{distribution_id}/links?surveyId={survey_id}")
 
         return resp.json()["result"]["elements"][0]["link"]
+    
+    def get_preview_survey_url(self, survey_id: str, mailing_list_id: str) -> str:
+        payload = {
+            "surveyId": survey_id,
+            "mailingListId": mailing_list_id
+        }
+        resp = self.post("distributions/preview", json=payload)
+        return resp.json()["result"]["previewLink"]
 

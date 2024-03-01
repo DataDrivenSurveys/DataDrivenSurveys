@@ -122,6 +122,17 @@ class SurveyPlatform(UIRegistry):
         - Unique Distribution URL (str) - The URL that will be used to distribute the survey.
         """
         raise NotImplementedError("handle_prepare_survey method not implemented.")
+    
+    @abstractmethod
+    def handle_export_survey_responses(self, project_short_id: str) -> Tuple[bool, Optional[str]]:
+        """
+        Download the responses from the survey platform and return the Tuple with:
+        - Status code (200 or 40x)
+        - Message ID (str)
+        - Message English Text (str)
+        - File Content (str) - The content of the file that was downloaded.
+        """
+        raise NotImplementedError("handle_export_survey_responses method not implemented.")
 
 
 class OAuthSurveyPlatform(SurveyPlatform):
