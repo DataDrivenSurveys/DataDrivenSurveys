@@ -329,7 +329,7 @@ class CustomVariable:
 
         if self.data_provider:
             data_category_instance = data_category_class(data_provider=data_provider)
-            data = data_category_instance.fetch_data
+            data = data_category_instance.fetch_data()
             self.data_list = data or []
 
         self.variable_name = custom_variable["variable_name"]

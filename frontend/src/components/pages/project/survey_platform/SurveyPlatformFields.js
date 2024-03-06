@@ -47,7 +47,6 @@ const SurveyPlatformFields = ({ selectedSurveyPlatform, surveyPlatformFields:ini
       switch (action) {
         case 'open_authorize_url':
           // save the fields to the local storage
-          console.log("open_authorize_url surveyPlatformFields", surveyPlatformFields)
           localStorage.setItem('surveyPlatformFields', JSON.stringify(surveyPlatformFields));
           return open_authorize_url(selectedSurveyPlatform.oauth2.authorize_url);
         case 'clear':
