@@ -310,6 +310,9 @@ class CustomVariableRow:
 
     def apply_filters(self) -> bool:
         return all(filter_(self) for filter_ in self.filters)
+    
+    def __repr__(self):
+        return f"CustomVariableRow(variable_name={self.variable_name}, data_category={self.data_category}, data={self.data})"
 
 
 class CustomVariable:
@@ -326,7 +329,7 @@ class CustomVariable:
 
         if self.data_provider:
             data_category_instance = data_category_class(data_provider=data_provider)
-            data = data_category_instance.fetch_data()
+            data = data_category_instance.fetch_data
             self.data_list = data or []
 
         self.variable_name = custom_variable["variable_name"]
@@ -485,4 +488,5 @@ class CustomVariable:
         custom_vars_rows = self.construct_custom_variables()
         filtered_vars = self.filter_custom_variables(custom_vars_rows)
         self.selected_row = self.apply_selection(filtered_vars)
+        logger.debug(f"Selected Row", self.to_data())
         return self.to_data()
