@@ -17,6 +17,7 @@ def client():
     os.environ['DATABASE_URL'] = "sqlite:///:memory:"
 
     app = create_app()
+    # Force the schema to be created
     Base.metadata.create_all(get_engine(app))
     app.config['TESTING'] = True
 
