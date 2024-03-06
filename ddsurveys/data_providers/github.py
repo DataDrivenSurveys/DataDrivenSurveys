@@ -36,7 +36,6 @@ class Account(DataCategory):
 
     api: Github = None
 
-    @cached_property
     def fetch_data(self) -> list[dict[str, Any]]:
         user = self.api.get_user()
         return user
@@ -90,7 +89,6 @@ class Repositories(DataCategory):
         "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
     }]
 
-    @cached_property
     def fetch_data(self) -> list[dict[str, Any]]:
         repos = self.data_provider.get_user_repositories
         return repos
