@@ -1,12 +1,7 @@
 name: Deploy to Debian Server
 
 on:
-  workflow_dispatch:
-    inputs:
-      remove_db:
-        description: 'Remove db container and its volume? (true/false)'
-        required: false
-        default: 'false'
+  workflow_dispatch: {}
 
 jobs:
   deploy:
