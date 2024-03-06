@@ -95,11 +95,13 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
     def handle_project_creation(self, project_name: str, use_existing_survey: bool = False) -> Tuple[int, str, str, str, Dict[str, Any]]:
         # survey_platform_fields to update project.survey_platform_fields
+        logger.debug(f"Creating project with name: {project_name}")
 
         survey_platform_fields = {
             "survey_id": self.survey_id,
             "survey_platform_api_key": self.survey_platform_api_key,
-            "survey_name": None
+            "survey_name": None,
+            "base_url": None
         }
 
         if use_existing_survey:
@@ -109,7 +111,9 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             try:
                 survey_info = self.surveys_api.get_survey(self.survey_id).json()
                 survey_name = survey_info['result']['SurveyName']
+                base_url = survey_info['result']['BrandBaseURL']
                 survey_platform_fields["survey_name"] = survey_name
+                survey_platform_fields["base_url"] = base_url
 
                 if not project_name:
                     project_name = survey_name
@@ -124,10 +128,18 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         else:
             try:
                 response = self.surveys_api.create_survey(survey_name=project_name).json()
+                
                 if 'result' in response:
-                    self.survey_id = response['result']['SurveyID']
-                    survey_platform_fields["survey_id"] = self.survey_id
+                    # Must get the survey info to get the base url
+                    survey_info = self.surveys_api.get_survey(response['result']['SurveyID']).json()
+                    survey_name = survey_info['result']['SurveyName']
+                    survey_id = response['result']['SurveyID']
+                    base_url = survey_info['result']['BrandBaseURL']
+
+                    self.survey_id = survey_id
+                    survey_platform_fields["survey_id"] = survey_id
                     survey_platform_fields["survey_name"] = project_name
+                    survey_platform_fields["base_url"] = base_url
                 else:
                     return (400, "api.survey.unknown_error_occurred",
                             "Unknown error occurred, please check your API key and survey ID", None, {})
@@ -218,3 +230,30 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         except FailedQualtricsRequest:
             return False, None
+        
+    def handle_export_survey_responses(self) -> Tuple[bool | str | None]:
+        """
+        Handle the downloading of responses from the survey platform.
+        """
+        try:
+            content = self.surveys_api.export_survey_responses(self.survey_id)
+            if content:
+                return 200, "api.ddsurveys.survey_platforms.export_survey_responses.success", "Exported survey responses successfully!", content
+            
+            return 400, "api.ddsurveys.survey_platforms.export_survey_responses.failed", "Failed to export survey responses!", None
+
+        except FailedQualtricsRequest:
+            return 400, "api.ddsurveys.survey_platforms.export_survey_responses.request_failed", "Failed to process export request. Please check your API key and survey ID.", None
+    
+    @staticmethod
+    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+        """
+        Handle the previewing of the survey.
+        """
+
+        if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
+            return 400, "api.ddsurveys.survey_platforms.get_preview_link.error", "Failed to get preview link. Please check your survey ID and base URL.", None
+        
+        base_url = survey_platform_fields['base_url']
+        survey_id = survey_platform_fields['survey_id']
+        return 200, "api.ddsurveys.survey_platforms.get_preview_link.success", "Preview link retrieved successfully!", f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current"

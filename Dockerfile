@@ -15,5 +15,10 @@ RUN pip install -e .
 # Set the PYTHONPATH environment variable (if necessary)
 ENV PYTHONPATH=/app
 
-# The CMD should use the entry point defined in setup.cfg if available
+RUN chmod +x /app/ddsurveys/entrypoint.sh
+
+# Set the entry point script
+ENTRYPOINT ["/app/ddsurveys/entrypoint.sh"]
+
+# Default command runs Gunicorn
 CMD ["gunicorn", "ddsurveys.wsgi:app", "--bind", "0.0.0.0:4000", "--reload"]
