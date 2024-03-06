@@ -133,6 +133,18 @@ class SurveyPlatform(UIRegistry):
         - File Content (str) - The content of the file that was downloaded.
         """
         raise NotImplementedError("handle_export_survey_responses method not implemented.")
+    
+    @staticmethod
+    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+        """
+        Get the preview link for the survey.
+        - Status code (200 or 40x)
+        - Message ID (str)
+        - Message English Text (str)
+        - Preview Link (str) - The preview link for the survey.
+
+        """
+        raise NotImplementedError("get_preview_link method not implemented.")
 
 
 class OAuthSurveyPlatform(SurveyPlatform):

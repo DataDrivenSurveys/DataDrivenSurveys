@@ -39,10 +39,9 @@ def get_engine(app:Flask = None):
 SessionLocal = None
 
 
-def create_all(app:Flask):
+def init_session(app:Flask):
     global SessionLocal
-    Base.metadata.create_all(get_engine(app))
-    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine(app))
 
 def get_db():
     return SessionLocal()
@@ -77,6 +76,7 @@ class DataProviderType(PyEnum):
     Fitbit = "fitbit"
     Instagram = "instagram"
     GitHub = "github"
+    Dds = "dds"
 
 
 class DataProvider(Base):
