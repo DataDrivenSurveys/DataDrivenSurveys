@@ -310,6 +310,20 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             return True, unique_link
         else:
             return False, None
+        
+    def handle_export_survey_responses(self) -> Tuple[bool | str | None]:
+        """
+        Handle the downloading of responses from the survey platform.
+        """
+        raise NotImplementedError
+        
+    @staticmethod
+    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+        """
+        Handle the previewing of the survey.
+        """
+        raise NotImplementedError
+
 
     
     

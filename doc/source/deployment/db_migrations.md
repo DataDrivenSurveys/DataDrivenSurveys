@@ -22,6 +22,8 @@ To reflect your changes in the database schema, you need to run the following co
 
 docker exec -it dds-dev-backend-1 bash
 
+cd /app/ddsurveys
+
 # Detect the changes in the models and generate a new migration
 alembic revision --autogenerate -m "Your message"
 

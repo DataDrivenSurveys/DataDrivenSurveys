@@ -551,17 +551,23 @@ def preview_survey(id):
                 "text": "Project not found"
             }}), 404
 
-        survey_platform_fields = project.survey_platform_fields
+        
+        
+        platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
-        if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
+        if not platform_class:
+            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
             return jsonify({"message": {
-                "id": "api.survey.missing_base_url_or_survey_id",
-                "text": "Missing base_url or survey_id"
+                "id": "api.survey.platform_not_supported",
+                "text": "Survey platform not supported"
             }}), 400
+        
+        survey_platform_fields = project.survey_platform_fields
+        
+        status, message_id, message, link = platform_class.get_preview_link(survey_platform_fields)
 
-        base_url = survey_platform_fields["base_url"]
-        survey_id = survey_platform_fields["survey_id"]
+        if status != 200:
+            logger.error(f"Error during survey preview: {link}")
+            return jsonify({"message": {"id": message_id, "text": message}}), status
 
-        preview_link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current"
-
-        return preview_link, 200
+        return link, status

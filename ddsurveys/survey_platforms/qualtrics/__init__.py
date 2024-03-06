@@ -244,17 +244,16 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         except FailedQualtricsRequest:
             return 400, "api.ddsurveys.survey_platforms.export_survey_responses.request_failed", "Failed to process export request. Please check your API key and survey ID.", None
-        
-    def handle_preview_survey(self) -> Tuple[bool, Optional[str]]:
+    
+    @staticmethod
+    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
         """
         Handle the previewing of the survey.
         """
-        try:
-            preview_url = self.distributions_api.get_preview_survey_url(self.survey_id)
-            if preview_url:
-                return 200, preview_url
 
-            return 400, None
-
-        except FailedQualtricsRequest:
-            return 400, None
+        if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
+            return 400, "api.ddsurveys.survey_platforms.get_preview_link.error", "Failed to get preview link. Please check your survey ID and base URL.", None
+        
+        base_url = survey_platform_fields['base_url']
+        survey_id = survey_platform_fields['survey_id']
+        return 200, "api.ddsurveys.survey_platforms.get_preview_link.success", "Preview link retrieved successfully!", f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current"
