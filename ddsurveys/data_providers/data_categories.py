@@ -82,13 +82,18 @@ class DataCategory(metaclass=DataCategoryBase):
         return variable_dict
 
     @classmethod
-    def get_variable_by_name(cls, name):
+    def get_custom_variable_by_name(cls, name):
         # Check in custom attributes
         for var in cls.cv_attributes:
             if var.name == name:
                 return var
 
-        # Check in builtin attributes
+        # If not found
+        raise ValueError(f"Variable {name} not found in {cls.__name__}")
+    
+    @classmethod
+    def get_builtin_variable_by_name(cls, name):
+         # Check in builtin attributes
         for var_list in cls.builtin_variables:
             for var in var_list:
                 if var.name == name:

@@ -157,7 +157,7 @@ class DataProvider(UIRegistry):
             project_custom_variables = []
 
         calculated_variables = {}
-        logger.info(f"project_builtin_variables: {project_builtin_variables}")
+        
         for variable in self.select_relevant_variables(project_builtin_variables):
             value = None
             try:
@@ -171,8 +171,7 @@ class DataProvider(UIRegistry):
             calculated_variables[variable['qualified_name']] = value
             calculated_variables[f"{variable['qualified_name']}.exists"] = exists
 
-        
-        logger.info(f"project_custom_variables: {project_custom_variables}")
+    
         for variable in self.select_relevant_variables(project_custom_variables):
             # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
             custom_var_manager = CustomVariable(data_provider=self, custom_variable=variable)
@@ -193,7 +192,7 @@ class DataProvider(UIRegistry):
         if data_category_class is None:
             raise ValueError(f"Data category '{category}' not found")
 
-        variable_func = data_category_class.get_variable_by_name(name).extractor_func
+        variable_func = data_category_class.get_builtin_variable_by_name(name).extractor_func
 
         if variable_func:
             if is_indexed_variable:
@@ -394,7 +393,6 @@ class OAuthDataProvider(DataProvider):
         required_scopes = list(required_scopes)
 
         self.required_scopes = required_scopes
-        logger.debug(f"Required scopes for {self.name}: {required_scopes}")
         return required_scopes
 
     # Methods that child classes must implement
