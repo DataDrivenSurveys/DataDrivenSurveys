@@ -337,6 +337,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     def get_authorize_url(self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None) -> str:
         required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
+        logger.info(f"Fitbit redirect_uri: {self.redirect_uri}")
         if len(required_scopes) == 0:
             required_scopes = self.__class__._scopes
         return self.oauth_client.authorize_token_url(scope=required_scopes, redirect_uri=self.redirect_uri)

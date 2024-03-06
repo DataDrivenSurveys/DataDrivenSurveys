@@ -41,11 +41,7 @@ const EditSurveyPlatformDialog = ({ open, surveyPlatformName, surveyPlatformFiel
         })();
     }, [surveyPlatformName, initialFields]);
 
-    const checkInputs = useCallback(() => {
-        const surveyIdField = surveyPlatformFields.find(f => f.name === 'survey_id');
-        const accessTokenField = surveyPlatformFields.find(f => f.name === 'access_token');
-        return surveyIdField?.value && accessTokenField?.value;
-    }, [surveyPlatformFields]);
+    const checkInputs = useCallback(() => surveyPlatformFields.every(f => f.value), [surveyPlatformFields]);
 
     const handleConfirm = useCallback(() => {
         if (!selectedSurveyPlatform) return;
