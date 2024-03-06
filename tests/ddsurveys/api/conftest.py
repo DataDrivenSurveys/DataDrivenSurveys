@@ -3,6 +3,7 @@
 
 import pytest
 from ddsurveys.app import create_app
+from ddsurveys.models import Base, get_engine
 import os
 from dotenv import load_dotenv
 
@@ -16,6 +17,7 @@ def client():
     os.environ['DATABASE_URL'] = "sqlite:///:memory:"
 
     app = create_app()
+    Base.metadata.create_all(get_engine(app))
     app.config['TESTING'] = True
 
     with app.test_client() as client:
