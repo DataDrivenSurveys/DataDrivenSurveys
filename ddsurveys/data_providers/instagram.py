@@ -9,7 +9,7 @@ Created on 2023-08-31 16:59
 __all__ = "InstagramDataProvider"
 
 from typing import Callable, Dict, Any
-
+from functools import cached_property
 import requests
 
 from .bases import OAuthDataProvider, FormField
@@ -22,6 +22,9 @@ from ..variable_types import TVariableFunction, VariableDataType
 logger = get_logger(__name__)
 
 class Media(DataCategory):
+   
+   def fetch_data(self) -> list[dict[str, Any]]:
+        return []
 
    cv_attributes = []
    builtin_variables = [
@@ -92,7 +95,7 @@ class InstagramDataProvider(OAuthDataProvider):
     api_version = "v11.0"
     user_id = "me"  # You can adjust this if needed
 
-
+    @cached_property
     def media_count(self):
         try:
 

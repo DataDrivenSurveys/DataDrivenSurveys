@@ -48,7 +48,7 @@ EXPECTED_RESULTS = {
     ],
     'GitHub': [
         {"enabled": True, "data_provider": "github"}
-    ],
+    ]
 }
 
 PARAMETERIZED_PROVIDERS = [(provider, EXPECTED_RESULTS[provider]) for provider in REGISTERED_DATAPROVIDERS]
@@ -240,7 +240,8 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
 
     # Mock the properties
     for prop, value in mock_properties.items():
-        mocker.patch.object(data_provider_class, prop, new_callable=mocker.PropertyMock, return_value=value)
+        # Patch each property with a PropertyMock to return the desired value
+        mocker.patch.object(data_provider_class, prop, new_callable=lambda: mocker.PropertyMock(return_value=value))
 
     data_provider_instance = data_provider_class()
 
@@ -254,7 +255,7 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
         project_custom_variables=custom_variables
     )
 
-
+    
     # filters keys that contain .builtin
     builtin_data_to_upload = {k: v for k, v in data_to_upload.items() if ".builtin" in k}
 
