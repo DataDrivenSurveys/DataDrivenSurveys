@@ -24,7 +24,7 @@ from dotenv import dotenv_values, load_dotenv
 
 # Import project libraries
 from .get_logger import get_logger, match_app_logger_level, only_log_ddsurveys, set_logger_level
-from .models import create_all, get_db
+from .models import init_session, get_db
 from .blueprints.auth import auth
 from .blueprints.projects import projects
 from .blueprints.survey_platforms import survey_platforms
@@ -118,7 +118,7 @@ def create_app() -> Flask:
     if APP_CONFIG.get("ONLY_LOG_DDSURVEYS", False):
         only_log_ddsurveys()
 
-    create_all(app)  # push the db schema to the database
+    init_session(app)  # Initialize the database session
 
     jwt = JWTManager(app)  # initializing the JWTManager
 

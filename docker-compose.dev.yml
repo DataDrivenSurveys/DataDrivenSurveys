@@ -17,9 +17,8 @@ services:
       - FAST_REFRESH=false
 
   backend:
-    image: python:3.11
+    build: .
     working_dir: /app
-    command: bash -c "pip install -e . && gunicorn --log-level debug ddsurveys.wsgi:app --bind 0.0.0.0:4000 --reload"
     volumes:
       - .:/app
     ports:

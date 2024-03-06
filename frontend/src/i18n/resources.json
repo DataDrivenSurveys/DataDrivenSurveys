@@ -149,6 +149,11 @@
             "exchange_code":{
               "success": "Successfully exchanged the code for access token",
               "error": "Failed to get the access to the survey platform."
+            },
+            "export_survey_responses": {
+              "failed": "Failed to export survey responses",
+              "request_failed": "Failed to export survey responses, please check your API key and survey ID",
+              "success": "Survey responses exported successfully!"
             }
           }
         },
@@ -190,7 +195,9 @@
           "not_active": "Survey is not active",
           "not_found": "Survey not found",
           "platform_not_supported": "Survey platform not supported",
-          "unknown_error_occurred": "Unknown error occurred, please check your API key and survey ID"
+          "unknown_error_occurred": "Unknown error occurrd, please check your API key and survey ID",
+          "export_failed": "Failed to export survey data",
+          "missing_base_url_or_survey_id": "Missing base URL or survey ID"
         },
         "unauthorized": "Unauthorized"
       },

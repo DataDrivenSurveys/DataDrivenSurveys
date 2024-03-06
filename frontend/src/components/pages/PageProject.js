@@ -7,7 +7,7 @@ import Authorization from "../auth/Authorization"
 import LayoutMain from "../layout/LayoutMain"
 import {useSnackbar} from "../../context/SnackbarContext";
 
-import {GET, POST, PUT, DEL} from "../../code/http_requests";
+import {GET, POST, POST_BLOB, PUT, DEL} from "../../code/http_requests";
 import CopyClipboard from "../input/CopyClipboard";
 
 import SyncIcon from '@mui/icons-material/Sync';
@@ -86,6 +86,7 @@ const PageProject = () => {
   const {projectId} = useParams();
 
   const [ syncLoading, setSyncLoading ] = useState(false);
+  const [ downloadLoading, setDownloadLoading ] = useState(false);
   const [ lastSynched, setLastSynched ] = useState(null);
   const [ clearResondentDataDialogOpen, setClearResondentDataDialogOpen ] = useState(false);
 
@@ -139,6 +140,53 @@ const PageProject = () => {
 
   }, [projectId, showSnackbar, t, project]);
 
+  const downloadRespondentResponses = useCallback(async () => {
+  
+    setDownloadLoading(true); 
+    const response = await POST_BLOB(`/projects/${projectId}/export_survey_responses`);
+    setDownloadLoading(false);
+
+    response.on('2xx', async (status, blob) => {
+      if (status === 200) {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', 'survey_responses.zip'); // Set the filename for the download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+
+    response.on('4xx', (_, data) => {
+      showSnackbar(t(data.message.id), 'error');
+    });
+
+    response.on('5xx', (_, data) => {
+      showSnackbar(data.error, 'error');
+    }); 
+
+  }, [projectId, showSnackbar, t]);
+
+  const previewSurvey = useCallback(async () => {
+    const response = await GET(`/projects/${projectId}/preview_survey`);
+
+    response.on('2xx', (status, data) => {
+      if (status === 200) {
+        window.open(data, '_blank');
+      }
+
+    });
+
+    response.on('4xx', (_, data) => {
+      showSnackbar(t(data.message.id), 'error');
+    });
+
+    response.on('5xx', (_, data) => {
+      showSnackbar(data.error, 'error');
+    });
+  }, [projectId, showSnackbar, t]);
+  
 
   const clearRespondentData = useCallback(async () => {
     const response = await DEL(`/projects/${projectId}/respondents`);
@@ -196,15 +244,21 @@ const PageProject = () => {
                       <Button
                         size={"small"}
                         color="primary"
-                        startIcon={<ScienceIcon/>}>
+                        startIcon={<ScienceIcon/>}
+                        onClick={previewSurvey}
+                        >
                         {t('ui.project.button.preview_survey')}
+
                       </Button>
-                      <Button
+                      <LoadingButton
                         size={"small"}
                         color="primary"
-                        startIcon={<FileDownloadIcon/>}>
+                        loading={downloadLoading}
+                        startIcon={<FileDownloadIcon/>}
+                        onClick={downloadRespondentResponses}
+                        >
                         {t('ui.project.button.download_data')}
-                      </Button>
+                      </LoadingButton>
                       <Button size={"small"}
                               color="error"
                               startIcon={<RestoreIcon/>}

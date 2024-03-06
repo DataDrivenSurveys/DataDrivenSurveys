@@ -253,7 +253,7 @@ class FitbitDataProvider(OAuthDataProvider):
         "heartrate",
         "location",
         "nutrition",
-        "profile",
+        "PROFILE",
         "settings",
         "sleep",
         "social",
