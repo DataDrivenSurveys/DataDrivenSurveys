@@ -9,7 +9,8 @@ from unittest.mock import patch, Mock
 dummy_qualtrics_active_survey = {
     "SurveyID": "SV_123456789",
     "SurveyName": "Mock Survey Name",
-    "SurveyStatus": "Active"
+    "SurveyStatus": "Active",
+    "BrandBaseURL": "https://unil.qualtrics.com/jfe/form/SV_123456789"
 }
 
 
