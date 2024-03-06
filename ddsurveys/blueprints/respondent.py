@@ -324,8 +324,6 @@ def prepare_survey():
 
                 db.commit()
 
-
-
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,
                 survey_platform_fields=project.survey_platform_fields,
