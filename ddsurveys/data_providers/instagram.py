@@ -191,8 +191,6 @@ class InstagramDataProvider(OAuthDataProvider):
 
             profile_data = profile_response.json()
 
-            logger.info(f"Instagram profile_data: {profile_data}")
-
             user_name = profile_data.get("username")
 
             if not user_name:
@@ -236,8 +234,6 @@ class InstagramDataProvider(OAuthDataProvider):
             profile_data = profile_response.json()
             user_name = profile_data.get("username")
 
-            logger.info(f"Instagram profile_data: {profile_data}")
-
             if not user_name:
                 return False
 
@@ -260,7 +256,6 @@ class InstagramDataProvider(OAuthDataProvider):
         }
         try:
             response = requests.post(self.token_url, headers=headers, data=data)
-            logger.debug(f"Instagram connect response: {response.json()}")
             success = response.status_code == 200
             if response.status_code != 200:
                 error = response.json().get("error_message")

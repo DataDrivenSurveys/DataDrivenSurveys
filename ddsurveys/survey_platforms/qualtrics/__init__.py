@@ -168,7 +168,6 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
                 # Update the variables on Qualtrics
                 resp = self.surveys_api.update_flow(self.survey_id, flow.to_dict())
-                logger.debug(f"Qualtrics response: {resp.json()}")
                 if resp.status_code == 200:
                     return 200, "api.ddsurveys.survey_platforms.variables_sync.success", "Variables synced successfully!"
                 else:

@@ -228,7 +228,6 @@ def delete_data_provider(data_provider_type):
         if project.custom_variables is not None and isinstance(project.custom_variables, (list, tuple)):
             project.custom_variables = [variable for variable in project.custom_variables if variable["data_provider"] != data_connection.data_provider.data_provider_type.value]
 
-        # logger.debug(f"Variables After: {project.variables}")
         # delete the data connection and update the project variables
         db.delete(data_connection)
         db.commit()
