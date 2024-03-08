@@ -140,9 +140,6 @@ class BuiltInVariable(Attribute):
         #parent_class_name = self.extractor_func.__qualname__[:self.extractor_func.__qualname__.rfind(".")]
         #data_provider = parent_class_name[:-12].lower()
 
-        #current_app.logger.info(f"parent_class_name: {parent_class_name}")
-        #current_app.logger.info(f"data_provider: {data_provider}")
-
 
         dct = super().to_dict()
         dct.update({
@@ -409,7 +406,7 @@ class CustomVariable:
                     'description': attribute.get('description'),
                     'info': attribute.get('info'),
                     'variable_name': attribute.get('variable_name'),
-                    'qualified_name': f"dds.{entry.get('data_provider')}.custom.{entry.get('variable_name')}.{attribute.get('name')}",
+                    'qualified_name': f"dds.{entry.get('data_provider')}.custom.{entry.get('data_category')}.{entry.get('variable_name')}.{attribute.get('name')}",
                     'test_value_placeholder': attribute.get('test_value', ""),
                     'type': entry.get('type'),
                 }

@@ -395,7 +395,6 @@ class RegistryBase(type):
 
         reg_dict = getattr(new_class, f"_{name}__registry", None)
         reg_dicts.append([name, reg_dict, id(reg_dict)])
-        logger.debug(reg_dicts[-1])
 
         if attrs.get("base_name", "") != "" and name not in mcs.registries:
             mcs.registries[name] = new_class

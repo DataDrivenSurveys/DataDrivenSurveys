@@ -196,7 +196,6 @@ class DataProvider(UIRegistry):
 
         if variable_func:
             if is_indexed_variable:
-                logger.info(f"Calculating indexed variable {name} with index {index}")
                 value = variable_func(self, index)
             else:
                 value = variable_func(self)
