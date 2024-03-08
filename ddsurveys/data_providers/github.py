@@ -71,7 +71,7 @@ class Account(DataCategory):
             data_type=VariableDataType.DATE,
             info="The date the account was created. It will be in the format YYYY-MM-DD.",
             is_indexed_variable=False,
-            extractor_func=lambda self: self.account_creation_date(),
+            extractor_func=lambda self: self.account_creation_date,
             data_origin=[{
                 "method": "get_user_repositories",
                 "endpoint": "https://api.github.com/users/[username]/repos",
@@ -370,7 +370,7 @@ class GitHubDataProvider(OAuthDataProvider):
         repos.sort(key=lambda repo: repo['stargazers_count'], reverse=True)
         return repos[idx - 1]["name"] if idx <= len(repos) else None
 
-
+    @cached_property
     def account_creation_date(self) -> str:
         user = self.api_client.get_user()
-        return user.created_at.isoformat()
+        return user.created_at.isoformat().split("T")[0]
