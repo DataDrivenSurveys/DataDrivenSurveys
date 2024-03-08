@@ -131,7 +131,6 @@ def get_public_data_providers():
 
             # Include data_connection.fields in the data provider dictionary.
             authorize_url = provider_instance.get_authorize_url(project.variables, project.custom_variables)
-            logger.debug(f"Authorize URL: {authorize_url}")
             data_providers.append({
                 'data_provider_type': data_provider.data_provider_type.value,
                 'client_id': provider_instance.get_client_id(),
@@ -139,7 +138,6 @@ def get_public_data_providers():
                 'authorize_url': authorize_url,
             })
 
-        logger.debug(f"Available DataProviders: {[dp['data_provider_type'] for dp in data_providers]}")
         return jsonify(data_providers), 200
 
 
