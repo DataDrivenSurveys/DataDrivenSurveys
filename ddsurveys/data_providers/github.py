@@ -372,4 +372,5 @@ class GitHubDataProvider(OAuthDataProvider):
 
 
     def account_creation_date(self) -> str:
-        return "2021-01-01"
+        user = self.api_client.get_user()
+        return user.created_at.isoformat()
