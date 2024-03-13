@@ -74,6 +74,7 @@ class DataProvider(UIRegistry):
     # cls_form_fields: dict[str, list[FormField]] = None
 
     # The following attributes (normally) do not need to be redeclared in child classes
+    app_required: bool = True
     name: str = ""
     name_lower: str = ""
     label: str = ""
@@ -297,6 +298,7 @@ class DataProvider(UIRegistry):
             # }
 
             item = subclass.to_dict()
+            item["app_required"] = subclass.app_required
 
             if hasattr(subclass, "get_redirect_uri"):
                 item["oauth2"] = {

@@ -76,7 +76,7 @@ def test_get_all_form_fields():
     data_provider_data = DataProvider.get_all_form_fields()
 
     # Define the required keys for the main structure, fields, and inside each field
-    main_keys = ['fields', 'instructions', 'label', 'value']
+    main_keys = ['app_required', 'fields', 'instructions', 'label', 'value']
     field_keys = ['helper_text', 'label', 'name', 'required', 'type']
 
     for provider_form in data_provider_data:

@@ -565,6 +565,8 @@ class UIRegistry(Registry):
             result.append(item)
 
         return result
+    
+
 
 class OAuthBase:
     # General class attributes
