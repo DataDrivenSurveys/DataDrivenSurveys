@@ -14,7 +14,7 @@ from typing import Dict, Any, Type, TypeVar
 
 from ..get_logger import get_logger
 from ..shared_bases import UIRegistry
-from ..shared_bases import FormField as BaseFormField
+from ..shared_bases import FormField as BaseFormField, FormTextBlock as BaseFormTextBlock
 from ..variable_types import TVariableValue
 
 from .variables import CustomVariable
@@ -453,3 +453,20 @@ class FormField(BaseFormField):
     _registry_class_name: str = ""  # No need to set this manually.
 
 
+
+class FormTextBlock(BaseFormTextBlock):
+    """This class is used to declare text blocks that a data provider needs to be filled when it is added in the UI.
+
+    Attributes:
+        content (str):
+            The content of the text block.
+        type (str):
+            The type of the text block.
+            Allowed values are: "text"
+    """
+    shared_prefix_text: str = "api"
+    _package: str = ""
+    _registry_class = DataProvider
+    _registry_class_name: str = ""  # No need to set this manually.
+
+    

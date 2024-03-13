@@ -137,37 +137,31 @@ class FormButton(FormElement):
     
     
 
-
 class FormField(FormElement):
     """This class is used to declare fields that a data provider needs to be filled when it is added in the UI.
 
 
-        Attributes:
-            name (str):
-                The name of the field.
-            type (str):
-                The type of input that is expected.
-                Allowed values are: "text"
-            required (bool): Whether the field is required to be filled or not.
-            label (str):
-                The label of the field.
-                It is used to look up the string that should be displayed in the UI in the frontend/src/i18n/resources.json
-                file.
-                If no label is passed, the value of name will be used to generate the label like so:
-                f"api.data_provider.{DP.__name__.lower()}.{name}.label"
-            helper_text (str):
-                The helper text of the field.
-                It is used to look up the string that should be displayed in the UI in the frontend/src/i18n/resources.json
-                file.
-                If no helper text is passed, the value of name will be used to generate the helper text like so:
-                f"api.data_provider.{DP.__name__.lower()}.{name}.helper_text"
-        """
-
-    _package: str = ""
-    _registry_class: TRegistryClass = None
-    _registry_class_name: str = ""  # No need to set this manually.
-
-class FormField(FormElement):
+    Attributes:
+        name (str):
+            The name of the field.
+        type (str):
+            The type of input that is expected.
+            Allowed values are: "text"
+        required (bool): Whether the field is required to be filled or not.
+        label (str):
+            The label of the field.
+            It is used to look up the string that should be displayed in the UI in the frontend/src/i18n/resources.json
+            file.
+            If no label is passed, the value of name will be used to generate the label like so:
+            f"api.data_provider.{DP.__name__.lower()}.{name}.label"
+        helper_text (str):
+            The helper text of the field.
+            It is used to look up the string that should be displayed in the UI in the frontend/src/i18n/resources.json
+            file.
+            If no helper text is passed, the value of name will be used to generate the helper text like so:
+            f"api.data_provider.{DP.__name__.lower()}.{name}.helper_text"
+    """
+    
     def __init__(self, type: str = "text", value: str = "", required: bool = True, disabled: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.type = type
@@ -253,6 +247,49 @@ class FormField(FormElement):
     def __repr__(self):
         return (f"{self.__class__.__name__}(name={self.name!r}, type={self.type!r}, required={self.required!r}, "
                 f"label={self.label!r}, helper_text={self.helper_text!r}, data={self.data!r})")
+    
+class FormTextBlock(FormElement):
+    """
+    This class is used to declare text blocks that provide information, instructions, or any kind of descriptive text
+    in the UI.
+
+    Attributes:
+        content (str):
+            The content of the text block. This is the actual text that will be displayed in the UI.
+        position (int):
+            The position where the text block should be displayed relative to other elements in the UI. This could be
+            interpreted by the frontend to place the text block in the correct order among other form elements.
+    """
+
+    def __init__(self, content: str, **kwargs):
+        super().__init__(**kwargs)
+        self.content = content
+        self.type = "textblock"  # This type can be used in the frontend to render the element appropriately.
+
+    def register_field(self, cls):
+        class_name = cls.__name__
+
+        if self.package == "" and hasattr(cls, "_package"):
+            self.package = getattr(cls, "_package", "")
+
+        if not self.package.startswith("."):
+            self.package = f".{self.package}"
+
+        # Use prefix_text to ensure that content is prefixed if necessary, similar to how labels and helper texts are handled.
+        self.content = self.prefix_text(self.content, cls)
+
+        if class_name not in self.registry_class.cls_form_fields:
+            self.registry_class.cls_form_fields[class_name] = []
+
+        # Adding the text block to the registry with its content.
+        self.registry_class.cls_form_fields[class_name].append({
+            "name": self.name,
+            "content": self.content,
+            "type": self.type,
+            "visibility_conditions": self.visibility_conditions
+        })
+        return cls
+
 
 reg_dicts = []
 
