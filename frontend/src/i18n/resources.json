@@ -118,6 +118,9 @@
               "client_secret.label": "App secret",
               "instructions.helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started",
               "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            },
+            "dds": {
+              "information": "Used to track respondent behaviour during the data provider connection process"
             }
           },
           "survey_platforms": {
