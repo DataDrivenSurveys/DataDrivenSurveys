@@ -112,7 +112,9 @@ const AddDataProviderDialog = ({projectId, exitingProviders, open, onClose, onAd
                   onChange={(e) => setSelected(dataProviders.find(dp => dp.value === e.target.value))}
                 />
 
-                { selected && selected.app_required && <AppRelatedInstructions selected={selected} projectName={projectName}/>}
+                { selected && selected.app_required && 
+                  <AppRelatedInstructions selected={selected} projectName={projectName}/>
+                }
 
 
                 <FormFields fields={fields} onChange={setFields}/>

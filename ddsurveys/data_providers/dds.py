@@ -16,7 +16,7 @@ from functools import cached_property
 import requests
 
 from ..get_logger import get_logger
-from .bases import DataProvider, FormTextBlock
+from .bases import FrontendDataProvider, FormTextBlock
 from .variables import CVAttribute, BuiltInVariable, BuiltInVariable
 from ..variable_types import TVariableFunction, VariableDataType
 from .data_categories import DataCategory
@@ -40,8 +40,7 @@ class FrontendActivity(DataCategory):
         )
     ]
 
-
-class DDSDataProvider(DataProvider):
+class DDSDataProvider(FrontendDataProvider):
 
     # Class attributes go here
     app_required: bool = False
