@@ -19,8 +19,8 @@ Examples:
             return project, status
         project: Project
 
-    get_project_data_connection(db, user, data_provider_type):
-        project, data_connection, status = get_project_data_connection(db, user, data_provider_type)
+    get_project_data_connection(db, user, data_provider_name):
+        project, data_connection, status = get_project_data_connection(db, user, data_provider_name)
         if status is not None:
             data_connection: ResponseReturnValue
             # Case where something could not be found in the database
@@ -85,7 +85,7 @@ def get_project(db: SessionLocal, user) -> Union[tuple[Project, None], tuple[Res
 
 
 def get_project_data_connection(db, user,
-                        data_provider_type
+                        data_provider_name
     ) -> Union[tuple[Project, DataConnection, None], tuple[None, ResponseReturnValue, int]]:
     project, satus = get_project(db, user)
     if satus is not None:
@@ -95,11 +95,11 @@ def get_project_data_connection(db, user,
     # get the data connection
     data_connection = db.query(DataConnection).filter_by(
         project_id=project.id,
-        data_provider_type=data_provider_type
+        data_provider_name=data_provider_name
     ).first()
 
     if not data_connection:
-        logger.error(f"Data connection for {data_provider_type} not found in project {project.id}")
+        logger.error(f"Data connection for {data_provider_name} not found in project {project.id}")
         return (None,
                 jsonify({"message": {"id": "api.data_provider.connection_not_found",
                                      "text": "Data connection not found"}}),

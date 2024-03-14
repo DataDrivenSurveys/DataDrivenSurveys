@@ -27,7 +27,7 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
 
       response.on('2xx', (status, dataProviders) => {
         setDataProviders(dataProviders);
-        const dataProvider = dataProviders.find(dp => dp.value === data.data_provider_type);
+        const dataProvider = dataProviders.find(dp => dp.value === data.data_provider_name);
         setSelected(dataProvider);
         const mergedFields = dataProvider.fields.map(field => ({
           ...field,
@@ -46,7 +46,7 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
     }
 
     (async () => {
-      const response = await PUT(`/projects/${projectId}/data-providers/${data.data_provider_type}`, {
+      const response = await PUT(`/projects/${projectId}/data-providers/${data.data_provider_name}`, {
         selected_data_provider: selected,
         fields
       });

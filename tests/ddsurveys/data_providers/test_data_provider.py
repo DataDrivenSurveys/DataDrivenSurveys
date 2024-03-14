@@ -255,10 +255,10 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
 
     data_provider_instance = data_provider_class()
 
-    data_provider_type = data_provider_instance.name_lower
+    data_provider_name = data_provider_instance.name_lower
 
-    builtin_variables = generate_builtin_variables(data_provider_type)
-    custom_variables = generate_custom_variables(data_provider_type)
+    builtin_variables = generate_builtin_variables(data_provider_name)
+    custom_variables = generate_custom_variables(data_provider_name)
 
     data_to_upload = data_provider_instance.calculate_variables(
         project_builtin_variables=builtin_variables,
@@ -275,23 +275,23 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
     # count the number of attributes for each custom variable (2 times the number of attributes + the global .exists for the custom variable)
     custom_variables_attributes_count = sum([len(cv["cv_attributes"] * 2) for cv in custom_variables]) + len(custom_variables)
 
-    assert len(builtin_data_to_upload) == len(builtin_variables) * 2, f"Check the total number of builtin variables to upload for {data_provider_type}, including .exists."
-    assert len(custom_data_to_upload) == custom_variables_attributes_count, f"Check the total number of custom variables to upload for {data_provider_type}, including .exists."
+    assert len(builtin_data_to_upload) == len(builtin_variables) * 2, f"Check the total number of builtin variables to upload for {data_provider_name}, including .exists."
+    assert len(custom_data_to_upload) == custom_variables_attributes_count, f"Check the total number of custom variables to upload for {data_provider_name}, including .exists."
 
     for variable in builtin_variables:
         qual_name = variable_to_qualname(variable, "builtin")
-        assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_type}."
-        assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_type}."
+        assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
+        assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
 
     for variable in custom_variables:
         for attribute in variable["cv_attributes"]:
             qual_name = variable_to_qualname(variable, "custom", attribute)
-            assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_type}."
-            assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_type}."
+            assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
+            assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
 
     # Asserting the data_to_upload values
     for key, expected_value in expected_upload_data.items():
-        assert data_to_upload.get(key) == expected_value, f"For {data_provider_type}, {key} should be {expected_value}."
+        assert data_to_upload.get(key) == expected_value, f"For {data_provider_name}, {key} should be {expected_value}."
 
     ctx.pop()
 

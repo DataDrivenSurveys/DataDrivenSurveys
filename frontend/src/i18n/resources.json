@@ -523,7 +523,7 @@
             },
             "table": {
               "data_origin": "Data Origin",
-              "data_provider_type": "Data Provider",
+              "data_provider_name": "Data Provider",
               "type": "Variable Type",
               "variable_description": "Description",
               "variable_name": "Variable Name"

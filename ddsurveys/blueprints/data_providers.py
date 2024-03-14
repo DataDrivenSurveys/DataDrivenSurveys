@@ -9,7 +9,7 @@ from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from ._common import get_project, get_project_data_connection
-from ..models import Project, DataConnection, DataProvider as DataProviderModel, DataProviderType, get_db
+from ..models import Project, DataConnection, DataProvider as DataProviderModel, DataProviderName, get_db
 from ..get_logger import get_logger
 from ..data_providers import DataProvider
 
@@ -73,13 +73,13 @@ def add_data_provider_to_project():
         # check if the data provider already exists
         data_provider = db.query(DataProviderModel).filter_by(
             name=selected_data_provider["label"],
-            data_provider_type=DataProviderType(selected_data_provider["value"])
+            data_provider_name=DataProviderName(selected_data_provider["value"])
         ).first()
 
         if not data_provider:
             data_provider = DataProviderModel(
                 name=selected_data_provider["label"],
-                data_provider_type=DataProviderType(selected_data_provider["value"])
+                data_provider_name=DataProviderName(selected_data_provider["value"])
             )
             db.add(data_provider)
             db.commit()
@@ -87,21 +87,21 @@ def add_data_provider_to_project():
         # check if the data connection already exists
         data_connection = db.query(DataConnection).filter_by(
             project_id=project.id,
-            data_provider_type=data_provider.data_provider_type
+            data_provider_name=data_provider.data_provider_name
         ).first()
 
         if data_connection:
-            logger.info(f"Data connection with {data_provider.data_provider_type} already exists for project "
+            logger.info(f"Data connection with {data_provider.data_provider_name} already exists for project "
                         f"{project_id}")
             return jsonify({"message": {
                 "id": "api.data_provider.connection_already_exists",
                 "text": "Data connection already exists"
             }}), 400
 
-        provider_class = DataProvider.get_class_by_value(data_provider.data_provider_type.value)
+        provider_class = DataProvider.get_class_by_value(data_provider.data_provider_name.value)
 
         if not provider_class:
-            logger.error(f"Data provider {data_provider.data_provider_type} not found")
+            logger.error(f"Data provider {data_provider.data_provider_name} not found")
             return jsonify({"message": {
                 "id": "api.data_provider.not_supported",
                 "text": "Data provider is not supported"
@@ -119,7 +119,7 @@ def add_data_provider_to_project():
         # create the data connection
         data_connection = DataConnection(
             project_id=project.id,
-            data_provider_type=data_provider.data_provider_type,
+            data_provider_name=data_provider.data_provider_name,
             connected=status >= 200 and status < 300,
             fields=fields_dict
         )
@@ -131,15 +131,15 @@ def add_data_provider_to_project():
 
 
 # Update
-@data_providers.route('/<string:data_provider_type>', methods=['PUT'])
+@data_providers.route('/<string:data_provider_name>', methods=['PUT'])
 @jwt_required()
-def update_data_provider(data_provider_type):
+def update_data_provider(data_provider_name):
     logger.debug("Updating data provider")
 
     with get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(db, user, data_provider_type)
+        project, data_connection, status = get_project_data_connection(db, user, data_provider_name)
         if status is not None:
             data_connection: ResponseReturnValue
             # Case where something could not be found in the database
@@ -183,7 +183,7 @@ def update_data_provider(data_provider_type):
         # check if the data provider already exists
         data_provider = db.query(DataProviderModel).filter_by(
             name=selected_data_provider["label"],
-            data_provider_type=DataProviderType(selected_data_provider["value"])
+            data_provider_name=DataProviderName(selected_data_provider["value"])
         ).first()
 
         if not data_provider:
@@ -205,15 +205,15 @@ def update_data_provider(data_provider_type):
 
 
 # delete
-@data_providers.route('/<string:data_provider_type>', methods=['DELETE'])
+@data_providers.route('/<string:data_provider_name>', methods=['DELETE'])
 @jwt_required()
-def delete_data_provider(data_provider_type):
+def delete_data_provider(data_provider_name):
     logger.debug("Deleting data provider")
 
     with get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(db, user, data_provider_type)
+        project, data_connection, status = get_project_data_connection(db, user, data_provider_name)
         if status is not None:
             data_connection: ResponseReturnValue
             # Case where something could not be found in the database
@@ -222,11 +222,11 @@ def delete_data_provider(data_provider_type):
 
         # delete the variables related to the data connection
         if project.variables is not None and isinstance(project.variables, (list, tuple)):
-            project.variables = [variable for variable in project.variables if variable["data_provider"] != data_connection.data_provider.data_provider_type.value]
+            project.variables = [variable for variable in project.variables if variable["data_provider"] != data_connection.data_provider.data_provider_name.value]
 
         # delete the custom variables related to the data connection
         if project.custom_variables is not None and isinstance(project.custom_variables, (list, tuple)):
-            project.custom_variables = [variable for variable in project.custom_variables if variable["data_provider"] != data_connection.data_provider.data_provider_type.value]
+            project.custom_variables = [variable for variable in project.custom_variables if variable["data_provider"] != data_connection.data_provider.data_provider_name.value]
 
         # delete the data connection and update the project variables
         db.delete(data_connection)
@@ -239,15 +239,15 @@ def delete_data_provider(data_provider_type):
 
 
 # Check Connection
-@data_providers.route('/<string:data_provider_type>/check-connection', methods=['GET'])
+@data_providers.route('/<string:data_provider_name>/check-connection', methods=['GET'])
 @jwt_required()
-def check_dataprovider_connection(data_provider_type):
+def check_dataprovider_connection(data_provider_name):
     logger.debug("Checking data provider connection")
 
     with get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(db, user, data_provider_type)
+        project, data_connection, status = get_project_data_connection(db, user, data_provider_name)
         if status is not None:
             data_connection: ResponseReturnValue
             # Case where something could not be found in the database
@@ -255,9 +255,9 @@ def check_dataprovider_connection(data_provider_type):
         data_connection: DataConnection
 
         # check the connection
-        data_provider = db.query(DataProviderModel).get(data_provider_type)
+        data_provider = db.query(DataProviderModel).get(data_provider_name)
 
-        provider_class = DataProvider.get_class_by_value(data_provider.data_provider_type.value)
+        provider_class = DataProvider.get_class_by_value(data_provider.data_provider_name.value)
         provider_instance: DataProvider = provider_class(**data_connection.fields)
         success = provider_instance.test_connection()
 

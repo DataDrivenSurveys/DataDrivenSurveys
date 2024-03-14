@@ -18,7 +18,7 @@ const PageParticipantOauth2Redirect = () => {
 
     const { t } = useTranslation();
 
-    const { provider: data_provider_type } = useParams();
+    const { provider: data_provider_name } = useParams();
 
     const [ status, setStatus ] = useState({
         failed: false,
@@ -46,7 +46,7 @@ const PageParticipantOauth2Redirect = () => {
             // Send the code grant to the backend
             const response = await PUBLIC_POST(`/projects/${projectId}/respondent/exchange-code`, {
                 code: code,
-                data_provider_type: data_provider_type
+                data_provider_name: data_provider_name
             });
 
             response.on('2xx', async (status, data) => {
@@ -57,10 +57,10 @@ const PageParticipantOauth2Redirect = () => {
                     // Save the access token in local storage as array
                     let tokens = JSON.parse(localStorage.getItem('RespondentTempTokens')) || [];
 
-                    tokens = tokens.filter((token) => token.data_provider_type !== data_provider_type)
+                    tokens = tokens.filter((token) => token.data_provider_name !== data_provider_name)
                     
                     tokens.push({
-                        data_provider_type: data_provider_type,
+                        data_provider_name: data_provider_name,
                         ...data.entity
                     });
 
