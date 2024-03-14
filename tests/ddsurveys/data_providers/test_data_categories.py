@@ -20,7 +20,7 @@ def test_get_all_data_categories():
         assert 'value' in data_category, "The value should be included in the DataCategory dict."
         assert 'builtin_variables' in data_category, "The builtin variables should be included in the DataCategory dict."
         assert 'cv_attributes' in data_category, "The custom variables should be included in the DataCategory dict."
-        assert 'data_provider_type' in data_category, "The data provider type should be included in the DataCategory dict."
+        assert 'data_provider_name' in data_category, "The data provider type should be included in the DataCategory dict."
 
         assert len(data_category['cv_attributes']) >= 0, "The custom variables should be included in the DataCategory dict."
         assert len(data_category['builtin_variables']) >= 0, "The builtin variables should be included in the DataCategory dict."

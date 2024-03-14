@@ -190,7 +190,7 @@ class DataProvider(UIRegistry):
     def get_data_categories(cls) -> list[Dict[str, Any]]:
         data_categories_dicts = [cat.to_dict() for cat in cls.data_categories]
         for dct in data_categories_dicts:
-            dct['data_provider_type'] = cls.name
+            dct['data_provider_name'] = cls.name
 
             # Updating the builtin variables' names
             for variable in dct["builtin_variables"]:
@@ -220,7 +220,7 @@ class DataProvider(UIRegistry):
             for subclass in cls.registry.get("DataProvider").values()
             for item in subclass.get_data_categories()
         ]
-        return sorted(categories, key=lambda dp: (dp['data_provider_type'], dp['label']))
+        return sorted(categories, key=lambda dp: (dp['data_provider_name'], dp['label']))
 
     @classmethod
     def get_all_form_fields(cls) -> list[dict[str, Any]]:
@@ -261,7 +261,7 @@ class DataProvider(UIRegistry):
 
     def to_public_dict(self) -> dict[str, Any]:
         return {
-            'data_provider_type':self.name_lower,
+            'data_provider_name':self.name_lower,
             'type': self.provider_type,
         }
 

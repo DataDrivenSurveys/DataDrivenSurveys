@@ -72,16 +72,21 @@ class SurveyStatus(PyEnum):
 
 
 # the enum entry "name" (ex. Fitbit) is used as name for the data provider
-class DataProviderType(PyEnum):
+class DataProviderName(PyEnum):
     Fitbit = "fitbit"
     Instagram = "instagram"
     GitHub = "github"
     Dds = "dds"
 
+class DataProviderType(PyEnum):
+    generic = "generic"
+    oauth = "oauth"
+    frontend = "frontend"
 
 class DataProvider(Base):
     __tablename__ = 'data_provider'
-    data_provider_type = Column(Enum(DataProviderType), primary_key=True)
+    data_provider_name = Column(Enum(DataProviderName), primary_key=True)
+    data_provider_type = Column(Enum(DataProviderType), default=DataProviderType.generic)
     name = Column(String(255))
     data_connections = relationship('DataConnection', back_populates='data_provider')
     data_provider_accesses = relationship('DataProviderAccess', back_populates='data_provider')
@@ -89,6 +94,7 @@ class DataProvider(Base):
     def to_dict(self):
         return {
             'name': self.name,
+            'data_provider_name': self.data_provider_name.value,
             'data_provider_type': self.data_provider_type.value
         }
 
@@ -97,7 +103,7 @@ class DataConnection(Base):
     __tablename__ = 'data_connection'
 
     project_id = Column(String(36), ForeignKey('project.id', ondelete='CASCADE'), primary_key=True)
-    data_provider_type = Column(Enum(DataProviderType), ForeignKey('data_provider.data_provider_type', ondelete='CASCADE'), primary_key=True)
+    data_provider_name = Column(Enum(DataProviderName), ForeignKey('data_provider.data_provider_name', ondelete='CASCADE'), primary_key=True)
     data_provider = relationship('DataProvider', back_populates='data_connections')
 
     connected = Column(Boolean, default=False)
@@ -108,7 +114,7 @@ class DataConnection(Base):
 
         return {
             'project_id': self.project_id,
-            'data_provider_type': self.data_provider_type.value,
+            'data_provider_name': self.data_provider_name.value,
             'data_provider': self.data_provider.to_dict() if self.data_provider else None,
             'connected': self.connected,
             'fields': self.fields
@@ -218,7 +224,7 @@ class Respondent(Base):
 class DataProviderAccess(Base):
     __tablename__ = 'data_provider_access'
 
-    data_provider_type = Column(Enum(DataProviderType), ForeignKey('data_provider.data_provider_type', ondelete='CASCADE'), primary_key=True)
+    data_provider_name = Column(Enum(DataProviderName), ForeignKey('data_provider.data_provider_name', ondelete='CASCADE'), primary_key=True)
     user_id = Column(String(255), nullable=False, primary_key=True)
     project_id = Column(String(36), ForeignKey('project.id', ondelete='CASCADE'), primary_key=True)
     respondent_id = Column(String(36), ForeignKey('respondent.id', ondelete='CASCADE'), primary_key=True)
@@ -234,7 +240,7 @@ class DataProviderAccess(Base):
     def to_dict(self):
         return {
             'respondent_id': self.respondent_id,
-            'data_provider_type': self.data_provider_type.value,
+            'data_provider_name': self.data_provider_name.value,
             'access_token': self.access_token,
             'refresh_token': self.refresh_token
         }

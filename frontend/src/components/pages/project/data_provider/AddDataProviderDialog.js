@@ -38,7 +38,7 @@ const AddDataProviderDialog = ({projectId, exitingProviders, open, onClose, onAd
 
       response.on('2xx', (status, data) => {
         const remainingProviders = data
-          .filter(p => !exitingProviders.some(ep => ep.data_provider_type === p.value))
+          .filter(p => !exitingProviders.some(ep => ep.data_provider_name === p.value))
           .map(ep => ({...ep, icon: <Logo name={ep.value} size={18}/>}));
 
         setDataProviders(remainingProviders);

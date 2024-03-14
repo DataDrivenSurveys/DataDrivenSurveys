@@ -319,7 +319,7 @@ class CustomVariable:
         self.data_list = []
 
         self.data_provider = data_provider
-        self.data_provider_type = custom_variable.get("data_provider", '')
+        self.data_provider_name = custom_variable.get("data_provider", '')
 
         data_category_class = DataCategory.get_by_value(custom_variable["data_category"])
         self.data_category = data_category_class
@@ -380,11 +380,11 @@ class CustomVariable:
         }
 
     def get_qualified_name(self) -> str:
-        return f"dds.{self.data_provider_type}.custom.{self.data_category.value}.{self.variable_name}"
+        return f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
 
     def get_qualified_attributes(self) -> list[dict[str, Any]]:
         return [
-            f"dds.{self.data_provider_type}.custom.{self.data_category.value}.{self.variable_name}.{attr.name}"
+            f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}.{attr.name}"
             for attr in self.attributes if attr.enabled
         ]
 
@@ -425,12 +425,12 @@ class CustomVariable:
         Each attribute of the custom variable is transformed into a separate variable for the survey platform
         """
 
-        data_provider_type = self.data_provider.name_lower
+        data_provider_name = self.data_provider.name_lower
 
         if not self.attributes or len(self.attributes) == 0:
             return {}
 
-        custom_var_name = f"dds.{data_provider_type}.custom.{self.data_category.value}.{self.variable_name}"
+        custom_var_name = f"dds.{data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
 
         output_data = {
             f"{custom_var_name}.exists": bool(self.selected_row) and self.selected_row != {}

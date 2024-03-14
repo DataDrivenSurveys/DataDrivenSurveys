@@ -30,9 +30,9 @@ import useEventTracker from "../events/useEventTracker";
 
 // Click here to see the data that this survey will collect from your accounts.
 
-const isDataProviderAlreadyUsed = async (projectShortId, data_provider_type, user_id) => {
+const isDataProviderAlreadyUsed = async (projectShortId, data_provider_name, user_id) => {
   const response = await PUBLIC_POST(`/projects/${projectShortId}/respondent/data-provider/was-used`, {
-    data_provider_type: data_provider_type,
+    data_provider_name: data_provider_name,
     user_id: user_id,
   });
 
@@ -96,11 +96,11 @@ const PageParticipantConnection = () => {
       const tokens = JSON.parse(localStorage.getItem('RespondentTempTokens')) || [];
       if (status === 200) {
         const providersPromises = data_providers.map(async (data_provider) => {
-          const token = tokens.find(token => token.data_provider_type === data_provider.data_provider_type);
+          const token = tokens.find(token => token.data_provider_name === data_provider.data_provider_name);
           let was_used = false;
 
           if (token) {
-            was_used = await isDataProviderAlreadyUsed(projectShortId, data_provider.data_provider_type, token.user_id);
+            was_used = await isDataProviderAlreadyUsed(projectShortId, data_provider.data_provider_name, token.user_id);
           }
 
           return {
@@ -137,9 +137,9 @@ const PageParticipantConnection = () => {
     }
   }, [fetchOauthDataProviders, project]);
 
-  const handleConnect = useCallback(async (data_provider_type) => {
+  const handleConnect = useCallback(async (data_provider_name) => {
     // find the authorize url for the data provider and redirect to it
-    const oauth2DataProvider = dataProviders.find(dp => dp.data_provider_type === data_provider_type);
+    const oauth2DataProvider = dataProviders.find(dp => dp.data_provider_name === data_provider_name);
 
     if (!oauth2DataProvider) {
       showSnackbar(t('ui.respondent.connection.error.data_provider_not_found'), 'error');
@@ -150,14 +150,14 @@ const PageParticipantConnection = () => {
 
   }, [dataProviders, showSnackbar, t]);
 
-  const handleDisconnect = useCallback(async (data_provider_type) => {
+  const handleDisconnect = useCallback(async (data_provider_name) => {
     // only remove the token from the data provider and from the local storage
     const tokens = JSON.parse(localStorage.getItem('RespondentTempTokens')) || [];
 
-    localStorage.setItem('RespondentTempTokens', JSON.stringify(tokens.filter(token => token.data_provider_type !== data_provider_type)));
+    localStorage.setItem('RespondentTempTokens', JSON.stringify(tokens.filter(token => token.data_provider_name !== data_provider_name)));
 
     const providers = dataProviders.map(provider => {
-      if (provider.data_provider_type === data_provider_type) {
+      if (provider.data_provider_name === data_provider_name) {
         return {
           ...provider,
           token: null
@@ -268,7 +268,7 @@ const PageParticipantConnection = () => {
                     dataProviders.map((data_provider, index) => {
                       return (
                         <Stack direction={"row"} key={index} spacing={2} alignItems={"center"} justifyContent={"space-between"}>
-                          <ConnectionBadge name={data_provider.data_provider_type}/>
+                          <ConnectionBadge name={data_provider.data_provider_name}/>
                           {data_provider.token ?
                             <Stack direction={"row"} alignItems={"center"}>
                               <Typography variant="body1">Connected
@@ -276,7 +276,7 @@ const PageParticipantConnection = () => {
                               <Button
                                 variant={"text"}
                                 color={"primary"}
-                                onClick={() => handleDisconnect(data_provider.data_provider_type)}
+                                onClick={() => handleDisconnect(data_provider.data_provider_name)}
                                 disabled={preparingSurvey || surveyURL}
                               >{
                                 t('ui.respondent.connection.button.disconnect')
@@ -292,7 +292,7 @@ const PageParticipantConnection = () => {
                               variant={"contained"}
                               color={"primary"}
                               startIcon={<AddIcon/>}
-                              onClick={() => handleConnect(data_provider.data_provider_type)}
+                              onClick={() => handleConnect(data_provider.data_provider_name)}
                             >{
                               t('ui.respondent.connection.button.connect')
                             }</Button>
@@ -388,7 +388,7 @@ const UsedVariables = ({used_variables: initial_variables}) => {
           columns={[
             {
               field: 'data_provider',
-              headerName: t('ui.respondent.connection.table.data_provider_type'),
+              headerName: t('ui.respondent.connection.table.data_provider_name'),
               minWidth: 90,
               renderCell: (params) => {
                 return (

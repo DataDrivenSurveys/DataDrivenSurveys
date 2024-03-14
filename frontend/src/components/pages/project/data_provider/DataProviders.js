@@ -19,8 +19,8 @@ import {useSnackbar} from "../../../../context/SnackbarContext";
 import DialogFeedback from "../../../feedback/DialogFeedback";
 
 
-const handleCheckConnection = async (projectId, data_provider_type, api_key) => {
-  const response = await GET(`/projects/${projectId}/data-providers/${data_provider_type}/check-connection`, {
+const handleCheckConnection = async (projectId, data_provider_name, api_key) => {
+  const response = await GET(`/projects/${projectId}/data-providers/${data_provider_name}/check-connection`, {
     api_key,
   });
 
@@ -48,16 +48,16 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       project_id: dc.project_id,
       connected: undefined,
       name: dc.data_provider.name,
-      data_provider_type: dc.data_provider.data_provider_type,
+      data_provider_name: dc.data_provider.data_provider_name,
       fields: dc.fields,
     })));
 
     Promise.all(project.data_connections.map(async (dc, index) => ({
       id: index,
       project_id: dc.project_id,
-      connected: await handleCheckConnection(projectId, dc.data_provider.data_provider_type, dc.api_key),
+      connected: await handleCheckConnection(projectId, dc.data_provider.data_provider_name, dc.api_key),
       name: dc.data_provider.name,
-      data_provider_type: dc.data_provider.data_provider_type,
+      data_provider_name: dc.data_provider.data_provider_name,
       fields: dc.fields,
     }))).then(newData => setDataProviders(newData));
 
@@ -66,7 +66,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
   const handleDelete = useCallback(() => {
     if(!selected) return;
     (async () => {
-      const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_type}`);
+      const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_name}`);
 
       response.on('2xx', (status, data) => {
         if (status === 200) {
@@ -95,7 +95,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       field: 'name',
       headerName: t('ui.project.data_providers.grid.column.name'),
       width: 200,
-      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_type}/>
+      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_name}/>
     },
     {
       field: 'actions',
@@ -124,7 +124,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
                 // set the connected status to undefined to show the loading icon
                 setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: undefined} : dp));
                 (async () => {
-                const connected = await handleCheckConnection(projectId, params.row.data_provider_type, params.row.api_key);
+                const connected = await handleCheckConnection(projectId, params.row.data_provider_name, params.row.api_key);
                 setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: connected} : dp));
                 })();
               }}
