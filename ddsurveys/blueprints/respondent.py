@@ -124,19 +124,20 @@ def get_public_data_providers():
         # Get all data providers linked to the project.
         data_providers = []
         for data_connection in project.data_connections:
+        
             data_provider = data_connection.data_provider
 
-            provider_class: TOAuthDataProviderClass = DataProvider.get_class_by_value(data_provider.data_provider_type.value)
-            provider_instance: OAuthDataProvider = provider_class(**data_connection.fields)
+            cunstructor_fields = data_connection.fields
+            cunstructor_fields["builtin_variables"] = project.variables
+            cunstructor_fields["custom_variables"] = project.custom_variables
 
-            # Include data_connection.fields in the data provider dictionary.
-            authorize_url = provider_instance.get_authorize_url(project.variables, project.custom_variables)
-            data_providers.append({
-                'data_provider_type': data_provider.data_provider_type.value,
-                'client_id': provider_instance.get_client_id(),
-                # 'redirect_url': provider_class.get_redirect_uri(),
-                'authorize_url': authorize_url,
-            })
+            provider_class: TOAuthDataProviderClass = DataProvider.get_class_by_value(data_provider.data_provider_type.value)
+            provider_instance: OAuthDataProvider = provider_class(**cunstructor_fields)
+        
+            dp_public_dict = provider_instance.to_public_dict()
+            if dp_public_dict['type'] == 'oauth':
+                # Include data_connection.fields in the data provider dictionary.
+                data_providers.append(dp_public_dict)
 
         return jsonify(data_providers), 200
 
@@ -244,6 +245,7 @@ def prepare_survey():
             data = request.get_json()
 
             respondent_id = data.get('respondent_id')
+            frontend_variables = data.get('frontend_variables')
 
             if not respondent_id:
                 logger.error(f"Missing respondent id.")
@@ -284,12 +286,12 @@ def prepare_survey():
                 logger.error(f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info.")
                 return jsonify({"message": {"id": "api.survey.not_active", "text": "Survey not not active"}}), 404
 
-            data_providers = respondent.data_provider_accesses
+            oauth_data_providers = respondent.data_provider_accesses
 
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            for data_provider in data_providers:
+            for data_provider in oauth_data_providers:
 
                 data_provider_type = data_provider.data_provider_type.value
                 access_token = data_provider.access_token
@@ -321,6 +323,8 @@ def prepare_survey():
                 data_provider.refresh_token = None
 
                 db.commit()
+
+            
 
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,

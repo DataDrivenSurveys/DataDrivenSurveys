@@ -102,6 +102,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       headerName: t('ui.project.data_providers.grid.column.actions'),
       width: 250,
       renderCell: (params) => {
+        console.log("params: ", params)
         return (
           <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
             <Button

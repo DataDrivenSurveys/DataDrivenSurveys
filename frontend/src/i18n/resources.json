@@ -241,6 +241,10 @@
           "surveymonkey": {
             "alt": "SurveyMonkey",
             "label": "SurveyMonkey"
+          },
+          "dds":{
+            "alt": "DDS",
+            "label": "DDS"
           }
         },
         "custom_variables": {

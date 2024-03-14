@@ -25,6 +25,8 @@ import Loading from "../feedback/Loading";
 import DataTable from "../layout/DataTable";
 
 import {formatDateStringToLocale} from "../utils/FormatDate";
+import ClickTracker from "../events/ClickTracker";
+import useEventTracker from "../events/useEventTracker";
 
 // Click here to see the data that this survey will collect from your accounts.
 
@@ -43,7 +45,6 @@ const isDataProviderAlreadyUsed = async (projectShortId, data_provider_type, use
   return was_used;
 }
 
-
 const PageParticipantConnection = () => {
 
   const {t} = useTranslation();
@@ -52,10 +53,11 @@ const PageParticipantConnection = () => {
 
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
+  const { reset:resetEvents, getEvents } = useEventTracker();
+
   const [project, setProject] = useState(null);
 
   const [dataProviders, setDataProviders] = useState([]);
-  const [dataProvidersOAuth2Attributes, setDataProvidersOAuth2Attributes] = useState([]);
 
   const [preparingSurvey, setPreparingSurvey] = useState(false);
   const [surveyURL, setSurveyURL] = useState(null);
@@ -71,9 +73,29 @@ const PageParticipantConnection = () => {
     const response = await PUBLIC_GET(`/projects/${projectShortId}/respondent/`);
 
     response.on('2xx', async (status, data) => {
+      if (status === 200) {
+        setProject(data);
+      }
+    });
+
+    response.on('4xx', (status, data) => {
+      if (status === 400) {
+        setProject(data);
+      } else {
+        showSnackbar(t(data.message.id), 'error');
+      }
+    });
+
+  }, [projectShortId, showSnackbar, t]);
+
+
+  const fetchOauthDataProviders = useCallback(async () => {
+    const response = await PUBLIC_GET(`/projects/${projectShortId}/respondent/data-providers`);
+
+    response.on('2xx', async (status, data_providers) => {
       const tokens = JSON.parse(localStorage.getItem('RespondentTempTokens')) || [];
       if (status === 200) {
-        const providersPromises = data.data_connections.map(async ({data_provider}) => {
+        const providersPromises = data_providers.map(async (data_provider) => {
           const token = tokens.find(token => token.data_provider_type === data_provider.data_provider_type);
           let was_used = false;
 
@@ -88,32 +110,7 @@ const PageParticipantConnection = () => {
           }
         });
         const providers = await Promise.all(providersPromises);
-        setProject(data);
         setDataProviders(providers);
-      }
-    });
-
-    response.on('4xx', (status, data) => {
-      switch (status) {
-        case 400:
-          // The project is not ready, we still get the project data
-          setProject(data);
-          break;
-        default:
-          showSnackbar(t(data.message.id), 'error');
-          break;
-      }
-    });
-
-  }, [projectShortId, showSnackbar, t]);
-
-
-  const fetchDataProvidersOAuth2Attrributes = useCallback(async () => {
-    const response = await PUBLIC_GET(`/projects/${projectShortId}/respondent/data-providers`);
-
-    response.on('2xx', (status, data) => {
-      if (status === 200) {
-        setDataProvidersOAuth2Attributes(data);
       }
     });
 
@@ -121,7 +118,7 @@ const PageParticipantConnection = () => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-  }, [projectShortId, showSnackbar, t]);
+  }, [project, projectShortId, showSnackbar, t]);
 
   useEffect(() => {
     if (localStorage.getItem('RespondentTempProjectId') !== projectShortId) {
@@ -131,13 +128,18 @@ const PageParticipantConnection = () => {
     localStorage.setItem('RespondentTempProjectId', projectShortId);
 
     fetchProject();
-    fetchDataProvidersOAuth2Attrributes();
 
-  }, [fetchProject, fetchDataProvidersOAuth2Attrributes, projectShortId]);
+  }, [fetchProject, projectShortId]);
+
+  useEffect(() => {
+    if (project) {
+      fetchOauthDataProviders();
+    }
+  }, [fetchOauthDataProviders, project]);
 
   const handleConnect = useCallback(async (data_provider_type) => {
     // find the authorize url for the data provider and redirect to it
-    const oauth2DataProvider = dataProvidersOAuth2Attributes.find(dp => dp.data_provider_type === data_provider_type);
+    const oauth2DataProvider = dataProviders.find(dp => dp.data_provider_type === data_provider_type);
 
     if (!oauth2DataProvider) {
       showSnackbar(t('ui.respondent.connection.error.data_provider_not_found'), 'error');
@@ -146,7 +148,7 @@ const PageParticipantConnection = () => {
 
     window.location.assign(oauth2DataProvider.authorize_url);
 
-  }, [dataProvidersOAuth2Attributes, showSnackbar, t]);
+  }, [dataProviders, showSnackbar, t]);
 
   const handleDisconnect = useCallback(async (data_provider_type) => {
     // only remove the token from the data provider and from the local storage
@@ -185,7 +187,8 @@ const PageParticipantConnection = () => {
 
     connect_response.on('2xx', async (_, data) => {
       const response_prepare = await PUBLIC_POST(`/projects/${projectShortId}/respondent/prepare-survey`, {
-        respondent_id: data.entity.id
+        respondent_id: data.entity.id,
+        frontend_variables: getEvents()
       });
 
       setPreparingSurvey(false);
@@ -194,6 +197,7 @@ const PageParticipantConnection = () => {
 
       response_prepare.on('2xx', (status, data) => {
         if (status === 200) {
+          resetEvents();
           setSurveyURL(data.entity.url);
           // wait 2 seconds and then redirect
           showSnackbar(t(data.message.id), 'success');
@@ -224,9 +228,9 @@ const PageParticipantConnection = () => {
     <Stack width={"100vw"} height={"100vh"} justifyContent={"center"} alignItems={"center"}>
       <Loading
         content={<Typography variant="body2">{t('ui.respondent.connection.loading')}</Typography>}
-        loading={!project || !dataProvidersOAuth2Attributes}
+        loading={!project || !dataProviders}
       >
-        {project && dataProvidersOAuth2Attributes && dataProvidersOAuth2Attributes.length > 0 &&
+        {project && dataProviders && dataProviders.length > 0 &&
           <CheckProjectReadiness project_ready={project.project_ready}>
             <LayoutMain
               header={
@@ -371,13 +375,14 @@ const UsedVariables = ({used_variables: initial_variables}) => {
 
   return used_variables && (
     <Box>
+      <ClickTracker details={{ type: 'click', id:"dds.dds.builtin.frontendactivity.open_transparency_table", time: new Date().toISOString() }}>
       <Stack direction="row" alignItems="center" onClick={() => setExpand(!expand)} sx={{cursor: 'pointer'}}>
         {expand ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
         <Typography variant="body1">
           {t('ui.respondent.connection.click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts')}
         </Typography>
-
       </Stack>
+      </ClickTracker>
       <Collapse in={expand}>
         <DataTable
           columns={[

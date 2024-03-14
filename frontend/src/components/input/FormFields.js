@@ -97,7 +97,9 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
   }, [fields]);
 
   const handleChange = useCallback((name, value) => {
+    console.log('Handling change:', name, value)
     let updatedFields = fields.map(field => field.name === name ? { ...field, value: value } : field);
+    console.log('Updated fields:', updatedFields)
     updatedFields = applyInteractionEffects(name, value, updatedFields);
     onChange(updatedFields);
   }, [fields, onChange, applyInteractionEffects]);
@@ -125,7 +127,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
             key={index}
             label={t(field.label)}
             value={field.value || ''}
-            onChange={(e) => handleChange(field.name, e.target.value)}
+            onChange={(value) => handleChange(field.name, value)}
             required={field.required}
             disabled={field.disabled}
             helperText={<HelperText text={t(field.helper_text)} url={field.data?.helper_url || ''} />}
@@ -137,7 +139,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
             key={index}
             label={t(field.label)}
             value={field.value || ''}
-            onChange={(e) => handleChange(field.name, e.target.value)}
+            onChange={(value) => handleChange(field.name, value)}
             required={field.required}
             disabled={field.disabled}
             multiline
