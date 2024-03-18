@@ -15,8 +15,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from ._common import get_project_data_connection
 from ..get_logger import get_logger
 from ..models import (Project, DataConnection, DataProviderName, DataProvider as DataProviderModel, Respondent,
-                     DataProviderAccess, Distribution, get_db)
-
+                     DataProviderAccess, Distribution, get_db, DataProviderType)
 from ..data_providers import DataProvider, OAuthDataProvider, TOAuthDataProviderClass
 from ..survey_platforms import SurveyPlatform
 
@@ -84,6 +83,8 @@ def get_public_project():
 
         variables_per_data_provider = DataProvider.get_used_variables(project_dict['variables'], project_dict['custom_variables'])
 
+        
+
         for data_connection in response_dict['data_connections']:
             provider_type = data_connection['data_provider']['data_provider_name']
             provider_class = DataProvider.get_class_by_value(provider_type)
@@ -100,7 +101,9 @@ def get_public_project():
             if not provider_instance.test_connection():
                 all_data_connections_connected = False
 
-        project_ready = all_data_connections_connected and survey_platform_connected and survey_active
+        has_oauth_data_providers = any(dc.data_provider.data_provider_type == DataProviderType.oauth for dc in project.data_connections)
+
+        project_ready = all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
         response_dict['project_ready'] = project_ready
         response_dict['used_variables'] = variables_per_data_provider
 
@@ -323,9 +326,23 @@ def prepare_survey():
                 data_provider.refresh_token = None
 
                 db.commit()
+           
+            frontend_data_providers = [dc for dc in project.data_connections if dc.data_provider.data_provider_type == DataProviderType.frontend]
+            for dc in frontend_data_providers:
+                data_provider_name = dc.data_provider.data_provider_name.value
 
-            
+                provider_class = DataProvider.get_class_by_value(data_provider_name)
+                provider_instance = provider_class()
 
+                print(f"frontend_variables: {frontend_variables}")
+
+                data_to_upload.update(provider_instance.calculate_variables(
+                    project_builtin_variables=project.variables,
+                    data=frontend_variables
+                )) 
+
+            logger.info(f"Data to upload: {data_to_upload}")
+        
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,
                 survey_platform_fields=project.survey_platform_fields,

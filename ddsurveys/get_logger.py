@@ -4,6 +4,7 @@
 Created on 2023-09-05 17:52
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 import logging

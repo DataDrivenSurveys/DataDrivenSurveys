@@ -79,7 +79,8 @@ def add_data_provider_to_project():
         if not data_provider:
             data_provider = DataProviderModel(
                 name=selected_data_provider["label"],
-                data_provider_name=DataProviderName(selected_data_provider["value"])
+                data_provider_name=DataProviderName(selected_data_provider["value"]),
+                data_provider_type=provider_class.provider_type
             )
             db.add(data_provider)
             db.commit()
@@ -120,7 +121,6 @@ def add_data_provider_to_project():
         data_connection = DataConnection(
             project_id=project.id,
             data_provider_name=data_provider.data_provider_name,
-            connected=status >= 200 and status < 300,
             fields=fields_dict
         )
 

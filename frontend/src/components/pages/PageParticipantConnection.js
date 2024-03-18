@@ -230,9 +230,10 @@ const PageParticipantConnection = () => {
         content={<Typography variant="body2">{t('ui.respondent.connection.loading')}</Typography>}
         loading={!project || !dataProviders}
       >
-        {project && dataProviders && dataProviders.length > 0 &&
+        {project && (
           <CheckProjectReadiness project_ready={project.project_ready}>
-            <LayoutMain
+            { dataProviders && dataProviders.length > 0 && (
+              <LayoutMain
               header={
                 <Stack direction="row" alignItems="center" justifyContent={"center"}>
                   <Typography variant="h5" style={{whiteSpace: 'nowrap'}}><b>{project.survey_name}</b></Typography>
@@ -356,8 +357,10 @@ const PageParticipantConnection = () => {
 
               </Stack>
             </LayoutMain>
+            )}
           </CheckProjectReadiness>
-        }</Loading>
+        )}
+        </Loading>
     </Stack>
   )
 }

@@ -4,6 +4,7 @@
 Created on 2023-05-08 12:09
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 import sys

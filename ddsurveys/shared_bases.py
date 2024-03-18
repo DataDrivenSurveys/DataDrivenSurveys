@@ -4,6 +4,7 @@
 Created on 2023-09-05 18:07
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from __future__ import annotations
 from copy import deepcopy

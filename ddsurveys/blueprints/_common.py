@@ -31,6 +31,7 @@ Examples:
 Created on 2023-09-08 13:52
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 __all__ = ["get_researcher", "get_project", "get_project_data_connection"]
 

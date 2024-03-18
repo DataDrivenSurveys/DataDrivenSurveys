@@ -4,6 +4,7 @@
 Created on 2023-05-23 14:01
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from __future__ import annotations
 import traceback
@@ -285,6 +286,56 @@ class FrontendDataProvider(DataProvider):
 
     # Class attributes that need be redeclared or redefined in child classes
     provider_type: str = "frontend"
+
+     # Standard class methods go here
+    def __init__(self, **kwargs):
+       
+        super().__init__(**kwargs)
+       
+
+    def test_connection(self) -> bool:
+        return True
+
+    def get_variable_value(self, data: Dict[str, Any], variable: Dict[str, Any]) -> TVariableValue:
+
+        name = variable['name']
+        category = variable['category']
+        qualified_name = variable['qualified_name']
+        
+        if qualified_name in self._variable_values:
+            return self._variable_values[qualified_name]
+
+        data_category_class = self.get_data_category(category.lower())
+
+        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+
+        if data_category_class is None:
+            raise ValueError(f"Data category '{category}' not found")
+
+        variable_func = data_category_class.get_builtin_variable_by_name(name).extractor_func
+
+        if variable_func:
+            value = variable_func(
+                variable=variable,
+                data=data
+            )
+            return value
+        else:
+            raise ValueError(f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                             f"function to build a function for '{name}'")
+
+    
+    def calculate_variables(self, project_builtin_variables: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+        select_relevant_variables = self.select_relevant_variables(project_builtin_variables)
+        calculated_variables = {}
+        for variable in select_relevant_variables:
+            value = self.get_variable_value(data, variable)
+            exists = value is not None
+            if exists:
+                calculated_variables[variable['qualified_name']] = value
+            calculated_variables[f"{variable['qualified_name']}_exists"] = exists
+
+        return calculated_variables
 
     
 

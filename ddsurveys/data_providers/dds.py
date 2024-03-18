@@ -4,6 +4,7 @@
 Created on 2023-08-31 16:59
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 __all__ = "FitbitDataProvider"
@@ -13,12 +14,10 @@ from datetime import datetime
 from typing import Callable, Dict, Any
 from functools import cached_property
 
-import requests
-
 from ..get_logger import get_logger
 from .bases import FrontendDataProvider, FormTextBlock
 from .variables import CVAttribute, BuiltInVariable, BuiltInVariable
-from ..variable_types import TVariableFunction, VariableDataType
+from ..variable_types import TVariableValue, VariableDataType
 from .data_categories import DataCategory
 
 logger = get_logger(__name__)
@@ -34,6 +33,7 @@ class FrontendActivity(DataCategory):
             data_type=VariableDataType.TEXT,
             test_value_placeholder="Yes",
             info="This variable reflects access to the transparency table, set to 'Yes' if accessed and 'No' otherwise.",
+            extractor_func=lambda variable, data: "Yes" if variable['qualified_name'] in data and data[variable['qualified_name']]["count"] > 0 else "No",
             data_origin=[{
                 "documentation":"Monitored by the frontend application."
             }]
@@ -60,12 +60,7 @@ class DDSDataProvider(FrontendDataProvider):
         FrontendActivity
     ]
 
-    # Standard class methods go here
-    def __init__(self, **kwargs):
-       
-        super().__init__(**kwargs)
-       
-
-    def test_connection(self) -> bool:
-        return True
+   
+    
+    
 
