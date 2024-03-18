@@ -62,8 +62,8 @@ const CVEditor = ({project, data: initial, onChange}) => {
     fetchDataCategories();
     setDataProviders(project?.data_connections.map(dc => ({
       label: dc.data_provider.name,
-      value: dc.data_provider_type,
-      icon: <Logo name={dc.data_provider_type} size={18}/>
+      value: dc.data_provider_name,
+      icon: <Logo name={dc.data_provider_name} size={18}/>
     })));
   }, [fetchFilterOperators, fetchDataCategories, project]);
 
@@ -139,7 +139,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
           (
             <DropDown
               label={t('ui.project.custom_variable.data_category.label')}
-              items={dataCategories.filter(dc => dc.data_provider_type === selectedDataProvider.label)}
+              items={dataCategories.filter(dc => dc.data_provider_name === selectedDataProvider.label)}
               value={selectedDataCategory?.value}
               onChange={(e) => {
                 const dc = dataCategories.find(dc => dc.value === e.target.value);

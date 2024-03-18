@@ -14,9 +14,8 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ._common import get_project_data_connection
 from ..get_logger import get_logger
-from ..models import (Project, DataConnection, DataProviderType, DataProvider as DataProviderModel, Respondent,
-                     DataProviderAccess, Distribution, get_db)
-
+from ..models import (Project, DataConnection, DataProviderName, DataProvider as DataProviderModel, Respondent,
+                     DataProviderAccess, Distribution, get_db, DataProviderType)
 from ..data_providers import DataProvider, OAuthDataProvider, TOAuthDataProviderClass
 from ..survey_platforms import SurveyPlatform
 
@@ -84,12 +83,14 @@ def get_public_project():
 
         variables_per_data_provider = DataProvider.get_used_variables(project_dict['variables'], project_dict['custom_variables'])
 
+        
+
         for data_connection in response_dict['data_connections']:
-            provider_type = data_connection['data_provider']['data_provider_type']
+            provider_type = data_connection['data_provider']['data_provider_name']
             provider_class = DataProvider.get_class_by_value(provider_type)
 
             project_data_connections = project_dict["data_connections"]
-            project_data_connection = next((dc for dc in project_data_connections if dc["data_provider"]["data_provider_type"] == provider_type), None)
+            project_data_connection = next((dc for dc in project_data_connections if dc["data_provider"]["data_provider_name"] == provider_type), None)
 
             if not project_data_connection:
                 all_data_connections_connected = False
@@ -100,7 +101,9 @@ def get_public_project():
             if not provider_instance.test_connection():
                 all_data_connections_connected = False
 
-        project_ready = all_data_connections_connected and survey_platform_connected and survey_active
+        has_oauth_data_providers = any(dc.data_provider.data_provider_type == DataProviderType.oauth for dc in project.data_connections)
+
+        project_ready = all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
         response_dict['project_ready'] = project_ready
         response_dict['used_variables'] = variables_per_data_provider
 
@@ -124,19 +127,20 @@ def get_public_data_providers():
         # Get all data providers linked to the project.
         data_providers = []
         for data_connection in project.data_connections:
+        
             data_provider = data_connection.data_provider
 
-            provider_class: TOAuthDataProviderClass = DataProvider.get_class_by_value(data_provider.data_provider_type.value)
-            provider_instance: OAuthDataProvider = provider_class(**data_connection.fields)
+            cunstructor_fields = data_connection.fields
+            cunstructor_fields["builtin_variables"] = project.variables
+            cunstructor_fields["custom_variables"] = project.custom_variables
 
-            # Include data_connection.fields in the data provider dictionary.
-            authorize_url = provider_instance.get_authorize_url(project.variables, project.custom_variables)
-            data_providers.append({
-                'data_provider_type': data_provider.data_provider_type.value,
-                'client_id': provider_instance.get_client_id(),
-                # 'redirect_url': provider_class.get_redirect_uri(),
-                'authorize_url': authorize_url,
-            })
+            provider_class: TOAuthDataProviderClass = DataProvider.get_class_by_value(data_provider.data_provider_name.value)
+            provider_instance: OAuthDataProvider = provider_class(**cunstructor_fields)
+        
+            dp_public_dict = provider_instance.to_public_dict()
+            if dp_public_dict['type'] == 'oauth':
+                # Include data_connection.fields in the data provider dictionary.
+                data_providers.append(dp_public_dict)
 
         return jsonify(data_providers), 200
 
@@ -152,7 +156,7 @@ def exchange_code_for_tokens():
 
         data = request.get_json()
 
-        data_provider_type = data.get('data_provider_type')
+        data_provider_name = data.get('data_provider_name')
 
         project_short_id = g.get('project_short_id')
 
@@ -164,16 +168,16 @@ def exchange_code_for_tokens():
             return jsonify({"message": {"id": "api.projects.not_found", "text": "Project not found"}}), 404
 
         # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
-        project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_type.value == data_provider_type), None)
+        project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_name.value == data_provider_name), None)
 
         if not project_data_connection:
-            logger.error(f"No data connection for data provider: {data_provider_type}")
+            logger.error(f"No data connection for data provider: {data_provider_name}")
             return jsonify({"message": {"id": "api.data_provider.not_found", "text": "Data provider not found"}}), 404
 
         try:
             # Create an instance of the data provider
             provider_class = DataProvider.get_class_by_value(
-                project_data_connection.data_provider.data_provider_type.value)
+                project_data_connection.data_provider.data_provider_name.value)
             provider_instance: OAuthDataProvider = provider_class(**project_data_connection.fields)
 
             # Exchange the code for an access token
@@ -182,18 +186,18 @@ def exchange_code_for_tokens():
             response = provider_instance.request_token(data['code'])
 
             if response['success']:
-                logger.info(f"Successfully exchanged code for tokens for: {data_provider_type}")
+                logger.info(f"Successfully exchanged code for tokens for: {data_provider_name}")
                 return jsonify({
                     "message": {"id": "api.data_provider.exchange_code_success", "text": "Successfully exchanged code for tokens"},
                     "entity": response,
                 }), 200
             else:
-                logger.error(f"Error exchanging code for tokens for: {data_provider_type}")
+                logger.error(f"Error exchanging code for tokens for: {data_provider_name}")
                 return jsonify({
                     "message": {"id": response['message_id'], "text": "Full scope not granted"},
                 }), 500
         except Exception as e:
-            logger.error(f"Error exchanging code for tokens for: {data_provider_type}")
+            logger.error(f"Error exchanging code for tokens for: {data_provider_name}")
             return jsonify({
                 "message": {"id": "api.data_provider.exchange_code_error", "text": "Error exchanging code for tokens"},
             }), 500
@@ -213,13 +217,13 @@ def was_data_provider_used():
 
         data = request.get_json()
 
-        data_provider_type = DataProviderType(data.get('data_provider_type'))  # Converting the string to Enum.
+        data_provider_name = DataProviderName(data.get('data_provider_name'))  # Converting the string to Enum.
 
         user_id = data.get('user_id')
 
         data_provider_access = db.query(DataProviderAccess).filter(
             DataProviderAccess.project_id == project.id,
-            DataProviderAccess.data_provider_type == data_provider_type,
+            DataProviderAccess.data_provider_name == data_provider_name,
             DataProviderAccess.user_id == user_id
         ).first()
 
@@ -244,6 +248,7 @@ def prepare_survey():
             data = request.get_json()
 
             respondent_id = data.get('respondent_id')
+            frontend_variables = data.get('frontend_variables')
 
             if not respondent_id:
                 logger.error(f"Missing respondent id.")
@@ -284,26 +289,26 @@ def prepare_survey():
                 logger.error(f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info.")
                 return jsonify({"message": {"id": "api.survey.not_active", "text": "Survey not not active"}}), 404
 
-            data_providers = respondent.data_provider_accesses
+            oauth_data_providers = respondent.data_provider_accesses
 
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            for data_provider in data_providers:
+            for data_provider in oauth_data_providers:
 
-                data_provider_type = data_provider.data_provider_type.value
+                data_provider_name = data_provider.data_provider_name.value
                 access_token = data_provider.access_token
                 refresh_token = data_provider.refresh_token
 
                 if not access_token:
-                    logger.error(f"Missing access token for data provider: {data_provider_type}")
+                    logger.error(f"Missing access token for data provider: {data_provider_name}")
                     return jsonify({"message": {"id": "api.data_provider.missing_tokens", "text": "Missing data provider tokens"}}), 400
 
                 # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
-                project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_type.value == data_provider_type), None)
+                project_data_connection = next((dc for dc in project.data_connections if dc.data_provider.data_provider_name.value == data_provider_name), None)
 
                 if not project_data_connection:
-                    logger.error(f"Data provider not found: {data_provider_type}")
+                    logger.error(f"Data provider not found: {data_provider_name}")
                     return jsonify({"message": {"id": "api.data_provider.not_found", "text": "Data provider not found"}}), 404
 
                 fields = project_data_connection.fields
@@ -313,7 +318,7 @@ def prepare_survey():
                     'refresh_token': refresh_token
                 })
 
-                user_data_provider = DataProvider.get_class_by_value(data_provider_type)(**fields)
+                user_data_provider = DataProvider.get_class_by_value(data_provider_name)(**fields)
                 data_to_upload.update(user_data_provider.calculate_variables(project.variables, project.custom_variables))
 
                 # set the data provider access tokens to Null
@@ -321,7 +326,23 @@ def prepare_survey():
                 data_provider.refresh_token = None
 
                 db.commit()
+           
+            frontend_data_providers = [dc for dc in project.data_connections if dc.data_provider.data_provider_type == DataProviderType.frontend]
+            for dc in frontend_data_providers:
+                data_provider_name = dc.data_provider.data_provider_name.value
 
+                provider_class = DataProvider.get_class_by_value(data_provider_name)
+                provider_instance = provider_class()
+
+                print(f"frontend_variables: {frontend_variables}")
+
+                data_to_upload.update(provider_instance.calculate_variables(
+                    project_builtin_variables=project.variables,
+                    data=frontend_variables
+                )) 
+
+            logger.info(f"Data to upload: {data_to_upload}")
+        
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,
                 survey_platform_fields=project.survey_platform_fields,
@@ -365,7 +386,7 @@ def prepare_survey():
         return jsonify({"message": {"id": "api.respondent.survey.error", "text": "Error preparing survey"}}), 500
 
 
-def check_data_provider_access_tokens(project_id, data_provider_type, access_token, refresh_token):
+def check_data_provider_access_tokens(project_id, data_provider_name, access_token, refresh_token):
     with get_db() as db:
         # Get project and its associated data connections.
         project = db.query(Project).get(project_id)
@@ -374,14 +395,14 @@ def check_data_provider_access_tokens(project_id, data_provider_type, access_tok
             return False
 
         data_connection = db.query(DataConnection).filter_by(
-            project_id=project_id, data_provider_type=data_provider_type
+            project_id=project_id, data_provider_name=data_provider_name
         ).first()
 
         if not data_connection:
-            logger.debug(f"Data connection not found for: {data_provider_type}")
+            logger.debug(f"Data connection not found for: {data_provider_name}")
             return False
 
-        data_provider_type = data_connection.data_provider.data_provider_type.value
+        data_provider_name = data_connection.data_provider.data_provider_name.value
 
         fields = data_connection.fields
 
@@ -390,10 +411,10 @@ def check_data_provider_access_tokens(project_id, data_provider_type, access_tok
             'refresh_token': refresh_token
         })
 
-        provider_class = DataProvider.get_class_by_value(data_provider_type)
+        provider_class = DataProvider.get_class_by_value(data_provider_name)
 
         if not provider_class:
-            logger.error(f"Data provider type not found: {data_provider_type}")
+            logger.error(f"Data provider type not found: {data_provider_name}")
             return False
 
         user_data_provider: OAuthDataProvider = provider_class(**fields)
@@ -427,12 +448,12 @@ def connect_respondent():
         respondent = None
 
         for data in data_providers:
-            data_provider_type = DataProviderType(data.get('data_provider_type'))  # Converting the string to Enum.
+            data_provider_name = DataProviderName(data.get('data_provider_name'))  # Converting the string to Enum.
 
             # Get the data provider
-            data_provider = db.query(DataProviderModel).get(data_provider_type)
+            data_provider = db.query(DataProviderModel).get(data_provider_name)
             if not data_provider:
-                logger.warning(f"Data provider not found: {data_provider_type}")
+                logger.warning(f"Data provider not found: {data_provider_name}")
                 return jsonify({"message": {"id": "api.data_provider.not_found", "text": "Data provider not found"}}), 404
 
             token = data.get('token')
@@ -441,22 +462,22 @@ def connect_respondent():
             access_token = token.get('access_token')
             refresh_token = token.get('refresh_token')
 
-            if not check_data_provider_access_tokens(project.id, data_provider_type, access_token, refresh_token):
-                logger.error(f"Invalid token for data provider: {data_provider_type}")
+            if not check_data_provider_access_tokens(project.id, data_provider_name, access_token, refresh_token):
+                logger.error(f"Invalid token for data provider: {data_provider_name}")
                 return jsonify({"message": {"id": "api.data_provider.invalid_tokens", "text": "Invalid token"}}), 400
 
             # Check if DataProviderAccess exists
             existing_data_provider_access = db.query(DataProviderAccess).filter_by(
                 user_id=user_id,
                 project_id=project.id,
-                data_provider_type=data_provider_type
+                data_provider_name=data_provider_name
             ).first()
 
             if existing_data_provider_access:
                 existing_data_provider_accesses.append(existing_data_provider_access)
             else:
                 new_data_provider_access = DataProviderAccess(
-                    data_provider_type=data_provider_type,
+                    data_provider_name=data_provider_name,
                     user_id=user_id,
                     project_id=project.id,
                     access_token=access_token,

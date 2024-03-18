@@ -4,6 +4,7 @@
 Created on 2023-05-02 16:38
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from collections import OrderedDict
 from copy import deepcopy

@@ -6,6 +6,7 @@ and Data types used for variables.
 Created on 2023-08-31 16:54
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 __all__ = [
     # Type and TypeVar exports

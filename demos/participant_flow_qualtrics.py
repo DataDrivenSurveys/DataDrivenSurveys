@@ -4,6 +4,7 @@
 Created on 2023-06-06 15:10
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from ddsurveys.survey_platforms.qualtrics.api import DistributionsAPI
 

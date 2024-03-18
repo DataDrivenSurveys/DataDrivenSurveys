@@ -4,6 +4,7 @@
 Created on 2023-04-26 12:18
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 
 References
 ----------

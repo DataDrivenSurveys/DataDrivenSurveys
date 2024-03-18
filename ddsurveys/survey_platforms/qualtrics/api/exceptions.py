@@ -4,6 +4,7 @@
 Created on 2023-04-27 16:02
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from flask import current_app
 from requests import Response

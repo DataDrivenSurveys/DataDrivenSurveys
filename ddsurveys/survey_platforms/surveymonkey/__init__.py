@@ -4,6 +4,7 @@
 Created on 2023-10-31 13:53
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import os
 import uuid

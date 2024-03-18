@@ -98,7 +98,7 @@ def generate_custom_variables(data_provider: str = "fitbit"):
                 "category.")
 
         custom_var["data_category"] = custom_var["value"]
-        custom_var["data_provider"] = custom_var["data_provider_type"].lower()
+        custom_var["data_provider"] = custom_var["data_provider_name"].lower()
         custom_var["type"] = "Custom"
         custom_var["enabled"] = True
 
@@ -116,7 +116,7 @@ def generate_custom_variables(data_provider: str = "fitbit"):
         }
 
         del custom_var["value"]
-        del custom_var["data_provider_type"]
+        del custom_var["data_provider_name"]
         del custom_var["label"]
 
     return project_custom_variables

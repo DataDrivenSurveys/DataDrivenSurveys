@@ -4,6 +4,7 @@
 Created on 2023-06-05 14:42
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import functools
 from datetime import date

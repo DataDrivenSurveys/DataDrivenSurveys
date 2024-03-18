@@ -4,6 +4,7 @@
 Created on 2023-05-23 14:01
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from __future__ import annotations
 import traceback
@@ -14,7 +15,7 @@ from typing import Dict, Any, Type, TypeVar
 
 from ..get_logger import get_logger
 from ..shared_bases import UIRegistry
-from ..shared_bases import FormField as BaseFormField
+from ..shared_bases import FormField as BaseFormField, FormTextBlock as BaseFormTextBlock
 from ..variable_types import TVariableValue
 
 from .variables import CustomVariable
@@ -59,7 +60,7 @@ class DataProvider(UIRegistry):
     # General class attributes
     base_name: str = "DataProvider"
     # attrs_to_unwrangle: list[str] = [""]
-    registry_exclude: list[str] = ["DataProvider", "OAuthDataProvider"]
+    registry_exclude: list[str] = ["DataProvider", "OAuthDataProvider", "FrontendDataProvider"]
     _package = __package__
 
     # Do not override the following attributes
@@ -74,8 +75,10 @@ class DataProvider(UIRegistry):
     # cls_form_fields: dict[str, list[FormField]] = None
 
     # The following attributes (normally) do not need to be redeclared in child classes
+    app_required: bool = True
     name: str = ""
     name_lower: str = ""
+    provider_type: str = "generic"
     label: str = ""
     instructions: str = ""
     instructions_helper_url: str = ""
@@ -119,8 +122,13 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_builtin_variables(cls) -> list[dict[str, str]]:
-        data_cats = cls.get_data_categories()
-        return [item for cat in data_cats for item in cat["builtin_variables"]]
+        data_cats = cls.get_data_categories()        
+        # Include the provider_type in each builtin variable dictionary
+        return [
+            {**item, "provider_type": cls.provider_type} 
+            for cat in data_cats 
+            for item in cat["builtin_variables"]
+        ]
 
     # Instance properties
 
@@ -137,6 +145,281 @@ class DataProvider(UIRegistry):
         """
         return [variable for variable in variables
                 if variable.get("enabled", False) and (variable["data_provider"] == self.name_lower)]
+
+    
+
+    @staticmethod
+    def get_used_variables(project_builtin_variables=None, project_custom_variables=None):
+        """
+        Returns a list of dicts containing the name and description of the project enabled variables
+        Used by the respondent page to display the variables used in the project
+        """
+        used_variables = []
+
+        for variable in (project_builtin_variables or []):
+            if variable.get("enabled", False):
+                used_variables.append({
+                    "data_provider": variable.get('data_provider', ''),
+                    "variable_name": variable.get('qualified_name', ''),
+                    "description": variable['description'],
+                    "data_origin": variable.get('data_origin', []),
+                    "type": "Builtin"
+                })
+
+        for variable in (project_custom_variables or []):
+            if variable.get("enabled", False):
+                custom_variable = CustomVariable(data_provider=None, custom_variable=variable)
+                cv_dict = custom_variable.to_dict()
+                used_variables.append({
+                    "data_provider": variable.get('data_provider', ''),
+                    "variable_name": cv_dict.get('qualified_name', ''),
+                    "data": cv_dict,
+                    "data_origin": cv_dict.get('data_category', {}).get('data_origin', []),
+                    "type": "Custom"
+                })
+
+        # order by data provider type
+        used_variables = sorted(used_variables, key=lambda v: v['data_provider'])
+
+        return used_variables
+
+    @classmethod
+    def get_data_category(cls, data_category_name: str) -> DataCategory:
+        return cls._all_data_categories[cls.name][data_category_name]
+
+    @classmethod
+    def get_data_categories(cls) -> list[Dict[str, Any]]:
+        data_categories_dicts = [cat.to_dict() for cat in cls.data_categories]
+        for dct in data_categories_dicts:
+            dct['data_provider_name'] = cls.name
+
+            # Updating the builtin variables' names
+            for variable in dct["builtin_variables"]:
+                category_name = variable["category"].lower()
+                variable_name = variable["name"]
+                # Check if variable is indexed
+                if variable.get("is_indexed_variable", False) and "index" in variable:
+                    index = variable["index"]
+                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}[{index}]"
+                else:
+                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}"
+
+                variable["qualified_name"] = qualified_name
+                variable["data_provider"] = cls.name.lower()
+                variable["type"] = "Builtin"
+
+            # sort the builtin variables by updated name
+            dct["builtin_variables"] = sorted(dct["builtin_variables"], key=lambda v: v["name"])
+
+        return data_categories_dicts
+
+    @classmethod
+    def get_all_data_categories(cls) -> list[dict[str, str]]:
+        subclass: TDataProviderClass
+        categories = [
+            item
+            for subclass in cls.registry.get("DataProvider").values()
+            for item in subclass.get_data_categories()
+        ]
+        return sorted(categories, key=lambda dp: (dp['data_provider_name'], dp['label']))
+
+    @classmethod
+    def get_all_form_fields(cls) -> list[dict[str, Any]]:
+        registry = cls.get_registry()
+
+        result = []
+
+        subclass: UIRegistry
+        for subclass in registry.values():
+            # item = {
+            #     "label": subclass.label,
+            #     "value": subclass.name_lower,
+            #     "instructions": subclass.instructions,
+            #     "instructions_helper_url": subclass.instructions_helper_url,
+            #     "fields": subclass.get_fields()
+            # }
+
+            item = subclass.to_dict()
+            item["app_required"] = subclass.app_required
+
+            if hasattr(subclass, "get_redirect_uri"):
+                item["oauth2"] = {
+                    "redirect_uri": subclass.get_redirect_uri()
+                }
+
+            result.append(item)
+
+        return result
+
+    # Methods that child classes must implement
+    @abstractmethod
+    def test_connection_before_extraction(self) -> bool:
+        pass
+
+    @abstractmethod
+    def test_connection(self) -> bool:
+        pass
+
+    def to_public_dict(self) -> dict[str, Any]:
+        return {
+            'data_provider_name':self.name_lower,
+            'type': self.provider_type,
+        }
+
+
+    # Properties to access class attributes
+
+    # Class methods
+
+    # Instance properties
+
+    # Instance methods
+
+    # Cached API responses
+    # API calls should be wrapped in properties using @cached_property decorators
+
+    # Extractor functions
+    # These are functions that extract user data from the API
+
+
+class FrontendDataProvider(DataProvider):
+
+    # Class attributes that need be redeclared or redefined in child classes
+    provider_type: str = "frontend"
+
+     # Standard class methods go here
+    def __init__(self, **kwargs):
+       
+        super().__init__(**kwargs)
+       
+
+    def test_connection(self) -> bool:
+        return True
+
+    def get_variable_value(self, data: Dict[str, Any], variable: Dict[str, Any]) -> TVariableValue:
+
+        name = variable['name']
+        category = variable['category']
+        qualified_name = variable['qualified_name']
+        
+        if qualified_name in self._variable_values:
+            return self._variable_values[qualified_name]
+
+        data_category_class = self.get_data_category(category.lower())
+
+        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+
+        if data_category_class is None:
+            raise ValueError(f"Data category '{category}' not found")
+
+        variable_func = data_category_class.get_builtin_variable_by_name(name).extractor_func
+
+        if variable_func:
+            value = variable_func(
+                variable=variable,
+                data=data
+            )
+            return value
+        else:
+            raise ValueError(f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                             f"function to build a function for '{name}'")
+
+    
+    def calculate_variables(self, project_builtin_variables: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
+        select_relevant_variables = self.select_relevant_variables(project_builtin_variables)
+        calculated_variables = {}
+        for variable in select_relevant_variables:
+            value = self.get_variable_value(data, variable)
+            exists = value is not None
+            if exists:
+                calculated_variables[variable['qualified_name']] = value
+            calculated_variables[f"{variable['qualified_name']}_exists"] = exists
+
+        return calculated_variables
+
+    
+
+
+class OAuthDataProvider(DataProvider):
+    # General class attributes
+    # These attributes need to be overridden
+    token_url: str = ""
+    revoke_url: str = ""
+    base_authorize_url: str = ""
+
+    # Class attributes that need be redeclared or redefined in child classes
+    provider_type: str = "oauth"
+
+    _scopes: list[str] = []
+    _categories_scopes: dict[str, str] = {}
+
+    def __init__(self, client_id: str = None, client_secret: str = None,
+                 access_token: str = None, refresh_token: str = None, builtin_variables: list[dict] = None, custom_variables: list[dict] = None):
+        super().__init__()
+        self.client_id: str = client_id
+        self.client_secret: str = client_secret
+        self.access_token: str = access_token
+        self.refresh_token: str = refresh_token
+        self._authorize_url: str = ""
+        self._required_scopes: list[str] = []
+
+        self.api_client = None
+        self.oauth_client = None
+
+        self.builtin_variables = builtin_variables
+        self.custom_variables = custom_variables
+
+
+
+    @classmethod
+    def get_redirect_uri(cls) -> str:
+        # TODO: avoid using environment variables.
+        frontend_url = os.getenv("FRONTEND_URL")
+        return f"{frontend_url}/dist/redirect/{cls.name_lower}"
+    
+    def to_public_dict(self) -> dict:
+        # Now requires context data to generate the authorize_url
+        authorize_url = self.get_authorize_url(
+            builtin_variables=self.builtin_variables,
+            custom_variables=self.custom_variables
+        )
+        return {
+            **super().to_public_dict(),
+            "client_id": self.client_id,
+            "authorize_url": authorize_url,
+        }
+
+    # Instance properties
+    @property
+    def required_scopes(self) -> list[str]:
+        return self._required_scopes
+
+    @required_scopes.setter
+    def required_scopes(self, scopes: list[str]):
+        self._required_scopes = scopes
+
+    # Instance methods
+    def get_required_scopes(self, builtin_variables: list[dict] = None,
+                            custom_variables: list[dict] = None) -> list[str]:
+        if len(self.required_scopes) > 0:
+            return self.required_scopes
+
+        if builtin_variables is None:
+            builtin_variables = []
+        if custom_variables is None:
+            custom_variables = []
+
+        builtin_variables = self.select_relevant_variables(builtin_variables)
+        custom_variables = self.select_relevant_variables(custom_variables)
+
+        required_scopes = {self._categories_scopes[v["category"]] for v in builtin_variables}
+
+        required_scopes.union({self._categories_scopes[v["data_category"]] for v in custom_variables})
+
+        required_scopes = list(required_scopes)
+
+        self.required_scopes = required_scopes
+        return required_scopes
 
     def calculate_variables(self,
                             project_builtin_variables: list[dict],
@@ -189,6 +472,8 @@ class DataProvider(UIRegistry):
 
         data_category_class = self.get_data_category(category.lower())
 
+        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+
         if data_category_class is None:
             raise ValueError(f"Data category '{category}' not found")
 
@@ -205,194 +490,6 @@ class DataProvider(UIRegistry):
             raise ValueError(f"'{self.__class__.__name__}' object does not have a defined function or a factory "
                              f"function to build a function for '{name}'")
 
-    @staticmethod
-    def get_used_variables(project_builtin_variables=None, project_custom_variables=None):
-        """
-        Returns a list of dicts containing the name and description of the project enabled variables
-        Used by the respondent page to display the variables used in the project
-        """
-        used_variables = []
-
-        for variable in (project_builtin_variables or []):
-            if variable.get("enabled", False):
-                used_variables.append({
-                    "data_provider": variable.get('data_provider', ''),
-                    "variable_name": variable.get('qualified_name', ''),
-                    "description": variable['description'],
-                    "data_origin": variable.get('data_origin', []),
-                    "type": "Builtin"
-                })
-
-        for variable in (project_custom_variables or []):
-            if variable.get("enabled", False):
-                custom_variable = CustomVariable(data_provider=None, custom_variable=variable)
-                cv_dict = custom_variable.to_dict()
-                used_variables.append({
-                    "data_provider": variable.get('data_provider', ''),
-                    "variable_name": cv_dict.get('qualified_name', ''),
-                    "data": cv_dict,
-                    "data_origin": cv_dict.get('data_category', {}).get('data_origin', []),
-                    "type": "Custom"
-                })
-
-        # order by data provider type
-        used_variables = sorted(used_variables, key=lambda v: v['data_provider'])
-
-        return used_variables
-
-    @classmethod
-    def get_data_category(cls, data_category_name: str) -> DataCategory:
-        return cls._all_data_categories[cls.name][data_category_name]
-
-    @classmethod
-    def get_data_categories(cls) -> list[Dict[str, Any]]:
-        data_categories_dicts = [cat.to_dict() for cat in cls.data_categories]
-        for dct in data_categories_dicts:
-            dct['data_provider_type'] = cls.name
-
-            # Updating the builtin variables' names
-            for variable in dct["builtin_variables"]:
-                category_name = variable["category"].lower()
-                variable_name = variable["name"]
-                # Check if variable is indexed
-                if variable.get("is_indexed_variable", False) and "index" in variable:
-                    index = variable["index"]
-                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}[{index}]"
-                else:
-                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}"
-
-                variable["qualified_name"] = qualified_name
-                variable["data_provider"] = cls.name.lower()
-                variable["type"] = "Builtin"
-
-            # sort the builtin variables by updated name
-            dct["builtin_variables"] = sorted(dct["builtin_variables"], key=lambda v: v["name"])
-
-        return data_categories_dicts
-
-    @classmethod
-    def get_all_data_categories(cls) -> list[dict[str, str]]:
-        subclass: TDataProviderClass
-        categories = [
-            item
-            for subclass in cls.registry.get("DataProvider").values()
-            for item in subclass.get_data_categories()
-        ]
-        return sorted(categories, key=lambda dp: (dp['data_provider_type'], dp['label']))
-
-    @classmethod
-    def get_all_form_fields(cls) -> list[dict[str, Any]]:
-        registry = cls.get_registry()
-
-        result = []
-
-        subclass: UIRegistry
-        for subclass in registry.values():
-            # item = {
-            #     "label": subclass.label,
-            #     "value": subclass.name_lower,
-            #     "instructions": subclass.instructions,
-            #     "instructions_helper_url": subclass.instructions_helper_url,
-            #     "fields": subclass.get_fields()
-            # }
-
-            item = subclass.to_dict()
-
-            if hasattr(subclass, "get_redirect_uri"):
-                item["oauth2"] = {
-                    "redirect_uri": subclass.get_redirect_uri()
-                }
-
-            result.append(item)
-
-        return result
-
-    # Methods that child classes must implement
-    @abstractmethod
-    def test_connection_before_extraction(self) -> bool:
-        pass
-
-    @abstractmethod
-    def test_connection(self) -> bool:
-        pass
-
-
-    # Properties to access class attributes
-
-    # Class methods
-
-    # Instance properties
-
-    # Instance methods
-
-    # Cached API responses
-    # API calls should be wrapped in properties using @cached_property decorators
-
-    # Extractor functions
-    # These are functions that extract user data from the API
-
-
-class OAuthDataProvider(DataProvider):
-    # General class attributes
-    # These attributes need to be overridden
-    token_url: str = ""
-    revoke_url: str = ""
-    base_authorize_url: str = ""
-
-    _scopes: list[str] = []
-    _categories_scopes: dict[str, str] = {}
-
-    def __init__(self, client_id: str = None, client_secret: str = None,
-                 access_token: str = None, refresh_token: str = None, **kwargs):
-        super().__init__()
-        self.client_id: str = client_id
-        self.client_secret: str = client_secret
-        self.access_token: str = access_token
-        self.refresh_token: str = refresh_token
-        self._authorize_url: str = ""
-        self._required_scopes: list[str] = []
-
-        self.api_client = None
-        self.oauth_client = None
-
-
-    @classmethod
-    def get_redirect_uri(cls) -> str:
-        # TODO: avoid using environment variables.
-        frontend_url = os.getenv("FRONTEND_URL")
-        return f"{frontend_url}/dist/redirect/{cls.name_lower}"
-
-    # Instance properties
-    @property
-    def required_scopes(self) -> list[str]:
-        return self._required_scopes
-
-    @required_scopes.setter
-    def required_scopes(self, scopes: list[str]):
-        self._required_scopes = scopes
-
-    # Instance methods
-    def get_required_scopes(self, builtin_variables: list[dict] = None,
-                            custom_variables: list[dict] = None) -> list[str]:
-        if len(self.required_scopes) > 0:
-            return self.required_scopes
-
-        if builtin_variables is None:
-            builtin_variables = []
-        if custom_variables is None:
-            custom_variables = []
-
-        builtin_variables = self.select_relevant_variables(builtin_variables)
-        custom_variables = self.select_relevant_variables(custom_variables)
-
-        required_scopes = {self._categories_scopes[v["category"]] for v in builtin_variables}
-
-        required_scopes.union({self._categories_scopes[v["data_category"]] for v in custom_variables})
-
-        required_scopes = list(required_scopes)
-
-        self.required_scopes = required_scopes
-        return required_scopes
 
     # Methods that child classes must implement
     @abstractmethod
@@ -451,3 +548,20 @@ class FormField(BaseFormField):
     _registry_class_name: str = ""  # No need to set this manually.
 
 
+
+class FormTextBlock(BaseFormTextBlock):
+    """This class is used to declare text blocks that a data provider needs to be filled when it is added in the UI.
+
+    Attributes:
+        content (str):
+            The content of the text block.
+        type (str):
+            The type of the text block.
+            Allowed values are: "text"
+    """
+    shared_prefix_text: str = "api"
+    _package: str = ""
+    _registry_class = DataProvider
+    _registry_class_name: str = ""  # No need to set this manually.
+
+    

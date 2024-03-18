@@ -43,7 +43,7 @@ def instagram_data_provider():
     """Return an instance of the InstagramDataProvider class."""
     return InstagramDataProvider()
 
-def data_category_to_custom_variable(data_category, data_provider_type, filters, selection):
+def data_category_to_custom_variable(data_category, data_provider_name, filters, selection):
     """Return the custom variable format based on a data category."""
 
     return {
@@ -52,7 +52,7 @@ def data_category_to_custom_variable(data_category, data_provider_type, filters,
             {**attribute_dict, 'enabled': True} for attribute_dict in data_category["cv_attributes"]
         ],
         "data_category": data_category["value"],
-        "data_provider": data_provider_type,
+        "data_provider": data_provider_name,
         "filters": filters,
         "selection": selection,
         "type": "Custom",
@@ -99,7 +99,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
 
     custom_vars = data_category_to_custom_variable(
                 data_category=activity,
-                data_provider_type="fitbit",
+                data_provider_name="fitbit",
                 filters=filters,
                 selection=selection
             )
@@ -149,7 +149,7 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
         data_provider=fitbit_data_provider,
         custom_variable=data_category_to_custom_variable(
             data_category=Activities.to_dict(),
-            data_provider_type="fitbit",
+            data_provider_name="fitbit",
             filters=filters,
             selection=selection
         )
