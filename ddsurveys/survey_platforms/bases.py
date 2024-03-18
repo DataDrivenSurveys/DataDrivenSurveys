@@ -4,6 +4,7 @@
 Created on 2023-05-23 14:08
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 from __future__ import annotations

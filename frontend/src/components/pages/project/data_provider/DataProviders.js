@@ -19,8 +19,8 @@ import {useSnackbar} from "../../../../context/SnackbarContext";
 import DialogFeedback from "../../../feedback/DialogFeedback";
 
 
-const handleCheckConnection = async (projectId, data_provider_type, api_key) => {
-  const response = await GET(`/projects/${projectId}/data-providers/${data_provider_type}/check-connection`, {
+const handleCheckConnection = async (projectId, data_provider_name, api_key) => {
+  const response = await GET(`/projects/${projectId}/data-providers/${data_provider_name}/check-connection`, {
     api_key,
   });
 
@@ -28,6 +28,8 @@ const handleCheckConnection = async (projectId, data_provider_type, api_key) => 
 }
 
 const DataProviders = ({project, onChangeDataProviders}) => {
+
+  console.log("DataProviders: project", project)
 
   const {t} = useTranslation();
 
@@ -48,6 +50,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       project_id: dc.project_id,
       connected: undefined,
       name: dc.data_provider.name,
+      data_provider_name: dc.data_provider.data_provider_name,
       data_provider_type: dc.data_provider.data_provider_type,
       fields: dc.fields,
     })));
@@ -55,10 +58,12 @@ const DataProviders = ({project, onChangeDataProviders}) => {
     Promise.all(project.data_connections.map(async (dc, index) => ({
       id: index,
       project_id: dc.project_id,
-      connected: await handleCheckConnection(projectId, dc.data_provider.data_provider_type, dc.api_key),
+      connected: await handleCheckConnection(projectId, dc.data_provider.data_provider_name, dc.api_key),
       name: dc.data_provider.name,
+      data_provider_name: dc.data_provider.data_provider_name,
       data_provider_type: dc.data_provider.data_provider_type,
       fields: dc.fields,
+      app_required: dc.data_provider.app_required,
     }))).then(newData => setDataProviders(newData));
 
   }, [project.data_connections, projectId]);
@@ -66,7 +71,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
   const handleDelete = useCallback(() => {
     if(!selected) return;
     (async () => {
-      const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_type}`);
+      const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_name}`);
 
       response.on('2xx', (status, data) => {
         if (status === 200) {
@@ -95,41 +100,50 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       field: 'name',
       headerName: t('ui.project.data_providers.grid.column.name'),
       width: 200,
-      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_type}/>
+      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_name}/>
     },
     {
       field: 'actions',
       headerName: t('ui.project.data_providers.grid.column.actions'),
       width: 250,
+      align: 'right',
       renderCell: (params) => {
+        
         return (
           <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
-            <Button
-              size={"small"}
-              startIcon={<EditIcon/>}
-              onClick={(ev) => {
-                ev.stopPropagation();
-                setSelected(params.row);
-                setOpenEditDataProviderDialog(true);
-              }}
-            >
-              {t('ui.project.data_providers.grid.button.edit')}
-            </Button>
-            <Button
-              size={"small"}
-              startIcon={<SyncIcon/>}
-              onClick={(ev) => {
-                ev.stopPropagation();
-                // set the connected status to undefined to show the loading icon
-                setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: undefined} : dp));
-                (async () => {
-                const connected = await handleCheckConnection(projectId, params.row.data_provider_type, params.row.api_key);
-                setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: connected} : dp));
-                })();
-              }}
-            >
-              {t('ui.project.data_providers.grid.button.check_connection')}
-            </Button>
+            { 
+              params.row.data_provider_type === "oauth" && (
+                <>
+                <Button
+                  size={"small"}
+                  startIcon={<EditIcon/>}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    setSelected(params.row);
+                    setOpenEditDataProviderDialog(true);
+                  }}
+                >
+                  {t('ui.project.data_providers.grid.button.edit')}
+                </Button>
+                <Button
+                  size={"small"}
+                  startIcon={<SyncIcon/>}
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    // set the connected status to undefined to show the loading icon
+                    setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: undefined} : dp));
+                    (async () => {
+                    const connected = await handleCheckConnection(projectId, params.row.data_provider_name, params.row.api_key);
+                    setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: connected} : dp));
+                    })();
+                  }}
+                >
+                  {t('ui.project.data_providers.grid.button.check_connection')}
+                </Button>
+                </>
+              )
+            }
+            
             <Button
               size={"small"}
               color="error"
@@ -148,6 +162,8 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       }
     },
   ];
+
+  console.log("DataProviders: dataProviders", dataProviders);
 
   return (
     <Stack spacing={2} alignItems={"flex-start"}>

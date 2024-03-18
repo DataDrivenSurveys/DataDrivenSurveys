@@ -10,6 +10,7 @@ https://stackoverflow.com/questions/3365740/how-to-import-all-submodules
 Created on 2023-05-23 14:00
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 __all__ = ["DataProvider"]
 
