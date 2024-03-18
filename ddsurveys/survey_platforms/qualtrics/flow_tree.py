@@ -4,6 +4,7 @@
 Created on 2023-05-10 13:47
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from _typeshed import SupportsKeysAndGetItem
 from copy import deepcopy

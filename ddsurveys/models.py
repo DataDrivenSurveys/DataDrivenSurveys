@@ -4,6 +4,7 @@
 Created on 2023-05-23 15:41
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from flask import Flask
 import os
@@ -94,7 +95,7 @@ class DataProvider(Base):
     def to_dict(self):
         return {
             'name': self.name,
-            'data_provider_name': self.data_provider_name.value,
+            'data_provider_name': self.data_provider_name.value, 
             'data_provider_type': self.data_provider_type.value
         }
 
@@ -106,7 +107,6 @@ class DataConnection(Base):
     data_provider_name = Column(Enum(DataProviderName), ForeignKey('data_provider.data_provider_name', ondelete='CASCADE'), primary_key=True)
     data_provider = relationship('DataProvider', back_populates='data_connections')
 
-    connected = Column(Boolean, default=False)
     fields = Column(JSON)
     project = relationship('Project', back_populates='data_connections')
 
@@ -116,7 +116,6 @@ class DataConnection(Base):
             'project_id': self.project_id,
             'data_provider_name': self.data_provider_name.value,
             'data_provider': self.data_provider.to_dict() if self.data_provider else None,
-            'connected': self.connected,
             'fields': self.fields
         }
 

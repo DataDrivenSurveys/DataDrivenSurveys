@@ -4,6 +4,7 @@
 Created on 2023-04-27 13:47
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 __name__ = "ddsurveys"

@@ -4,6 +4,7 @@
 Created on 2023-08-31 16:59
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 __all__ = "FitbitDataProvider"

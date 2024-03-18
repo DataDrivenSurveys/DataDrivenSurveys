@@ -4,6 +4,7 @@
 Created on 2023-05-23 14:07
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 __all__ = ["SurveyPlatform"]
 

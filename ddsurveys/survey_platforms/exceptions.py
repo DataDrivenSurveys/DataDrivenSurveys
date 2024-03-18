@@ -4,6 +4,7 @@
 Created on 2023-06-06 14:54
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from requests import Response
 
