@@ -255,8 +255,6 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
             return 400, "api.ddsurveys.survey_platforms.get_preview_link.error", "Failed to get preview link. Please check your survey ID and base URL.", None
-        
-        logger.debug(f"Enabled variables: {enabled_variables}")
 
         base_url = survey_platform_fields['base_url']
         survey_id = survey_platform_fields['survey_id']
