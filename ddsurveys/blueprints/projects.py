@@ -562,9 +562,16 @@ def preview_survey(id):
                 "text": "Survey platform not supported"
             }}), 400
         
+        enabled_variables = []
+        if project.variables:
+            enabled_variables = [variable for variable in project.variables if variable['enabled']]
+        if project.custom_variables:
+            enabled_custom_variables = CustomVariable.custom_variables_as_list([variable for variable in project.custom_variables if variable.get('enabled', False)])
+            enabled_variables.extend(enabled_custom_variables)
+        
         survey_platform_fields = project.survey_platform_fields
         
-        status, message_id, message, link = platform_class.get_preview_link(survey_platform_fields)
+        status, message_id, message, link = platform_class.get_preview_link(survey_platform_fields, enabled_variables)
 
         if status != 200:
             logger.error(f"Error during survey preview: {link}")

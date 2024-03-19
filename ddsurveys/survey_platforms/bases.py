@@ -136,7 +136,7 @@ class SurveyPlatform(UIRegistry):
         raise NotImplementedError("handle_export_survey_responses method not implemented.")
     
     @staticmethod
-    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+    def get_preview_link(survey_platform_fields, enabled_variables) -> Tuple[int, str, str, str]:
         """
         Get the preview link for the survey.
         - Status code (200 or 40x)
