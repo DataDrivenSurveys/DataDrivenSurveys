@@ -319,7 +319,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         raise NotImplementedError
         
     @staticmethod
-    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+    def get_preview_link(survey_platform_fields, enabled_variables) -> Tuple[int, str, str, str]:
         """
         Handle the previewing of the survey.
         """
