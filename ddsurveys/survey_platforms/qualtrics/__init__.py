@@ -259,7 +259,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         base_url = survey_platform_fields['base_url']
         survey_id = survey_platform_fields['survey_id']
 
-        url_params = "&".join([f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value'])}" for var in enabled_variables])
+        url_params = "&".join([f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value_placeholder'])}" for var in enabled_variables])
         
         link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"
 
