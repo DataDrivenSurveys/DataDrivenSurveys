@@ -118,7 +118,7 @@ const PageParticipantConnection = () => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-  }, [project, projectShortId, showSnackbar, t]);
+  }, [projectShortId, showSnackbar, t]);
 
   useEffect(() => {
     if (localStorage.getItem('RespondentTempProjectId') !== projectShortId) {
@@ -221,7 +221,7 @@ const PageParticipantConnection = () => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-  }, [anyProviderAlreadyUsed, allProvidersAlreadyUsed, dataProviders, projectShortId, showSnackbar, t]);
+  }, [anyProviderAlreadyUsed, allProvidersAlreadyUsed, dataProviders, getEvents, projectShortId, resetEvents, showSnackbar, t]);
 
 
   return (
