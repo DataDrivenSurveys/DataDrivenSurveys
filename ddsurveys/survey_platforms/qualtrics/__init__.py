@@ -28,6 +28,8 @@ from .api import AuthorizationError, FailedQualtricsRequest
 from ..bases import SurveyPlatform, FormField
 from ddsurveys.get_logger import get_logger
 
+from urllib.parse import quote_plus
+
 
 logger = get_logger(__name__)
 
@@ -246,7 +248,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             return 400, "api.ddsurveys.survey_platforms.export_survey_responses.request_failed", "Failed to process export request. Please check your API key and survey ID.", None
     
     @staticmethod
-    def get_preview_link(survey_platform_fields) -> Tuple[int, str, str, str]:
+    def get_preview_link(survey_platform_fields, enabled_variables) -> Tuple[int, str, str, str]:
         """
         Handle the previewing of the survey.
         """
@@ -254,6 +256,13 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         if 'base_url' not in survey_platform_fields or 'survey_id' not in survey_platform_fields:
             return 400, "api.ddsurveys.survey_platforms.get_preview_link.error", "Failed to get preview link. Please check your survey ID and base URL.", None
         
+        logger.debug(f"Enabled variables: {enabled_variables}")
+
         base_url = survey_platform_fields['base_url']
         survey_id = survey_platform_fields['survey_id']
-        return 200, "api.ddsurveys.survey_platforms.get_preview_link.success", "Preview link retrieved successfully!", f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current"
+
+        url_params = "&".join([f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value'])}" for var in enabled_variables])
+        
+        link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"
+
+        return 200, "api.ddsurveys.survey_platforms.get_preview_link.success", "Preview link retrieved successfully!", link
