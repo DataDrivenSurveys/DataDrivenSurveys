@@ -112,7 +112,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
       }
     }
     buttonActionReducer(field.onClick.action, args);
-  }, [buttonActionReducer, replacePlaceholders, fields]);
+  }, [buttonActionReducer, fields]);
 
   return fields.map((field, index) => {
     if (!checkVisibility(field)) {
