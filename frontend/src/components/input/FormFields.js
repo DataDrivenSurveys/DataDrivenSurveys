@@ -102,7 +102,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
     console.log('Updated fields:', updatedFields)
     updatedFields = applyInteractionEffects(name, value, updatedFields);
     onChange(updatedFields);
-  }, [fields, onChange, applyInteractionEffects]);
+  }, [fields, onChange]);
 
   const handleButtonClick = useCallback((field) => {
     const args = {};
@@ -112,7 +112,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
       }
     }
     buttonActionReducer(field.onClick.action, args);
-  }, [buttonActionReducer, replacePlaceholders]);
+  }, [buttonActionReducer, replacePlaceholders, fields]);
 
   return fields.map((field, index) => {
     if (!checkVisibility(field)) {
