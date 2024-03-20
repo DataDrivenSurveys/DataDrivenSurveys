@@ -53,7 +53,7 @@ def variable_to_qualname(variable, v_type="builtin", cv_attribute=None):
         qual_name = (f"dds.{variable['data_provider']}.{v_type.lower()}.{variable['category'].lower()}."
                      f"{variable['name']}")
         if variable["is_indexed_variable"]:
-            qual_name += f"[{variable['index']}]"
+            qual_name += f"{variable['index']}"
     elif v_type.lower() == "custom":
         qual_name = f"dds.{variable['data_provider']}.{v_type.lower()}.{variable[('data_category')].lower()}.{variable['variable_name']}.{cv_attribute['name']}"
 
