@@ -75,13 +75,7 @@ class BuiltInVariable(Attribute):
             test_value_placeholder=test_value_placeholder,
             unit=unit
         )
-        # self.name = name
-        # self.label = label
-        # self.description = description
-        # self.data_type = data_type
-        # self.unit = unit
-        # self.info = info
-        # self.test_value_placeholder = test_value_placeholder
+
         self.is_indexed_variable = is_indexed_variable
         self.index = index
         self.extractor_func = extractor_func

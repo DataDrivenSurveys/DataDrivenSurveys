@@ -212,16 +212,16 @@ def test_builtin_variables(provider_name):
                 "dds.fitbit.builtin.steps.average": 8000,
                 "dds.fitbit.builtin.steps.highest.exists": True,
                 "dds.fitbit.builtin.steps.highest": 30123,
-                "dds.fitbit.builtin.activities.by_frequency[1].exists": True,
-                "dds.fitbit.builtin.activities.by_frequency[1]": "Walk",
-                "dds.fitbit.builtin.activities.by_frequency[2].exists": True,
-                "dds.fitbit.builtin.activities.by_frequency[2]": "Sport",
-                "dds.fitbit.builtin.activities.by_frequency[3].exists": True,
-                "dds.fitbit.builtin.activities.by_frequency[3]": "Outdoor Bike",
-                "dds.fitbit.builtin.activities.by_frequency[4].exists": False,
-                "dds.fitbit.builtin.activities.by_frequency[4]": None,
-                "dds.fitbit.builtin.activities.by_frequency[5].exists": False,
-                "dds.fitbit.builtin.activities.by_frequency[5]": None,
+                "dds.fitbit.builtin.activities.by_frequency1.exists": True,
+                "dds.fitbit.builtin.activities.by_frequency1": "Walk",
+                "dds.fitbit.builtin.activities.by_frequency2.exists": True,
+                "dds.fitbit.builtin.activities.by_frequency2": "Sport",
+                "dds.fitbit.builtin.activities.by_frequency3.exists": True,
+                "dds.fitbit.builtin.activities.by_frequency3": "Outdoor Bike",
+                "dds.fitbit.builtin.activities.by_frequency4.exists": False,
+                "dds.fitbit.builtin.activities.by_frequency4": None,
+                "dds.fitbit.builtin.activities.by_frequency5.exists": False,
+                "dds.fitbit.builtin.activities.by_frequency5": None,
                 "dds.fitbit.builtin.account.creation_date.exists": True,
                 "dds.fitbit.builtin.account.creation_date": "2018-05-05",
                 # ... include all other expected key-value pairs here
@@ -325,7 +325,7 @@ def test_get_used_variables(provider_name):
             
             qual_name = variable_to_qualname(variable, used_variable.get("type"))
             
-            assert used_variable["variable_name"] == qual_name, f"Wrong qualified name for the used variable {used_variable['qualified_name']}."
+            assert used_variable["variable_name"] == qual_name, f"Wrong qualified name for the used variable {used_variable['variable_name']}."
 
             assert len(used_variable["description"]) > 0, "The description of the used variables should not be empty."
             

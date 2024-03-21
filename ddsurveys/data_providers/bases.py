@@ -200,7 +200,7 @@ class DataProvider(UIRegistry):
                 # Check if variable is indexed
                 if variable.get("is_indexed_variable", False) and "index" in variable:
                     index = variable["index"]
-                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}[{index}]"
+                    qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}{index}"
                 else:
                     qualified_name = f"dds.{cls.name.lower()}.builtin.{category_name}.{variable_name}"
 

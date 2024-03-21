@@ -334,14 +334,10 @@ def prepare_survey():
                 provider_class = DataProvider.get_class_by_value(data_provider_name)
                 provider_instance = provider_class()
 
-                print(f"frontend_variables: {frontend_variables}")
-
                 data_to_upload.update(provider_instance.calculate_variables(
                     project_builtin_variables=project.variables,
                     data=frontend_variables
                 )) 
-
-            logger.info(f"Data to upload: {data_to_upload}")
         
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,
