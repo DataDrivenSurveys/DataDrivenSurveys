@@ -11,6 +11,9 @@ from copy import deepcopy
 from typing import Any, MutableMapping, NoReturn, TypeVar, Union
 
 from . import EmbeddedData, EmbeddedDataBlock
+from ddsurveys.get_logger import get_logger
+
+logger = get_logger(__name__)
 
 
 # CustomVariables = dict[str, Union[str, list[dict[str, Any]]]]
@@ -53,7 +56,7 @@ class Flow:
         if flow["Type"] == "Root":
             self._flow = flow
 
-            self._cv_block_id = self._identify_custom_variables_flow_id(flow)
+            self._cv_block_id = self._identify_custom_variables_flow_id(flow, ("dds.",))
             self._cv_block_idx = self._get_block_index(self._cv_block_id)
 
             if self._cv_block_idx is None:
@@ -112,29 +115,31 @@ class Flow:
         else:
             flow_blocks = flow
 
+        flow_id = None
         candidates = list()
         flow_ids = list()
+        # Check for existing embedded data blocks
         for block in flow_blocks:
             if block["Type"] == "EmbeddedData":
                 candidates.append(block)
             self._get_flow_ids(block, flow_ids)
 
         # No existing custom variables block
-        if len(candidates) == 0:
-            flow_ids_nums = [int(id_.split("_")[1]) for id_ in flow_ids]
-            flow_id = f"FL_{max(flow_ids_nums) + 1}"
-        elif len(candidates) == 1:
-            flow_id = candidates[0]["FlowID"]
-        else:
+        if len(candidates) > 0:
             valid_candidates = list()
             for candidate in candidates:
-                if any([data["Field"].startswith(variables_namespaces) for data in candidate["EmbeddedData"]]):
+                if all([data["Field"].startswith(variables_namespaces) for data in candidate["EmbeddedData"]]):
                     valid_candidates.append(candidate)
             if len(valid_candidates) > 1:
-                raise ValueError(f"Only a single block can contain custom variables. "
-                                 f"Remove the extra custom variable blocks.")
-            else:
+                logger.error(f"Multiple custom variable blocks found.")
+                # raise ValueError(f"Only a single block can contain custom variables. "
+                #                  f"Remove the extra custom variable blocks.")
+            if len(valid_candidates) > 0:
                 flow_id = valid_candidates[0]["FlowID"]
+
+        if flow_id is None:
+            flow_ids_nums = [int(id_.split("_")[1]) for id_ in flow_ids]
+            flow_id = f"FL_{max(flow_ids_nums) + 1}"
 
         return flow_id
 
