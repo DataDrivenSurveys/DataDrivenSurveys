@@ -95,7 +95,6 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         except FailedQualtricsRequest:
             return 400, None, survey_platform_info
 
-
     def handle_project_creation(self, project_name: str, use_existing_survey: bool = False) -> Tuple[int, str, str, str, Dict[str, Any]]:
         # survey_platform_fields to update project.survey_platform_fields
         logger.debug(f"Creating project with name: {project_name}")
@@ -131,7 +130,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         else:
             try:
                 response = self.surveys_api.create_survey(survey_name=project_name).json()
-                
+
                 if 'result' in response:
                     # Must get the survey info to get the base url
                     survey_info = self.surveys_api.get_survey(response['result']['SurveyID']).json()
@@ -178,7 +177,6 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             except (FailedQualtricsRequest, PermissionError):
                 return 401, "api.ddsurveys.survey_platforms.variables_sync.request_failed", "Failed to process sync request. Please check your API key and survey ID."
-
 
     def handle_prepare_survey(self, project_short_id: str, survey_platform_fields: dict,
                               embedded_data: dict) -> Tuple[bool, Optional[str]]:
@@ -232,8 +230,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         except FailedQualtricsRequest:
             return False, None
-        
-    def handle_export_survey_responses(self) -> Tuple[bool | str | None]:
+
+    def handle_export_survey_responses(self) -> Tuple[bool, str, None]:
         """
         Handle the downloading of responses from the survey platform.
         """
@@ -241,12 +239,12 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             content = self.surveys_api.export_survey_responses(self.survey_id)
             if content:
                 return 200, "api.ddsurveys.survey_platforms.export_survey_responses.success", "Exported survey responses successfully!", content
-            
+
             return 400, "api.ddsurveys.survey_platforms.export_survey_responses.failed", "Failed to export survey responses!", None
 
         except FailedQualtricsRequest:
             return 400, "api.ddsurveys.survey_platforms.export_survey_responses.request_failed", "Failed to process export request. Please check your API key and survey ID.", None
-    
+
     @staticmethod
     def get_preview_link(survey_platform_fields, enabled_variables) -> Tuple[int, str, str, str]:
         """
@@ -260,7 +258,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         survey_id = survey_platform_fields['survey_id']
 
         url_params = "&".join([f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value_placeholder'])}" for var in enabled_variables])
-        
+
         link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"
 
         return 200, "api.ddsurveys.survey_platforms.get_preview_link.success", "Preview link retrieved successfully!", link

@@ -83,7 +83,7 @@ def get_public_project():
 
         variables_per_data_provider = DataProvider.get_used_variables(project_dict['variables'], project_dict['custom_variables'])
 
-        
+
 
         for data_connection in response_dict['data_connections']:
             provider_type = data_connection['data_provider']['data_provider_name']
@@ -127,7 +127,7 @@ def get_public_data_providers():
         # Get all data providers linked to the project.
         data_providers = []
         for data_connection in project.data_connections:
-        
+
             data_provider = data_connection.data_provider
 
             cunstructor_fields = data_connection.fields
@@ -136,7 +136,7 @@ def get_public_data_providers():
 
             provider_class: TOAuthDataProviderClass = DataProvider.get_class_by_value(data_provider.data_provider_name.value)
             provider_instance: OAuthDataProvider = provider_class(**cunstructor_fields)
-        
+
             dp_public_dict = provider_instance.to_public_dict()
             if dp_public_dict['type'] == 'oauth':
                 # Include data_connection.fields in the data provider dictionary.
@@ -326,7 +326,7 @@ def prepare_survey():
                 data_provider.refresh_token = None
 
                 db.commit()
-           
+
             frontend_data_providers = [dc for dc in project.data_connections if dc.data_provider.data_provider_type == DataProviderType.frontend]
             for dc in frontend_data_providers:
                 data_provider_name = dc.data_provider.data_provider_name.value
@@ -337,8 +337,8 @@ def prepare_survey():
                 data_to_upload.update(provider_instance.calculate_variables(
                     project_builtin_variables=project.variables,
                     data=frontend_variables
-                )) 
-        
+                ))
+
             success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
                 project_short_id=project_short_id,
                 survey_platform_fields=project.survey_platform_fields,
@@ -376,7 +376,7 @@ def prepare_survey():
                         "text": "Failed to create a unique distribution link"
                     }
                 }), status
-            
+
     except Exception as e:
         logger.error(f"Error preparing survey: {traceback.format_exc()}")
         return jsonify({"message": {"id": "api.respondent.survey.error", "text": "Error preparing survey"}}), 500
@@ -482,7 +482,11 @@ def connect_respondent():
                 new_data_provider_accesses.append(new_data_provider_access)
 
         if new_data_provider_accesses and existing_data_provider_accesses:
-            return jsonify({"message": {"id": "api.respondent.resume_failed_different_data_providers", "text": "Some data providers are different from the previous session"}}), 400
+            return jsonify({
+                "message": {
+                    "id": "api.respondent.resume_failed_different_data_providers",
+                    "text": "Some data providers are different from the previous session"
+                }}), 400
         elif existing_data_provider_accesses:
             # all data providers already exists, so we can just return the respondent
             respondent = db.query(Respondent).filter_by(project_id=project.id).first() # There should only be one respondent per project

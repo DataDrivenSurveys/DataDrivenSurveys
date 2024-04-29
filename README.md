@@ -23,8 +23,7 @@ Here is the citation in bibtex format:
   address = {{Honolulu, HI, USA}},
   doi = {10.1145/3613904.3642572},
   isbn = {979-8-4007-0330-0/24/05},
-  langid = {english},
-  file = {/Users/admin/Zotero/storage/3K7A499A/Velykoivanenko et al. - 2024 - One Platform to Survey Them All Designing a Data-Driven Survey System.pdf}
+  langid = {english}
 }
 ```
 
