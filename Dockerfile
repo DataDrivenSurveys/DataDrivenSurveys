@@ -1,6 +1,9 @@
 # Dockerfile
 FROM python:3.11
 
+# Install dos2unix
+RUN apt-get update && apt-get install -y dos2unix
+
 WORKDIR /app
 
 # Copy only the necessary files for installation
@@ -15,10 +18,12 @@ RUN pip install -e .
 # Set the PYTHONPATH environment variable (if necessary)
 ENV PYTHONPATH=/app
 
-RUN chmod +x /app/ddsurveys/entrypoint.sh
+RUN dos2unix /app/ddsurveys/entrypoint.sh && chmod +x /app/ddsurveys/entrypoint.sh
+
 
 # Set the entry point script
-ENTRYPOINT ["/app/ddsurveys/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/ddsurveys/entrypoint.sh"]
+
 
 # Default command runs Gunicorn
 CMD ["gunicorn", "ddsurveys.wsgi:app", "--bind", "0.0.0.0:4000", "--reload"]
