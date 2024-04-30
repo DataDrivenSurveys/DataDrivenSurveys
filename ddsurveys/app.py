@@ -7,42 +7,31 @@ Created on 2023-05-23 15:41
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
-import os
-import logging
 import datetime
+import logging
 from functools import wraps
-from http import HTTPStatus
-from typing import NoReturn
 
 # Import installed libraries
-import coloredlogs
 import flask
-from flask import jsonify, Flask, current_app
-from flask.typing import ResponseReturnValue
-from flask_jwt_extended import JWTManager, jwt_required
+from flask import Flask, jsonify
 from flask_cors import CORS
-from dotenv import dotenv_values, load_dotenv
+from flask_jwt_extended import JWTManager, jwt_required
 
-# Import project libraries
-from .get_logger import get_logger, match_app_logger_level, only_log_ddsurveys, set_logger_level
-from .models import init_session, get_db
 from .blueprints.auth import auth
 from .blueprints.projects import projects
 from .blueprints.survey_platforms import survey_platforms
-
 from .data_providers.bases import DataProvider
+
+# Import project libraries
+from .get_logger import get_logger, only_log_ddsurveys, set_logger_level
+from .models import get_db, init_session
 from .survey_platforms.bases import SurveyPlatform
-from .variable_types import VariableDataType, Data
+from .utils import handle_env_file
+from .variable_types import Data, VariableDataType
 
-
-
-# logger = logging.getLogger(__name__)
 logger = get_logger(__name__)
 
-
-load_dotenv()
-
-env = dotenv_values(".env")
+env = handle_env_file()
 
 APP_CONFIG = {
     # ddsurveys specific settings
@@ -134,11 +123,11 @@ def create_app() -> Flask:
 
     # App configuration
     @app.before_request
-    def create_db_session():
+    def create_db_session() -> None:
         flask.g.db = get_db()  # Store the database session in the Flask global context
 
     @app.teardown_appcontext
-    def shutdown_session(response_or_exc):
+    def shutdown_session(response_or_exc) -> None:
         db = flask.g.pop('db', None)
         if db is not None:
             db.close()  # This should now work without errors
@@ -152,7 +141,7 @@ def create_app() -> Flask:
     return app
 
 
-def declare_app_routes(app) -> NoReturn:
+def declare_app_routes(app) -> None:
 
     # TODO : Discuss eventual migration of these routes into respective blueprints
 

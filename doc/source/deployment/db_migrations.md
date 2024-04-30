@@ -45,6 +45,7 @@ If you want to rollback the last revision, you can use:
 ```bash
 alembic downgrade -1
 ```	
+
 This command tells Alembic to downgrade one step from the current database version.
 
 If you know the exact revision identifier you want to downgrade to, you can use:

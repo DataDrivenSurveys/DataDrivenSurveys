@@ -6,29 +6,45 @@ Created on 2023-05-23 15:41
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-from flask import Flask
 import os
 import uuid
-from sqlalchemy import create_engine, Column, ForeignKey, Enum, Integer, BigInteger, String, Text, Boolean, JSON, DateTime, func
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from enum import Enum as PyEnum
 
-from dotenv import dotenv_values, load_dotenv
-
+from flask import Flask
 from sonyflake import SonyFlake
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    create_engine,
+    func,
+)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+
+
+try:
+    from .utils import handle_env_file
+except ImportError:
+    from utils import handle_env_file
+
+
 sf = SonyFlake()
 
-
-load_dotenv()
-
-env = dotenv_values(".env")
+env = handle_env_file()
 
 Base = declarative_base()
 
 _engine = None
 
 
-def get_engine(app:Flask = None):
+def get_engine(app: Flask = None):
     global _engine
     if _engine is None:
         try:
@@ -37,12 +53,14 @@ def get_engine(app:Flask = None):
             _engine = create_engine(os.getenv("DATABASE_URL"))
     return _engine
 
+
 SessionLocal = None
 
 
-def init_session(app:Flask):
+def init_session(app: Flask):
     global SessionLocal
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine(app))
+
 
 def get_db():
     return SessionLocal()
@@ -79,10 +97,12 @@ class DataProviderName(PyEnum):
     GitHub = "github"
     Dds = "dds"
 
+
 class DataProviderType(PyEnum):
     generic = "generic"
     oauth = "oauth"
     frontend = "frontend"
+
 
 class DataProvider(Base):
     __tablename__ = 'data_provider'
@@ -95,7 +115,7 @@ class DataProvider(Base):
     def to_dict(self):
         return {
             'name': self.name,
-            'data_provider_name': self.data_provider_name.value, 
+            'data_provider_name': self.data_provider_name.value,
             'data_provider_type': self.data_provider_type.value
         }
 
@@ -230,7 +250,6 @@ class DataProviderAccess(Base):
 
     access_token = Column(Text, nullable=True)
     refresh_token = Column(Text, nullable=True)
-
 
     respondent = relationship('Respondent', back_populates='data_provider_accesses')
     data_provider = relationship('DataProvider', back_populates='data_provider_accesses')
