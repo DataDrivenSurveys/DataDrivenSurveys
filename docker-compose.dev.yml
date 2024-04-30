@@ -29,7 +29,7 @@ services:
     networks:
       - dds-dev-net
     environment:
-      - DDS_DEVELOPMENT=true
+      - DDS_ENV=development
 
   db:
     image: mariadb:latest

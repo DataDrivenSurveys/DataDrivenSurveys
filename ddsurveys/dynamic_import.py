@@ -40,7 +40,7 @@ def dynamic_import(parent_package: PathLike, exclude_names: tuple[str] = (), rec
             continue
         try:
             modules.append(importlib.import_module(f".{module_name}", package=parent_package.stem))
-        except ModuleNotFoundError:
+        except (ImportError, ModuleNotFoundError):
             modules.append(importlib.import_module(f".{module_name}", package=f"ddsurveys.{parent_package.stem}"))
     return modules
 

@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
+os.environ["DDS_ENV"] = "testing"
 
 import pytest
 from ddsurveys.app import create_app
 from ddsurveys.models import Base, get_engine
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
 
 
 @pytest.fixture
 def client():
     # Override DATABASE_URL with testing database
-    os.environ['FLASK_ENV'] = "testing"
-    os.environ['DATABASE_URL'] = "sqlite:///:memory:"
+    # os.environ['FLASK_ENV'] = "testing"
+    # os.environ['DATABASE_URL'] = "sqlite:///:memory:"
 
     app = create_app()
     # Force the schema to be created
