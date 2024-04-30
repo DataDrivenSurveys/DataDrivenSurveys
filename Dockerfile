@@ -21,6 +21,7 @@ ENV PYTHONPATH=/app
 RUN dos2unix /app/ddsurveys/entrypoint.sh && chmod +x /app/ddsurveys/entrypoint.sh
 
 
+
 # Set the entry point script
 ENTRYPOINT ["sh", "/app/ddsurveys/entrypoint.sh"]
 
