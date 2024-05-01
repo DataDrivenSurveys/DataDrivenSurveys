@@ -18,13 +18,16 @@ coloredlogs.install()
 old_logger = logging.getLogger
 
 
-def get_logger(name):
+def get_logger(name: str) -> logging.Logger:
     """Get a logger and ensure its hierarchy matches the name."""
+    name_: str
     if not name.startswith('ddsurveys'):
-        name = f'ddsurveys.{name}'
+        name_ = f'ddsurveys.{name}'
+    else:
+        name_ = name
 
-    parts = name.split('.')
-    current_name = ''
+    parts: list[str] = name_.split('.')
+    current_name: str = ''
     last_logger = None
     logger = None
     for part in parts:
@@ -39,10 +42,10 @@ def get_logger(name):
     return logger
 
 
-module_logger = get_logger(__name__)
+module_logger: logging.Logger = get_logger(__name__)
 
 
-def only_log_ddsurveys():
+def only_log_ddsurveys() -> None:
     """Filter logger output to only show output from loggers that start with 'ddsurveys'.
 
     This silences the output from most loggers used in imported packages.
@@ -52,8 +55,12 @@ def only_log_ddsurveys():
     logging.getLogger().addFilter(lambda record: record.name.startswith('ddsurveys'))
 
 
-def set_logger_level(logger: Union[str, logging.Logger], level: Union[int, str] = logging.INFO,
-                     recursive: bool = False, include_root: bool = False):
+def set_logger_level(
+    logger: Union[str, logging.Logger],
+    level: Union[int, str] = logging.INFO,
+    recursive: bool = False,
+    include_root: bool = False,
+) -> None:
     """Set a logger's level.
 
     This function can also be used to change the log level of the entire logger's hierarchy.
@@ -88,7 +95,7 @@ def set_logger_level(logger: Union[str, logging.Logger], level: Union[int, str] 
         l.setLevel(level)
 
 
-def match_app_logger_level(only_log_ddsurveys_: bool = False):
+def match_app_logger_level(only_log_ddsurveys_: bool = False) -> None:
     from flask import current_app as app
 
     try:

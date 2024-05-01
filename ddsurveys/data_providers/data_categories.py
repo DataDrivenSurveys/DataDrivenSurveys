@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from functools import cached_property
-from typing import Any, Type, TypeVar, List, Dict
 from abc import abstractmethod
+from functools import cached_property
+from typing import Any, Dict, List, Type, TypeVar
 
-__all__ = [
-   "DataCategory"
-]
+__all__ = ["DataCategory"]
 
 
 TDataCategoryClass = Type["DataCategory"]
@@ -30,7 +28,8 @@ class DataCategoryBase(type):
 
 
 class DataCategory(metaclass=DataCategoryBase):
-    """data origin of the fetch_data method """
+    """data origin of the fetch_data method"""
+
     data_origin: List[Dict[str, Any]] = []
 
     custom_variables_enabled: bool = True
@@ -45,11 +44,16 @@ class DataCategory(metaclass=DataCategoryBase):
     cv_attributes: list[TDataCategory] = []
     builtin_variables: list[list[TDataCategory]] = []
 
-    def __init__(self, data_provider):
+    def __init__(self, data_provider) -> None:
         self.data_provider = data_provider
 
-    @abstractmethod
+    def __str__(self):
+        return f"{self.__class__.__name__}(data_provider={self.data_provider})"
+
+    __repr__ = __str__
+
     @cached_property
+    @abstractmethod
     def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
@@ -67,7 +71,10 @@ class DataCategory(metaclass=DataCategoryBase):
             "label": cls.label,
             "value": cls.value,
             "custom_variables_enabled": cls.custom_variables_enabled,
-            "cv_attributes": [cls._include_data_category(prop.to_dict(), data_category_name) for prop in cls.cv_attributes],
+            "cv_attributes": [
+                cls._include_data_category(prop.to_dict(), data_category_name)
+                for prop in cls.cv_attributes
+            ],
             "builtin_variables": [
                 cls._include_data_category(variable.to_dict(), data_category_name)
                 for variables in cls.builtin_variables
@@ -90,10 +97,10 @@ class DataCategory(metaclass=DataCategoryBase):
 
         # If not found
         raise ValueError(f"Variable {name} not found in {cls.__name__}")
-    
+
     @classmethod
     def get_builtin_variable_by_name(cls, name):
-         # Check in builtin attributes
+        # Check in builtin attributes
         for var_list in cls.builtin_variables:
             for var in var_list:
                 if var.name == name:

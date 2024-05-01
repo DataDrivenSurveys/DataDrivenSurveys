@@ -6,17 +6,18 @@ Created on 2023-05-10 13:47
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-from _typeshed import SupportsKeysAndGetItem
 from copy import deepcopy
 from typing import Any, ItemsView, Iterator, KeysView, MutableMapping, NoReturn, TypeVar, Union, ValuesView, overload
 
+from _typeshed import SupportsKeysAndGetItem
+
 # Taken from typing module:
-T = TypeVar('T')  # Any type.
-KT = TypeVar('KT')  # Key type.
-VT = TypeVar('VT')  # Value type.
-T_co = TypeVar('T_co', covariant=True)  # Any type covariant containers.
-V_co = TypeVar('V_co', covariant=True)  # Any type covariant containers.
-VT_co = TypeVar('VT_co', covariant=True)  # Value type covariant containers.
+T = TypeVar("T")  # Any type.
+KT = TypeVar("KT")  # Key type.
+VT = TypeVar("VT")  # Value type.
+T_co = TypeVar("T_co", covariant=True)  # Any type covariant containers.
+V_co = TypeVar("V_co", covariant=True)  # Any type covariant containers.
+VT_co = TypeVar("VT_co", covariant=True)  # Value type covariant containers.
 
 
 class Flow(MutableMapping):
@@ -26,7 +27,12 @@ class Flow(MutableMapping):
         elif isinstance(flow, Flow):
             self._data = flow.to_dict()
         else:
-            self._data = {"FlowID": "FL_1", "Properties": {}, "Type": "Root", "Flow": []}
+            self._data = {
+                "FlowID": "FL_1",
+                "Properties": {},
+                "Type": "Root",
+                "Flow": [],
+            }
         self._flow_id: str = self._data["FlowID"]
         self._type: str = self._data["Type"]
         self._subflows: list = None

@@ -16,10 +16,9 @@ __package__ = "ddsurveys"
 
 
 # Set up custom loggers
-import logging
-from .get_logger import get_logger
-import verboselogs
 import coloredlogs
+
+from .get_logger import get_logger
 
 # We can override the builtin getLogger function with our own
 # logging.getLogger = get_logger
@@ -29,9 +28,9 @@ coloredlogs.install()
 
 # Import base data provider
 # import data_providers
-# from .data_providers import DataProvider
+from .data_providers import DataProvider
 
 # Import base survey platforms
 # import survey_platforms
-# from .survey_platforms import SurveyPlatform
+from .survey_platforms import SurveyPlatform
 

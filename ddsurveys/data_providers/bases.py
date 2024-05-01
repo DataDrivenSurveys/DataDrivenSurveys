@@ -7,28 +7,28 @@ Created on 2023-05-23 14:01
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from __future__ import annotations
-import traceback
 
 import os
+import traceback
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Type, TypeVar
+from typing import Any, Type, TypeVar
 
 from ..get_logger import get_logger
+from ..shared_bases import FormField as BaseFormField
+from ..shared_bases import FormTextBlock as BaseFormTextBlock
 from ..shared_bases import UIRegistry
-from ..shared_bases import FormField as BaseFormField, FormTextBlock as BaseFormTextBlock
 from ..variable_types import TVariableValue
-
-from .variables import CustomVariable
 from .data_categories import DataCategory
-
+from .variables import CustomVariable
 
 __all__ = [
-    "TDataProviderClass", "TOAuthDataProviderClass",
-    "TDataProvider", "TOAuthDataProvider",
-
+    "TDataProviderClass",
+    "TOAuthDataProviderClass",
+    "TDataProvider",
+    "TOAuthDataProvider",
     "FormField",
-
-    "DataProvider", "OAuthDataProvider"
+    "DataProvider",
+    "OAuthDataProvider",
 ]
 
 
@@ -60,15 +60,17 @@ class DataProvider(UIRegistry):
     # General class attributes
     base_name: str = "DataProvider"
     # attrs_to_unwrangle: list[str] = [""]
-    registry_exclude: list[str] = ["DataProvider", "OAuthDataProvider", "FrontendDataProvider"]
+    registry_exclude: list[str] = [
+        "DataProvider",
+        "OAuthDataProvider",
+        "FrontendDataProvider",
+    ]
     _package = __package__
 
     # Do not override the following attributes
     # __registry: dict[str, TDataProviderClass] = {}
     # _cls_form_fields: dict[str, list[dict[str, Any]]] = {}
     _all_data_categories: dict[str, dict[str, DataCategory]] = {}
-
-
 
     # The following are placeholder properties for convenient access to the name wrangled dicts
     # registry: dict[str, TDataProviderClass] = None
@@ -100,7 +102,6 @@ class DataProvider(UIRegistry):
     # Variable declarations go here
     # Use the @variable decorator
 
-
     # Standard/builtin class methods go here
     def __init__(self, *args, **kwargs):
         self._variable_values: dict[str, Any] = {}
@@ -122,18 +123,20 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_builtin_variables(cls) -> list[dict[str, str]]:
-        data_cats = cls.get_data_categories()        
+        data_cats = cls.get_data_categories()
         # Include the provider_type in each builtin variable dictionary
         return [
-            {**item, "provider_type": cls.provider_type} 
-            for cat in data_cats 
+            {**item, "provider_type": cls.provider_type}
+            for cat in data_cats
             for item in cat["builtin_variables"]
         ]
 
     # Instance properties
 
     # Methods used for extracting data
-    def select_relevant_variables(self, variables: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def select_relevant_variables(
+        self, variables: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Selects only the variables that are enabled and relevant to this data provider.
 
         Args:
@@ -143,43 +146,55 @@ class DataProvider(UIRegistry):
         Returns:
             A list of dicts where each dict contains key/value pairs conforming to the Variable class.
         """
-        return [variable for variable in variables
-                if variable.get("enabled", False) and (variable["data_provider"] == self.name_lower)]
-
-    
+        return [
+            variable
+            for variable in variables
+            if variable.get("enabled", False)
+            and (variable["data_provider"] == self.name_lower)
+        ]
 
     @staticmethod
-    def get_used_variables(project_builtin_variables=None, project_custom_variables=None):
+    def get_used_variables(
+        project_builtin_variables=None, project_custom_variables=None
+    ):
         """
         Returns a list of dicts containing the name and description of the project enabled variables
         Used by the respondent page to display the variables used in the project
         """
         used_variables = []
 
-        for variable in (project_builtin_variables or []):
+        for variable in project_builtin_variables or []:
             if variable.get("enabled", False):
-                used_variables.append({
-                    "data_provider": variable.get('data_provider', ''),
-                    "variable_name": variable.get('qualified_name', ''),
-                    "description": variable['description'],
-                    "data_origin": variable.get('data_origin', []),
-                    "type": "Builtin"
-                })
+                used_variables.append(
+                    {
+                        "data_provider": variable.get("data_provider", ""),
+                        "variable_name": variable.get("qualified_name", ""),
+                        "description": variable["description"],
+                        "data_origin": variable.get("data_origin", []),
+                        "type": "Builtin",
+                    }
+                )
 
-        for variable in (project_custom_variables or []):
+        for variable in project_custom_variables or []:
             if variable.get("enabled", False):
-                custom_variable = CustomVariable(data_provider=None, custom_variable=variable)
+                custom_variable = CustomVariable(
+                    data_provider=None, custom_variable=variable
+                )
                 cv_dict = custom_variable.to_dict()
-                used_variables.append({
-                    "data_provider": variable.get('data_provider', ''),
-                    "variable_name": cv_dict.get('qualified_name', ''),
-                    "data": cv_dict,
-                    "data_origin": cv_dict.get('data_category', {}).get('data_origin', []),
-                    "type": "Custom"
-                })
+                used_variables.append(
+                    {
+                        "data_provider": variable.get("data_provider", ""),
+                        "variable_name": cv_dict.get("qualified_name", ""),
+                        "data": cv_dict,
+                        "data_origin": cv_dict.get("data_category", {}).get(
+                            "data_origin", []
+                        ),
+                        "type": "Custom",
+                    }
+                )
 
         # order by data provider type
-        used_variables = sorted(used_variables, key=lambda v: v['data_provider'])
+        used_variables = sorted(used_variables, key=lambda v: v["data_provider"])
 
         return used_variables
 
@@ -191,7 +206,7 @@ class DataProvider(UIRegistry):
     def get_data_categories(cls) -> list[Dict[str, Any]]:
         data_categories_dicts = [cat.to_dict() for cat in cls.data_categories]
         for dct in data_categories_dicts:
-            dct['data_provider_name'] = cls.name
+            dct["data_provider_name"] = cls.name
 
             # Updating the builtin variables' names
             for variable in dct["builtin_variables"]:
@@ -209,7 +224,9 @@ class DataProvider(UIRegistry):
                 variable["type"] = "Builtin"
 
             # sort the builtin variables by updated name
-            dct["builtin_variables"] = sorted(dct["builtin_variables"], key=lambda v: v["name"])
+            dct["builtin_variables"] = sorted(
+                dct["builtin_variables"], key=lambda v: v["name"]
+            )
 
         return data_categories_dicts
 
@@ -221,7 +238,9 @@ class DataProvider(UIRegistry):
             for subclass in cls.registry.get("DataProvider").values()
             for item in subclass.get_data_categories()
         ]
-        return sorted(categories, key=lambda dp: (dp['data_provider_name'], dp['label']))
+        return sorted(
+            categories, key=lambda dp: (dp["data_provider_name"], dp["label"])
+        )
 
     @classmethod
     def get_all_form_fields(cls) -> list[dict[str, Any]]:
@@ -243,9 +262,7 @@ class DataProvider(UIRegistry):
             item["app_required"] = subclass.app_required
 
             if hasattr(subclass, "get_redirect_uri"):
-                item["oauth2"] = {
-                    "redirect_uri": subclass.get_redirect_uri()
-                }
+                item["oauth2"] = {"redirect_uri": subclass.get_redirect_uri()}
 
             result.append(item)
 
@@ -262,10 +279,9 @@ class DataProvider(UIRegistry):
 
     def to_public_dict(self) -> dict[str, Any]:
         return {
-            'data_provider_name':self.name_lower,
-            'type': self.provider_type,
+            "data_provider_name": self.name_lower,
+            "type": self.provider_type,
         }
-
 
     # Properties to access class attributes
 
@@ -287,21 +303,22 @@ class FrontendDataProvider(DataProvider):
     # Class attributes that need be redeclared or redefined in child classes
     provider_type: str = "frontend"
 
-     # Standard class methods go here
+    # Standard class methods go here
     def __init__(self, **kwargs):
-       
+
         super().__init__(**kwargs)
-       
 
     def test_connection(self) -> bool:
         return True
 
-    def get_variable_value(self, data: Dict[str, Any], variable: Dict[str, Any]) -> TVariableValue:
+    def get_variable_value(
+        self, data: dict[str, Any], variable: dict[str, Any]
+    ) -> TVariableValue:
 
-        name = variable['name']
-        category = variable['category']
-        qualified_name = variable['qualified_name']
-        
+        name = variable["name"]
+        category = variable["category"]
+        qualified_name = variable["qualified_name"]
+
         if qualified_name in self._variable_values:
             return self._variable_values[qualified_name]
 
@@ -312,32 +329,33 @@ class FrontendDataProvider(DataProvider):
         if data_category_class is None:
             raise ValueError(f"Data category '{category}' not found")
 
-        variable_func = data_category_class.get_builtin_variable_by_name(name).extractor_func
+        variable_func = data_category_class.get_builtin_variable_by_name(
+            name
+        ).extractor_func
 
         if variable_func:
-            value = variable_func(
-                variable=variable,
-                data=data
-            )
-            return value
+            return variable_func(variable=variable, data=data)
         else:
-            raise ValueError(f"'{self.__class__.__name__}' object does not have a defined function or a factory "
-                             f"function to build a function for '{name}'")
+            raise ValueError(
+                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                f"function to build a function for '{name}'"
+            )
 
-    
-    def calculate_variables(self, project_builtin_variables: Dict[str, Any], data: Dict[str, Any]) -> Dict[str, Any]:
-        select_relevant_variables = self.select_relevant_variables(project_builtin_variables)
+    def calculate_variables(
+        self, project_builtin_variables: dict[str, Any], data: dict[str, Any]
+    ) -> dict[str, Any]:
+        select_relevant_variables = self.select_relevant_variables(
+            project_builtin_variables
+        )
         calculated_variables = {}
         for variable in select_relevant_variables:
             value = self.get_variable_value(data, variable)
             exists = value is not None
             if exists:
-                calculated_variables[variable['qualified_name']] = value
+                calculated_variables[variable["qualified_name"]] = value
             calculated_variables[f"{variable['qualified_name']}_exists"] = exists
 
         return calculated_variables
-
-    
 
 
 class OAuthDataProvider(DataProvider):
@@ -353,8 +371,15 @@ class OAuthDataProvider(DataProvider):
     _scopes: list[str] = []
     _categories_scopes: dict[str, str] = {}
 
-    def __init__(self, client_id: str = None, client_secret: str = None,
-                 access_token: str = None, refresh_token: str = None, builtin_variables: list[dict] = None, custom_variables: list[dict] = None):
+    def __init__(
+        self,
+        client_id: str = None,
+        client_secret: str = None,
+        access_token: str = None,
+        refresh_token: str = None,
+        builtin_variables: list[dict] = None,
+        custom_variables: list[dict] = None,
+    ):
         super().__init__()
         self.client_id: str = client_id
         self.client_secret: str = client_secret
@@ -369,19 +394,17 @@ class OAuthDataProvider(DataProvider):
         self.builtin_variables = builtin_variables
         self.custom_variables = custom_variables
 
-
-
     @classmethod
     def get_redirect_uri(cls) -> str:
         # TODO: avoid using environment variables.
         frontend_url = os.getenv("FRONTEND_URL")
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
-    
+
     def to_public_dict(self) -> dict:
         # Now requires context data to generate the authorize_url
         authorize_url = self.get_authorize_url(
             builtin_variables=self.builtin_variables,
-            custom_variables=self.custom_variables
+            custom_variables=self.custom_variables,
         )
         return {
             **super().to_public_dict(),
@@ -399,8 +422,9 @@ class OAuthDataProvider(DataProvider):
         self._required_scopes = scopes
 
     # Instance methods
-    def get_required_scopes(self, builtin_variables: list[dict] = None,
-                            custom_variables: list[dict] = None) -> list[str]:
+    def get_required_scopes(
+        self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None
+    ) -> list[str]:
         if len(self.required_scopes) > 0:
             return self.required_scopes
 
@@ -412,18 +436,24 @@ class OAuthDataProvider(DataProvider):
         builtin_variables = self.select_relevant_variables(builtin_variables)
         custom_variables = self.select_relevant_variables(custom_variables)
 
-        required_scopes = {self._categories_scopes[v["category"]] for v in builtin_variables}
+        required_scopes = {
+            self._categories_scopes[v["category"]] for v in builtin_variables
+        }
 
-        required_scopes.union({self._categories_scopes[v["data_category"]] for v in custom_variables})
+        required_scopes.union(
+            {self._categories_scopes[v["data_category"]] for v in custom_variables}
+        )
 
         required_scopes = list(required_scopes)
 
         self.required_scopes = required_scopes
         return required_scopes
 
-    def calculate_variables(self,
-                            project_builtin_variables: list[dict],
-                            project_custom_variables: list[dict] = None) -> dict[str, TVariableValue]:
+    def calculate_variables(
+        self,
+        project_builtin_variables: list[dict],
+        project_custom_variables: list[dict] = None,
+    ) -> dict[str, TVariableValue]:
         """Calculates the values of passed variables.
 
         Args:
@@ -440,24 +470,27 @@ class OAuthDataProvider(DataProvider):
             project_custom_variables = []
 
         calculated_variables = {}
-        
+
         for variable in self.select_relevant_variables(project_builtin_variables):
             value = None
             try:
                 value = self.get_variable_value(**variable)
                 exists = value is not None
             except ValueError:
-                logger.warning(f"Variable {variable['name']} could not be calculated with the following "
-                               f"error:\n{traceback.format_exc()}")
+                logger.warning(
+                    f"Variable {variable['name']} could not be calculated with the following "
+                    f"error:\n{traceback.format_exc()}"
+                )
                 exists = False
 
-            calculated_variables[variable['qualified_name']] = value
+            calculated_variables[variable["qualified_name"]] = value
             calculated_variables[f"{variable['qualified_name']}.exists"] = exists
 
-    
         for variable in self.select_relevant_variables(project_custom_variables):
             # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
-            custom_var_manager = CustomVariable(data_provider=self, custom_variable=variable)
+            custom_var_manager = CustomVariable(
+                data_provider=self, custom_variable=variable
+            )
 
             custom_vars = custom_var_manager.calculate_custom_variables()
 
@@ -465,8 +498,15 @@ class OAuthDataProvider(DataProvider):
 
         return calculated_variables
 
-    def get_variable_value(self, category: str = "", name: str = "", qualified_name: str = "", is_indexed_variable: bool = False,
-                           index: int = 0, **kwargs) -> TVariableValue:
+    def get_variable_value(
+        self,
+        category: str = "",
+        name: str = "",
+        qualified_name: str = "",
+        is_indexed_variable: bool = False,
+        index: int = 0,
+        **kwargs,
+    ) -> TVariableValue:
         if qualified_name in self._variable_values:
             return self._variable_values[qualified_name]
 
@@ -477,7 +517,9 @@ class OAuthDataProvider(DataProvider):
         if data_category_class is None:
             raise ValueError(f"Data category '{category}' not found")
 
-        variable_func = data_category_class.get_builtin_variable_by_name(name).extractor_func
+        variable_func = data_category_class.get_builtin_variable_by_name(
+            name
+        ).extractor_func
 
         if variable_func:
             if is_indexed_variable:
@@ -487,9 +529,10 @@ class OAuthDataProvider(DataProvider):
             self._variable_values[name] = value
             return value
         else:
-            raise ValueError(f"'{self.__class__.__name__}' object does not have a defined function or a factory "
-                             f"function to build a function for '{name}'")
-
+            raise ValueError(
+                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                f"function to build a function for '{name}'"
+            )
 
     # Methods that child classes must implement
     @abstractmethod
@@ -501,7 +544,9 @@ class OAuthDataProvider(DataProvider):
         pass
 
     @abstractmethod
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] = None) -> str:
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+    ) -> str:
         pass
 
     @abstractmethod
@@ -509,7 +554,7 @@ class OAuthDataProvider(DataProvider):
         pass
 
     @abstractmethod
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
         pass
 
     @abstractmethod
@@ -548,7 +593,6 @@ class FormField(BaseFormField):
     _registry_class_name: str = ""  # No need to set this manually.
 
 
-
 class FormTextBlock(BaseFormTextBlock):
     """This class is used to declare text blocks that a data provider needs to be filled when it is added in the UI.
 
@@ -559,9 +603,8 @@ class FormTextBlock(BaseFormTextBlock):
             The type of the text block.
             Allowed values are: "text"
     """
+
     shared_prefix_text: str = "api"
     _package: str = ""
     _registry_class = DataProvider
     _registry_class_name: str = ""  # No need to set this manually.
-
-    

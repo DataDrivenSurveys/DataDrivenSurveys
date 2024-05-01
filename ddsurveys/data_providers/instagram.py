@@ -7,48 +7,50 @@ Created on 2023-08-31 16:59
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
-__all__ = "InstagramDataProvider"
+__all__ = ["InstagramDataProvider"]
 
-from typing import Callable, Dict, Any
 from functools import cached_property
+from typing import Any, Callable, Dict
+
 import requests
 
-from .bases import OAuthDataProvider, FormField
-from .variables import BuiltInVariable
-from .data_categories import DataCategory
 from ..get_logger import get_logger
 from ..variable_types import TVariableFunction, VariableDataType
-
+from .bases import FormField, OAuthDataProvider
+from .data_categories import DataCategory
+from .variables import BuiltInVariable
 
 logger = get_logger(__name__)
 
+
 class Media(DataCategory):
-   
-   def fetch_data(self) -> list[dict[str, Any]]:
+
+    def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
-   cv_attributes = []
-   builtin_variables = [
-      BuiltInVariable.create_instances(
-        name="media_count",
-        label="Media Count",
-        description="Number of media posts.",
-        data_type=VariableDataType.NUMBER,
-        test_value_placeholder="2020-01-01",
-        info="This will be the date that the respondent's Instagram account was created. It will be in YYYY-MM-DD format.",
-        extractor_func= lambda self: self.media_count,
-        data_origin=[{
-            "method": "media_count",
-            "endpoint": "https://graph.instagram.com/v11/me?fields=media_count&access_token=[access_token]",
-            "documentation": "https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#fields"
-        }]
-      )
+    cv_attributes = []
+    builtin_variables = [
+        BuiltInVariable.create_instances(
+            name="media_count",
+            label="Media Count",
+            description="Number of media posts.",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="2020-01-01",
+            info="This will be the date that the respondent's Instagram account was created. It will be in YYYY-MM-DD format.",
+            extractor_func=lambda self: self.media_count,
+            data_origin=[
+                {
+                    "method": "media_count",
+                    "endpoint": "https://graph.instagram.com/v11/me?fields=media_count&access_token=[access_token]",
+                    "documentation": "https://developers.facebook.com/docs/instagram-basic-display-api/reference/user#fields",
+                }
+            ],
+        )
     ]
 
 
 class InstagramDataProvider(OAuthDataProvider):
     # General class attributes
-
 
     # These attributes need to be overridden
     app_creation_url: str = "https://developers.facebook.com/apps/creation/"
@@ -76,7 +78,7 @@ class InstagramDataProvider(OAuthDataProvider):
             required=True,
             data={
                 # "helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started"
-            }
+            },
         ),
         FormField(
             name="client_secret",
@@ -84,13 +86,11 @@ class InstagramDataProvider(OAuthDataProvider):
             required=True,
             data={
                 # "helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started"
-            }
+            },
         ),
     ]
 
-    data_categories = [
-        Media
-    ]
+    data_categories = [Media]
 
     # Assuming the use of the latest API version (as of September 2021)
     api_version = "v11.0"
@@ -111,7 +111,6 @@ class InstagramDataProvider(OAuthDataProvider):
             logger.error(f"Error fetching media count from Instagram: {e}")
             return None
 
-
     # Standard/builtin class methods go here
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -123,7 +122,9 @@ class InstagramDataProvider(OAuthDataProvider):
     def init_oauth_client(self, *args, **kwargs) -> None:
         pass
 
-    def get_authorize_url(self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None) -> str:
+    def get_authorize_url(
+        self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None
+    ) -> str:
         """
         Returns the authorize url.
 
@@ -141,7 +142,11 @@ class InstagramDataProvider(OAuthDataProvider):
             "scope": "user_profile,user_media",
             "response_type": "code",
         }
-        url = requests.Request('GET', self.base_authorize_url, params=params).prepare().url
+        url = (
+            requests.Request("GET", self.base_authorize_url, params=params)
+            .prepare()
+            .url
+        )
         return url
 
     def get_client_id(self) -> str:
@@ -181,7 +186,7 @@ class InstagramDataProvider(OAuthDataProvider):
             if not access_token or not user_id:
                 return {
                     "success": False,
-                    "message_id": "api.data_provider.exchange_code_error.general_error"
+                    "message_id": "api.data_provider.exchange_code_error.general_error",
                 }
 
             # At this point, for Instagram, we know the user has accepted the full scope.
@@ -197,7 +202,7 @@ class InstagramDataProvider(OAuthDataProvider):
             if not user_name:
                 return {
                     "success": False,
-                    "message_id": "api.data_provider.exchange_code_error.general_error"
+                    "message_id": "api.data_provider.exchange_code_error.general_error",
                 }
 
             return {
@@ -205,21 +210,22 @@ class InstagramDataProvider(OAuthDataProvider):
                 "access_token": access_token,
                 "refresh_token": None,  # Instagram doesn't provide refresh token in this flow
                 "user_id": user_id,
-                "user_name": user_name
+                "user_name": user_name,
             }
 
         except requests.HTTPError:
             logger.error(
-                    f"HTTP error when exchanging Instagram code for token. Status code: {response.status_code}")
+                f"HTTP error when exchanging Instagram code for token. Status code: {response.status_code}"
+            )
             return {
                 "success": False,
-                "message_id": "api.data_provider.exchange_code_error.general_error"
+                "message_id": "api.data_provider.exchange_code_error.general_error",
             }
         except Exception as e:
             logger.error(f"Error exchanging Instagram code for token: {e}")
             return {
                 "success": False,
-                "message_id": "api.data_provider.exchange_code_error.general_error"
+                "message_id": "api.data_provider.exchange_code_error.general_error",
             }
 
     def revoke_token(self, token: str) -> bool:
@@ -260,7 +266,7 @@ class InstagramDataProvider(OAuthDataProvider):
             success = response.status_code == 200
             if response.status_code != 200:
                 error = response.json().get("error_message")
-                if error == 'Invalid platform app' or error == 'Invalid Client ID':
+                if error == "Invalid platform app" or error == "Invalid Client ID":
                     success = False
                 else:
                     success = True

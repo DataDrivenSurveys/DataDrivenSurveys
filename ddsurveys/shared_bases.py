@@ -7,44 +7,54 @@ Created on 2023-09-05 18:07
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 from __future__ import annotations
-from copy import deepcopy
+
 from abc import abstractmethod
+from copy import deepcopy
 from functools import cached_property
-from typing import Any, Optional, Type, List, Dict, Tuple
+from logging import Logger
 from pprint import pprint
+from typing import Any, Optional, Type
 
 from .get_logger import get_logger
 
-logger = get_logger(__name__)
+logger: Logger = get_logger(__name__)
 
 TRegistryClass = Type["Registry"]
 TUIRegistryClass = Type["UIRegistry"]
 
+
 class FormElement:
+    _package: str
+    _registry_class: TUIRegistryClass
+
     shared_prefix_text: str = "ddsurveys"
 
-    def __init__(self, name: str, label: Optional[str] = None, helper_text: Optional[str] = None, data: Optional[Dict[str, Any]] = None, visibility_conditions: Optional[Dict[str, Any]] = None, interaction_effects: Optional[Dict[str, Any]] = None):
-        self.name = name
-        self.label = label
-        if label is None:
-            self.label = f"{name}.label"
+    def __init__(
+        self,
+        name: str,
+        label: Optional[str] = None,
+        helper_text: Optional[str] = None,
+        data: Optional[dict[str, Any]] = None,
+        visibility_conditions: Optional[dict[str, Any]] = None,
+        interaction_effects: Optional[dict[str, Any]] = None,
+    ) -> None:
+        self.name: str = name
+        self.label: str = label or f"{name}.label"
 
-        self.visibility_conditions = visibility_conditions
-        self.interaction_effects = interaction_effects
+        self.visibility_conditions: dict[str, Any] | None = visibility_conditions
+        self.interaction_effects: dict[str, Any] | None = interaction_effects
 
-        self.helper_text = helper_text
-        if helper_text is None:
-            self.helper_text = f"{name}.helper_text"
+        self.helper_text: str = helper_text or f"{name}.helper_text"
 
-        self.data = data
+        self.data: dict[str, Any] | None = data
 
     @classmethod
     def prefix_text(cls, text: str, class_: type) -> str:
-        label = text
+        label: str = text
         if not text.startswith(cls.shared_prefix_text):
             label = f"{cls.shared_prefix_text}.{class_.__module__}.{text}"
         return label
-    
+
     def get_qualified_name(self, class_: type) -> str:
         """
         Returns the fully qualified name key for the field.
@@ -56,7 +66,7 @@ class FormElement:
             str: Fully qualified name key.
         """
         return self.prefix_text(self.name, class_)
-    
+
     @cached_property
     def registry_class(self) -> TUIRegistryClass:
         return self.__class__._registry_class
@@ -66,7 +76,7 @@ class FormElement:
         return self.__class__._package
 
     @package.setter
-    def package(self, value: str):
+    def package(self, value: str) -> None:
         self.__class__._package = value
 
 
@@ -91,21 +101,19 @@ class FormButton(FormElement):
         data (dict):
             Additional data that will be sent to the frontend.
             This data will be available in the frontend when the button is clicked.
-        onClick (dict):
+        on_click (dict):
             The onClick event of the button.
             The dictionary should contain the following keys:
                 "action" (str): The action that should be performed when the button is clicked. This should be implemented in the reducer passed to the frontend FormFields component.
                 "args" (dict): The arguments that should be passed to the action hanlder.
     """
 
-
-    def __init__(self, onClick: Optional[Dict[str, Any]] = None, **kwargs):
+    def __init__(self, on_click: Optional[dict[str, Any]] = None, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.onClick = onClick
+        self.on_click: dict[str, Any] | None = on_click
         self.type = "button"
 
-
-    def register_field(self, cls):
+    def register_field(self, cls: type) -> Type:
         class_name = cls.__name__
 
         if self.package == "" and hasattr(cls, "_package"):
@@ -127,12 +135,11 @@ class FormButton(FormElement):
             "helper_text": self.helper_text,
             "type": self.type,
             "visibility_conditions": self.visibility_conditions,
-            "onClick": self.onClick,
+            "onClick": self.on_click,
             "data": self.data
         })
         return cls
-    
-    
+
 
 class FormField(FormElement):
     """This class is used to declare fields that a data provider needs to be filled when it is added in the UI.
@@ -158,7 +165,7 @@ class FormField(FormElement):
             If no helper text is passed, the value of name will be used to generate the helper text like so:
             f"api.data_provider.{DP.__name__.lower()}.{name}.helper_text"
     """
-    
+
     def __init__(self, type: str = "text", value: str = "", required: bool = True, disabled: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.type = type
@@ -201,9 +208,9 @@ class FormField(FormElement):
         return cls
 
     @classmethod
-    def check_input_fields(cls, fields: List[dict], form_fields: List[FormField],
-                           override_required_fields: List[str] = None,
-                           class_: type = None) -> Tuple[bool, Optional[str]]:
+    def check_input_fields(cls, fields: list[dict], form_fields: list[FormField | FormButton],
+                           override_required_fields: list[str] = None,
+                           class_: type = None) -> tuple[bool, Optional[str]]:
         """
         Check if all the required fields are present and not empty in the input fields.
 
@@ -244,7 +251,7 @@ class FormField(FormElement):
     def __repr__(self):
         return (f"{self.__class__.__name__}(name={self.name!r}, type={self.type!r}, required={self.required!r}, "
                 f"label={self.label!r}, helper_text={self.helper_text!r}, data={self.data!r})")
-    
+
 class FormTextBlock(FormElement):
     """
     This class is used to declare text blocks that provide information, instructions, or any kind of descriptive text
@@ -504,7 +511,7 @@ class Registry(metaclass=RegistryBase):
         return cls.registry.get(name)
 
     @classmethod
-    def get_class_by_value(cls, value) -> TRegistryClass:
+    def get_class_by_value(cls, value) -> TRegistryClass | None:
         for subclass in cls.registry.get(cls.base_name, {}).values():
             if subclass.name_lower == value:
                 return subclass
@@ -541,12 +548,12 @@ class UIRegistry(Registry):
     # Class attributes that need be redeclared or redefined in child classes
     # The following attributes need to be redeclared in child classes.
     # You can just copy and paste them into the child class body.
-    fields: list[dict[str, Any]] = {}
+    fields: list[dict[str, Any]] = []
 
     # Form fields declarations go here
     # Child classes should redeclare the form_fields attribute and populate the list with instances of FormField.
     # These instances are used to create the form when adding a data provider in the UI.
-    form_fields: list[FormField] = []
+    form_fields: list[FormField | FormButton] = []
 
     @classmethod
     def register(cls):
@@ -599,7 +606,6 @@ class UIRegistry(Registry):
             result.append(item)
 
         return result
-    
 
 
 class OAuthBase:
@@ -645,7 +651,7 @@ class OAuthBase:
         pass
 
     @abstractmethod
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
         pass
 
     @abstractmethod

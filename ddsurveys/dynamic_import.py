@@ -7,14 +7,12 @@ Created on 2023-09-04 13:51
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
-import sys
 import importlib
 import importlib.util
+import sys
 from functools import wraps
 from os import PathLike
 from pathlib import Path
-from typing import Callable, Union
-from types import ModuleType
 
 
 def dynamic_import(parent_package: PathLike, exclude_names: tuple[str] = (), recursive: bool = False):

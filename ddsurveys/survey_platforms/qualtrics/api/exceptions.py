@@ -6,7 +6,6 @@ Created on 2023-04-27 16:02
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-from flask import current_app
 from requests import Response
 
 
@@ -22,9 +21,11 @@ def extract_qualtrics_error(resp: Response) -> str:
 
     if "validationErrors" in json_error:
         for error in json_error["validationErrors"]:
-            text = (f"{error['Context']} had the value '{error['Value']}', which failed to be validated with the "
-                    f"following message:\n"
-                    f"{error['Description']}")
+            text = (
+                f"{error['Context']} had the value '{error['Value']}', which failed to be validated with the "
+                f"following message:\n"
+                f"{error['Description']}"
+            )
             detailed_errors.append(text)
 
     detailed_errors = "\n".join(detailed_errors)
@@ -33,8 +34,10 @@ def extract_qualtrics_error(resp: Response) -> str:
 
 
 class MissingAPIToken(Exception):
-    _default_message = "No Qualtrics token was passed. Pass it as the 'api_token' constructor parameter, or set the " \
-                       "'QUALTRICS_API_TOKEN' environment variable equal to it."
+    _default_message = (
+        "No Qualtrics token was passed. Pass it as the 'api_token' constructor parameter, or set the "
+        "'QUALTRICS_API_TOKEN' environment variable equal to it."
+    )
 
     def __init__(self, message=None):
         if message is None:
@@ -72,6 +75,7 @@ class FailedQualtricsRequest(Exception):
 
 class BadRequestError(FailedQualtricsRequest):
     """Exception raised when a 400 Bad Request error occurs."""
+
     def __init__(self, resp: Response):
         message = f"Possible cause: Your request is malformed. Check the syntax and structure of your request."
         super().__init__(resp, message)
@@ -79,6 +83,7 @@ class BadRequestError(FailedQualtricsRequest):
 
 class AuthorizationError(FailedQualtricsRequest):
     """Exception raised when a 401 Unauthorized error occurs."""
+
     def __init__(self, resp: Response):
         message = f"Possible cause: You're not authenticated or don't have permission to access the requested resource."
         super().__init__(resp, message)
@@ -86,6 +91,7 @@ class AuthorizationError(FailedQualtricsRequest):
 
 class NotFoundError(FailedQualtricsRequest):
     """Exception raised when a 404 Not Found error occurs."""
+
     def __init__(self, resp: Response):
         message = f"Possible cause: The requested resource could not be found."
         super().__init__(resp, message)
@@ -93,6 +99,7 @@ class NotFoundError(FailedQualtricsRequest):
 
 class ServerError(FailedQualtricsRequest):
     """Exception raised when a 500 Internal Server Error occurs."""
+
     def __init__(self, resp: Response):
         message = f"Possible cause: The server encountered an internal error."
         super().__init__(resp, message)
@@ -100,5 +107,6 @@ class ServerError(FailedQualtricsRequest):
 
 class UnhandledStatusCodeError(FailedQualtricsRequest):
     """Exception raised when an unhandled status code is returned."""
+
     def __init__(self, resp: Response):
         super().__init__(resp)

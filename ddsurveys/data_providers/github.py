@@ -1,36 +1,38 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-__all__ = "GitHubDataProvider"
+__all__ = ["GitHubDataProvider"]
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Callable
 from functools import cached_property
+from typing import Any, Callable, Dict
 
 import requests
-
+from github import ApplicationOAuth, Auth, Github
 from github.AccessToken import AccessToken
-from github import Github, Auth, ApplicationOAuth
-from github.GithubException import GithubException, BadCredentialsException
+from github.GithubException import BadCredentialsException, GithubException
 
 from ..get_logger import get_logger
 from ..variable_types import TVariableFunction, VariableDataType
-from .bases import OAuthDataProvider, FormField
-from .variables import CVAttribute, BuiltInVariable, BuiltInVariable
+from .bases import FormField, OAuthDataProvider
 from .data_categories import DataCategory
-
+from .variables import BuiltInVariable, CVAttribute
 
 logger = get_logger(__name__)
 
 
 class Account(DataCategory):
 
-    data_origin = [{
-        "method": "get_user",
-        "endpoint": "https://api.github.com/user",
-        "documentation": "https://docs.github.com/en/rest/reference/users",
-    }]
+    data_origin = [
+        {
+            "method": "get_user",
+            "endpoint": "https://api.github.com/user",
+            "documentation": "https://docs.github.com/en/rest/reference/users",
+        }
+    ]
 
     custom_variables_enabled = False
 
@@ -48,9 +50,8 @@ class Account(DataCategory):
             attribute="name",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="Username",
-            info="The name of the user."
+            info="The name of the user.",
         ),
-
         CVAttribute(
             label="Creation Date",
             description="The date the repository was created.",
@@ -58,7 +59,7 @@ class Account(DataCategory):
             name="creation_date",
             data_type=VariableDataType.DATE,
             test_value_placeholder="2023-01-10T12:00:00.000",
-            info="The date the account was created."
+            info="The date the account was created.",
         ),
     ]
 
@@ -72,22 +73,26 @@ class Account(DataCategory):
             info="The date the account was created. It will be in the format YYYY-MM-DD.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.account_creation_date,
-            data_origin=[{
-                "method": "get_user_repositories",
-                "endpoint": "https://api.github.com/users/[username]/repos",
-                "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
-            }]
+            data_origin=[
+                {
+                    "method": "get_user_repositories",
+                    "endpoint": "https://api.github.com/users/[username]/repos",
+                    "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
+                }
+            ],
         )
     ]
 
 
 class Repositories(DataCategory):
 
-    data_origin = [{
-        "method": "get_user_repositories",
-        "endpoint": "https://api.github.com/users/[username]/repos",
-        "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
-    }]
+    data_origin = [
+        {
+            "method": "get_user_repositories",
+            "endpoint": "https://api.github.com/users/[username]/repos",
+            "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
+        }
+    ]
 
     def fetch_data(self) -> list[dict[str, Any]]:
         repos = self.data_provider.get_user_repositories
@@ -101,7 +106,7 @@ class Repositories(DataCategory):
             attribute="name",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="MyRepo",
-            info="The name of the repository."
+            info="The name of the repository.",
         ),
         CVAttribute(
             name="description",
@@ -110,7 +115,7 @@ class Repositories(DataCategory):
             attribute="description",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="A repository for XYZ project.",
-            info="The description of the repository."
+            info="The description of the repository.",
         ),
         CVAttribute(
             label="Creation Date",
@@ -119,7 +124,7 @@ class Repositories(DataCategory):
             name="creation_date",
             data_type=VariableDataType.DATE,
             test_value_placeholder="2023-01-10T12:00:00.000",
-            info="The date the repository was created."
+            info="The date the repository was created.",
         ),
         CVAttribute(
             name="stars",
@@ -129,7 +134,7 @@ class Repositories(DataCategory):
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="100",
             info="The number of stars the repository has.",
-            unit="stars"
+            unit="stars",
         ),
         CVAttribute(
             label="Repository URL",
@@ -138,7 +143,7 @@ class Repositories(DataCategory):
             name="url",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="https://github.com/user/repo",
-            info="The URL of the repository."
+            info="The URL of the repository.",
         ),
         CVAttribute(
             label="Open Issues",
@@ -148,8 +153,8 @@ class Repositories(DataCategory):
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="10",
             info="The number of open issues the repository has.",
-            unit="issues"
-        )
+            unit="issues",
+        ),
     ]
 
     builtin_variables = [
@@ -189,14 +194,13 @@ class GitHubDataProvider(OAuthDataProvider):
     # instructions_helper_url: str = "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
 
     # Unique class attributes go here
-    _scopes = [
-    ]
+    _scopes = []
 
     _categories_scopes = {
         "Account": "read_user",
         "account": "read_user",
         "Repositories": "repo",
-        "repositories": "repo"
+        "repositories": "repo",
     }
 
     form_fields = [
@@ -206,7 +210,7 @@ class GitHubDataProvider(OAuthDataProvider):
             required=True,
             data={
                 # "helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
-            }
+            },
         ),
         FormField(
             name="client_secret",
@@ -214,14 +218,11 @@ class GitHubDataProvider(OAuthDataProvider):
             required=True,
             data={
                 # "helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
-            }
-        )
+            },
+        ),
     ]
 
-    data_categories = [
-        Account,
-        Repositories
-    ]
+    data_categories = [Account, Repositories]
 
     def __init__(self, **kwargs):
         """
@@ -243,9 +244,10 @@ class GitHubDataProvider(OAuthDataProvider):
         if self.access_token is not None and self.refresh_token is not None:
             self.init_api_client(self.access_token, self.refresh_token)
 
-
     # OAuthBase methods
-    def init_api_client(self, access_token: str = None, refresh_token: str = None, code: str = None) -> None:
+    def init_api_client(
+        self, access_token: str = None, refresh_token: str = None, code: str = None
+    ) -> None:
         if access_token is not None:
             self.access_token = access_token
         if refresh_token is not None:
@@ -260,14 +262,15 @@ class GitHubDataProvider(OAuthDataProvider):
     def init_oauth_client(self, *args, **kwargs) -> None:
         g = Github()
 
-        app  = g.get_oauth_application(
-            client_id=self.client_id,
-            client_secret=self.client_secret
+        app = g.get_oauth_application(
+            client_id=self.client_id, client_secret=self.client_secret
         )
 
         self.oauth_client: ApplicationOAuth = app
 
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] = None) -> str:
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+    ) -> str:
         # required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
         #
         # if len(required_scopes) == 0:
@@ -287,12 +290,11 @@ class GitHubDataProvider(OAuthDataProvider):
 
             g = Github()
 
-            app  = g.get_oauth_application(
-                client_id=self.client_id,
-                client_secret=self.client_secret
+            app = g.get_oauth_application(
+                client_id=self.client_id, client_secret=self.client_secret
             )
 
-            token = app.get_access_token(code);
+            token = app.get_access_token(code)
 
             g = Github(auth=app.get_app_user_auth(token))
 
@@ -303,13 +305,13 @@ class GitHubDataProvider(OAuthDataProvider):
                 "access_token": token.token,
                 "refresh_token": token.refresh_token,
                 "user_id": user.id,
-                "user_name": user.login
+                "user_name": user.login,
             }
         except GithubException as e:
             logger.exception(f"Failed to request token: {e}")
             return {
                 "success": False,
-                "message_id": "api.data_provider.exchange_code_error.general_error"
+                "message_id": "api.data_provider.exchange_code_error.general_error",
             }
 
     def revoke_token(self, token: str) -> bool:
@@ -342,7 +344,9 @@ class GitHubDataProvider(OAuthDataProvider):
             if reason.get("error") == "bad_verification_code":
                 return True
 
-            logger.exception(f"Failed to connect to GitHub BadCredentialsException: {e}")
+            logger.exception(
+                f"Failed to connect to GitHub BadCredentialsException: {e}"
+            )
             return False
         except GithubException as e:
             logger.exception(f"Failed to connect to GitHub: {e}")
@@ -354,20 +358,22 @@ class GitHubDataProvider(OAuthDataProvider):
         """
             Repository: https://pygithub.readthedocs.io/en/stable/github_objects/Repository.html
         """
-        return [{
-            "name": repo.name,
-            "description": repo.description,
-            "created_at": repo.created_at.isoformat(), # "2021-08-10T12:00:00.000"
-            "html_url": repo.html_url,
-            "open_issues": repo.open_issues_count,
-            "stargazers_count": repo.stargazers_count
-        } for repo in repos]
-
+        return [
+            {
+                "name": repo.name,
+                "description": repo.description,
+                "created_at": repo.created_at.isoformat(),  # "2021-08-10T12:00:00.000"
+                "html_url": repo.html_url,
+                "open_issues": repo.open_issues_count,
+                "stargazers_count": repo.stargazers_count,
+            }
+            for repo in repos
+        ]
 
     def repositories_by_stars(self, idx: int) -> str:
         repos = self.get_user_repositories
         # Sort the repositories by stars
-        repos.sort(key=lambda repo: repo['stargazers_count'], reverse=True)
+        repos.sort(key=lambda repo: repo["stargazers_count"], reverse=True)
         return repos[idx - 1]["name"] if idx <= len(repos) else None
 
     @cached_property

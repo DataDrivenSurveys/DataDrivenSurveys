@@ -1,22 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-"""
-__all__ = "TemplateSimpleDataProvider"
+This module is a template file that can be used as a starting point for creating your own data providers.
 
-from abc import ABC, abstractmethod
-from typing import Dict, Any, Callable
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+"""
+__all__ = ["TemplateSimpleDataProvider"]
+
 from functools import cached_property
+from typing import Any, Callable, Dict
 
 import requests
 
-# Import the required libraries to make this work
-
 from ..get_logger import get_logger
 from ..variable_types import TVariableFunction, VariableDataType
-from .bases import OAuthDataProvider, FormField
-from .variables import CVAttribute, BuiltInVariable, BuiltInVariable
+from .bases import FormField, OAuthDataProvider
 from .data_categories import DataCategory
+from .variables import BuiltInVariable, CVAttribute
+
+# Import the required libraries to make this work
 
 
 logger = get_logger(__name__)
@@ -26,11 +29,13 @@ logger = get_logger(__name__)
 # In practice each endpoint can be turned into a data category.
 class ExampleAccount(DataCategory):
 
-    data_origin = [{
-        "method": "get_user",
-        "endpoint": "https://api.dataprovider.com/account",
-        "documentation": "https://docs.dataprovider.com/en/rest/reference/account",
-    }]
+    data_origin = [
+        {
+            "method": "get_user",
+            "endpoint": "https://api.dataprovider.com/account",
+            "documentation": "https://docs.dataprovider.com/en/rest/reference/account",
+        }
+    ]
 
     custom_variables_enabled = False
 
@@ -48,9 +53,8 @@ class ExampleAccount(DataCategory):
             attribute="name",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="Username",
-            info="The name of the user."
+            info="The name of the user.",
         ),
-
         CVAttribute(
             label="Creation Date",
             description="The date the repository was created.",
@@ -58,7 +62,7 @@ class ExampleAccount(DataCategory):
             name="creation_date",
             data_type=VariableDataType.DATE,
             test_value_placeholder="2023-01-10T12:00:00.000",
-            info="The date the account was created."
+            info="The date the account was created.",
         ),
     ]
 
@@ -72,7 +76,7 @@ class ExampleAccount(DataCategory):
             info="The date the account was created. It will be in the format YYYY-MM-DD.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.account_creation_date,
-            data_origin=[]
+            data_origin=[],
         )
     ]
 
@@ -91,31 +95,21 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
 
     # Update the following attributes:
     app_creation_url: str = "https://dataprovider.com/settings/apps/new"
-    instructions_helper_url: str = "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
+    instructions_helper_url: str = (
+        "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
+    )
 
     # Unique class attributes go here
-    _scopes = [
-    ]
+    _scopes = []
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
-    _categories_scopes = {
-    }
+    _categories_scopes = {}
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
     form_fields = [
-        FormField(
-            name="client_id",
-            type="text",
-            required=True,
-            data={}
-        ),
-        FormField(
-            name="client_secret",
-            type="text",
-            required=True,
-            data={}
-        )
+        FormField(name="client_id", type="text", required=True, data={}),
+        FormField(name="client_secret", type="text", required=True, data={}),
     ]
 
     # List all the data categories that this data provider supports.
@@ -146,9 +140,10 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
         if self.access_token is not None and self.refresh_token is not None:
             self.init_api_client(self.access_token, self.refresh_token)
 
-
     # OAuthBase methods
-    def init_api_client(self, access_token: str = None, refresh_token: str = None, code: str = None) -> None:
+    def init_api_client(
+        self, access_token: str = None, refresh_token: str = None, code: str = None
+    ) -> None:
         ...
 
         self.api_client = ...
@@ -158,33 +153,25 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
 
         self.oauth_client = ...
 
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] = None) -> str:
-        ...
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+    ) -> str: ...
 
-    def get_client_id(self) -> str:
-        ...
+    def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> Dict[str, Any]:
-        ...
+    def request_token(self, code: str) -> Dict[str, Any]: ...
 
-    def revoke_token(self, token: str) -> bool:
-        ...
+    def revoke_token(self, token: str) -> bool: ...
 
     # DataProvider methods
-    def test_connection_before_extraction(self) -> bool:
-        ...
+    def test_connection_before_extraction(self) -> bool: ...
 
-    def test_connection(self) -> bool:
-        ...
+    def test_connection(self) -> bool: ...
 
     @cached_property
-    def get_user_repositories(self) -> list:
-        ...
+    def get_user_repositories(self) -> list: ...
 
-
-    def repositories_by_stars(self, idx: int) -> str:
-        ...
+    def repositories_by_stars(self, idx: int) -> str: ...
 
     @cached_property
-    def account_creation_date(self) -> str:
-        ...
+    def account_creation_date(self) -> str: ...

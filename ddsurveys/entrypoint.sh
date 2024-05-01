@@ -11,7 +11,7 @@ set -e
 # Run Alembic migrations
 echo "Running Alembic migrations..."
 cd /app/ddsurveys
-#alembic upgrade head
+alembic upgrade head
 
 cd /app
 

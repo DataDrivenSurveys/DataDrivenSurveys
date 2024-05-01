@@ -8,7 +8,6 @@ Created on 2023-05-23 15:41
 """
 
 import datetime
-import logging
 from functools import wraps
 
 # Import installed libraries
@@ -31,32 +30,47 @@ from .variable_types import Data, VariableDataType
 
 logger = get_logger(__name__)
 
+# Load environment variables
 env = handle_env_file()
 
+# Configure logging
+if env.get("DDS_SET_LEVEL_FOR_ALL_LOGGERS", "true").casefold() == "true":
+    set_logger_level(
+        "ddsurveys",
+        env.get("DDS_LOG_LEVEL", "DEBUG"),
+        recursive=True,
+        include_root=True,
+    )
+
+if env.get("DDS_ONLY_LOG_DDS", "true").casefold() == "true":
+    only_log_ddsurveys()
+
+logger.debug(f"Loaded environment variables: {env}")
+
+# Flask app config
 APP_CONFIG = {
-    # ddsurveys specific settings
-    "ONLY_LOG_DDSURVEYS": True,  # Custom option to set logging to show only output for ddsurveys modules
-    "SET_LEVEL_FOR_ALL_LOGGERS": True,
+    # DDS specific settings
+    # Custom option to set logging to show only output for ddsurveys modules
+    "DDS_ONLY_LOG_DDS": env.get("DDS_ONLY_LOG_DDS", "true").casefold() == "true",
+    # Set all loggers to the same level
+    "DDS_SET_LEVEL_FOR_ALL_LOGGERS": env.get("DDS_SET_LEVEL_FOR_ALL_LOGGERS", "true").casefold() == "true",
 
     # Flask settings
-    "LOG_LEVEL": 1,
-
-
+    "LOG_LEVEL": env.get("DDS_LOG_LEVEL", "DEBUG"),
     # JWT Configuration
-    "JWT_TOKEN_LOCATION": ['headers'],
-    "JWT_HEADER_NAME": 'Authorization',
-    "JWT_HEADER_TYPE": 'Bearer',
+    "JWT_TOKEN_LOCATION": ["headers"],
+    "JWT_HEADER_NAME": "Authorization",
+    "JWT_HEADER_TYPE": "Bearer",
     "JWT_ACCESS_TOKEN_EXPIRES": datetime.timedelta(days=1),
     "JWT_SECRET_KEY": env.get("JWT_SECRET_KEY", "dummy_secret_key_for_testing"),
     "JWT_ERROR_MESSAGE_KEY": "message",  # We use 'message' instead of 'msg' in our frontend
-
     # eventually set up the blacklisting of tokens for sign out
     # will require a database model for the blacklisted tokens
     # "JWT_BLACKLIST_ENABLED": True,
     # "JWT_BLACKLIST_TOKEN_CHECKS": ['access','refresh']
 }
 
-JWT_FUNCTIONS_TO_WRAP = [
+JWT_FUNCTIONS_TO_WRAP: list[str] = [
     "default_expired_token_callback",
     "default_invalid_token_callback",
     "default_unauthorized_callback",
@@ -100,13 +114,6 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     app.config.from_mapping(APP_CONFIG)
-
-    # Configure logging
-    if APP_CONFIG.get("SET_LEVEL_FOR_ALL_LOGGERS", False):
-        set_logger_level("ddsurveys", APP_CONFIG.get("LOG_LEVEL", logging.DEBUG), recursive=True, include_root=True)
-
-    if APP_CONFIG.get("ONLY_LOG_DDSURVEYS", False):
-        only_log_ddsurveys()
 
     init_session(app)  # Initialize the database session
 

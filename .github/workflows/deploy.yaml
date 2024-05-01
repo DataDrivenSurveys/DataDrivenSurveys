@@ -19,14 +19,14 @@ jobs:
         npm install
         npm run build
 
-    - name: Generate .env.production for ddsurveys and frontend
+    - name: Generate .env.production.local for ddsurveys and frontend.
       run: |
-        echo DATABASE_URL="${{ secrets.DATABASE_URL }}" > ddsurveys/.env.production
-        echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> ddsurveys/.env.production
-        echo FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> ddsurveys/.env.production
-        echo APP_SURVEY_MONKEY_CLIENT_ID="${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }}" >> ddsurveys/.env.production
-        echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >> ddsurveys/.env.production
-        echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production
+        echo DATABASE_URL="${{ secrets.DATABASE_URL }}" > ddsurveys/.env.production.local
+        echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> ddsurveys/.env.production.local
+        echo FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> ddsurveys/.env.production.local
+        echo APP_SURVEY_MONKEY_CLIENT_ID="${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }}" >> ddsurveys/.env.production.local
+        echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >> ddsurveys/.env.production.local
+        echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production.local
 
     - name: Copy the project to the server
       uses: appleboy/scp-action@master

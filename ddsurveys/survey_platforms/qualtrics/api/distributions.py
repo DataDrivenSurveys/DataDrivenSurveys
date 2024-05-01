@@ -8,14 +8,15 @@ Created on 2023-06-05 14:42
 """
 import functools
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from typing import Optional
 
+from dateutil.relativedelta import relativedelta
 from requests import Response
 
 from ddsurveys.get_logger import get_logger
+
+from .exceptions import FailedQualtricsRequest, MissingMailingListID, MissingSurveyID
 from .qualtrics_requests import QualtricsRequests
-from .exceptions import MissingMailingListID, MissingSurveyID, FailedQualtricsRequest
 
 logger = get_logger(__name__)
 
@@ -23,8 +24,13 @@ logger = get_logger(__name__)
 class DistributionsAPI(QualtricsRequests):
     _endpoint = "distributions"
 
-    def __init__(self, api_token="", datacenter_location: str = "EU", accept_datacenter_redirect: bool = True,
-                 mailing_list_id: Optional[str] = None):
+    def __init__(
+        self,
+        api_token="",
+        datacenter_location: str = "EU",
+        accept_datacenter_redirect: bool = True,
+        mailing_list_id: Optional[str] = None,
+    ):
         super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
         self.mailing_list_id = mailing_list_id
 
@@ -69,17 +75,33 @@ class DistributionsAPI(QualtricsRequests):
     def get_first_directory_id(self):
         return self.list_directories()[0]["directoryId"]
 
-    def create_mailing_list(self, directory_id: str, name: str, owner_id: str, prioritize_list_metadata: bool = True):
+    def create_mailing_list(
+        self,
+        directory_id: str,
+        name: str,
+        owner_id: str,
+        prioritize_list_metadata: bool = True,
+    ):
         payload = {
             "name": name,
             "ownerId": owner_id,
-            "prioritizeListMetadata": prioritize_list_metadata
+            "prioritizeListMetadata": prioritize_list_metadata,
         }
         return self.post(f"directories/{directory_id}/mailinglists", json=payload)
 
-    def create_contact(self, directory_id: str, mailing_list_id: str,
-                       embedded_data: dict, first_name: str = "", last_name: str = "", email: str = "", phone: str = "",
-                       ext_ref: str = "", language: str = "", unsubscribed: bool = False):
+    def create_contact(
+        self,
+        directory_id: str,
+        mailing_list_id: str,
+        embedded_data: dict,
+        first_name: str = "",
+        last_name: str = "",
+        email: str = "",
+        phone: str = "",
+        ext_ref: str = "",
+        language: str = "",
+        unsubscribed: bool = False,
+    ):
 
         data = dict()
         for k, v in embedded_data.items():
@@ -92,10 +114,7 @@ class DistributionsAPI(QualtricsRequests):
             else:
                 data[k] = v
 
-        payload = {
-            "embeddedData": data,
-            "unsubscribed": unsubscribed
-        }
+        payload = {"embeddedData": data, "unsubscribed": unsubscribed}
 
         if first_name != "":
             payload["firstName"] = first_name
@@ -115,21 +134,26 @@ class DistributionsAPI(QualtricsRequests):
         if language != "":
             payload["language"] = language
 
-        resp = self.post(f"directories/{directory_id}/mailinglists/{mailing_list_id}/contacts", json=payload)
+        resp = self.post(
+            f"directories/{directory_id}/mailinglists/{mailing_list_id}/contacts",
+            json=payload,
+        )
 
-        return  resp.json()["result"]
+        return resp.json()["result"]
 
-    def create_unique_distribution_link(self, survey_id: str, mailing_list_id: str, contact_lookup_id: str) -> str:
+    def create_unique_distribution_link(
+        self, survey_id: str, mailing_list_id: str, contact_lookup_id: str
+    ) -> str:
         one_month = date.today() + relativedelta(months=+1)
 
         payload = {
             "surveyId": survey_id,
             "linkType": "Individual",
-            "description": "distribution " + one_month.strftime('%Y-%m-%d %H:%M:%S'),
+            "description": "distribution " + one_month.strftime("%Y-%m-%d %H:%M:%S"),
             "action": "CreateDistribution",
-            "expirationDate": one_month.strftime('%Y-%m-%d %H:%M:%S'),
+            "expirationDate": one_month.strftime("%Y-%m-%d %H:%M:%S"),
             "mailingListId": mailing_list_id,
-            "contactId": contact_lookup_id
+            "contactId": contact_lookup_id,
         }
 
         resp = self.post("distributions", json=payload)
@@ -139,12 +163,8 @@ class DistributionsAPI(QualtricsRequests):
         resp = self.get(f"distributions/{distribution_id}/links?surveyId={survey_id}")
 
         return resp.json()["result"]["elements"][0]["link"]
-    
+
     def get_preview_survey_url(self, survey_id: str, mailing_list_id: str) -> str:
-        payload = {
-            "surveyId": survey_id,
-            "mailingListId": mailing_list_id
-        }
+        payload = {"surveyId": survey_id, "mailingListId": mailing_list_id}
         resp = self.post("distributions/preview", json=payload)
         return resp.json()["result"]["previewLink"]
-

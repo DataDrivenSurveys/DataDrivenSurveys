@@ -10,23 +10,36 @@ Created on 2023-08-31 16:54
 """
 __all__ = [
     # Type and TypeVar exports
-    "TData", "TDataClass", "TVariableValue", "TVariable",  "TVariableFunction",
-
+    "TData",
+    "TDataClass",
+    "TVariableValue",
+    "TVariable",
+    "TVariableFunction",
     # Variable specification class exports
-    "Variable", "VariableFunction",
-
+    "Variable",
+    "VariableFunction",
     # Enum class exports
-    "Operators", "VariableType", "VariableDataType",
-
+    # "Operators",
+    "VariableType",
+    "VariableDataType",
     # Data type class exports
-    "Data", "Date", "Number", "Text"
+    "Data",
+    "Date",
+    "Number",
+    "Text",
 ]
 
 import re
-from abc import ABC
-from enum import Enum
+from abc import ABC, abstractmethod
+from collections.abc import Callable
 from datetime import date, datetime
-from typing import Any, Callable, Optional, Union, Type, TypeVar
+from enum import Enum
+from typing import Any, Optional, Type, TypeVar, Union
+
+from .get_logger import get_logger
+
+logger = get_logger(__name__)
+
 
 # Class types (used for type hinting that something is that class object)
 TDataClass = Type["Data"]
@@ -50,8 +63,16 @@ class VariableFunction(Callable):
         index_end: The end index of the variable.
         fully_indexed: Whether all indexed references of the variable have been added to a `DataProvider`'s variable_funcs dictionary.
     """
-    def __init__(self, variable_name: str = "", is_indexed_variable: bool = None, index_start: int = None,
-                 index_end: bool = None, fully_indexed: bool = False, *args, **kwargs):
+    def __init__(
+        self,
+        variable_name: str = "",
+        is_indexed_variable: bool = None,
+        index_start: int = None,
+        index_end: int = None,
+        fully_indexed: bool = False,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.variable_name: str = variable_name
         self.is_indexed_variable: bool = is_indexed_variable
@@ -59,11 +80,12 @@ class VariableFunction(Callable):
         self.index_end: int = index_end
         self.fully_indexed: bool = fully_indexed
 
+    @abstractmethod
     def __call__(self, *args, **kwargs) -> TVariableValue:
-        pass
+        ...
 
 
-class Variable:
+class Variable(Callable):
     """This class standardizes the attributes that a variable should have.
 
     TVariables that are implemented in DataProvider classes should be Callable and be capable of calculating the value
@@ -100,10 +122,21 @@ class Variable:
             it should default to 5.
         value: The calculated value of the variable that gets uploaded to a SurveyPlatform.
     """
-    def __init__(self, data_provider: str = "", category: str = "", type: str = "", name: str = "",
-                 description: str = "", data_type: str = "", test_value_placeholder: str = "", info: str = None,
-                 is_indexed_variable: bool = False, index_start: Optional[int] = 0, index_end: Optional[int] = 5,
-                 value: Optional[TVariableValue] = None):
+    def __init__(
+        self,
+        data_provider: str = "",
+        category: str = "",
+        type: str = "",
+        name: str = "",
+        description: str = "",
+        data_type: str = "",
+        test_value_placeholder: str = "",
+        info: str = "",
+        is_indexed_variable: bool = False,
+        index_start: Optional[int] = 0,
+        index_end: Optional[int] = 5,
+        value: Optional[TVariableValue] = None,
+    ) -> None:
         self.data_provider: str = data_provider
         self.category: str = category
         self.type: str = type
@@ -133,8 +166,9 @@ class Variable:
             "value": self.value
         }
 
+    @abstractmethod
     def __call__(self, *args, **kwargs):
-        pass
+        ...
 
 
 class Operator(Enum):
@@ -169,49 +203,38 @@ class Data(ABC):
     operators: dict = None
 
     @staticmethod
-    def register(data_type: VariableDataType, cls):
+    def register(data_type: VariableDataType, cls) -> None:
         Data._registry[data_type] = cls
 
     @staticmethod
-    def get_class_by_type(data_type: VariableDataType):
+    def get_class_by_type(data_type: VariableDataType) -> Any:
         return Data._registry[data_type]
 
     @classmethod
+    @abstractmethod
     def get_filter_operators(cls):
-        pass
+        ...
 
     @staticmethod
-    def determine_type(value) -> TDataClass:
-        if isinstance(type(value), Data):
-            return type(value)
+    def is_this_data_type(data) -> bool:
+        return isinstance(type(data), Data)
 
-        # Check for List type
-        if isinstance(value, list):
+    @staticmethod
+    def determine_type(value) -> TDataClass | type:
+        if Data.is_this_data_type(value):  # Check for Data type
             return type(value)
-
-        # Check for Object (dictionary) type
-        if isinstance(value, dict):
+        elif isinstance(value, list):  # Check for List type
             return type(value)
-
-        # Check for Date type
-        try:
-            Date._parse_date(value)
+        elif isinstance(value, dict):  # Check for Object (dictionary) type
+            return type(value)
+        elif Date.is_this_data_type(value):  # Check for Date type
             return Date
-        except ValueError:
-            pass
-
-        # Check for Number type
-        try:
-            if '.' in str(value):
-                float(value)
-            else:
-                int(value)
+        elif Number.is_this_data_type(value):  # Check for Number type
             return Number
-        except ValueError:
-            pass
-
-        # Default to Text type
-        return Text
+        else:  # Default to Text type
+            if not Text.is_this_data_type(value):
+                logger.error(f"Unable to determine data type for value: {value}")
+            return Text
 
     @staticmethod
     def get_all_filter_operators():
@@ -219,7 +242,7 @@ class Data(ABC):
         for data_type, cls in Data._registry.items():
             result[data_type.value] = cls.get_filter_operators()
         return result
-    
+
     @classmethod
     def get_operator(cls, operator: str = None):
         # check if operators has the key corresponding to the operator
@@ -230,6 +253,14 @@ class Data(ABC):
 
 
 class Date(Data):
+
+    @staticmethod
+    def is_this_data_type(data: str) -> bool:
+        try:
+            Date._parse_date(data)
+            return True
+        except ValueError:
+            return False
 
     @staticmethod
     def _parse_date(date_str: str) -> date:
@@ -288,6 +319,14 @@ class Date(Data):
 class Number(Data):
 
     @staticmethod
+    def is_this_data_type(data) -> bool:
+        try:
+            float(data)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
     def _parse_number(numeric_value: Union[int, float, str]) -> Union[int, float]:
 
         if isinstance(numeric_value, int) or isinstance(numeric_value, float):
@@ -329,6 +368,10 @@ class Number(Data):
 
 class Text(Data):
 
+    @staticmethod
+    def is_this_data_type(data) -> bool:
+        return isinstance(data, str)
+
     operators = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.text.is",
@@ -363,8 +406,7 @@ class Text(Data):
     @classmethod
     def get_filter_operators(cls):
         return [{"label": op_info["label"], "value": op_key} for op_key, op_info in cls.operators.items()]
-    
-    
+
 
 Data.register(VariableDataType.DATE, Date)
 Data.register(VariableDataType.NUMBER, Number)

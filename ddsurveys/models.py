@@ -28,7 +28,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
-
 try:
     from .utils import handle_env_file
 except ImportError:

@@ -10,8 +10,9 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import Any, MutableMapping, NoReturn, TypeVar, Union
 
-from . import EmbeddedData, EmbeddedDataBlock
 from ddsurveys.get_logger import get_logger
+
+from . import EmbeddedData, EmbeddedDataBlock
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,7 @@ class Flow:
     flow
     _custom_variables : CustomVariables
     """
+
     # TODO: Cleanup Flow class:
     #       - Handle correctly creating the flow if no flow is passed in __init__.
     #       - Use clearer property and attribute names.
@@ -37,11 +39,24 @@ class Flow:
     # TODO: make variable namespaces start with `dds.`
 
     allowed_flow_types = [
-        "Authenticator", "Block", "BlockRandomizer", "Branch", "Conjoint", "EmbeddedData", "EndSurvey", "Group",
-        "QuotaCheck", " ReferenceSurvey", "Root", " Standard", "SupplementalData", "TableOfContents", "WebService"
+        "Authenticator",
+        "Block",
+        "BlockRandomizer",
+        "Branch",
+        "Conjoint",
+        "EmbeddedData",
+        "EndSurvey",
+        "Group",
+        "QuotaCheck",
+        " ReferenceSurvey",
+        "Root",
+        " Standard",
+        "SupplementalData",
+        "TableOfContents",
+        "WebService",
     ]
 
-    def __init__(self, flow: dict):
+    def __init__(self, flow: dict) -> None:
         """
 
         Parameters
@@ -61,16 +76,20 @@ class Flow:
 
             if self._cv_block_idx is None:
                 self._cv_block_idx = 0
-                self._cv_block = EmbeddedDataBlock(flow_id=self._cv_block_id, variables_list=[])
+                self._cv_block = EmbeddedDataBlock(
+                    flow_id=self._cv_block_id, variables_list=[]
+                )
             else:
                 self._cv_block = EmbeddedDataBlock(flow["Flow"][self._cv_block_idx])
                 del self._flow["Flow"][self._cv_block_idx]
         else:  # Case where the flow is only an embedded data block
-            self._flow = {"Flow": [],
-                          "FlowID": "FL_1",
-                          # "Properties": {"Count": 1, "RemovedFieldsets": []},
-                          "Properties": {"Count": 1, "RemovedFieldsets": []},
-                          "Type": "Root"}
+            self._flow = {
+                "Flow": [],
+                "FlowID": "FL_1",
+                # "Properties": {"Count": 1, "RemovedFieldsets": []},
+                "Properties": {"Count": 1, "RemovedFieldsets": []},
+                "Type": "Root",
+            }
 
             self._cv_block_id = "FL_2"
             self._cv_block_idx = 1
@@ -103,9 +122,13 @@ class Flow:
             if "Flow" in flow_blocks:
                 cls._get_flow_ids(flow_blocks["Flow"], flow_ids)
         else:
-            raise ValueError(f"Expected flow_blocks to be of type list or dict. Received type: {type(flow_blocks)}")
+            raise ValueError(
+                f"Expected flow_blocks to be of type list or dict. Received type: {type(flow_blocks)}"
+            )
 
-    def _identify_custom_variables_flow_id(self, flow: dict, variables_namespaces: list = ()) -> str:
+    def _identify_custom_variables_flow_id(
+        self, flow: dict, variables_namespaces: list = ()
+    ) -> str:
         variables_namespaces = tuple(variables_namespaces) or ()
 
         if flow["Type"] == "EmbeddedData":
@@ -128,7 +151,12 @@ class Flow:
         if len(candidates) > 0:
             valid_candidates = list()
             for candidate in candidates:
-                if all([data["Field"].startswith(variables_namespaces) for data in candidate["EmbeddedData"]]):
+                if all(
+                    [
+                        data["Field"].startswith(variables_namespaces)
+                        for data in candidate["EmbeddedData"]
+                    ]
+                ):
                     valid_candidates.append(candidate)
             if len(valid_candidates) > 1:
                 logger.error(f"Multiple custom variable blocks found.")
@@ -211,8 +239,10 @@ class Flow:
         return flow
 
     def __str__(self):
-        return f"{self.__class__.__name__}({len(self.flow['Flow'])} blocks, custom variables block id: " \
-               f"{self.custom_variables_block_id})"
+        return (
+            f"{self.__class__.__name__}({len(self.flow['Flow'])} blocks, custom variables block id: "
+            f"{self.custom_variables_block_id})"
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.flow!r})"

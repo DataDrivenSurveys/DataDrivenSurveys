@@ -7,14 +7,22 @@ Created on 2023-04-27 13:48
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import functools
-import re
 import os
+import re
 from datetime import datetime
 
 import requests
 
 from ddsurveys.get_logger import get_logger
-from .exceptions import MissingAPIToken, BadRequestError, AuthorizationError, NotFoundError, ServerError, UnhandledStatusCodeError
+
+from .exceptions import (
+    AuthorizationError,
+    BadRequestError,
+    MissingAPIToken,
+    NotFoundError,
+    ServerError,
+    UnhandledStatusCodeError,
+)
 
 logger = get_logger(__name__)
 
@@ -25,6 +33,7 @@ class QualtricsDataCenter:
     ----------
     `API Documentation <https://api.qualtrics.com/60d24f6897737-qualtrics-survey-api>`_
     """
+
     data_centers = {
         "Canadian Data Center": "https://yul1.qualtrics.com/API/v3",
         "Washington, DC Area Data Center": "https://iad1.qualtrics.com/API/v3",
@@ -48,20 +57,25 @@ class QualtricsDataCenter:
         "Singapore Data Center": ["Singapore", "SG"],
         "Tokyo, Japan Data Center": ["Tokyo", "JP", "Japan"],
         "US Government Data Center": ["US Gov"],
-        "Mock Server": ["Mock"]
+        "Mock Server": ["Mock"],
     }
 
     @classmethod
-    def get_datacenter_url(cls, datacenter_name_or_location: str):
+    def get_datacenter_url(cls, datacenter_name_or_location: str) -> str:
         key = None
         for datacenter_name, abbreviations in cls.extra_keys.items():
-            if datacenter_name_or_location == datacenter_name or datacenter_name_or_location in abbreviations:
+            if (
+                datacenter_name_or_location == datacenter_name
+                or datacenter_name_or_location in abbreviations
+            ):
                 key = datacenter_name
                 break
         if key is None:
-            raise ValueError(f"Could not identify the requested datacenter: {datacenter_name_or_location}\n"
-                             f"Here is a list of complete datacenter names and abbreviations to select them:\n"
-                             f"{cls.extra_keys}")
+            raise ValueError(
+                f"Could not identify the requested datacenter: {datacenter_name_or_location}\n"
+                f"Here is a list of complete datacenter names and abbreviations to select them:\n"
+                f"{cls.extra_keys}"
+            )
         return cls.data_centers[key]
 
 
@@ -78,11 +92,16 @@ class QualtricsRequests:
         "X-API-TOKEN": "",
     }
 
-    _re_datacenter_redirect = re.compile(r'.*: (.+?\.qualtrics.com)$')
+    _re_datacenter_redirect = re.compile(r".*: (.+?\.qualtrics.com)$")
 
     _session = requests.Session()
 
-    def __init__(self, api_token=None, datacenter_location: str = "EU", accept_datacenter_redirect: bool = True):
+    def __init__(
+        self,
+        api_token=None,
+        datacenter_location: str = "EU",
+        accept_datacenter_redirect: bool = True,
+    ) -> None:
         self.accept_datacenter_redirect: bool = accept_datacenter_redirect
         self.base_url: str = QualtricsDataCenter.get_datacenter_url(datacenter_location)
         self._api_token: str = ""
@@ -96,18 +115,29 @@ class QualtricsRequests:
         if not self.api_token:
             raise MissingAPIToken()
 
-        self.headers.update({
-            "X-API-TOKEN": self.api_token,
-        })
+        self.headers.update(
+            {
+                "X-API-TOKEN": self.api_token,
+            }
+        )
 
         self.session.headers.update(self.headers)
 
-    def update_datacenter_on_redirect(self, response: requests.Response) -> requests.Response:
+    def update_datacenter_on_redirect(
+        self, response: requests.Response
+    ) -> requests.Response:
         if self.accept_datacenter_redirect:
             resp_json = response.json()
-            redirect_info_str = "Request proxied. For faster response times, use this host instead:"
-            if "notice" in resp_json["meta"] and redirect_info_str in resp_json["meta"]["notice"]:
-                match = self.__class__._re_datacenter_redirect.match(resp_json["meta"]["notice"])
+            redirect_info_str = (
+                "Request proxied. For faster response times, use this host instead:"
+            )
+            if (
+                "notice" in resp_json["meta"]
+                and redirect_info_str in resp_json["meta"]["notice"]
+            ):
+                match = self.__class__._re_datacenter_redirect.match(
+                    resp_json["meta"]["notice"]
+                )
                 if match is not None:
                     self.base_url = f"https://{match.group(1)}/API/v3"
                 else:
@@ -142,7 +172,9 @@ class QualtricsRequests:
                     else:
                         raise UnhandledStatusCodeError(resp)
                 return resp
+
             return wrapper
+
         return decorator
 
     @property
@@ -150,7 +182,7 @@ class QualtricsRequests:
         return self._api_token
 
     @api_token.setter
-    def api_token(self, value: str):
+    def api_token(self, value: str) -> None:
         self._api_token = value
 
     @property
@@ -158,11 +190,11 @@ class QualtricsRequests:
         return QualtricsRequests._headers
 
     @headers.setter
-    def headers(self, value: dict):
+    def headers(self, value: dict) -> None:
         QualtricsRequests._headers = value
 
     @property
-    def endpoint(self):
+    def endpoint(self) -> str:
         return self.__class__._endpoint
 
     @property
@@ -171,33 +203,49 @@ class QualtricsRequests:
 
     @handle_response_status()
     @update_datacenter_wrapper
-    def get(self, endpoint=None, data=None, json=None, *args, **kwargs) -> requests.Response:
+    def get(
+        self, endpoint=None, data=None, json=None, *args, **kwargs
+    ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.get(f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs)
+        resp = self.session.get(
+            f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
+        )
 
         return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
-    def put(self, endpoint=None, data=None, json=None, *args, **kwargs) -> requests.Response:
+    def put(
+        self, endpoint=None, data=None, json=None, *args, **kwargs
+    ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.put(f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs)
+        resp = self.session.put(
+            f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
+        )
 
         return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
-    def post(self, endpoint=None, data=None, json=None, *args, **kwargs) -> requests.Response:
+    def post(
+        self, endpoint=None, data=None, json=None, *args, **kwargs
+    ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.post(f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs)
+        resp = self.session.post(
+            f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
+        )
 
         return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
-    def delete(self, endpoint=None, data=None, json=None, *args, **kwargs) -> requests.Response:
+    def delete(
+        self, endpoint=None, data=None, json=None, *args, **kwargs
+    ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.delete(f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs)
+        resp = self.session.delete(
+            f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
+        )
 
         return resp
 
@@ -208,9 +256,10 @@ class QualtricsRequests:
 
 if __name__ == "__main__":
     q_requests = QualtricsRequests("", "EU")
-    data = {"SurveyName": "api-test-survey",
-            "Language": "EN",
-            "ProjectCategory": "CORE"}
+    data = {
+        "SurveyName": "api-test-survey",
+        "Language": "EN",
+        "ProjectCategory": "CORE",
+    }
 
     r = q_requests.get("survey-definitions/SV_e3OyJozlSuFHdzw")
-

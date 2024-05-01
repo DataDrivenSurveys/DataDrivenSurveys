@@ -12,16 +12,24 @@ References
 """
 import functools
 import re
+import time
 from datetime import datetime
 from typing import Optional
-import time
 
 import requests
 
 from ddsurveys.get_logger import get_logger
-from .qualtrics_requests import QualtricsRequests
-from .exceptions import MissingSurveyID, FailedQualtricsRequest, BadRequestError, AuthorizationError, NotFoundError, ServerError, UnhandledStatusCodeError
 
+from .exceptions import (
+    AuthorizationError,
+    BadRequestError,
+    FailedQualtricsRequest,
+    MissingSurveyID,
+    NotFoundError,
+    ServerError,
+    UnhandledStatusCodeError,
+)
+from .qualtrics_requests import QualtricsRequests
 
 logger = get_logger(__name__)
 
@@ -32,12 +40,18 @@ class SurveysAPI(QualtricsRequests):
     ----------
     `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
     """
+
     # TODO: Convert methods to return results or raise exceptions if requests fail.
     _endpoint = "survey-definitions"
-    _re_survey_id = re.compile(r'^SV_[a-zA-Z0-9]{11,15}$')
+    _re_survey_id = re.compile(r"^SV_[a-zA-Z0-9]{11,15}$")
 
-    def __init__(self, api_token: str = "", datacenter_location: str = "EU", accept_datacenter_redirect: bool = True,
-                 survey_id: Optional[str] = None):
+    def __init__(
+        self,
+        api_token: str = "",
+        datacenter_location: str = "EU",
+        accept_datacenter_redirect: bool = True,
+        survey_id: Optional[str] = None,
+    ) -> None:
         super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
         self._survey_id = survey_id
 
@@ -46,7 +60,9 @@ class SurveysAPI(QualtricsRequests):
         if self._survey_id is not None:
             return f"{self.base_url}/{self._survey_id}"
         else:
-            logger.warning("No survey id is currently set. Set it by setting the `survey_id` property.")
+            logger.warning(
+                "No survey id is currently set. Set it by setting the `survey_id` property."
+            )
             return f"{self.base_url}/"
 
     @property
@@ -54,14 +70,16 @@ class SurveysAPI(QualtricsRequests):
         return self._survey_id
 
     @survey_id.setter
-    def survey_id(self, value):
+    def survey_id(self, value) -> None:
         assert self.__class__._re_survey_id.match(value) is not None
         self._survey_id = value
 
-    def get_survey_url(self, survey_id: Optional[str] = None):
+    def get_survey_url(self, survey_id: Optional[str] = None) -> str:
         survey_id = survey_id or self.survey_id
         if survey_id is None:
-            raise MissingSurveyID("No survey id is currently set. Set it by setting the `survey_id` property.")
+            raise MissingSurveyID(
+                "No survey id is currently set. Set it by setting the `survey_id` property."
+            )
 
         survey = self.get_survey(survey_id)
         base_url = survey.json()["result"]["BrandBaseURL"]
@@ -80,10 +98,12 @@ class SurveysAPI(QualtricsRequests):
                 raise MissingSurveyID()
             self._survey_id = survey_id
             return func(self, *args, **kwargs)
+
         return wrapper
 
-    def create_survey(self, survey_name: str, language: str = "EN",
-                      project_category: str = "CORE") -> requests.Response:
+    def create_survey(
+        self, survey_name: str, language: str = "EN", project_category: str = "CORE"
+    ) -> requests.Response:
         """
         Creates a new survey on Qualtrics.
 
@@ -100,7 +120,11 @@ class SurveysAPI(QualtricsRequests):
         ----------
         `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
         """
-        json_data = {"SurveyName": survey_name, "Language": language, "ProjectCategory": project_category}
+        json_data = {
+            "SurveyName": survey_name,
+            "Language": language,
+            "ProjectCategory": project_category,
+        }
         return self.post(json=json_data)
 
     def survey_exists(self, survey_id: str) -> bool:
@@ -128,7 +152,9 @@ class SurveysAPI(QualtricsRequests):
         return False
 
     @survey_id_wrapper
-    def get_survey(self, survey_id: str = None, get_qsf_format: bool = False) -> requests.Response:
+    def get_survey(
+        self, survey_id: str = None, get_qsf_format: bool = False
+    ) -> requests.Response:
         """
         Gets the survey information from the Qualtrics platform for a given survey.
 
@@ -187,9 +213,15 @@ class SurveysAPI(QualtricsRequests):
         return self.get(f"{self.endpoint}/{survey_id}/metadata")
 
     @survey_id_wrapper
-    def update_metadata(self, survey_id: str, survey_name: str, survey_status: str,
-                        survey_start_date: datetime, survey_expiration_date: datetime,
-                        survey_description: Optional[str] = None) -> requests.Response:
+    def update_metadata(
+        self,
+        survey_id: str,
+        survey_name: str,
+        survey_status: str,
+        survey_start_date: datetime,
+        survey_expiration_date: datetime,
+        survey_description: Optional[str] = None,
+    ) -> requests.Response:
         """
 
         Parameters
@@ -209,7 +241,9 @@ class SurveysAPI(QualtricsRequests):
         `API Documentation <https://api.qualtrics.com/ae7f40bbcb91a-update-metadata>`_
         """
         assert survey_status in ["Active", "Inactive"]
-        assert isinstance(survey_start_date, datetime) and isinstance(survey_expiration_date, datetime)
+        assert isinstance(survey_start_date, datetime) and isinstance(
+            survey_expiration_date, datetime
+        )
 
         survey_id = survey_id or self._survey_id
         payload = {
@@ -217,7 +251,7 @@ class SurveysAPI(QualtricsRequests):
             "SurveyDescription": survey_description,
             "SurveyStatus": survey_status,
             "SurveyStartDate": self.to_iso8601(survey_start_date),
-            "SurveyExpirationDate": self.to_iso8601(survey_expiration_date)
+            "SurveyExpirationDate": self.to_iso8601(survey_expiration_date),
         }
 
         return self.put(f"{self.endpoint}/{survey_id}/metadata", json=payload)
@@ -241,7 +275,9 @@ class SurveysAPI(QualtricsRequests):
         return self.get(f"{self.endpoint}/{survey_id}/flow")
 
     @survey_id_wrapper
-    def update_flow(self, survey_id: str = None, flow: dict = None) -> requests.Response:
+    def update_flow(
+        self, survey_id: str = None, flow: dict = None
+    ) -> requests.Response:
         """
         Update a survey flow.
 
@@ -259,7 +295,7 @@ class SurveysAPI(QualtricsRequests):
             `API Documentation <https://api.qualtrics.com/be14598374903-update-flow>`_
         """
         return self.put(f"{self.endpoint}/{survey_id}/flow", json=flow)
-    
+
     @survey_id_wrapper
     def start_export_request(self, survey_id: str, format: str = "csv") -> str:
         """
@@ -331,7 +367,9 @@ class SurveysAPI(QualtricsRequests):
         file_contents : bytes
             The contents of the exported file.
         """
-        endpoint = f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        endpoint = (
+            f"{self.base_url}/surveys/{survey_id}/export-responses/{file_id}/file"
+        )
         headers = self.headers
         response = requests.get(endpoint, headers=headers)
         response.raise_for_status()
@@ -363,9 +401,10 @@ class SurveysAPI(QualtricsRequests):
             time.sleep(1)  # Wait for a bit before checking the progress again
             file_id = self.check_export_progress(survey_id, progress_id)
             if file_id:
-                break  
+                break
 
         return self.download_export_file(survey_id, file_id)
+
     # @survey_id_wrapper
     # def update_flow_element_definition(self, _survey_id: str = None, flow: Union[Flow, dict, list] = None) -> requests.Response:
     #     """
@@ -403,4 +442,3 @@ if __name__ == "__main__":
     # r = resp
 
     # print(r.json())
-

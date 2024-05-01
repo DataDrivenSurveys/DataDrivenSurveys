@@ -8,8 +8,8 @@ Created on 2023-05-23 14:07
 """
 __all__ = ["SurveyPlatform"]
 
-from .bases import SurveyPlatform
 from ..dynamic_import import dynamic_import
+from .bases import SurveyPlatform
 
 excluded_dynamic_load_modules = ("bases", "__init__", "_registration", "exceptions")
 

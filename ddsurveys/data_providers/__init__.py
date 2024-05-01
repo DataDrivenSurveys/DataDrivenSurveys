@@ -14,10 +14,15 @@ Created on 2023-05-23 14:00
 """
 __all__ = ["DataProvider"]
 
-from .bases import (DataProvider, OAuthDataProvider, TOAuthDataProvider, TDataProviderClass, TOAuthDataProviderClass,
-                    TDataProvider)
 from ..dynamic_import import dynamic_import
-
+from .bases import (
+    DataProvider,
+    OAuthDataProvider,
+    TDataProvider,
+    TDataProviderClass,
+    TOAuthDataProvider,
+    TOAuthDataProviderClass,
+)
 
 excluded_dynamic_load_modules = ("bases", "custom_variables", "variables", "__init__", "_registration",
                                  "template_simple", "template_complex")
