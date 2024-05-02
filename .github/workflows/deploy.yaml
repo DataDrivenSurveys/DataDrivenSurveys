@@ -13,12 +13,6 @@ jobs:
       with:
         ref: main
 
-    - name: Build the Frontend
-      working-directory: frontend
-      run: |
-        npm install
-        npm run build
-
     - name: Generate .env.production.local for ddsurveys and frontend.
       run: |
         echo DATABASE_URL="${{ secrets.DATABASE_URL }}" > ddsurveys/.env.production.local
@@ -28,6 +22,13 @@ jobs:
         echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >> ddsurveys/.env.production.local
         echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production.local
         echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env
+
+    - name: Build the Frontend
+      working-directory: frontend
+      run: |
+        npm install
+        npm run build
+    
 
     - name: Copy the project to the server
       uses: appleboy/scp-action@master
