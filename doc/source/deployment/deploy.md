@@ -168,3 +168,56 @@ USE dds;
 
 SHOW TABLES;
 ```
+
+### Renew the SSL certificate
+
+First search for valid certificates:
+
+```bash
+docker exec dds-certbot-1 certbot certificates
+```
+
+If you already have a valid certificate consider checking the expiration date and eventually renew it.
+    
+```bash
+docker exec dds-certbot-1 certbot certonly --webroot -w /var/www/letsencrypt -d www.datadrivensurvey.com --agree-tos --email your-email@example.comm
+```
+
+### Force renew the SSL certificate
+
+If you want to force renew the SSL certificate, you can run the following command:
+
+```bash
+docker exec dds-certbot-1 certbot certonly --webroot -w /var/www/letsencrypt -d www.datadrivensurvey.com --agree-tos --email your-email@example.comm --force-renewal
+```
+
+You shall see the following output:
+
+```bash
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for www.datadrivensurvey.com
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/www.datadrivensurvey.com-0002/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/www.datadrivensurvey.com-0002/privkey.pem
+This certificate expires on 2024-07-31.
+These files will be updated when the certificate renews.
+NEXT STEPS:
+- The certificate will need to be renewed before it expires. Certbot can automatically renew the certificate in the background, but you may need to take steps to enable that functionality. See https://certbot.org/renewal-setup for instructions.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+```
+
+It is important to consider the path where the new certificate has been stored by certbot. /etc/letsencrypt/live/www.datadrivensurvey.com-0002. 
+
+In case the folder is different than whats configured in nginx, you will have to update the nginx configuration file to point to the new certificate and reload the nginx container.
+
+Check: ./volumes/nginx/nginx.conf
+
+
+
