@@ -2,6 +2,7 @@ import { Box, Stack } from '@mui/material'
 
 import Header from './Header'
 import ScrollContainer from './ScrollContainer'
+import Footer from "./Footer";
 const LayoutMain = ({
   children,
   backUrl,
@@ -21,6 +22,7 @@ const LayoutMain = ({
             {children}
           </Stack>
         </ScrollContainer>
+        <Footer />
       </Stack>
     </>
   )

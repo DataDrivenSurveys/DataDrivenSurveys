@@ -18,6 +18,9 @@ import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
 import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatformOauth2Redirect';
 
+import PrivacyPolicy from "./components/pages/PagePrivacyPolicy";
+import TermsOfService from "./components/pages/PageTermsOfService";
+
 
 export const themeOptions = {
   typography: {
@@ -147,6 +150,19 @@ function App() {
                 }
               />
 
+              <Route
+                path="/privacy-policy"
+                element={
+                  <PrivacyPolicy/>
+                }
+              />
+
+              <Route
+                path="/terms-of-service"
+                element={
+                  <TermsOfService/>
+                }
+              />
 
             </Routes>
           </SnackbarProvider>

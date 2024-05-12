@@ -246,7 +246,8 @@ const PageParticipantConnection = () => {
                     <b>{t('ui.respondent.connection.info')}</b>
                   </Typography>
                   <Typography variant="body1">
-                    <Link href={"/privacy-policy"} target={"_blank"} rel="noopener">
+                    {/*target={"_blank"}*/}
+                    <Link href={"/privacy-policy"}  rel="noopener">
                       {t('ui.respondent.connection.click_here')}
                     </Link>
                     {t('ui.respondent.connection.click_here_to_read_privacy_policy')}
