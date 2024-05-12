@@ -12,7 +12,7 @@ function TermsOfServiceContent() {
 
   return (
     <Container>
-      <Typography variant="h1">{t('terms_of_service.title')}</Typography>
+      {/*<Typography variant="h1">{t('terms_of_service.title')}</Typography>*/}
 
       <Typography variant="h2">{t('terms_of_service.introduction.title')}</Typography>
       <Typography paragraph>{t('terms_of_service.introduction.content')}</Typography>
@@ -96,7 +96,7 @@ function TermsOfService() {
 
   return (
     <LayoutMain
-      header={<Typography variant="h2">{t('privacy_policy.title')}</Typography>}
+      header={<Typography variant="h2">{t('terms_of_service.title')}</Typography>}
       backUrl={-1}
     >
       <Stack spacing={2} width={"80%"}>

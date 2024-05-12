@@ -1,6 +1,5 @@
 import React from 'react';
-import {Box, Container, Typography, Grid, Link, Stack, AppBar} from '@mui/material';
-import {Facebook, Twitter, Instagram} from '@mui/icons-material';
+import {Typography, Link, Stack, AppBar} from '@mui/material';
 
 function Footer() {
   return (
