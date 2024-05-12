@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This module is a template file that can be used as a starting point for creating your own data providers.
+Created on 2024-05-12 20:52
 
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
 """
-__all__ = ["TemplateSimpleDataProvider"]
+__all__ = ["TemplateComplexDataProvider"]
 
 from functools import cached_property
 from typing import Any, Callable, Dict
 
 import requests
 
-from ..get_logger import get_logger
-from ..variable_types import TVariableFunction, VariableDataType
-from .bases import FormField, OAuthDataProvider
-from .data_categories import DataCategory
-from .variables import BuiltInVariable, CVAttribute
+from ...get_logger import get_logger
+from ...variable_types import TVariableFunction, VariableDataType
+from ..bases import FormField, OAuthDataProvider
+from ..data_categories import DataCategory
+from ..variables import BuiltInVariable, CVAttribute
 
 # Import the required libraries to make this work
-
+from .api import MyAPI
 
 logger = get_logger(__name__)
 
@@ -81,10 +80,10 @@ class ExampleAccount(DataCategory):
     ]
 
 
-class TemplateSimpleDataProvider(OAuthDataProvider):
+class TemplateComplexDataProvider(OAuthDataProvider):
     # Class attributes that need be redeclared or redefined in child classes
     # The following attributes need to be redeclared in child classes.
-    # You can copy and paste them into the child class body.
+    # You can just copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
     all_initial_funcs: dict[str, Callable] = {}
     factory_funcs: dict[str, Callable] = {}
@@ -111,13 +110,12 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
     ]
 
     # List all the data categories that this data provider supports.
-    # Just enter the names of the classes.
+    # Enter the names of the classes.
     data_categories = [
         ExampleAccount,
     ]
 
     # In the functions below, update the elipses (...) with the correct classes and code.
-
     def __init__(self, **kwargs):
         """
 
@@ -173,3 +171,4 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
 
     @cached_property
     def account_creation_date(self) -> str: ...
+
