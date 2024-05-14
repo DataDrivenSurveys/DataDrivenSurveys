@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on 2024-05-12 20:52
+You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
 """
@@ -19,65 +20,10 @@ from ..data_categories import DataCategory
 from ..variables import BuiltInVariable, CVAttribute
 
 # Import the required libraries to make this work
-from .api import MyAPI
+from .api import MyAPI, MyAPIOAuthClient
+from .data_category import ExampleDataCategory
 
 logger = get_logger(__name__)
-
-
-# This is an example of a data category.
-# In practice, each endpoint can be turned into a data category.
-class ExampleAccount(DataCategory):
-
-    data_origin = [
-        {
-            "method": "get_user",
-            "endpoint": "https://api.dataprovider.com/account",
-            "documentation": "https://docs.dataprovider.com/en/rest/reference/account",
-        }
-    ]
-
-    custom_variables_enabled = False
-
-    api = None
-
-    def fetch_data(self) -> list[dict[str, Any]]:
-        user = self.api.get_user()
-        return user
-
-    cv_attributes = [
-        CVAttribute(
-            name="name",
-            label="Users Name",
-            description="The name of the user.",
-            attribute="name",
-            data_type=VariableDataType.TEXT,
-            test_value_placeholder="Username",
-            info="The name of the user.",
-        ),
-        CVAttribute(
-            label="Creation Date",
-            description="The date the repository was created.",
-            attribute="created_at",
-            name="creation_date",
-            data_type=VariableDataType.DATE,
-            test_value_placeholder="2023-01-10T12:00:00.000",
-            info="The date the account was created.",
-        ),
-    ]
-
-    builtin_variables = [
-        BuiltInVariable.create_instances(
-            name="creation_date",
-            label="Account creation date",
-            description="The date the user created their account.",
-            test_value_placeholder="2020-01-01",
-            data_type=VariableDataType.DATE,
-            info="The date the account was created. It will be in the format YYYY-MM-DD.",
-            is_indexed_variable=False,
-            extractor_func=lambda self: self.account_creation_date,
-            data_origin=[],
-        )
-    ]
 
 
 class TemplateComplexDataProvider(OAuthDataProvider):
@@ -85,16 +31,14 @@ class TemplateComplexDataProvider(OAuthDataProvider):
     # The following attributes need to be redeclared in child classes.
     # You can just copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
-    all_initial_funcs: dict[str, Callable] = {}
-    factory_funcs: dict[str, Callable] = {}
-    variable_funcs: dict[str, TVariableFunction] = {}
-    fields: list[dict[str, Any]] = {}
+    all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
+    factory_funcs: dict[str, Callable] = {}  # Leave unchanged.
+    variable_funcs: dict[str, TVariableFunction] = {}  # Leave unchanged.
+    fields: list[dict[str, Any]] = {}  # Leave unchanged.
 
     # Update the following attributes:
-    app_creation_url: str = "https://dataprovider.com/settings/apps/new"
-    instructions_helper_url: str = (
-        "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
-    )
+    app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
+    instructions_helper_url: str = ...  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
 
     # Unique class attributes go here
     _scopes = []
@@ -112,7 +56,7 @@ class TemplateComplexDataProvider(OAuthDataProvider):
     # List all the data categories that this data provider supports.
     # Enter the names of the classes.
     data_categories = [
-        ExampleAccount,
+        ExampleDataCategory,
     ]
 
     # In the functions below, update the elipses (...) with the correct classes and code.
@@ -127,8 +71,9 @@ class TemplateComplexDataProvider(OAuthDataProvider):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.api_client: ...
-        self.oauth_client: ...
+        # Declare the instance annotations for the API and OAuth clients
+        self.api_client: ...  # e.g.,  MyAPI
+        self.oauth_client: ...  # e.g., MyAPIOAuthClient
         self.redirect_uri = self.get_redirect_uri()
 
         self.init_oauth_client()
@@ -164,11 +109,7 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     def test_connection(self) -> bool: ...
 
-    @cached_property
-    def get_user_repositories(self) -> list: ...
-
     def repositories_by_stars(self, idx: int) -> str: ...
 
     @cached_property
     def account_creation_date(self) -> str: ...
-

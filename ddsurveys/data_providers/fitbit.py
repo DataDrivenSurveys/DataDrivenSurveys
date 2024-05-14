@@ -310,10 +310,8 @@ class FitbitDataProvider(OAuthDataProvider):
         ),
     ]
 
-    data_categories = [Activities, Account, Steps, Badges]
-
     # DataCategory declarations go here
-    # TODO: replace this with external classes after splitting the classes into modules
+    data_categories = [Activities, Account, Steps, Badges]
 
     # Standard class methods go here
     def __init__(self, **kwargs):

@@ -4,23 +4,20 @@
 # test_data_provider.py
 # (.venv) C:\UNIL\DataDrivenSurveys\ddsurveys>python -m pytest
 import pytest
-from ddsurveys.data_providers.bases import DataProvider, CustomVariable
-from ddsurveys.data_providers.fitbit import FitbitDataProvider, Activities
-
-from ddsurveys.data_providers.instagram import InstagramDataProvider
-
-from ..utils.mock_data import fitbit_mock_data
-from ..utils.custom_variables_scenarios_data import get_scenarios
-from ..utils.functions import assert_has_value
-
 from flask import Flask
 
+from ddsurveys.data_providers.bases import CustomVariable, DataProvider
+from ddsurveys.data_providers.fitbit import Activities, FitbitDataProvider
+from ddsurveys.data_providers.instagram import InstagramDataProvider
 
+from ..utils.custom_variables_scenarios_data import get_scenarios
+from ..utils.functions import assert_has_value
+from ..utils.mock_data import fitbit_mock_data
 
 app = Flask(__name__)
 
 
-def variable_to_qualname(variable, v_type = "builtin"):
+def variable_to_qualname(variable, v_type = "builtin") -> str:
     """Return the qualified name of a variable."""
     qual_name = f"dds.{variable['data_provider']}.{v_type}.{variable['category'].lower()}.{variable['name']}"
     if variable["is_indexed_variable"]:
@@ -29,21 +26,21 @@ def variable_to_qualname(variable, v_type = "builtin"):
     return qual_name
 
 @pytest.fixture
-def abstract_data_provider():
+def abstract_data_provider() -> DataProvider:
     """Return an instance of the abstract DataProvider class."""
     return DataProvider()
 
 @pytest.fixture
-def fitbit_data_provider():
+def fitbit_data_provider() -> FitbitDataProvider:
     """Return an instance of the FitbitDataProvider class."""
     return FitbitDataProvider()
 
 @pytest.fixture
-def instagram_data_provider():
+def instagram_data_provider() -> InstagramDataProvider:
     """Return an instance of the InstagramDataProvider class."""
     return InstagramDataProvider()
 
-def data_category_to_custom_variable(data_category, data_provider_name, filters, selection):
+def data_category_to_custom_variable(data_category, data_provider_name, filters, selection):# -> dict[str, Any]:
     """Return the custom variable format based on a data category."""
 
     return {
@@ -89,7 +86,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     ctx = app.app_context()
     ctx.push()
 
-   
+
     mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
 
     # get all the attributes of the Activities class as dict

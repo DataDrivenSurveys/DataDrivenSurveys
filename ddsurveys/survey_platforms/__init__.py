@@ -11,6 +11,7 @@ __all__ = ["SurveyPlatform"]
 from ..dynamic_import import dynamic_import
 from .bases import SurveyPlatform
 
-excluded_dynamic_load_modules = ("bases", "__init__", "_registration", "exceptions")
+excluded_dynamic_load_modules = ("bases", "__init__", "_registration", "exceptions",
+                                 "template", "template_oauth")
 
 modules = dynamic_import(__file__, exclude_names=excluded_dynamic_load_modules, recursive=False)

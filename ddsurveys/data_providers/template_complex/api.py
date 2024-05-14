@@ -9,6 +9,10 @@ This module is a placeholder file for a custom API implementation in a more comp
 """
 
 
+class MyAPIOAuthClient:
+    ...
+
+
 class MyAPI:
     ...
 

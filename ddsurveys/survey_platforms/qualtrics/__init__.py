@@ -315,12 +315,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
     @staticmethod
     def get_preview_link(
-        survey_platform_fields, enabled_variables
+        survey_platform_fields: dict, enabled_variables: dict
     ) -> tuple[int, str, str, str]:
-        """
-        Handle the previewing of the survey.
-        """
-
         if (
             "base_url" not in survey_platform_fields
             or "survey_id" not in survey_platform_fields

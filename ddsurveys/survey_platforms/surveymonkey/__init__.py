@@ -6,10 +6,12 @@ Created on 2023-10-31 13:53
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+__all__ = ["SurveyMonkeySurveyPlatform"]
+
 import json
 import os
 import uuid
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 import requests
 from surveymonkey.client import Client as SMClient
@@ -103,13 +105,13 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         self.client_id: str = client_id
         self.client_secret: str = client_secret
         self.access_token: str = access_token
+        self.redirect_uri: str = kwargs.get("redirect_uri", None)
 
-        self.api_client: SMClient = SMClient(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            redirect_uri=self.get_redirect_uri(),
-            access_token=self.access_token if self.access_token else None,
-        )
+        if self.redirect_uri is None:
+            self.redirect_uri = self.get_redirect_uri()
+
+        self.api_client: SMClient
+        self.init_api_client(self.client_id, self.client_secret)
 
     # OAuthSurveyPlatform methods
     def init_api_client(
@@ -121,13 +123,14 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         *args,
         **kwargs,
     ) -> None:
-        if redirect_uri is None:
-            redirect_uri = self.get_redirect_uri()
+        self.client_id: str = client_id
+        self.client_secret: str = client_secret
+
         self.api_client = SMClient(
-            client_id=client_id,
-            client_secret=client_secret,
-            redirect_uri=redirect_uri,
-            access_token=access_token,
+            client_id=self.client_id,
+            client_secret=self.client_secret,
+            redirect_uri=self.redirect_uri,
+            access_token=self.access_token if self.access_token else None,
         )
 
     def init_oauth_client(self, *args, **kwargs) -> None:
@@ -148,7 +151,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
 
         token = self.api_client.exchange_code(code=code)
 
@@ -160,7 +163,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     def revoke_token(self, token: str) -> bool: ...
 
     # SurveyPlatform methods
-    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], Dict[str, Any]]:
+    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
         survey_platform_info = {
             "connected": False,
             "active": False,
@@ -244,7 +247,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         return 200, "", "", project_name, survey_platform_fields
 
-    def handle_variable_sync(self, enabled_variables: dict) -> Tuple[int, str, str]:
+    def handle_variable_sync(self, enabled_variables: dict) -> tuple[int, str, str]:
 
         variables: dict[str, str] = {
             variable["qualified_name"]: variable["test_value_placeholder"]

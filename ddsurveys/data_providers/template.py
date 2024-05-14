@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 """
 This module is a template file that can be used as a starting point for creating your own data providers.
+You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-__all__ = ["TemplateSimpleDataProvider"]
+__all__ = ["TemplateDataProvider"]
 
 from functools import cached_property
 from typing import Any, Callable, Dict
@@ -21,13 +22,12 @@ from .variables import BuiltInVariable, CVAttribute
 
 # Import the required libraries to make this work
 
-
 logger = get_logger(__name__)
 
 
 # This is an example of a data category.
 # In practice, each endpoint can be turned into a data category.
-class ExampleAccount(DataCategory):
+class ExampleDataCategory(DataCategory):
 
     data_origin = [
         {
@@ -81,21 +81,19 @@ class ExampleAccount(DataCategory):
     ]
 
 
-class TemplateSimpleDataProvider(OAuthDataProvider):
+class TemplateDataProvider(OAuthDataProvider):
     # Class attributes that need be redeclared or redefined in child classes
     # The following attributes need to be redeclared in child classes.
     # You can copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
-    all_initial_funcs: dict[str, Callable] = {}
-    factory_funcs: dict[str, Callable] = {}
-    variable_funcs: dict[str, TVariableFunction] = {}
-    fields: list[dict[str, Any]] = {}
+    all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
+    factory_funcs: dict[str, Callable] = {}  # Leave unchanged.
+    variable_funcs: dict[str, TVariableFunction] = {}  # Leave unchanged.
+    fields: list[dict[str, Any]] = {}  # Leave unchanged.
 
     # Update the following attributes:
-    app_creation_url: str = "https://dataprovider.com/settings/apps/new"
-    instructions_helper_url: str = (
-        "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
-    )
+    app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
+    instructions_helper_url: str = ...  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
 
     # Unique class attributes go here
     _scopes = []
@@ -113,7 +111,7 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
     data_categories = [
-        ExampleAccount,
+        ExampleDataCategory,
     ]
 
     # In the functions below, update the elipses (...) with the correct classes and code.
@@ -129,8 +127,8 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.api_client: ...
-        self.oauth_client: ...
+        self.api_client: ...  # e.g.,  MyAPI
+        self.oauth_client: ...  # e.g., MyAPIOAuthClient
         self.redirect_uri = self.get_redirect_uri()
 
         self.init_oauth_client()
@@ -165,9 +163,6 @@ class TemplateSimpleDataProvider(OAuthDataProvider):
     def test_connection_before_extraction(self) -> bool: ...
 
     def test_connection(self) -> bool: ...
-
-    @cached_property
-    def get_user_repositories(self) -> list: ...
 
     def repositories_by_stars(self, idx: int) -> str: ...
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+This module provides various utility functions that can be used in various parts of the system.
+
 Created on 2024-04-30 13:44
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
@@ -13,7 +15,27 @@ from typing import Optional
 from dotenv import dotenv_values, load_dotenv
 
 
-def get_and_load_env(path: Path | str, in_module_root: bool = False) -> dict[str, Optional[str]]:
+def get_and_load_env(
+    path: Path | str, in_module_root: bool = False
+) -> dict[str, Optional[str]]:
+    """
+    Load environment variables from a specified path or from a path relative to the module root.
+
+    This function first resolves the given path to an absolute path. If `in_module_root` is True, the path is treated
+    as relative to the module's root directory. It then loads environment variables from the specified `.env` file.
+    If a `.env.local` file exists in the same directory, it loads this file as well, allowing local overrides of the
+    environment variables.
+
+    Args:
+        path: A Path object or string specifying the path to the `.env` file. This can be an absolute path or, if
+              `in_module_root` is True, a path relative to the module's root directory.
+        in_module_root: A boolean indicating whether the path is relative to the module's root directory. Defaults to False.
+
+    Returns:
+        A dictionary with the loaded environment variables. The keys are the variable names, and the values are the
+        variable values or None if the variable is not set. If `.env.local` exists, variables defined there will
+        override those from the `.env` file.
+    """
     # Prepare paths
     module_dir = Path(__file__).resolve().parent
     if in_module_root:
@@ -34,17 +56,22 @@ def get_and_load_env(path: Path | str, in_module_root: bool = False) -> dict[str
 
 def handle_env_file(path: Optional[str] = None) -> dict[str, Optional[str]]:
     """
-    Load environment variables from a custom path or from the environment files located inside the module root.
-    This function follows loading conventions of Create React App (CRA), wherein it will load default files and then
-    .local version if they exist.
-    The type of environment file that is is loaded is determined by the environment variable DDS_ENV.
-    If DDS_ENV is not set, it will default to "development".
+    Load environment variables from a custom path or from the default environment files located inside the module root.
+
+    This function is designed to simplify the process of loading environment variables for different deployment stages
+    (e.g., development, testing, production) by automatically selecting the appropriate `.env` file based on the
+    `DDS_ENV` environment variable. If a `.env.local` file exists for the selected environment, it will also be loaded
+    to allow for local overrides. This approach follows the loading conventions used by Create React App (CRA).
 
     Args:
-        path: Path to the environment file. If not provided, the environment files located inside the module root are loaded.
+        path: Optional; A string specifying a custom path to an environment file. If provided, this file will be loaded
+              instead of the default files based on `DDS_ENV`. If not provided, the function will load the environment
+              file based on the value of `DDS_ENV` or default to `.env.development` if `DDS_ENV` is not set.
 
     Returns:
-        dict[str, Optional[str]]: A dict containing the loaded environment variables.
+        A dictionary containing the loaded environment variables. The keys are the variable names, and the values are
+        the variable values or None if the variable is not set. If a `.env.local` file exists for the selected
+        environment, variables defined there will override those from the main `.env` file.
     """
     env: dict[str, str | None]
     if path is not None:
@@ -56,6 +83,6 @@ def handle_env_file(path: Optional[str] = None) -> dict[str, Optional[str]]:
         env = get_and_load_env(".env.testing", in_module_root=True)
     else:
         # Default to development environment
-       env = get_and_load_env(".env.development", in_module_root=True)
+        env = get_and_load_env(".env.development", in_module_root=True)
 
     return env

@@ -25,7 +25,7 @@ from .bases import (
 )
 
 excluded_dynamic_load_modules = ("bases", "custom_variables", "variables", "__init__", "_registration",
-                                 "template_simple", "template_complex")
+                                 "template", "template_complex")
 
 # All data providers need to be imported before calling DataProvider.register_subclasses()
 # Any data providers that are not imported will not be registered.

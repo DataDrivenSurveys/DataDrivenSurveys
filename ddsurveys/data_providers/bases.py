@@ -200,10 +200,28 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_data_category(cls, data_category_name: str) -> DataCategory:
+        """
+        Get a specific data category by its name.
+
+        Args:
+            data_category_name (str): The name of the data category to retrieve.
+
+        Returns:
+            DataCategory: The requested data category object.
+
+        Raises:
+            KeyError: If the specified data category name does not exist.
+        """
         return cls._all_data_categories[cls.name][data_category_name]
 
     @classmethod
-    def get_data_categories(cls) -> list[Dict[str, Any]]:
+    def get_data_categories(cls) -> list[dict[str, Any]]:
+        """
+        Get a list of data categories along with their associated data provider and built-in variables.
+
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries, where each dictionary represents a data category and its associated data provider, along with a list of built-in variables.
+        """
         data_categories_dicts = [cat.to_dict() for cat in cls.data_categories]
         for dct in data_categories_dicts:
             dct["data_provider_name"] = cls.name
@@ -244,6 +262,12 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_all_form_fields(cls) -> list[dict[str, Any]]:
+        """
+        Get a list of all form fields along with their associated metadata.
+
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries, where each dictionary represents a form field and its associated metadata.
+        """
         registry = cls.get_registry()
 
         result = []
@@ -271,11 +295,11 @@ class DataProvider(UIRegistry):
     # Methods that child classes must implement
     @abstractmethod
     def test_connection_before_extraction(self) -> bool:
-        pass
+        ...
 
     @abstractmethod
     def test_connection(self) -> bool:
-        pass
+        ...
 
     def to_public_dict(self) -> dict[str, Any]:
         return {

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Optional, Type
 
 from ..get_logger import get_logger
 from ..shared_bases import FormButton as BaseFormButton
@@ -22,7 +22,9 @@ logger = get_logger(__name__)
 
 __all__ = [
     "SurveyPlatform",
+    "OAuthSurveyPlatform",
     "FormField",
+    "FormButton"
 ]
 
 TSurveyPlatformClass = Type["SurveyPlatform"]
@@ -66,12 +68,20 @@ class SurveyPlatform(UIRegistry):
     @classmethod
     def check_input_fields(
         cls,
-        fields: List[dict],
-        override_required_fields: List[str] = None,
+        fields: list[dict],
+        override_required_fields: list[str] = None,
         class_: type = None,
     ) -> tuple[bool, Optional[str]]:
         """
         Check if all the required fields are present and not empty.
+
+        Args:
+            fields
+            override_required_fields
+            class_
+
+        Returns:
+
         """
         if override_required_fields is None:
             override_required_fields = []
@@ -88,16 +98,18 @@ class SurveyPlatform(UIRegistry):
     def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
         """
         Fetch information about the survey platform. And translate it into the DDS format.
-        Returns:
-        {
-            "connected": False,        - Whether the survey platform is connected or not.
-            "active": False,           - Whether the survey is active or not.
-            "exists": False,           - Whether the survey exists or not.
-            "survey_name": None,       - The name of the survey.
-            "survey_status": "unknown" - The status of the survey. Allowed values are: "active", "inactive", "unknown"
-        }
-
         Each survey platform should implement this method and decide what any of these keys mean in its own platform context.
+
+        Args:
+
+        Returns:
+            dict with the following keys: {
+                "connected": False,        # Whether the survey platform is connected or not.
+                "active": False,           # Whether the survey is active or not.
+                "exists": False,           # Whether the survey exists or not.
+                "survey_name": None,       # The name of the survey.
+                "survey_status": "unknown" # The status of the survey. Allowed values are: "active", "inactive", "unknown"
+            }
         """
         ...
 
@@ -106,24 +118,38 @@ class SurveyPlatform(UIRegistry):
         self, project_name: str, use_existing_survey: bool = False
     ) -> tuple[int, str, str, Optional[str], dict[str, Any]]:
         """
-        Create a project in the survey platform and return the Tuple with:
+        Create a project in the survey platform and return the tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
         - Project Name (str) - The project name can be conditional (user input or survey name) and should be returned here.
-        - Fields for the survey platform (dict) - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
+        - Fields for the survey platform (dict)
+        - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
+
+        Args:
+            project_name
+            use_existing_survey
+
+        Returns:
+
         """
         ...
 
     @abstractmethod
     def handle_variable_sync(self, enabled_variables: dict) -> tuple[int, str, str]:
         """
-        Sync the variables in the survey platform and return the Tuple with:
+        Sync the variables in the survey platform and return the tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
         The status 200 means that the variables were successfully synced.
         The status 40x means that the variables were not synced.
+
+        Args:
+            enabled_variables:
+
+        Returns:
+
         """
         ...
 
@@ -132,29 +158,43 @@ class SurveyPlatform(UIRegistry):
         self, project_short_id: str, survey_platform_fields: str, embedded_data: dict
     ) -> tuple[bool, Optional[str]]:
         """
-        Prepare the survey in the survey platform and return the Tuple with:
+        Prepare the survey in the survey platform and return the tuple with:
         - Boolean representing whether the survey was successfully prepared or not.
         - Unique Distribution URL (str) - The URL that will be used to distribute the survey.
+
+        Args:
+            project_short_id:
+            survey_platform_fields:
+            embedded_data:
+
+        Returns:
+            tuple made of the: bool representing whether the survey was successfully prepared or not, and the unique distribution URL.
         """
         ...
 
     @abstractmethod
     def handle_export_survey_responses(
-        self, project_short_id: str
-    ) -> tuple[bool, Optional[str]]:
+        self, project_short_id: str = None
+    ) -> tuple[int, str, str, str]:
         """
-        Download the responses from the survey platform and return the Tuple with:
+        Download the responses from the survey platform and return a tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
         - File Content (str) - The content of the file that was downloaded.
+
+        Args:
+            project_short_id:
+
+        Returns:
+            tuple made of the: status code, message id, message english text, and the file content.
         """
         ...
 
     @staticmethod
     @abstractmethod
     def get_preview_link(
-        survey_platform_fields, enabled_variables
+        survey_platform_fields: dict, enabled_variables: dict
     ) -> tuple[int, str, str, str]:
         """
         Get the preview link for the survey.
@@ -163,6 +203,12 @@ class SurveyPlatform(UIRegistry):
         - Message English Text (str)
         - Preview Link (str) - The preview link for the survey.
 
+        Args:
+            survey_platform_fields:
+            enabled_variables:
+
+        Returns:
+            tuple made of the: status code, message id, message english text, and the preview link.
         """
         ...
 
@@ -229,7 +275,7 @@ class OAuthSurveyPlatform(SurveyPlatform):
     def get_client_id(self) -> str: ...
 
     @abstractmethod
-    def request_token(self, code: str) -> Dict[str, Any]: ...
+    def request_token(self, code: str) -> dict[str, Any]: ...
 
     @abstractmethod
     def revoke_token(self, token: str) -> bool: ...
