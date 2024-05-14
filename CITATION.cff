@@ -21,6 +21,7 @@ authors:
 title: "DataDrivenSurveys"
 version: 1.0.0
 repository-code: 'https://github.com/DataDrivenSurveys/DataDrivenSurveys'
+url: 'https://github.com/DataDrivenSurveys/DataDrivenSurveys'
 license: MIT
 preferred-citation:
   type: conference-paper
@@ -69,6 +70,7 @@ preferred-citation:
     country: CH
   title: "Designing a Data-Driven Survey System: Leveraging Participants' Online Data to Personalize Surveys"
   doi: "10.1145/3613904.3642572"
+  url: "https://doi.org/10.1145/3613904.3642572"
   year: 2024
   month: 5
   keywords:
@@ -78,7 +80,7 @@ preferred-citation:
   - user interfaces
   collection-title: "In Proceedings of the CHI Conference on Human Factors in Computing Systems (CHI '24), May 11-16, 2024, Honolulu, HI, USA."
   collection-type: "proceedings"
-  isbn: 979-8-4007-0330-0/24/05
+  isbn: "9798400703300"
   publisher:
     name: ACM
     city: "New York, NY"

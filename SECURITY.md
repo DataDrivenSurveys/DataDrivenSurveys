@@ -22,7 +22,7 @@ We place a high priority on the security of our project and appreciate the commu
    - Click on **New advisory** and follow the provided steps to describe the vulnerability.
    - This action creates a private discussion space between you and our project maintainers.
 
-2. **Email:** If you prefer, you can also send us a detailed email about the potential issue at [security@yourprojectname.com](mailto:security@yourprojectname.com). If possible, please encrypt your message using our PGP public key to ensure confidentiality. [PGP Key to be added]
+2. **Email:** If you prefer, you can also send us a detailed email about the potential issue at [security@yourprojectname.com](mailto:dds@unil.ch). If possible, please encrypt your message using our PGP public key to ensure confidentiality. [PGP Key to be added]
 
 ### What to expect after reporting:
 
