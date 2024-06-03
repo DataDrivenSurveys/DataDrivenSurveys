@@ -438,6 +438,10 @@ class OAuthDataProvider(DataProvider):
 
     # Instance properties
     @property
+    def scopes(self):
+        return self.__class__._scopes
+
+    @property
     def required_scopes(self) -> list[str]:
         return self._required_scopes
 

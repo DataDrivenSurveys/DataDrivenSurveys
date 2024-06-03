@@ -830,7 +830,7 @@ class Registry(metaclass=RegistryBase):
         Returns:
             TRegistryClass: The class object associated with the given name.
         """
-        return cls.registry.get(name)
+        return cls.registry.get(cls.base_name, {}).get(name)
 
     @classmethod
     def get_class_by_value(cls, value) -> TRegistryClass | None:

@@ -111,6 +111,14 @@
               "instructions.helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
               "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
             },
+            "google_contacts": {
+              "client_id.helper_text": "Copy paste the value in the 'Client ID' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "Copy paste the value in the 'Client secret' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_secret.label": "Client secret",
+              "instructions.helper_url": "https://developers.google.com/people/quickstart/python",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            },
             "instagram": {
               "client_id.helper_text": "You need to open your app in the Facebook developer portal, then click on > 'App Settings' > 'Basic'. Copy paste the value in the 'App ID' field.",
               "client_id.label": "App ID",
@@ -349,6 +357,10 @@
           "github": {
             "alt": "GitHub",
             "label": "GitHub"
+          },
+          "googlecontacts": {
+            "alt": "Google Contacts",
+            "label": "Google Contacts"
           },
           "instagram": {
             "alt": "Instagram",
