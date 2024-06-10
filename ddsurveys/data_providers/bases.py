@@ -153,6 +153,92 @@ class DataProvider(UIRegistry):
             and (variable["data_provider"] == self.name_lower)
         ]
 
+    def calculate_variables(
+        self,
+        project_builtin_variables: list[dict],
+        project_custom_variables: list[dict] = None,
+    ) -> dict[str, TVariableValue]:
+        """Calculates the values of passed variables.
+
+        Args:
+            project_builtin_variables:
+                List of dicts where each dict contains key/value pairs conforming to the Variable class.
+            project_custom_variables:
+            List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
+
+        Returns:
+            A dict of key value pairs where the key is the name of the variable and the value is the value of the variable.
+            This dict can be passed to SurveyPlatform.upload_variable_values()
+        """
+        if project_custom_variables is None:
+            project_custom_variables = []
+
+        calculated_variables = {}
+
+        for variable in self.select_relevant_variables(project_builtin_variables):
+            value = None
+            try:
+                value = self.get_variable_value(**variable)
+                exists = value is not None
+            except ValueError:
+                logger.warning(
+                    f"Variable {variable['name']} could not be calculated with the following "
+                    f"error:\n{traceback.format_exc()}"
+                )
+                exists = False
+
+            calculated_variables[variable["qualified_name"]] = value
+            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
+
+        for variable in self.select_relevant_variables(project_custom_variables):
+            # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
+            custom_var_manager = CustomVariable(
+                data_provider=self, custom_variable=variable
+            )
+
+            custom_vars = custom_var_manager.calculate_custom_variables()
+
+            calculated_variables.update(custom_vars)
+
+        return calculated_variables
+
+    def get_variable_value(
+        self,
+        category: str = "",
+        name: str = "",
+        qualified_name: str = "",
+        is_indexed_variable: bool = False,
+        index: int = 0,
+        **kwargs,
+    ) -> TVariableValue:
+
+        if qualified_name in self._variable_values:
+            return self._variable_values[qualified_name]
+
+        data_category_class = self.get_data_category(category.lower())
+
+        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+
+        if data_category_class is None:
+            raise ValueError(f"Data category '{category}' not found")
+
+        variable_func = data_category_class.get_builtin_variable_by_name(
+            name
+        ).extractor_func
+
+        if variable_func:
+            if is_indexed_variable:
+                value = variable_func(self, index)
+            else:
+                value = variable_func(self)
+            self._variable_values[name] = value
+            return value
+        else:
+            raise ValueError(
+                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                f"function to build a function for '{name}'"
+            )
+
     @staticmethod
     def get_used_variables(
         project_builtin_variables=None, project_custom_variables=None
@@ -476,91 +562,6 @@ class OAuthDataProvider(DataProvider):
 
         self.required_scopes = required_scopes
         return required_scopes
-
-    def calculate_variables(
-        self,
-        project_builtin_variables: list[dict],
-        project_custom_variables: list[dict] = None,
-    ) -> dict[str, TVariableValue]:
-        """Calculates the values of passed variables.
-
-        Args:
-            project_builtin_variables:
-                List of dicts where each dict contains key/value pairs conforming to the Variable class.
-            project_custom_variables:
-            List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
-
-        Returns:
-            A dict of key value pairs where the key is the name of the variable and the value is the value of the variable.
-            This dict can be passed to SurveyPlatform.upload_variable_values()
-        """
-        if project_custom_variables is None:
-            project_custom_variables = []
-
-        calculated_variables = {}
-
-        for variable in self.select_relevant_variables(project_builtin_variables):
-            value = None
-            try:
-                value = self.get_variable_value(**variable)
-                exists = value is not None
-            except ValueError:
-                logger.warning(
-                    f"Variable {variable['name']} could not be calculated with the following "
-                    f"error:\n{traceback.format_exc()}"
-                )
-                exists = False
-
-            calculated_variables[variable["qualified_name"]] = value
-            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
-
-        for variable in self.select_relevant_variables(project_custom_variables):
-            # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
-            custom_var_manager = CustomVariable(
-                data_provider=self, custom_variable=variable
-            )
-
-            custom_vars = custom_var_manager.calculate_custom_variables()
-
-            calculated_variables.update(custom_vars)
-
-        return calculated_variables
-
-    def get_variable_value(
-        self,
-        category: str = "",
-        name: str = "",
-        qualified_name: str = "",
-        is_indexed_variable: bool = False,
-        index: int = 0,
-        **kwargs,
-    ) -> TVariableValue:
-        if qualified_name in self._variable_values:
-            return self._variable_values[qualified_name]
-
-        data_category_class = self.get_data_category(category.lower())
-
-        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
-
-        if data_category_class is None:
-            raise ValueError(f"Data category '{category}' not found")
-
-        variable_func = data_category_class.get_builtin_variable_by_name(
-            name
-        ).extractor_func
-
-        if variable_func:
-            if is_indexed_variable:
-                value = variable_func(self, index)
-            else:
-                value = variable_func(self)
-            self._variable_values[name] = value
-            return value
-        else:
-            raise ValueError(
-                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
-                f"function to build a function for '{name}'"
-            )
 
     # Methods that child classes must implement
     @abstractmethod
