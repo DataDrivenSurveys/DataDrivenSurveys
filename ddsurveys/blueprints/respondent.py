@@ -537,6 +537,7 @@ def prepare_survey():
                 fields.update(
                     {"access_token": access_token, "refresh_token": refresh_token}
                 )
+                logger.debug(f"Data provider fields: {fields}")
 
                 user_data_provider = DataProvider.get_class_by_value(
                     data_provider_name
@@ -570,6 +571,7 @@ def prepare_survey():
                         data=frontend_variables,
                     )
                 )
+            logger.debug(f"Data to upload: {data_to_upload}")
 
             success_preparing_survey, unique_url = (
                 platform_instance.handle_prepare_survey(

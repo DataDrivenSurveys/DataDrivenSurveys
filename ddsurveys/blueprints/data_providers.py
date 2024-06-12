@@ -89,6 +89,8 @@ def add_data_provider_to_project():
         status = provider_instance.test_connection()
 
         # check if the data provider already exists
+        logger.debug(f"{selected_data_provider}")
+        logger.debug(f"{provider_class.name}, {provider_class.label}, {provider_class.provider_type}")
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(

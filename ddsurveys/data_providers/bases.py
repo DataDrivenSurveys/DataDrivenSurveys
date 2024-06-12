@@ -157,6 +157,7 @@ class DataProvider(UIRegistry):
         self,
         project_builtin_variables: list[dict],
         project_custom_variables: list[dict] = None,
+        **kwargs
     ) -> dict[str, TVariableValue]:
         """Calculates the values of passed variables.
 
@@ -422,7 +423,7 @@ class FrontendDataProvider(DataProvider):
         return True
 
     def get_variable_value(
-        self, data: dict[str, Any], variable: dict[str, Any]
+        self, data: dict[str, Any], variable: dict[str, Any], **kwargs
     ) -> TVariableValue:
 
         name = variable["name"]

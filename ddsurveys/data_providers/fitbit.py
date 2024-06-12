@@ -10,11 +10,12 @@ Created on 2023-08-31 16:59
 __all__ = ["FitbitDataProvider"]
 
 import base64
-from datetime import datetime
-from functools import cached_property
+from datetime import datetime, date
+from functools import cache, cached_property
 from typing import Any, Callable, Dict
 
 import requests
+from dateutil.relativedelta import relativedelta
 from fitbit.api import Fitbit, FitbitOauth2Client
 
 from ..get_logger import get_logger
@@ -147,6 +148,69 @@ class Activities(DataCategory):
     ]
 
 
+class ActiveMinutes(DataCategory):
+    builtin_variables = [
+        BuiltInVariable.create_instances(
+            name="average_weekly_last_6_months",
+            label="Average Weekly Active Minutes Last 6 Months",
+            description="Average weekly active minutes",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="120",
+            unit="minutes",
+            info="Average weekly active minutes over the last 6 months.",
+            extractor_func=lambda self: self.average_weekly_active_time_last_6_months,
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/[activityType]/date/[start-date]/[end-date].json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity-timeseries-by-date-range/",
+                }
+            ],
+        ),
+    ]
+
+
+class Daily(DataCategory):
+    builtin_variables = [
+        BuiltInVariable.create_instances(
+            name="highest_steps_last_6_months_steps",
+            label="Highest Daily Step Count in Last 6 Months",
+            description="Highest step count achieved on a single day within the last 6 months. This includes wearable "
+                        "activity tracker data only.",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="20000",
+            unit="steps",
+            info="Highest daily step count in last 6 months.",
+            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[1],
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/tracker/steps/date/[start-date]/[end-date].json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity-timeseries-by-date-range/",
+                }
+            ],
+        ),
+        BuiltInVariable.create_instances(
+            name="highest_steps_last_6_months_date",
+            label="Date of Highest Daily Step Count in Last 6 Months",
+            description="Date of step count achieved on a single day within the last 6 months. This includes wearable "
+                        "activity tracker data only.",
+            data_type=VariableDataType.DATE,
+            test_value_placeholder="2020-01-01",
+            unit="date",
+            info="Date of highest daily step count in last 6 months.",
+            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[0],
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/tracker/steps/date/[start-date]/[end-date].json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity-timeseries-by-date-range/",
+                }
+            ],
+        ),
+    ]
+
+
 class Steps(DataCategory):
 
     def fetch_data(self) -> list[dict[str, Any]]:
@@ -164,7 +228,7 @@ class Steps(DataCategory):
             test_value_placeholder="10000",
             unit="steps",
             info="Average lifetime steps. ",
-            extractor_func=lambda self: self.average_lifetime_steps(),
+            extractor_func=lambda self: self.average_lifetime_steps,
             data_origin=[
                 {
                     "method": "activities_frequent",
@@ -187,7 +251,7 @@ class Steps(DataCategory):
             test_value_placeholder="20000",
             unit="steps",
             info="Highest step count achieved on a single day. ",
-            extractor_func=lambda self: self.highest_lifetime_steps(),
+            extractor_func=lambda self: self.highest_lifetime_steps,
             data_origin=[
                 {
                     "method": "lifetime_stats",
@@ -311,7 +375,7 @@ class FitbitDataProvider(OAuthDataProvider):
     ]
 
     # DataCategory declarations go here
-    data_categories = [Activities, Account, Steps, Badges]
+    data_categories = [Activities, Account, ActiveMinutes, Daily, Steps, Badges]
 
     # Standard class methods go here
     def __init__(self, **kwargs):
@@ -501,6 +565,7 @@ class FitbitDataProvider(OAuthDataProvider):
             return self.activities_frequent[idx - 1]["name"]
         return None
 
+    @cached_property
     def average_lifetime_steps(self):
         average_steps = self.user_profile["averageDailySteps"]
         if average_steps == 0:
@@ -513,6 +578,7 @@ class FitbitDataProvider(OAuthDataProvider):
             average_steps = int(total_steps / delta)
         return average_steps
 
+    @cached_property
     def highest_lifetime_steps(self):
         try:
             return (
@@ -545,7 +611,7 @@ class FitbitDataProvider(OAuthDataProvider):
     def user_badges(self):
         return []
 
-    @property
+    @cached_property
     def activity_logs(self):
         # Assuming you want to fetch activities before the current date in descending order
         before_date = datetime.now().strftime("%Y-%m-%d")
@@ -619,6 +685,123 @@ class FitbitDataProvider(OAuthDataProvider):
             *self.api_client._get_common_args()
         )
         return self.api_client.make_request(url)
+
+    @cache
+    def daily_stats(
+        self, activity: str, start_date: datetime, end_date: datetime
+    ) -> dict[str, list[dict[str, str]]]:
+        """
+
+        Args:
+            activity: The type of activity to retrieve.
+                Allowed values are: 'activityCalories', 'calories', 'caloriesBMR', 'distance', 'elevation', 'floors',
+                'minutesSedentary', 'minutesLightlyActive', 'minutesFairlyActive', 'minutesVeryActive', and 'steps'.
+                You can add 'tracker/' before the activity name to only get data collected with a tracker.
+            start_date: Start date of the range for which to retrieve data.
+                'activityCalories' has a maximum range of 30 days.
+                All other activities have a maximum range of 1095 days.
+            end_date: End date of the range for which to retrieve data.
+
+        Returns:
+            dict with the following structure:
+                {
+                    "activities-[`activity`]": [
+                        {
+                            "dateTime": "2018-12-26",
+                            "value": "[value]"
+                        }
+                    ]
+                }
+            If activity is 'steps', the response will be:
+                {
+                  "activities-steps": [
+                    {
+                      "dateTime": "2018-12-26",
+                      "value": "2504"
+                    },
+                    {
+                      "dateTime": "2018-12-27",
+                      "value": "3723"
+                    },
+                    {
+                      "dateTime": "2018-12-28",
+                      "value": "8304"
+                    }
+                  ]
+                }
+
+        Examples:
+
+
+        """
+        #  /1/user/[user-id]/activities/[resource-path]/date/[start-date]/[end-date].json
+        #  GET https://api.fitbit.com/1/user/-/activities/steps/date/2019-01-01/2019-01-07.json
+        if activity == "activityCalories" or activity == "tracker/activityCalories" and (end_date - start_date).days > 30:
+            raise ValueError(f"Maximum range for {activity} is 30 days. Received {(end_date - start_date).days} days.")
+        elif (end_date - start_date).days > 1095:
+            raise ValueError(f"Maximum range for {activity} is 1095 days. Received {(end_date - start_date).days} days.")
+
+        url = (
+            f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date.strftime('%Y-%m-%d')}/"
+            f"{end_date.strftime('%Y-%m-%d')}.json"
+        )
+        return self.api_client.make_request(url)
+
+    @cached_property
+    def daily_step_counts_last_6_months(self) -> dict[str, list[dict[str, str]]]:
+        end_date = date.today()
+        start_date = end_date - relativedelta(months=6)
+        # return self.daily_step_counts("tracker/steps", start_date, end_date)
+        return self.daily_stats("steps", start_date, end_date)
+
+    @cached_property
+    def highest_daily_steps_last_6_months_date_steps(self) -> tuple[datetime, int] | tuple[None, None]:
+        steps: list[dict[str, str]]
+        if "activities-tracker-steps" in self.daily_step_counts_last_6_months:
+            steps = self.daily_step_counts_last_6_months["activities-tracker-steps"]
+        else:
+            steps = self.daily_step_counts_last_6_months["activities-steps"]
+        day_steps = max(steps, key=lambda x: int(x["value"]))
+        day = datetime.strptime(day_steps["dateTime"], "%Y-%m-%d").date()
+        steps = int(day_steps["value"])
+        if steps != 0:
+            return day, steps
+        else:
+            return None, None
+
+    @cached_property
+    def average_weekly_active_time_last_6_months(self) -> float | None:
+        end_date = date.today()
+        start_date = end_date - relativedelta(months=6)
+        one_week = relativedelta(weeks=1)
+        activity_types = [
+            "minutesLightlyActive",
+            "minutesFairlyActive",
+            "minutesVeryActive",
+            # "tracker/minutesLightlyActive",
+            # "tracker/minutesFairlyActive",
+            # "tracker/minutesVeryActive",
+        ]
+        weekly_stats = {}
+        current_date = start_date
+        while current_date <= end_date:
+            iso_date = current_date.isocalendar()
+            weekly_stats[(iso_date.year, iso_date.week)] = []
+            current_date += one_week
+
+        for activity_type in activity_types:
+            activity = self.daily_stats(activity_type, start_date, end_date)
+            for day in activity["activities-" + activity_type]:
+                day_date = datetime.strptime(day["dateTime"], "%Y-%m-%d").date()
+                iso_date = day_date.isocalendar()
+                weekly_stats[(iso_date.year, iso_date.week)].append(int(day["value"]))
+        weekly_averages = {k: sum(v) / 7 for k, v in weekly_stats.items()}
+        average = sum(weekly_averages.values()) / len(weekly_averages)
+        if average != 0:
+            return average
+        else:
+            return None
+
 
     # Extractor functions
 
