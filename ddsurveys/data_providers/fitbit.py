@@ -348,8 +348,11 @@ class FitbitDataProvider(OAuthDataProvider):
         "Account": "profile",
         "Activities": "activity",
         "activities": "activity",
+        "ActiveMinutes": "activity",
+        "activeminutes": "activity",
         "badges": "profile",
         "Badges": "profile",
+        "Daily": "activity",
         "Steps": "activity",
         "Body": "weight",
     }
@@ -771,32 +774,33 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_weekly_active_time_last_6_months(self) -> float | None:
-        end_date = date.today()
-        start_date = end_date - relativedelta(months=6)
+        end_date: datetime = date.today()
+        start_date: datetime = end_date - relativedelta(months=6)
         one_week = relativedelta(weeks=1)
+        # TODO: determine which ones should be used
         activity_types = [
             "minutesLightlyActive",
             "minutesFairlyActive",
             "minutesVeryActive",
-            # "tracker/minutesLightlyActive",
-            # "tracker/minutesFairlyActive",
-            # "tracker/minutesVeryActive",
+            "tracker/minutesLightlyActive",
+            "tracker/minutesFairlyActive",
+            "tracker/minutesVeryActive",
         ]
-        weekly_stats = {}
-        current_date = start_date
+        weekly_stats: dict[tuple[int, int], int] = {}
+        current_date: datetime = start_date
         while current_date <= end_date:
             iso_date = current_date.isocalendar()
-            weekly_stats[(iso_date.year, iso_date.week)] = []
+            weekly_stats[(iso_date.year, iso_date.week)] = 0
             current_date += one_week
 
         for activity_type in activity_types:
             activity = self.daily_stats(activity_type, start_date, end_date)
-            for day in activity["activities-" + activity_type]:
+            for day in activity["activities-" + activity_type.replace("/", "-")]:
                 day_date = datetime.strptime(day["dateTime"], "%Y-%m-%d").date()
                 iso_date = day_date.isocalendar()
-                weekly_stats[(iso_date.year, iso_date.week)].append(int(day["value"]))
-        weekly_averages = {k: sum(v) / 7 for k, v in weekly_stats.items()}
-        average = sum(weekly_averages.values()) / len(weekly_averages)
+                weekly_stats[(iso_date.year, iso_date.week)] += int(day["value"])
+        # weekly_totals = {k: sum(v) for k, v in weekly_stats.items()}
+        average = sum(weekly_stats.values()) / len(weekly_stats)
         if average != 0:
             return average
         else:

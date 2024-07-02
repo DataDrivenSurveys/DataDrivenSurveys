@@ -490,6 +490,7 @@ class OAuthDataProvider(DataProvider):
         refresh_token: str = None,
         builtin_variables: list[dict] = None,
         custom_variables: list[dict] = None,
+        **kwargs,
     ):
         super().__init__()
         self.client_id: str = client_id
