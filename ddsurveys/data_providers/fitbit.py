@@ -199,7 +199,7 @@ class Daily(DataCategory):
             test_value_placeholder="2020-01-01",
             unit="date",
             info="Date of highest daily step count in last 6 months.",
-            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[0],
+            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[0].strftime("%Y-%m-%d"),
             data_origin=[
                 {
                     "method": "",
@@ -782,9 +782,15 @@ class FitbitDataProvider(OAuthDataProvider):
             "minutesLightlyActive",
             "minutesFairlyActive",
             "minutesVeryActive",
-            "tracker/minutesLightlyActive",
-            "tracker/minutesFairlyActive",
-            "tracker/minutesVeryActive",
+            # "tracker/minutesLightlyActive",
+            # "tracker/minutesFairlyActive",
+            # "tracker/minutesVeryActive",
+
+            # "active-zone-minutes",
+            # "activeZoneMinutes",
+            # "fatBurnActiveZoneMinutes",
+            # "cardioActiveZoneMinutes",
+            # "peakActiveZoneMinutes"
         ]
         weekly_stats: dict[tuple[int, int], int] = {}
         current_date: datetime = start_date
@@ -799,7 +805,6 @@ class FitbitDataProvider(OAuthDataProvider):
                 day_date = datetime.strptime(day["dateTime"], "%Y-%m-%d").date()
                 iso_date = day_date.isocalendar()
                 weekly_stats[(iso_date.year, iso_date.week)] += int(day["value"])
-        # weekly_totals = {k: sum(v) for k, v in weekly_stats.items()}
         average = sum(weekly_stats.values()) / len(weekly_stats)
         if average != 0:
             return average

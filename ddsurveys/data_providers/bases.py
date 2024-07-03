@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 import traceback
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Any, Type, TypeVar
 
 from ..get_logger import get_logger
