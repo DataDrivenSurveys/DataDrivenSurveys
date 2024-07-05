@@ -6,11 +6,10 @@
 """
 __all__ = ["GitHubDataProvider"]
 
-from abc import ABC, abstractmethod
+import traceback
 from functools import cached_property
 from typing import Any, Callable, Dict
 
-import requests
 from github import ApplicationOAuth, Auth, Github
 from github.AccessToken import AccessToken
 from github.GithubException import BadCredentialsException, GithubException
@@ -284,7 +283,7 @@ class GitHubDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
 
         try:
 
@@ -309,6 +308,7 @@ class GitHubDataProvider(OAuthDataProvider):
             }
         except GithubException as e:
             logger.exception(f"Failed to request token: {e}")
+            logger.debug(traceback.format_exc())
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",

@@ -464,7 +464,9 @@ class FrontendDataProvider(DataProvider):
             exists = value is not None
             if exists:
                 calculated_variables[variable["qualified_name"]] = value
-            calculated_variables[f"{variable['qualified_name']}_exists"] = exists
+            else:
+                calculated_variables[variable["qualified_name"]] = ""
+            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
 
         return calculated_variables
 
@@ -510,6 +512,8 @@ class OAuthDataProvider(DataProvider):
     def get_redirect_uri(cls) -> str:
         # TODO: avoid using environment variables.
         frontend_url = os.getenv("FRONTEND_URL")
+        if frontend_url is None or frontend_url == "":
+            logger.critical(f"FRONTEND_URL environment variable not set, empty, or failed to load.")
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
 
     def to_public_dict(self) -> dict:
@@ -568,29 +572,29 @@ class OAuthDataProvider(DataProvider):
     # Methods that child classes must implement
     @abstractmethod
     def init_api_client(self, *args, **kwargs) -> None:
-        pass
+        ...
 
     @abstractmethod
     def init_oauth_client(self, *args, **kwargs) -> None:
-        pass
+        ...
 
     @abstractmethod
     def get_authorize_url(
         self, builtin_variables: list[dict], custom_variables: list[dict] = None
     ) -> str:
-        pass
+        ...
 
     @abstractmethod
     def get_client_id(self) -> str:
-        pass
+        ...
 
     @abstractmethod
     def request_token(self, code: str) -> dict[str, Any]:
-        pass
+        ...
 
     @abstractmethod
     def revoke_token(self, token: str) -> bool:
-        pass
+        ...
 
 
 class FormField(BaseFormField):

@@ -10,8 +10,9 @@ You will need to replace the elipses (...) with the correct classes and code.
 __all__ = ["GoogleContactsDataProvider"]
 
 import traceback
+import operator
 from functools import cached_property, cache
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, TypedDict, Optional
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -21,93 +22,21 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
 from googleapiclient.errors import HttpError
 
-from ..get_logger import get_logger
-from ..variable_types import TVariableFunction, VariableDataType
-from .bases import FormField, OAuthDataProvider
-from .data_categories import DataCategory
-from .variables import BuiltInVariable, CVAttribute
+from ...get_logger import get_logger
+from ...variable_types import TVariableFunction, VariableDataType
+from ..bases import FormField, OAuthDataProvider
 
-# Import the required libraries to make this work
+from ..utils import count_words, count_sentences
+
+from .api_response_dicts import *
+from .people import People
+
 
 logger = get_logger(__name__)
 
 
 # This is an example of a data category.
 # In practice, each endpoint can be turned into a data category.
-class People(DataCategory):
-    data_origin = [
-        {
-            "method": "get",
-            "endpoint": "https://people.googleapis.com/v1/resourceName=people/me",
-            "documentation": "https://developers.google.com/people/api/rest/v1/people/get",
-        }
-    ]
-
-    custom_variables_enabled = False
-
-    api: "GoogleContactsDataProvider" = None
-    self: "GoogleContactsDataProvider"
-
-    def __init__(self, data_provider: "GoogleContactsDataProvider"):
-        super().__init__(data_provider)
-        self.data_provider: "GoogleContactsDataProvider"
-
-    def fetch_data(self) -> list[dict[str, Any]]:
-        contacts = self.data_provider.contacts
-        return contacts
-
-    cv_attributes = []
-
-    builtin_variables = [
-        BuiltInVariable.create_instances(
-            name="total_contacts",
-            label="Total number of contacts",
-            description="The total number of contacts that a respondent has.",
-            test_value_placeholder="100",
-            data_type=VariableDataType.NUMBER,
-            info="The total number of contacts that a respondent has. It will always be a whole number greater or "
-                 "equal to 0.",
-            is_indexed_variable=False,
-            extractor_func=lambda self: self.num_contacts,
-            data_origin=[],
-        ),
-        BuiltInVariable.create_instances(
-            name="num_with_first_name",
-            label="Number of contacts with a first name",
-            description="The number of contacts that a respondent has with a first name.",
-            test_value_placeholder="100",
-            data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a first name. It will always be a whole number "
-                 "greater or equal to 0.",
-            is_indexed_variable=False,
-            extractor_func=lambda self: self.num_with_first_name,
-            data_origin=[],
-        ),
-        BuiltInVariable.create_instances(
-            name="num_with_nickname",
-            label="Number of contacts with a nickname",
-            description="The number of contacts that a respondent has with a nickname.",
-            test_value_placeholder="100",
-            data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a nickname. It will always be a whole number "
-                 "greater or equal to 0.",
-            is_indexed_variable=False,
-            extractor_func=lambda self: self.num_with_nickname,
-            data_origin=[],
-        ),
-        BuiltInVariable.create_instances(
-            name="num_with_organization",
-            label="Number of contacts with a company name",
-            description="The number of contacts that a respondent has with an organization.",
-            test_value_placeholder="100",
-            data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with an organization. It will always be a whole number "
-                 "greater or equal to 0.",
-            is_indexed_variable=False,
-            extractor_func=lambda self: self.num_with_organization,
-            data_origin=[],
-        ),
-    ]
 
 
 class GoogleContactsDataProvider(OAuthDataProvider):
@@ -129,16 +58,21 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     )
 
     # Unique class attributes go here
-    _scopes = ["https://www.googleapis.com/auth/contacts.readonly"]
+    _scopes = [
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/contacts.readonly"
+    ]
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
-    _categories_scopes = {}
+    _categories_scopes = {
+    }
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
     form_fields = [
         FormField(name="client_id", type="text", required=True, data={}),
         FormField(name="client_secret", type="text", required=True, data={}),
+        FormField(name="project_id", type="text", required=True, data={}),
     ]
 
     # List all the data categories that this data provider supports.
@@ -183,6 +117,10 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
 
+    # def __new__(cls, *args, **kwargs):
+    #     instance = super().__new__(cls)
+    #     instance._categories_scopes["People"] =
+
     def __init__(self, **kwargs):
         """
 
@@ -198,10 +136,17 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.oauth_client: Flow
         self.redirect_uri = self.get_redirect_uri()
 
+        self.project_id: str = kwargs.get("project_id")
+        self.state = None
+        self.credentials: Credentials = None
+
         self.init_oauth_client()
 
         if self.client_id is not None and self.client_secret is not None:
-            self.init_api_client(self.access_token, self.refresh_token)
+            self.init_oauth_client(self.client_id, self.client_secret)
+
+        if self.client_id is not None and self.client_secret is not None:
+            self.init_api_client(self.access_token, self.refresh_token, self.client_id, self.client_secret)
 
     # OAuthBase methods
     def init_api_client(
@@ -226,21 +171,21 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             "client_id": self.client_id,
             "client_secret": self.client_secret,
         }
-        creds = Credentials.from_authorized_user_info(info=info, scopes=self.scopes)
+        self.credentials = Credentials.from_authorized_user_info(info=info, scopes=self.scopes)
 
-        self.api_client = build("people", "v1", credentials=creds)
+        self.api_client = build("people", "v1", credentials=self.credentials)
 
     def init_oauth_client(
-        self, client_id: str = None, client_secret: str = None
+        self, client_id: str = None, client_secret: str = None, project_id: str = None
     ) -> None:
         client_config = {
             "web": {
-                "client_id": client_id,
-                "project_id": "dab-idp-dds",
+                "client_id": client_id or self.client_id,
+                "project_id": project_id or self.project_id,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
                 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-                "client_secret": client_secret,
+                "client_secret": client_secret or self.client_secret,
                 "redirect_uris": [self.redirect_uri],
             }
         }
@@ -249,23 +194,106 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             client_config=client_config, scopes=self.scopes
         )
 
+        # Set redirect_uri
+        self.oauth_client.redirect_uri = self.redirect_uri
+
     def get_authorize_url(
         self, builtin_variables: list[dict], custom_variables: list[dict] = None
     ) -> str:
-        ...
+        url, state = self.oauth_client.authorization_url(
+            # Recommended, enable offline access so that you can refresh an access token without
+            # re-prompting the user for permission. Recommended for web server apps.
+            access_type="offline",
+
+            # Optional, enable incremental authorization. Recommended as a best practice.
+            include_granted_scopes='true',
+
+            # Optional, set prompt to 'consent' will prompt the user for consent
+            prompt='consent',
+        )
+        self.state = state
+        return url
 
     def get_client_id(self) -> str:
-        ...
+        return self.client_id
 
-    def request_token(self, code: str) -> Dict[str, Any]:
-        ...
+    def get_required_scopes(
+        self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None
+    ) -> list[str]:
+        self.required_scopes = self.__class__._scopes
+        return self.required_scopes
+
+    def request_token(self, code: str) -> dict[str, Any]:
+        logger.info(f"Requesting token")
+        self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
+        credentials = self.oauth_client.credentials
+
+        logger.info(f"Credentials: {credentials}")
+        logger.info(credentials.granted_scopes)
+        logger.info(self.required_scopes)
+
+        if set(self.required_scopes) != set(credentials.granted_scopes):
+            logger.error(f"The required scopes were not granted.")
+            self.revoke_token(credentials.token)
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error.incomplete_scopes",
+                "required_scopes": self.scopes,
+                "accepted_scopes": credentials.granted_scopes,
+            }
+
+        self.init_api_client(credentials.token, credentials.refresh_token, credentials.client_id,
+                             credentials.client_secret)
+
+        people_service = build("people", "v1", credentials=credentials)
+        profile = people_service.people().get(resourceName='people/me', personFields='names').execute()
+
+        logger.info(f"Profile: {profile}")
+        self.credentials = credentials
+
+        return {
+            "success": True,
+            "access_token": credentials.token,
+            "refresh_token": credentials.refresh_token,
+            "user_id": profile["resourceName"].split("/")[-1],
+            "user_name": profile["names"][0]["displayName"],
+        }
 
     def revoke_token(self, token: str) -> bool:
-        ...
+
+        if self.credentials is None:
+            self.credentials = self.oauth_client.credentials
+
+        r = requests.post(
+            "https://oauth2.googleapis.com/revoke",
+            params={"token": self.credentials.token},
+            headers={"content-type": "application/x-www-form-urlencoded"},
+        )
+
+        if r.status_code == 200:
+            logger.info(f"Successfully revoked google token")
+            return True
+        else:
+            logger.error(f"Failed to revoke google token: {r.status_code}")
+            logger.error(f"Response: {r.content}")
+            return False
 
     # DataProvider methods
     def test_connection_before_extraction(self) -> bool:
-        ...
+        self.init_api_client()
+        results = (
+            self.api_client.people()
+            .connections()
+            .list(
+                resourceName="people/me",
+                pageSize=10,
+                personFields=self._person_fields,
+            )
+            .execute()
+        )
+        if results.get("connections") is None:
+            return False
+        return True
 
     def test_connection(self) -> bool:
         """
@@ -325,7 +353,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return self.__class__._person_fields
 
     @cached_property
-    def contacts(self) -> list[dict]:
+    def contacts(self) -> list[ContactDict]:
         # Fetch all contacts from the API and return them as a list of dictionaries.
         connections: list[dict] = list()
         has_next_page = True
@@ -354,59 +382,93 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # Functions to calculate variables
     @cache
-    def with_category(self, category: str) -> list[dict]:
+    def with_category(self, category: str) -> list[ContactDict]:
+        return self.with_category_count(
+            category=category,
+            operator_=operator.gt,
+            count=0,
+        )
+
+    @cache
+    def with_category_subcategory(self, category: str, subcategory: str) -> list[ContactDict]:
         return [
             c
             for c in self.contacts
-            if (cat := c.get(category, [])) and len(cat) > 0
+            if ((cat := c.get(category, [])) or True)
+               and len(cat) > 0
+               and any([subcat.get(subcategory, "") != "" for subcat in cat])
         ]
 
     @cache
-    def with_category_subcategory(self, category: str, subcategory: str) -> list[dict]:
+    def with_category_count(self, category: str, operator_: callable = operator.gt, count: int = 0) -> list[ContactDict]:
         return [
             c
             for c in self.contacts
-            if
-            (cat := c.get(category, [])) and len(cat) > 0 and any([subcat.get(subcategory, "") != "" for subcat in cat])
+            if ((cat := c.get(category, [])) or True) and operator_(len(cat), count)
         ]
 
     @cached_property
-    def with_first_name(self) -> list[dict]:
+    def with_first_name(self) -> list[ContactDict]:
         return self.with_category_subcategory("names", "givenName")
 
     @cached_property
-    def with_last_name(self) -> list[dict]:
+    def with_last_name(self) -> list[ContactDict]:
         return [
             c
             for c in self.contacts
-            if (names := c.get("names", [])) and len(names) > 0 and names[0].get("familyName", "") != ""
+            if ((names := c.get("names", [])) or True) and len(names) > 0 and names[0].get("familyName", "") != ""
         ]
 
     @cached_property
-    def with_nickname(self) -> list[dict]:
+    def with_nickname(self) -> list[ContactDict]:
         return [
             c
             for c in self.contacts
-            if (names := c.get("nicknames", [])) and len(names) > 0 and names[0].get("value", "") != ""
+            if ((names := c.get("nicknames", [])) or True)
+               and len(names) > 0
+               and names[0].get("value", "") != ""
         ]
 
     @cached_property
-    def with_company(self) -> int:
+    def with_company(self) -> list[ContactDict]:
         return self.with_category_subcategory("organizations", "name")
 
     @cached_property
-    def with_job_title(self) -> list[dict]:
+    def with_job_title(self) -> list[ContactDict]:
         return self.with_category_subcategory("organizations", "title")
 
     @cached_property
-    def with_company_or_job_title(self) -> list[dict]:
+    def with_company_or_job_title(self) -> list[ContactDict]:
         return [
                 c
                 for c in self.contacts
-                if (organizations := c.get("organizations", []))
+                if ((organizations := c.get("organizations", [])) or True)
                 and len(organizations) > 0
                 and any([org.get("name", "") != "" or org.get("title", "") != "" for org in organizations])
             ]
+
+    @cached_property
+    def with_birthday_year(self) -> list[ContactDict]:
+        return [
+            c
+            for c in self.contacts
+            if ((birthdays := c.get("birthdays", [])) or True)
+            and len(birthdays) > 0
+            and birthdays[0].get("date", {}).get("year") is not None
+        ]
+    
+    @cached_property
+    def count_num_contacts_by_biography_length(self) -> dict[str, int]:
+        counts = {"few words": 0, "few sentences": 0, "few paragraphs": 0}
+        for c in self.with_category("biographies"):
+            type_ = self.classify_text(
+                c["biographies"][0]["value"],
+                few_words_threshold=10,
+                few_sentences_threshold=3
+            )
+            counts[type_] += 1
+
+        return counts
 
     # Number of contacts with specific values
     @cached_property
@@ -458,5 +520,66 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return len(self.with_category("phoneNumbers"))
 
     @cached_property
-    def num_with_phone_numbers_stats(self) -> list[list[int]]:
-        pass
+    def num_with_relations(self) -> int:
+        return len(self.with_category("relations"))
+
+    @cached_property
+    def num_with_photos(self) -> int:
+        return len(self.with_category("photos"))
+
+    @cached_property
+    def num_with_birthday(self) -> int:
+        return len(self.with_category("birthdays"))
+
+    @cached_property
+    def num_with_addresses(self) -> int:
+        return len(self.with_category("addresses"))
+
+    @cached_property
+    def num_with_biographies(self) -> int:
+        return len(self.with_category("biographies"))
+
+    @cached_property
+    def num_with_0_phone_numbers(self) -> int:
+        return len(self.with_category_count("phoneNumbers", operator.eq, 0))
+
+    @cached_property
+    def num_with_1_phone_numbers(self) -> int:
+        return len(self.with_category_count("phoneNumbers", operator.eq, 1))
+
+    @cached_property
+    def num_with_2_phone_numbers(self) -> int:
+        return len(self.with_category_count("phoneNumbers", operator.eq, 2))
+
+    @cached_property
+    def num_with_3_or_more_phone_numbers(self) -> int:
+        return len(self.with_category_count("phoneNumbers", operator.ge, 3))
+
+    @cached_property
+    def num_with_birthday_year(self) -> int:
+        return len(self.with_birthday_year)
+
+    @cached_property
+    def num_with_biographies_few_words(self) -> int:
+        return self.count_num_contacts_by_biography_length["few words"]
+
+    @cached_property
+    def num_with_biographies_few_sentences(self) -> int:
+        return self.count_num_contacts_by_biography_length["few sentences"]
+
+    @cached_property
+    def num_with_biographies_few_paragraphs(self) -> int:
+        return self.count_num_contacts_by_biography_length["few paragraphs"]
+
+    # Supporting functions
+    @staticmethod
+    def classify_text(text: str, few_words_threshold: int = 10, few_sentences_threshold: int = 3) -> str:
+        word_count = count_words(text)
+        sentence_count = count_sentences(text)
+
+        if word_count <= few_words_threshold:
+            return 'few words'
+        elif sentence_count <= few_sentences_threshold:
+            return 'few sentences'
+        else:
+            return 'few paragraphs'

@@ -435,7 +435,7 @@ class FitbitDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
         """
         Exchange the authorization code for an access token and retrieve the user's Fitbit profile.
 
@@ -505,8 +505,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
         """
         headers = {
-            "Authorizatio"
-            "n": f"Basic {base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode('utf-8')).decode('utf-8')}",
+            "Authorization": f"Basic {base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode('utf-8')).decode('utf-8')}",
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {"token": token}
