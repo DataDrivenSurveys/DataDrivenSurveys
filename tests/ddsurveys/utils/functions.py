@@ -65,12 +65,12 @@ def generate_builtin_variables(data_provider: str = "fitbit"):
     # Simulate all enabled builtin variables for the fitbit data provider
     data_provider_class = DataProvider.get_class_by_value(data_provider)
     data_provider_instance = data_provider_class()
-    project_buitin_variables = data_provider_instance.get_builtin_variables()
+    project_builtin_variables = data_provider_instance.get_builtin_variables()
 
-    for variable in project_buitin_variables:
+    for variable in project_builtin_variables:
         variable["enabled"] = True
 
-    return project_buitin_variables
+    return project_builtin_variables
 
 
 def generate_custom_variables(data_provider: str = "fitbit"):

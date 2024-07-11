@@ -11,7 +11,15 @@ set -e
 # Run Alembic migrations
 echo "Running Alembic migrations..."
 cd /app/ddsurveys
-alembic upgrade head
+{
+  alembic upgrade head
+} || {
+  echo "Probably failed to connect to the database."
+  echo "Waiting 3 seconds before retrying"
+  sleep 3
+  alembic upgrade head
+}
+
 
 cd /app
 

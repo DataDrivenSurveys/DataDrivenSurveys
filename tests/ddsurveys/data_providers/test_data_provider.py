@@ -199,14 +199,20 @@ def test_builtin_variables(provider_name):
     [
         (
             FitbitDataProvider,
-            {
-                'user_profile': fitbit_mock_data["user_profile"],
-                'activities_favorite': fitbit_mock_data["activities_favorite"],
-                'activities_frequent': fitbit_mock_data["activities_frequent"],
-                'activities_recent': fitbit_mock_data["activities_recent"],
-                'lifetime_stats': fitbit_mock_data["lifetime_stats"],
-                'activity_logs': fitbit_mock_data["activity_logs"],
-            },
+            # {
+            #     'user_profile': fitbit_mock_data["user_profile"],
+            #     'activities_favorite': fitbit_mock_data["activities_favorite"],
+            #     'activities_frequent': fitbit_mock_data["activities_frequent"],
+            #     'activities_recent': fitbit_mock_data["activities_recent"],
+            #     'lifetime_stats': fitbit_mock_data["lifetime_stats"],
+            #     'activity_logs': fitbit_mock_data["activity_logs"],
+            #     "daily_stats": fitbit_mock_data["daily_stats"],
+            #     "highest_daily_steps_last_6_months_date_steps": fitbit_mock_data["highest_daily_steps_last_6_months_date_steps"],
+            #     "average_weekly_zone_time_last_6_months": fitbit_mock_data["average_weekly_zone_time_last_6_months"],
+            #     "average_weekly_active_time_last_6_months": fitbit_mock_data["average_weekly_active_time_last_6_months"],
+            #     "average_weekly_activity_time_last_6_months": fitbit_mock_data["average_weekly_activity_time_last_6_months"],
+            # },
+            fitbit_mock_data,
             {
                 "dds.fitbit.builtin.steps.average.exists": True,
                 "dds.fitbit.builtin.steps.average": 8000,
@@ -224,6 +230,7 @@ def test_builtin_variables(provider_name):
                 "dds.fitbit.builtin.activities.by_frequency5": None,
                 "dds.fitbit.builtin.account.creation_date.exists": True,
                 "dds.fitbit.builtin.account.creation_date": "2018-05-05",
+
                 # ... include all other expected key-value pairs here
             }
         ),

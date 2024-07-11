@@ -111,16 +111,14 @@
               "instructions.helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
               "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
             },
-            "google_contacts": {
-              "google_contacts": {
-                "client_id.helper_text": "Copy paste the value in the 'Client ID' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
-                "client_id.label": "Client ID",
-                "client_secret.helper_text": "Copy paste the value in the 'Client secret' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
-                "client_secret.label": "Client secret",
-                "project_id.helper_text": "Copy paste the value in the 'project_id' field in the credentials JSON that you can download from the Google Cloud Credentials section of your Google Cloud Project.",
-                "project_id.label": "Project ID",
-                "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
-              },
+            "googlecontacts": {
+              "client_id.helper_text": "Copy paste the value in the 'Client ID' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "Copy paste the value in the 'Client secret' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_secret.label": "Client secret",
+              "project_id.helper_text": "Copy paste the value in the 'project_id' field in the credentials JSON that you can download from the Google Cloud Credentials section of your Google Cloud Project.",
+              "project_id.label": "Project ID",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:",
               "instructions.helper_url": "https://developers.google.com/people/quickstart/python"
             },
             "instagram": {

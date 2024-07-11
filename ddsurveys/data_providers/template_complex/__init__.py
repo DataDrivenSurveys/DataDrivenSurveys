@@ -8,7 +8,7 @@ You will need to replace the elipses (...) with the correct classes and code.
 This module is convenient for data providers where you may need to implement new APIs or more complex data categories and functions.
 Splitting the code into multiple files may make it easier to maintain and develop.
 
-@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 
 from .template_complex import TemplateComplexDataProvider

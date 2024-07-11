@@ -3,7 +3,7 @@
 """
 Created on 2024-07-05 13:23
 
-@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 
 from typing import Any
@@ -12,15 +12,17 @@ from ...variable_types import TVariableFunction, VariableDataType
 from ..data_categories import DataCategory
 from ..variables import BuiltInVariable, CVAttribute
 
+data_origin = [
+    {
+        "method": "get",
+        "endpoint": "https://people.googleapis.com/v1/resourceName=people/me",
+        "documentation": "https://developers.google.com/people/api/rest/v1/people/get",
+    }
+]
+
 
 class People(DataCategory):
-    data_origin = [
-        {
-            "method": "get",
-            "endpoint": "https://people.googleapis.com/v1/resourceName=people/me",
-            "documentation": "https://developers.google.com/people/api/rest/v1/people/get",
-        }
-    ]
+    data_origin = data_origin
 
     custom_variables_enabled = False
 
@@ -48,7 +50,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_contacts,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_first_name",
@@ -60,19 +62,19 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_first_name,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
-                name="num_with_last_name",
-                label="Number of contacts with a last name",
-                description="The number of contacts that a respondent has with a last name.",
-                test_value_placeholder="100",
-                data_type=VariableDataType.NUMBER,
-                info="The number of contacts that a respondent has with a last name. "
-                     "It will always be a whole number greater or equal to 0.",
-                is_indexed_variable=False,
-                extractor_func=lambda self: self.num_with_last_name,
-                data_origin=[],
+            name="num_with_last_name",
+            label="Number of contacts with a last name",
+            description="The number of contacts that a respondent has with a last name.",
+            test_value_placeholder="100",
+            data_type=VariableDataType.NUMBER,
+            info="The number of contacts that a respondent has with a last name. "
+                 "It will always be a whole number greater or equal to 0.",
+            is_indexed_variable=False,
+            extractor_func=lambda self: self.num_with_last_name,
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_nickname",
@@ -84,7 +86,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_nickname,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_organization",
@@ -96,7 +98,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_organization,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_company_or_title",
@@ -108,7 +110,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_company_or_title,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_relations",
@@ -120,7 +122,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_relations,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_email_addresses",
@@ -132,7 +134,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_email_addresses,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_phone_numbers",
@@ -144,7 +146,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_phone_numbers,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_photos",
@@ -156,7 +158,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_photos,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_birthday",
@@ -168,7 +170,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_birthday,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_addresses",
@@ -180,7 +182,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_addresses,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_biographies",
@@ -192,7 +194,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_0_phone_numbers",
@@ -204,7 +206,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_0_phone_numbers,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_1_phone_numbers",
@@ -216,7 +218,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_1_phone_numbers,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_2_phone_numbers",
@@ -228,7 +230,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_2_phone_numbers,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_3_or_more_phone_numbers",
@@ -240,7 +242,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_3_or_more_phone_numbers,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_birthday_year",
@@ -252,7 +254,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_birthday_year,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_biographies_few_words",
@@ -264,7 +266,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_words,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_biographies_few_sentences",
@@ -276,7 +278,7 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_sentences,
-            data_origin=[],
+            data_origin=data_origin,
         ),
         BuiltInVariable.create_instances(
             name="num_with_biographies_few_paragraphs",
@@ -288,7 +290,6 @@ class People(DataCategory):
                  "It will always be a whole number greater or equal to 0.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_paragraphs,
-            data_origin=[],
+            data_origin=data_origin,
         ),
     ]
-

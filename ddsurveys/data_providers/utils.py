@@ -3,7 +3,7 @@
 """
 Created on 2024-07-05 13:03
 
-@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 import re
 

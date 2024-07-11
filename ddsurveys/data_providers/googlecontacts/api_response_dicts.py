@@ -3,7 +3,7 @@
 """
 Created on 2024-07-05 12:53
 
-@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 
 This module contains TypedDicts for the Google Contacts API responses.
 """
@@ -26,7 +26,7 @@ __all__ = [
     "ContactDict"
 ]
 
-from typing import TypedDict, Optional
+from typing import TypedDict, NotRequired
 
 
 class SourceDict(TypedDict):
@@ -46,12 +46,12 @@ class NameDict(TypedDict):
     displayName: str
     familyName: str
     givenName: str
-    middleName: Optional[str]
-    honorificPrefix: Optional[str]
-    honorificSuffix: Optional[str]
-    phoneticFamilyName: Optional[str]
-    phoneticGivenName: Optional[str]
-    phoneticMiddleName: Optional[str]
+    middleName: NotRequired[str]
+    honorificPrefix: NotRequired[str]
+    honorificSuffix: NotRequired[str]
+    phoneticFamilyName: NotRequired[str]
+    phoneticGivenName: NotRequired[str]
+    phoneticMiddleName: NotRequired[str]
     displayNameLastFirst: str
     unstructuredName: str
 
@@ -67,7 +67,7 @@ class PhotoDict(TypedDict):
 
 
 class BirthdayInfoDict(TypedDict):
-    year: Optional[int]
+    year: NotRequired[int]
     month: int
     day: int
 
@@ -102,7 +102,7 @@ class PhoneNumberDict(TypedDict):
     value: str
     type: str
     formattedType: str
-    canonicalForm: Optional[str]
+    canonicalForm: NotRequired[str]
 
 
 class BiographyDict(TypedDict):
@@ -121,8 +121,8 @@ class UrlDict(TypedDict):
 class OrganizationDict(TypedDict):
     metadata: dict
     name: str
-    department: Optional[str]
-    title: Optional[str]
+    department: NotRequired[str]
+    title: NotRequired[str]
 
 
 class ContactGroupMembershipDict(TypedDict):

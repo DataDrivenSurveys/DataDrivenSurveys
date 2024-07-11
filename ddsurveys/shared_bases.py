@@ -28,7 +28,7 @@ from copy import deepcopy
 from functools import cached_property
 from logging import Logger
 from pprint import pprint
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Union
 from typing_extensions import override
 
 from .get_logger import get_logger
@@ -1229,3 +1229,10 @@ class OAuthBase:
             This is an abstract method and must be implemented by subclasses.
         """
         ...
+
+
+class JSONCompatible(ABC):
+    @abstractmethod
+    def to_json(self) -> dict[str, Union[int, float, str, bool, list, dict]]:
+        ...
+
