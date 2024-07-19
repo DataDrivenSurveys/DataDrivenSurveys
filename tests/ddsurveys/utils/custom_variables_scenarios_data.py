@@ -16,7 +16,7 @@ custom_variables_processing_scenarios = [
             'dds.fitbit.custom.activities.act1.duration.exists': True,
             'dds.fitbit.custom.activities.act1.calories': 234,
             'dds.fitbit.custom.activities.act1.calories.exists': True,
-            'dds.fitbit.custom.activities.act1.date': '2023-01-10T12:00:00.000',
+            'dds.fitbit.custom.activities.act1.date': '2023-01-10T12:00:00.000+02:00',
             'dds.fitbit.custom.activities.act1.date.exists': True,
             'dds.fitbit.custom.activities.act1.distance': 0,
             'dds.fitbit.custom.activities.act1.distance.exists': True,
@@ -30,36 +30,36 @@ custom_variables_processing_scenarios = [
 example_values = {
     "Date": {
         "attr": "originalStartTime",
-        "value": "2023-01-10T12:00:00.000",
+        "value": "2023-01-10T12:00:00.000+02:00",
         "expected": {
             "__eq__": {
-                "min": "2023-01-10T12:00:00.000",
-                "max": "2023-01-10T12:00:00.000",
-                "random": "2023-01-10T12:00:00.000"
+                "min": "2023-01-10T12:00:00.000+02:00",
+                "max": "2023-01-10T12:00:00.000+02:00",
+                "random": "2023-01-10T12:00:00.000+02:00"
             },
             "__ne__": {
-                "min": "2023-01-01T12:00:00.000",
-                "max": "2023-01-15T12:00:00.000",
+                "min": "2023-01-01T12:00:00.000+02:00",
+                "max": "2023-01-15T12:00:00.000+02:00",
                 "random": None  # we have 2 resulting rows, can be either
             },
             "__gt__": {
-                "min": "2023-01-15T12:00:00.000",
-                "max": "2023-01-15T12:00:00.000",
+                "min": "2023-01-15T12:00:00.000+02:00",
+                "max": "2023-01-15T12:00:00.000+02:00",
                 "random": None  # we have 2 resulting rows, can be either
             },
             "__ge__": {
-                "min": "2023-01-10T12:00:00.000",
-                "max": "2023-01-15T12:00:00.000",
+                "min": "2023-01-10T12:00:00.000+02:00",
+                "max": "2023-01-15T12:00:00.000+02:00",
                 "random": None  # we have 2 resulting rows, can be either
             },
             "__lt__": {
-                "min": "2023-01-01T12:00:00.000",
-                "max": "2023-01-01T12:00:00.000",
-                "random": "2023-01-01T12:00:00.000"
+                "min": "2023-01-01T12:00:00.000+02:00",
+                "max": "2023-01-01T12:00:00.000+02:00",
+                "random": "2023-01-01T12:00:00.000+02:00"
             },
             "__le__": {
-                "min": "2023-01-01T12:00:00.000",
-                "max": "2023-01-10T12:00:00.000",
+                "min": "2023-01-01T12:00:00.000+02:00",
+                "max": "2023-01-10T12:00:00.000+02:00",
                 "random": None  # we have 2 resulting rows, can be either
             },
         }

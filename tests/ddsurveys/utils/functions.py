@@ -92,10 +92,12 @@ def generate_custom_variables(data_provider: str = "fitbit"):
         date_attribute_for_filter = next((attr for attr in custom_var["cv_attributes"] if attr["data_type"] == "Date"),
                                          None)
 
-        if date_attribute_for_filter is None:
-            raise Exception(
-                "Could not find a Date attribute for filtering, make sure you have a Date attribute in your data "
-                "category.")
+        if date_attribute_for_filter is not None:
+            custom_var["filters"] = [{
+                "attr": date_attribute_for_filter["attribute"],
+                "operator": "__gt__",
+                "value": date_attribute_for_filter["test_value"]
+            }]
 
         custom_var["data_category"] = custom_var["value"]
         custom_var["data_provider"] = custom_var["data_provider_name"].lower()
@@ -103,12 +105,6 @@ def generate_custom_variables(data_provider: str = "fitbit"):
         custom_var["enabled"] = True
 
         custom_var["variable_name"] = f"custom-variable-{index}"
-
-        custom_var["filters"] = [{
-            "attr": date_attribute_for_filter["attribute"],
-            "operator": "__gt__",
-            "value": "2023-01-01T12:00:00.000"
-        }]
 
         custom_var["selection"] = {
             "attr": attribute_for_selection["attribute"],

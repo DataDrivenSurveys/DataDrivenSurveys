@@ -103,4 +103,4 @@ def get_isoweek(date_: date | datetime) -> tuple[int, int]:
 def get_weeks_difference(start_date: date | datetime, end_date: date | datetime) -> int:
     start_date = ensure_date(start_date)
     end_date = ensure_date(end_date)
-    return (end_date - start_date).days // 7 + 1
+    return (end_date - start_date).days // 7

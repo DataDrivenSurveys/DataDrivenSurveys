@@ -3,7 +3,7 @@
 from datetime import datetime
 """
 activities_frequent
-[{'activityId': 17151, 'calories': 600, 'description': 'Walking less than 2 mph, strolling very slowly', 'distance': 1.86, 'duration': 1800000, 'name': 'Walk'}, {'activityId': 1010, 'calories': 700, 'description': 'Very Leisurely - Less than 10 mph', 'distance': 9.94, 'duration': 2700000, 'name': 'Bike'}, {'activityId': 12030, 'calories': 1000, 'description': 'Running - 5 mph (12 min/mile)', 'distance': 3.11, 'duration': 3600000, 'name': 'Run'}]  
+[{'activityId': 17151, 'calories': 600, 'description': 'Walking less than 2 mph, strolling very slowly', 'distance': 1.86, 'duration': 1800000, 'name': 'Walk'}, {'activityId': 1010, 'calories': 700, 'description': 'Very Leisurely - Less than 10 mph', 'distance': 9.94, 'duration': 2700000, 'name': 'Bike'}, {'activityId': 12030, 'calories': 1000, 'description': 'Running - 5 mph (12 min/mile)', 'distance': 3.11, 'duration': 3600000, 'name': 'Run'}]
 """
 fitbit_mock_data = {
     "user_profile": {
@@ -80,7 +80,6 @@ fitbit_mock_data = {
             "description": "Walking less than 2 mph, strolling very slowly",
             "distance": 1.61,
             "duration": 1178000,
-            "originalStartTime": "2023-01-01T12:00:00.000",
             "name": "Walk"
         },
         {
@@ -89,7 +88,6 @@ fitbit_mock_data = {
             "description": "",
             "distance": 0,
             "duration": 1228000,
-            "originalStartTime": "2023-01-10T12:00:00.000",
             "name": "Sport"
         },
         {
@@ -98,7 +96,6 @@ fitbit_mock_data = {
             "description": "",
             "distance": 0,
             "duration": 973000,
-            "originalStartTime": "2023-01-15T12:00:00.000",
             "name": "Outdoor Bike"
         }
     ],
@@ -110,7 +107,7 @@ fitbit_mock_data = {
                 "description": "Walking less than 2 mph, strolling very slowly",
                 "distance": 1.61,
                 "duration": 1178000,
-                "originalStartTime": "2023-01-01T12:00:00.000",
+                "originalStartTime": "2023-01-01T12:00:00.000+02:00",
                 "activityName": "Walk"
             },
             {
@@ -119,7 +116,7 @@ fitbit_mock_data = {
                 "description": "",
                 "distance": 0,
                 "duration": 1228000,
-                "originalStartTime": "2023-01-10T12:00:00.000",
+                "originalStartTime": "2023-01-10T12:00:00.000+02:00",
                 "activityName": "Sport"
             },
             {
@@ -128,7 +125,7 @@ fitbit_mock_data = {
                 "description": "",
                 "distance": 0,
                 "duration": 973000,
-                "originalStartTime": "2023-01-15T12:00:00.000",
+                "originalStartTime": "2023-01-15T12:00:00.000+02:00",
                 "activityName": "Outdoor Bike"
             }
         ]

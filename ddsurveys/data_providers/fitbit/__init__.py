@@ -36,12 +36,8 @@ logger = get_logger(__name__)
 
 
 class Account(DataCategory):
-    supports_custom_variables = False
-
     def fetch_data(self) -> list[dict[str, Any]]:
-        return []
-
-    cv_attributes = []
+        return
 
     builtin_variables = [
         BuiltInVariable.create_instances(
@@ -53,6 +49,22 @@ class Account(DataCategory):
             info="This will be the date that the respondent's Fitbit account was created. It will be in YYYY-MM-DD "
                  "format.",
             extractor_func=lambda self: self.user_profile["memberSince"],
+            data_origin=[
+                {
+                    "method": "user_profile",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/profile.json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-profile/",
+                }
+            ],
+        ),
+        BuiltInVariable.create_instances(
+            name="account_created_at_least_1_year_ago",
+            label="Account Created at Least 1 Year Ago",
+            description="Account Created at Least 1 Year Ago.",
+            data_type=VariableDataType.TEXT,
+            test_value_placeholder="True",
+            info="This will be 'True' if the account was created at least 1 year ago, otherwise 'False'.",
+            extractor_func=lambda self: self.account_created_at_least_1_year_ago,
             data_origin=[
                 {
                     "method": "user_profile",
@@ -106,7 +118,7 @@ class Activities(DataCategory):
             attribute="originalStartTime",
             name="date",
             data_type=VariableDataType.DATE,
-            test_value_placeholder="2023-01-10T12:00:00.000",
+            test_value_placeholder="2023-01-10T12:00:00.000+02:00",
             info="The date of the activity",
         ),
         CVAttribute(
@@ -381,7 +393,7 @@ class FitbitDataProvider(OAuthDataProvider):
         "heartrate",
         "location",
         "nutrition",
-        "PROFILE",
+        "profile",
         "settings",
         "sleep",
         "social",
@@ -513,11 +525,11 @@ class FitbitDataProvider(OAuthDataProvider):
             profile = fitbit.user_profile_get()
 
             # check if all scopes are authorized
-            if set(self.required_scopes) != set(accepted_scopes):
+            if set(accepted_scopes).issubset(set(self.required_scopes)):
                 logger.error(
                     f"Incomplete Fitbit scopes: {accepted_scopes} required: {self.required_scopes}"
                 )
-                # if not all scopes are authorized, revoke the token
+                # if all scopes were not authorized, revoke the token
                 self.revoke_token(access_token)
                 return {
                     "success": False,
@@ -553,9 +565,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
         """
         headers = {
-            "Authori"
-            "zation": f"Basic "
-                      f"{base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode('utf-8')).decode('utf-8')}",
+            "Authorization": f"Basic {base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode('utf-8')).decode('utf-8')}",
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {"token": token}
@@ -619,8 +629,8 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_lifetime_steps(self) -> int:
-        average_steps = self.user_profile["averageDailySteps"]
-        if average_steps == 0:
+        average_steps = self.user_profile.get("averageDailySteps")
+        if average_steps is None or average_steps == 0:
             total_steps = self.lifetime_stats["lifetime"]["tracker"]["steps"]
             account_creation_date = datetime.strptime(
                 self.user_profile["memberSince"], "%Y-%m-%d"
@@ -631,7 +641,7 @@ class FitbitDataProvider(OAuthDataProvider):
         return average_steps
 
     @cached_property
-    def highest_lifetime_steps(self):
+    def highest_lifetime_steps(self) -> int | None:
         try:
             return (
                 self.lifetime_stats.get("best", {})
@@ -644,16 +654,17 @@ class FitbitDataProvider(OAuthDataProvider):
 
     # Cached API responses
     @cached_property
-    def user_profile(self):
-        return self.api_client.user_profile_get()["user"]
+    def user_profile(self) -> UserDict:
+        url = "https://api.fitbit.com/1/user/-/profile.json"
+        return self.api_client.make_request(url)["user"]
 
     @cached_property
-    def activities_favorite(self):
-        return self.api_client.activity_stats(qualifier="favorite")
+    def activities_favorite(self) -> list[FavoriteActivityDict]:
+        return self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/favorite.json")
 
     @cached_property
-    def activities_frequent(self):
-        return self.api_client.activity_stats(qualifier="frequent")
+    def activities_frequent(self) -> list[FrequentActivityDict]:
+        return self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/frequent.json")
 
     @cached_property
     def activities_recent(self):
@@ -917,8 +928,7 @@ class FitbitDataProvider(OAuthDataProvider):
             ).items()
         }
 
-        # TODO: decide if average should be calculated over entire duration or just the weeks for which there is data
-        average = sum(AggregationFunctions.sum(data, convert=False).values()) / get_weeks_difference(start_date, end_date)
+        average = sum(AggregationFunctions.sum(data, convert=False).values()) / 26
         if average > 0:
             return round(average, 1)
         else:
@@ -944,8 +954,7 @@ class FitbitDataProvider(OAuthDataProvider):
             for activity_type in activity_types
         ])
 
-        # TODO: decide if average should be calculated over entire duration or just the weeks for which there is data
-        average = sum(AggregationFunctions.sum(data).values()) / get_weeks_difference(start_date, end_date)
+        average = sum(AggregationFunctions.sum(data).values()) / 26
         if average > 0:
             return round(average, 1)
         else:
@@ -962,13 +971,23 @@ class FitbitDataProvider(OAuthDataProvider):
         for activity in activities:
             week = get_isoweek(activity.start_date)
             weekly_stats.setdefault(week, []).append(activity.activeDuration)
-        # TODO: decide if average should be calculated over entire duration or just the weeks for which there is data
         average = (
             sum(sum(durations) for durations in weekly_stats.values())
-            / get_weeks_difference(start_date, end_date)
+            / 26
             / 60_000  # convert miliseconds to minutes
         )
         if average > 0:
             return round(average, 1)
         else:
             return None
+
+    @cached_property
+    def devices(self) -> list[DeviceDict]:
+        url = "https://api.fitbit.com/1/user/-/devices.json"
+        return self.api_client.make_request(url)
+
+    @cached_property
+    def account_created_at_least_1_year_ago(self) -> bool:
+        user = self.user_profile
+        creation_date = datetime.strptime(user["memberSince"], "%Y-%m-%d").date()
+        return creation_date <= date.today() - relativedelta(years=1)

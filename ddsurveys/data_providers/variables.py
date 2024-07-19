@@ -15,7 +15,7 @@ from typing import Any, Mapping
 
 from ..get_logger import get_logger
 from ..variable_types import Data, VariableDataType
-from .data_categories import DataCategory
+from .data_categories import DataCategory, TDataCategoryClass, TDataCategory
 
 logger = get_logger(__name__)
 
@@ -45,6 +45,13 @@ class Attribute(ABC):
 
         if self.test_value is None:
             self.test_value = self.test_value_placeholder
+
+    def __str__(self):
+        return f"{self.__class__.__name__}: name={self.name}, label={self.label}, data_type={self.data_type}"
+
+    def __repr__(self) -> str:
+        attrs = ", ".join(f"{name}={value!r}" for name, value in self.to_dict().items())
+        return f"{self.__class__.__name__}({attrs})"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -327,13 +334,15 @@ class CVFilter:
             return False
 
         other_value = custom_variable.data[self.attribute.attribute]
-        return self.operator.get("lambda")(other_value, self.value)
-
-    def __repr__(self):
-        return f"CVFilter(attr={self.attribute.attribute if hasattr(getattr(self, 'attribute', None), 'attribute') else None}, operator={self.operator.get('label')}, value={self.value})"
+        return self.operator.get("func")(other_value, self.value)
 
     def __str__(self):
-        return f"{self.attribute.attribute} {self.operator.get('label')} {self.value}"
+        return (f"{self.__class__.__name__}: attribute={self.attribute.attribute}, "
+                f"operator={self.operator.get('label')}, value={self.value}")
+
+    def __repr__(self):
+        attrs = ", ".join(f"{key}={value!r}" for key, value in self.to_dict().items())
+        return f"{self.__class__.__name__}({attrs})"
 
 
 class CustomVariableRow:
@@ -373,13 +382,13 @@ class CustomVariable:
         self.data_provider = data_provider
         self.data_provider_name = custom_variable.get("data_provider", "")
 
-        data_category_class = DataCategory.get_by_value(
+        data_category_class: TDataCategoryClass = DataCategory.get_by_value(
             custom_variable["data_category"]
         )
         self.data_category = data_category_class
 
         if self.data_provider:
-            data_category_instance = data_category_class(data_provider=data_provider)
+            data_category_instance: TDataCategory = data_category_class(data_provider=data_provider)
             data = data_category_instance.fetch_data()
             self.data_list = data or []
 

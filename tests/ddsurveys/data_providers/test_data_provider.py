@@ -56,8 +56,8 @@ EXPECTED_RESULTS = {
 }
 
 PARAMETERIZED_PROVIDERS = [
-    (provider, EXPECTED_RESULTS[provider]) 
-    for provider in REGISTERED_DATAPROVIDERS 
+    (provider, EXPECTED_RESULTS[provider])
+    for provider in REGISTERED_DATAPROVIDERS
     if provider in EXPECTED_RESULTS
 ]
 
@@ -272,7 +272,6 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
         project_custom_variables=custom_variables
     )
 
-    
     # filters keys that contain .builtin
     builtin_data_to_upload = {k: v for k, v in data_to_upload.items() if ".builtin" in k}
 
@@ -327,15 +326,15 @@ def test_get_used_variables(provider_name):
 
             variable = next((v for v in project_buitin_variables if v.get("qualified_name") == used_variable.get("variable_name")), None)
             assert variable, f"Could not find the builtin variable {used_variable['variable_name']}."
-    
+
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
-            
+
             qual_name = variable_to_qualname(variable, used_variable.get("type"))
-            
+
             assert used_variable["variable_name"] == qual_name, f"Wrong qualified name for the used variable {used_variable['variable_name']}."
 
             assert len(used_variable["description"]) > 0, "The description of the used variables should not be empty."
-            
+
 
         if used_variable.get("type") == "Custom":
             # the last part of the qual name
@@ -347,8 +346,8 @@ def test_get_used_variables(provider_name):
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
 
             assert used_variable["data"] is not None, f"The data of the used variables should not be None."
-        
-        
+
+
 
         # must have "data_origin" that is an array of at least one element
         assert variable["data_origin"] and len(variable["data_origin"]) > 0, f"Missing data origin for the used variable {used_variable['variable_name']}."

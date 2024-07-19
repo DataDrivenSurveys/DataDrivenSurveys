@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import traceback
 from abc import abstractmethod
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 from ..get_logger import get_logger
 from ..shared_bases import FormField as BaseFormField
@@ -34,9 +34,9 @@ __all__ = [
 
 logger = get_logger(__name__)
 
-TDataProviderClass = Type["DataProvider"]
+TDataProviderClass = type["DataProvider"]
 TDataProvider = TypeVar("TDataProvider", bound="DataProvider")
-TOAuthDataProviderClass = Type["OAuthDataProvider"]
+TOAuthDataProviderClass = type["OAuthDataProvider"]
 
 TOAuthDataProvider = TypeVar("TOAuthDataProvider", bound="OAuthDataProvider")
 
@@ -106,6 +106,12 @@ class DataProvider(UIRegistry):
     def __init__(self, *args, **kwargs):
         self._variable_values: dict[str, Any] = {}
 
+    def __str__(self):
+        return f"{self.__class__.__name__}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
     @classmethod
     def register(cls):
         super().register()
@@ -114,9 +120,9 @@ class DataProvider(UIRegistry):
         for data_category in cls.data_categories:
             cls._all_data_categories[cls.name][data_category.value] = data_category
 
-    @classmethod
-    def get_variable_storage(cls) -> dict[str, list[dict[str, Any]]]:
-        return DataProvider.cls_variables
+    # @classmethod
+    # def get_variable_storage(cls) -> dict[str, list[dict[str, Any]]]:
+    #     return DataProvider.cls_variables
 
     # fields are used to generate the form for the user to fill out
     # the dict object "fields" can be used to create an instance of the class using the ** operator: provider_class(**data_connection.fields)
@@ -155,7 +161,7 @@ class DataProvider(UIRegistry):
 
     def calculate_variables(
         self,
-        project_builtin_variables: list[dict],
+        project_builtin_variables: list[dict] = None,
         project_custom_variables: list[dict] = None,
         **kwargs
     ) -> dict[str, TVariableValue]:
@@ -165,12 +171,14 @@ class DataProvider(UIRegistry):
             project_builtin_variables:
                 List of dicts where each dict contains key/value pairs conforming to the Variable class.
             project_custom_variables:
-            List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
+                List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
 
         Returns:
             A dict of key value pairs where the key is the name of the variable and the value is the value of the variable.
             This dict can be passed to SurveyPlatform.upload_variable_values()
         """
+        if project_builtin_variables is None:
+            project_builtin_variables = []
         if project_custom_variables is None:
             project_custom_variables = []
 
@@ -508,6 +516,11 @@ class OAuthDataProvider(DataProvider):
         self.builtin_variables = builtin_variables
         self.custom_variables = custom_variables
 
+    def __repr__(self):
+        return (f"{self.__class__.__name__}(client_id={self.client_id!r}, client_secret={self.client_secret!r}, "
+                f"access_token={self.access_token!r}, refresh_token={self.refresh_token!r}, "
+                f"self.api_client={self.api_client!r}, self.oauth_client={self.oauth_client!r}, "
+                f"self.builtin_variables={self.builtin_variables!r}, self.custom_variables={self.custom_variables!r})")
     @classmethod
     def get_redirect_uri(cls) -> str:
         # TODO: avoid using environment variables.

@@ -12,21 +12,20 @@ __all__ = ["GoogleContactsDataProvider"]
 import traceback
 import operator
 from functools import cached_property, cache
-from typing import Any, Callable, Dict, TypedDict, Optional
+from typing import Any, Callable
 
 import requests
 from google.auth.exceptions import RefreshError
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
-from googleapiclient.errors import HttpError
+# from textblob import TextBlob
 
 from ...get_logger import get_logger
-from ...variable_types import TVariableFunction, VariableDataType
+from ...variable_types import TVariableFunction
 from ..bases import FormField, OAuthDataProvider
 
-from ..utils import count_words, count_sentences
+from ..nlp import count_words, count_sentences
 
 from .api_response_dicts import *
 from .people import People
@@ -116,11 +115,6 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     _person_fields = ",".join(_person_fields_list)
 
     # In the functions below, update the elipses (...) with the correct classes and code.
-
-    # def __new__(cls, *args, **kwargs):
-    #     instance = super().__new__(cls)
-    #     instance._categories_scopes["People"] =
-
     def __init__(self, **kwargs):
         """
 
@@ -456,7 +450,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             and len(birthdays) > 0
             and birthdays[0].get("date", {}).get("year") is not None
         ]
-    
+
     @cached_property
     def count_num_contacts_by_biography_length(self) -> dict[str, int]:
         counts = {"few words": 0, "few sentences": 0, "few paragraphs": 0}
@@ -573,13 +567,12 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # Supporting functions
     @staticmethod
-    def classify_text(text: str, few_words_threshold: int = 10, few_sentences_threshold: int = 3) -> str:
-        word_count = count_words(text)
-        sentence_count = count_sentences(text)
+    def classify_text(text: str, few_words_threshold: int = 5, few_sentences_threshold: int = 3) -> str:
+        blob = TextBlob(text)
 
-        if word_count <= few_words_threshold:
+        if len(blob.sentences) == 1 and len(blob.words) <= few_words_threshold:
             return 'few words'
-        elif sentence_count <= few_sentences_threshold:
+        elif len(blob.sentences) <= few_sentences_threshold:
             return 'few sentences'
         else:
             return 'few paragraphs'

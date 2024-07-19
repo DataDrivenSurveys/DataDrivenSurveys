@@ -94,7 +94,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
 
     assert len(fitbit_data_provider.activity_logs["activities"]) == 3, "There should be 3 most frequent activities."
 
-    custom_vars = data_category_to_custom_variable(
+    custom_var = data_category_to_custom_variable(
                 data_category=activity,
                 data_provider_name="fitbit",
                 filters=filters,
@@ -104,7 +104,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     data_to_upload = fitbit_data_provider.calculate_variables(
         project_builtin_variables=[],
         project_custom_variables=[
-            custom_vars
+            custom_var
         ],
     )
 

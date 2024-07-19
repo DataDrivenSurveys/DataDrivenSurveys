@@ -132,7 +132,7 @@ class DistributionsAPI(QualtricsRequests):
             payload["extRef"] = ext_ref
 
         if language != "":
-            payload["language"] = language
+            payload["detected_language"] = language
 
         resp = self.post(
             f"directories/{directory_id}/mailinglists/{mailing_list_id}/contacts",

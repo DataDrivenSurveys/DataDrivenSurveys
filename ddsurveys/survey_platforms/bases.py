@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, Optional, Type
+from typing import Any, Optional
 
 from ..get_logger import get_logger
 from ..shared_bases import FormButton as BaseFormButton
@@ -27,7 +27,7 @@ __all__ = [
     "FormButton"
 ]
 
-TSurveyPlatformClass = Type["SurveyPlatform"]
+TSurveyPlatformClass = type["SurveyPlatform"]
 
 
 class SurveyPlatform(UIRegistry):

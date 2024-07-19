@@ -21,6 +21,19 @@ __all__ = [
     "ActivityDict",
     "ActivitiesListPaginationDict",
     "ActivitiesListResponseDict",
+
+    # TypedDicts for Sleep API Responses
+    "DeviceDict",
+
+    # User Profile API Responses
+    "UserDict",
+    "UserProfileResponseDict",
+
+    # Frequent Activities API endpoints
+    "FrequentActivityDict",
+
+    # Favorite Activities API endpoints
+    "FavoriteActivityDict",
 ]
 
 from typing import Literal, TypedDict, NotRequired
@@ -222,3 +235,120 @@ class ActivitiesListPaginationDict(TypedDict):
 class ActivitiesListResponseDict(TypedDict):
     activities: list[ActivityDict]
     pagination: ActivitiesListPaginationDict
+
+
+# Device API endpoints
+class DeviceDict(TypedDict):
+    batteryLevel: int
+    deviceVersion: str
+    features: list[str]
+    id: str
+    lastSyncTime: str
+    mac: str
+
+
+# User Profile API endpoints
+class TopBadge(TypedDict):
+    badgeGradientEndColor: str
+    badgeGradientStartColor: str
+    badgeType: str
+    category: str
+    cheers: list
+    dateTime: str
+    description: str
+    earnedMessage: str
+    encodedId: str
+    image100px: str
+    image125px: str
+    image300px: str
+    image50px: str
+    image75px: str
+    marketingDescription: str
+    mobileDescription: str
+    name: str
+    shareImage640px: str
+    shareText: str
+    shortDescription: str
+    shortName: str
+    timesAchieved: int
+    value: int
+
+
+class FeaturesDict(TypedDict):
+    exerciseGoal: bool
+
+
+class UserDict(TypedDict):
+    age: int
+    ambassador: bool
+    autoStrideEnabled: bool
+    avatar: str
+    avatar150: str
+    avatar640: str
+    averageDailySteps: int
+    challengesBeta: bool
+    clockTimeDisplayFormat: str
+    corporate: bool
+    corporateAdmin: bool
+    country: str
+    dateOfBirth: str
+    displayName: str
+    displayNameSetting: str
+    distanceUnit: str
+    encodedId: str
+    features: FeaturesDict
+    firstName: str
+    foodsLocale: str
+    fullName: str
+    gender: str
+    glucoseUnit: str
+    height: float
+    heightUnit: str
+    isBugReportEnabled: bool
+    isChild: bool
+    isCoach: bool
+    languageLocale: str
+    lastName: str
+    legalTermsAcceptRequired: bool
+    locale: str
+    memberSince: str
+    mfaEnabled: bool
+    offsetFromUTCMillis: int
+    sdkDeveloper: bool
+    sleepTracking: str
+    startDayOfWeek: str
+    strideLengthRunning: float
+    strideLengthRunningType: str
+    strideLengthWalking: float
+    strideLengthWalkingType: str
+    swimUnit: str
+    temperatureUnit: str
+    timezone: str
+    topBadges: list[TopBadge]
+    visibleUser: bool
+    waterUnit: str
+    waterUnitName: str
+    weight: float
+    weightUnit: str
+
+
+class UserProfileResponseDict(TypedDict):
+    user: UserDict
+
+
+# Frequent Activities API endpoints
+class FrequentActivityDict(TypedDict):
+    activityId: int
+    calories: int
+    description: str
+    distance: float
+    duration: int
+    name: str
+
+
+# Favorite Activities API endpoints
+class FavoriteActivityDict(TypedDict):
+    activityId: int
+    description: str
+    mets: int
+    name: str

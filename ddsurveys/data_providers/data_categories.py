@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 from abc import abstractmethod
 from functools import cached_property
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, TypeVar
 
 __all__ = ["DataCategory"]
 
 
-TDataCategoryClass = Type["DataCategory"]
+TDataCategoryClass = type["DataCategory"]
 TDataCategory = TypeVar("TDataCategory", bound="DataCategory")
 
 
@@ -24,16 +24,27 @@ class DataCategoryBase(type):
 
         attrs["label"] = name
         attrs["value"] = name.lower()
+
+        # Set custom_variables_enabled based on cv_attributes attribute.
+        if "cv_attributes" in attrs:
+            if attrs.get("custom_variables_enabled", False):
+                attrs["custom_variables_enabled"] = len(attrs["cv_attributes"]) > 0
+            else:
+                attrs["custom_variables_enabled"] = len(attrs["cv_attributes"]) > 0
+        elif len(bases) == 1:
+            attrs["custom_variables_enabled"] = False
+
         return super().__new__(mcs, name, bases, attrs)
 
 
 class DataCategory(metaclass=DataCategoryBase):
-    """data origin of the fetch_data method"""
-
-    data_origin: List[Dict[str, Any]] = []
+    data_origin: list[dict[str, Any]] = []
+    """Data origin of the fetch_data method"""
 
     custom_variables_enabled: bool = True
-    """Whether custom variables should be enabled in the frontend UI."""
+    """Whether custom variables should be enabled in the frontend UI.
+    If cv_attributes is empty, this will automatically be set to False.
+    If custom_variables_enabled was manually set to False, it will not be overridden."""
 
     label: str = ""
     value: str = ""
