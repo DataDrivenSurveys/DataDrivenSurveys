@@ -19,13 +19,13 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
+
+from ..utils.text_structure_analyzer import SpacyTextStructureAnalyzer
 # from textblob import TextBlob
 
 from ...get_logger import get_logger
 from ...variable_types import TVariableFunction
 from ..bases import FormField, OAuthDataProvider
-
-from ..nlp import count_words, count_sentences
 
 from .api_response_dicts import *
 from .people import People
@@ -141,6 +141,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
         if self.client_id is not None and self.client_secret is not None:
             self.init_api_client(self.access_token, self.refresh_token, self.client_id, self.client_secret)
+
+        self.text_structure_analyzer = SpacyTextStructureAnalyzer(preload_models=False)
 
     # OAuthBase methods
     def init_api_client(
@@ -456,9 +458,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         counts = {"few words": 0, "few sentences": 0, "few paragraphs": 0}
         for c in self.with_category("biographies"):
             type_ = self.classify_text(
-                c["biographies"][0]["value"],
-                few_words_threshold=10,
-                few_sentences_threshold=3
+                c["biographies"][0]["value"]
             )
             counts[type_] += 1
 
@@ -566,13 +566,11 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return self.count_num_contacts_by_biography_length["few paragraphs"]
 
     # Supporting functions
-    @staticmethod
-    def classify_text(text: str, few_words_threshold: int = 5, few_sentences_threshold: int = 3) -> str:
-        blob = TextBlob(text)
-
-        if len(blob.sentences) == 1 and len(blob.words) <= few_words_threshold:
+    def classify_text(self, text: str, few_words_threshold: int = 5, few_sentences_threshold: int = 3) -> str:
+        words, sentences, paragraphs = self.text_structure_analyzer.analyze_text(text)
+        if sentences == 1 and words <= few_words_threshold:
             return 'few words'
-        elif len(blob.sentences) <= few_sentences_threshold:
+        elif sentences <= few_sentences_threshold:
             return 'few sentences'
         else:
             return 'few paragraphs'

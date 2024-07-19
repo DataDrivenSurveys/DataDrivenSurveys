@@ -1,0 +1,177 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ddsurveys"
+dynamic = ["version"]
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Lev Velykoivanenko", email = "lev.velykoivanenko@unil.ch"},
+    {name = "Stefan Teofanovic", email = "stefan.teofanovic@heig-vd.ch"}
+]
+maintainers = [
+    {name = "Lev Velykoivanenko", email = "lev.velykoivanenko@unil.ch"},
+]
+description = "A platform supporting the creation of data-driven surveys."
+readme = { file = "README.md", content-type = "text/markdown" }
+keywords = ["library", "analytics"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: GPU",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Database",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: OS Independent"
+]
+
+dependencies = [
+    "setuptools~=71.0.1",
+    "requests==2.31.0",
+    "coloredlogs~=15.0.1",
+    "sqlalchemy~=2.0.20",
+    "pymysql~=1.1.0",
+    "python-dotenv~=1.0.0",
+    "flask~=2.3.3",
+    "google-api-python-client~=2.131.0",
+    "google-auth-httplib2~=0.2.0",
+    "google-auth-oauthlib~=1.2.0",
+    "gunicorn~=21.2.0",
+    "mysql-connector-python~=8.1.0",
+    "werkzeug~=3.0.1",
+    "flask-jwt-extended~=4.5.3",
+    "flask-cors~=4.0.0",
+    "alembic~=1.12.0",
+    "rpdb~=0.1.6",
+    "fitbit~=0.3.1",
+    "sonyflake-py~=1.3.0",
+    "pytest~=7.3.1",
+    "pytest-mock~=3.11.1",
+    "pytest-flask~=1.2.0",
+    "surveymonkey-python~=0.1.5",
+    "validators~=0.22.0",
+    "PyGithub~=2.1.1",
+    "lingua-language-detector~=2.0.2",
+    "spacy~=3.7.5",
+    # Spacy dependencies
+    "SudachiPy",  # Japanese
+    # Korean packages did not install correctly on Windows
+#    "mecab-ko",  # Korean
+#    "mecab-ko-dic",  # Korean
+#    "natto-py",  # Korean
+    "pymorphy3",  # Ukrainian and Russian
+    "pythainlp",  # Thai
+    "pymorphy3-dicts-uk",  # Ukrainian
+    "Pyvi",  # Vietnamese
+    "Jieba",  # Chinese
+    "spacy-pkuseg",  # Chinese
+]
+
+[project.urls]
+Homepage = "https://github.com/DataDrivenSurveys/DataDrivenSurveys"
+Source = "https://github.com/DataDrivenSurveys/DataDrivenSurveys"
+
+[project.scripts]
+ddsurveys-app = "ddsurveys.wsgi:app"
+
+[project.optional-dependencies]
+all = []
+test = ["pytest"]
+coverage = [
+    "coverage",
+    "codecov",
+    "codacy-coverage"
+]
+doc = [
+    "sphinx~=3.0",
+    "groundwork-sphinx-theme~=1.1.1",
+    "semantic-version~=2.8"
+]
+dev = [
+    "hatch",
+    "mypy",
+    "black",
+    "isort",
+    "docutils",
+    # Add remaining dev dependencies...
+    "funcy"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["ddsurveys"]
+
+[tool.hatch.version]
+path = "ddsurveys/__init__.py"
+
+[tool.coverage.run]
+branch = true
+source = [
+    "ddsurveys"  # Ensure the package name is correct
+]
+concurrency = ["subprocess"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise AssertionError",
+    # Add other excludes...
+    "if typing.TYPE_CHECKING:"
+]
+ignore_errors = true
+skip_empty = true
+show_missing = false
+omit = [
+    "tests/*"
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+extra_css = "coverage_extra_css.css"
+
+[tool.black]
+line-length = 120
+target-version = "py312"
+
+[tool.isort]
+profile = "black"
+
+[tool.pydocstyle]
+inherit = false
+match-dir = "(?!tests)(?!resources)(?!docs)[^\\.].*"
+match = "(?!test)(?!setup)[^\\._].*\\.py"
+ignore = ["D200", "D203", "D213", "D406", "D407"]
+
+[tool.flake8]
+max-line-length = 120
+doctests = true
+ignore = ["D200", "D203", "D213", "D406", "D407"]
+exclude = [
+    ".git",
+    ".eggs",
+    ".idea",
+    "__pycache__",
+    "tests/",
+    "docs/",
+    "build/",
+    "dist/",
+    "setup.py"
+]
+
+[tool.mypy]
+disallow_any_decorated = false
+disallow_any_generics = false
+disallow_any_unimported = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_return_any = false
+
