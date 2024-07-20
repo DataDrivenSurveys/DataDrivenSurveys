@@ -41,7 +41,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Optional, Type, TypeVar, Union
+from typing import Any, Optional, TypeAlias, TypeVar, TypedDict, Union
 
 from .get_logger import get_logger
 
@@ -49,13 +49,21 @@ logger = get_logger(__name__)
 
 
 # Class types (used for type hinting that something is that class object)
-TDataClass = Type["Data"]
+TDataClass = type["Data"]
 
 # TypeVars (used for type hinting that something is an instance of that class)
 TVariableValue = Union[str, float, int, bool, None]
 TVariableFunction = TypeVar("TVariableFunction", bound="VariableFunction")
 TVariable = TypeVar("TVariable", bound="Variable")
 TData = TypeVar("TData", bound="Data")
+
+
+class OperatorDict(TypedDict):
+    label: str
+    func: Callable[[TVariableValue, TVariableValue], bool]
+
+
+OperatorsDict: TypeAlias = dict[str, OperatorDict]
 
 
 class VariableFunction(Callable):
@@ -241,6 +249,7 @@ class Variable(Callable):
         """
         ...
 
+
 class Operator(Enum):
     """
     Enum representing various operators used for filtering and comparison.
@@ -319,12 +328,12 @@ class Data(ABC):
     Attributes:
         _registry (dict[str, type]): A class-level dictionary that maps `VariableDataType` enum values to
             corresponding data type classes.
-        operators (dict[str, dict[str, str | Callable]]): A class-level dictionary that stores operators
+        operators (OperatorsDict): A class-level dictionary that stores operators
             and their metadata or functions for filtering and comparison.
     """
 
-    _registry: dict[VariableDataType, type] = {}
-    operators: dict[str, dict[str, str | Callable]] = {}
+    _registry: dict[VariableDataType, "Data"] = {}
+    operators: OperatorsDict = {}
 
     @staticmethod
     def register(data_type: VariableDataType, cls) -> None:
@@ -440,30 +449,30 @@ class Date(Data):
                           performing the comparison operation between two date values.
     """
 
-    operators: dict[str, dict[str, str | Callable]] = {
+    operators: OperatorsDict = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.date.is",
-            "lambda": lambda a, b: Date._parse_date(a) == Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) == Date._parse_date(b),
         },
         Operator.IS_NOT.value: {
             "label": "api.custom_variables.filters.operators.date.is_not",
-            "lambda": lambda a, b: Date._parse_date(a) != Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) != Date._parse_date(b),
         },
         Operator.IS_GREATER_THAN.value: {
             "label": "api.custom_variables.filters.operators.date.is_after",
-            "lambda": lambda a, b: Date._parse_date(a) > Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) > Date._parse_date(b),
         },
         Operator.IS_GREATER_THAN_OR_EQUAL_TO.value: {
             "label": "api.custom_variables.filters.operators.date.is_on_or_after",
-            "lambda": lambda a, b: Date._parse_date(a) >= Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) >= Date._parse_date(b),
         },
         Operator.IS_LESS_THAN.value: {
             "label": "api.custom_variables.filters.operators.date.is_before",
-            "lambda": lambda a, b: Date._parse_date(a) < Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) < Date._parse_date(b),
         },
         Operator.IS_LESS_THAN_OR_EQUAL_TO.value: {
             "label": "api.custom_variables.filters.operators.date.is_on_or_before",
-            "lambda": lambda a, b: Date._parse_date(a) <= Date._parse_date(b),
+            "func": lambda a, b: Date._parse_date(a) <= Date._parse_date(b),
         },
     }
 
@@ -498,6 +507,18 @@ class Date(Data):
         Raises:
             ValueError: If the date string does not match any of the predefined formats.
         """
+        if isinstance(date_str, int):
+            try:
+                return datetime.fromtimestamp(date_str)
+            except ValueError:
+                pass
+
+        try:
+            return datetime.fromisoformat(date_str)
+        except ValueError:
+            pass
+
+
         formats = [
             "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%S.%f",
@@ -512,8 +533,7 @@ class Date(Data):
             try:
                 return datetime.strptime(date_str, fmt)
             except ValueError:
-                continue
-
+                pass
         raise ValueError(f"Unknown date format: {date_str}")
 
     @classmethod
@@ -543,30 +563,30 @@ class Number(Data):
     It defines a set of operators for numeric comparison and provides methods to check if a given data is a numeric type and to parse numeric values.
     """
 
-    operators: dict[str, dict[str, str | Callable]] = {
+    operators: OperatorsDict = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.number.is",
-            "lambda": lambda a, b: Number._parse_number(a) == Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) == Number._parse_number(b),
         },
         Operator.IS_NOT.value: {
             "label": "api.custom_variables.filters.operators.number.is_not",
-            "lambda": lambda a, b: Number._parse_number(a) != Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) != Number._parse_number(b),
         },
         Operator.IS_GREATER_THAN.value: {
             "label": "api.custom_variables.filters.operators.number.is_greater_than",
-            "lambda": lambda a, b: Number._parse_number(a) > Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) > Number._parse_number(b),
         },
         Operator.IS_GREATER_THAN_OR_EQUAL_TO.value: {
             "label": "api.custom_variables.filters.operators.number.is_greater_than_or_equal_to",
-            "lambda": lambda a, b: Number._parse_number(a) >= Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) >= Number._parse_number(b),
         },
         Operator.IS_LESS_THAN.value: {
             "label": "api.custom_variables.filters.operators.number.is_less_than",
-            "lambda": lambda a, b: Number._parse_number(a) < Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) < Number._parse_number(b),
         },
         Operator.IS_LESS_THAN_OR_EQUAL_TO.value: {
             "label": "api.custom_variables.filters.operators.number.is_less_than_or_equal_to",
-            "lambda": lambda a, b: Number._parse_number(a) <= Number._parse_number(b),
+            "func": lambda a, b: Number._parse_number(a) <= Number._parse_number(b),
         },
     }
 
@@ -633,34 +653,34 @@ class Text(Data):
     It defines a set of operators for text comparison and provides methods to check if a given data is a textual type and to perform text-specific operations.
     """
 
-    operators: dict[str, dict[str, str | Callable]] = {
+    operators: OperatorsDict = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.text.is",
-            "lambda": lambda a, b: a == b,
+            "func": lambda a, b: a == b,
         },
         Operator.IS_NOT.value: {
             "label": "api.custom_variables.filters.operators.text.is_not",
-            "lambda": lambda a, b: a != b,
+            "func": lambda a, b: a != b,
         },
         Operator.CONTAINS.value: {
             "label": "api.custom_variables.filters.operators.text.contains",
-            "lambda": lambda a, b: b in a,
+            "func": lambda a, b: b in a,
         },
         Operator.DOES_NOT_CONTAIN.value: {
             "label": "api.custom_variables.filters.operators.text.does_not_contain",
-            "lambda": lambda a, b: b not in a,
+            "func": lambda a, b: b not in a,
         },
         Operator.BEGINS_WITH.value: {
             "label": "api.custom_variables.filters.operators.text.begins_with",
-            "lambda": lambda a, b: a.startswith(b),
+            "func": lambda a, b: a.startswith(b),
         },
         Operator.ENDS_WITH.value: {
             "label": "api.custom_variables.filters.operators.text.ends_with",
-            "lambda": lambda a, b: a.endswith(b),
+            "func": lambda a, b: a.endswith(b),
         },
         Operator.REGEXP.value: {
             "label": "api.custom_variables.filters.operators.text.regexp",
-            "lambda": lambda a, b: re.match(b, a),
+            "func": lambda a, b: re.match(b, a),
         },
     }
 

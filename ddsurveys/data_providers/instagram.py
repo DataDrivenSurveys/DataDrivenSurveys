@@ -152,7 +152,7 @@ class InstagramDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> Dict[str, Any]:
+    def request_token(self, code: str) -> dict[str, Any]:
         """
         Exchange the authorization code for an Instagram User Access Token and retrieve the user's profile.
 

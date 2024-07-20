@@ -4,7 +4,7 @@
 Created on 2024-05-12 20:52
 You will need to replace the elipses (...) with the correct classes and code.
 
-@author: Lev Velykoivanenko (velykoivanenko.lev@gmail.com)
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 __all__ = ["TemplateComplexDataProvider"]
 

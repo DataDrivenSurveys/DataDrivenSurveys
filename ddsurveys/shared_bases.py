@@ -28,15 +28,15 @@ from copy import deepcopy
 from functools import cached_property
 from logging import Logger
 from pprint import pprint
-from typing import Any, Optional, Type
+from typing import Any, Optional, Union
 from typing_extensions import override
 
 from .get_logger import get_logger
 
 logger: Logger = get_logger(__name__)
 
-TRegistryClass = Type["Registry"]
-TUIRegistryClass = Type["UIRegistry"]
+TRegistryClass = type["Registry"]
+TUIRegistryClass = type["UIRegistry"]
 
 
 class FormElement(ABC):
@@ -204,7 +204,7 @@ class FormButton(FormElement):
             cls (type): The class with which this button is to be registered.
 
         Returns:
-            Type: The class passed as an argument, allowing for method chaining or further modifications.
+            type: The class passed as an argument, allowing for method chaining or further modifications.
         """
         class_name = cls.__name__
 
@@ -830,7 +830,7 @@ class Registry(metaclass=RegistryBase):
         Returns:
             TRegistryClass: The class object associated with the given name.
         """
-        return cls.registry.get(name)
+        return cls.registry.get(cls.base_name, {}).get(name)
 
     @classmethod
     def get_class_by_value(cls, value) -> TRegistryClass | None:
@@ -1229,3 +1229,10 @@ class OAuthBase:
             This is an abstract method and must be implemented by subclasses.
         """
         ...
+
+
+class JSONCompatible(ABC):
+    @abstractmethod
+    def to_json(self) -> dict[str, Union[int, float, str, bool, list, dict]]:
+        ...
+

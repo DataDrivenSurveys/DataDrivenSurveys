@@ -35,18 +35,17 @@ Created on 2023-09-08 13:52
 """
 __all__ = ["get_researcher", "get_project", "get_project_data_connection"]
 
-from typing import Union
-
 from flask import jsonify, g
 from flask.typing import ResponseReturnValue
+from sqlalchemy.orm.session import Session
 
-from ..models import Collaboration, DataConnection, Project, Researcher, SessionLocal
+from ..models import Collaboration, DataConnection, Project, Researcher
 from ..get_logger import get_logger
 
 logger = get_logger(__name__)
 
 
-def get_researcher(db: SessionLocal, user) -> Union[tuple[Researcher, None], tuple[ResponseReturnValue, int]]:
+def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None] | tuple[ResponseReturnValue, int]:
     """Get the researcher from the database.
 
     Args:
@@ -65,7 +64,7 @@ def get_researcher(db: SessionLocal, user) -> Union[tuple[Researcher, None], tup
     return researcher, None
 
 
-def get_project(db: SessionLocal, user) -> Union[tuple[Project, None], tuple[ResponseReturnValue, int]]:
+def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | tuple[ResponseReturnValue, int]:
     researcher, satus = get_researcher(db, user)
     if satus is not None:
         # Case where the user or project could not be found
@@ -85,9 +84,8 @@ def get_project(db: SessionLocal, user) -> Union[tuple[Project, None], tuple[Res
     return project, None
 
 
-def get_project_data_connection(db, user,
-                        data_provider_name
-    ) -> Union[tuple[Project, DataConnection, None], tuple[None, ResponseReturnValue, int]]:
+def get_project_data_connection(db: Session, user: dict[str, str], data_provider_name: str
+    ) -> tuple[Project, DataConnection, None] | tuple[None, ResponseReturnValue, int]:
     project, satus = get_project(db, user)
     if satus is not None:
         # Case where the user or project could not be found
@@ -97,7 +95,7 @@ def get_project_data_connection(db, user,
     data_connection = db.query(DataConnection).filter_by(
         project_id=project.id,
         data_provider_name=data_provider_name
-    ).first()
+    )
 
     if not data_connection:
         logger.error(f"Data connection for {data_provider_name} not found in project {project.id}")
@@ -106,4 +104,4 @@ def get_project_data_connection(db, user,
                                      "text": "Data connection not found"}}),
                 404)
 
-    return project, data_connection, None
+    return project, data_connection.first(), None

@@ -1,0 +1,270 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on 2024-07-09 14:50
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""
+from __future__ import annotations
+
+from datetime import datetime, date, timedelta
+from typing import Literal, Optional, overload
+from pprint import pformat
+
+from .api_response_dicts import ActiveZoneMinutesDict, ActivityDict, ActivityLevelDict, \
+    HeartRateZoneDict, ManualValuesSpecifiedDict, SourceDict
+from ddsurveys.data_providers.date_ranges import DateRanges, ensure_date, range_date
+
+
+class Activity:
+    __slots__ = (
+        "activeDuration",
+        "activeZoneMinutes",
+        "activityLevel",
+        "activityName",
+        "activityTypeId",
+        "averageHeartRate",
+        "calories",
+        "caloriesLink",
+        "detailsLink",
+        "distance",
+        "distanceUnit",
+        "duration",
+        "elevationGain",
+        "hasActiveZoneMinutes",
+        "heartRateLink",
+        "heartRateZones",
+        "lastModified",
+        "logId",
+        "logType",
+        "manualValuesSpecified",
+        "originalDuration",
+        "originalStartTime",
+        "pace",
+        "source",
+        "speed",
+        "startTime",
+        "steps",
+        "tcxLink",
+        "start_datetime",
+        "start_date"
+    )
+
+    def __init__(
+        self,
+        activeDuration: int,
+        activityLevel: list[ActivityLevelDict],
+        activityName: str,
+        activityTypeId: int,
+        calories: int,
+        duration: int,
+        lastModified: str,
+        logId: int,
+        logType: Literal['auto_detected', 'manual', 'mobile_run', 'tracker'],
+        manualValuesSpecified: ManualValuesSpecifiedDict,
+        originalDuration: int,
+        originalStartTime: str,
+        startTime: str,
+        averageHeartRate: Optional[int] = None,
+        activeZoneMinutes: Optional[ActiveZoneMinutesDict] = None,
+        caloriesLink: Optional[str] = None,
+        detailsLink: Optional[str] = None,
+        distance: Optional[float] = None,
+        distanceUnit: Optional[str] = None,
+        elevationGain: Optional[float] = None,
+        hasActiveZoneMinutes: Optional[bool] = None,
+        heartRateLink: Optional[str] = None,
+        heartRateZones: Optional[HeartRateZoneDict] = None,
+        pace: Optional[float] = None,
+        source: Optional[SourceDict] = None,
+        speed: Optional[float] = None,
+        steps: Optional[int] = None,
+        tcxLink: Optional[str] = None,
+    ) -> None:
+        # Values read from the Fitbit API
+        self.activeDuration = activeDuration
+        self.activeZoneMinutes = activeZoneMinutes
+        self.activityLevel = activityLevel
+        self.activityName = activityName
+        self.activityTypeId = activityTypeId
+        self.averageHeartRate = averageHeartRate
+        self.calories = calories
+        self.caloriesLink = caloriesLink
+        self.detailsLink = detailsLink
+        self.distance = distance
+        self.distanceUnit = distanceUnit
+        self.duration = duration
+        self.elevationGain = elevationGain
+        self.hasActiveZoneMinutes = hasActiveZoneMinutes
+        self.heartRateLink = heartRateLink
+        self.heartRateZones = heartRateZones
+        self.lastModified = lastModified
+        self.logId = logId
+        self.logType = logType
+        self.manualValuesSpecified = manualValuesSpecified
+        self.originalDuration = originalDuration
+        self.originalStartTime = originalStartTime
+        self.pace = pace
+        self.source = source
+        self.speed = speed
+        self.startTime = startTime
+        self.steps = steps
+        self.tcxLink = tcxLink
+
+        # Computed values
+        self.start_datetime = datetime.fromisoformat(self.startTime)
+        self.start_date = self.start_datetime.date()
+
+    def __hash__(self) -> int:
+        return hash(self.logId)
+
+    def __eq__(self, other: Activity) -> bool:
+        return self.logId == other.logId
+
+    def __lt__(self, other: Activity | date | datetime) -> bool:
+        if isinstance(other, Activity):
+            return self.start_datetime < other.start_datetime
+        elif isinstance(other, date):
+            return self.start_date < other
+        elif isinstance(other, datetime):
+            return self.start_datetime < other
+        else:
+            return NotImplemented
+
+
+class ActivityLog:
+    __slots__ = (
+        "date_ranges",
+        # "activities",
+        "id_activities",
+        "date_activities",
+        "type_activities",
+        "name_activities",
+        "_integration_last_end_date",
+        "_integration_last_start_date",
+    )
+
+    activity_types: tuple[Literal['auto_detected', 'manual', 'mobile_run', 'tracker']] = ('auto_detected', 'manual', 'mobile_run', 'tracker')
+
+    def __init__(self) -> None:
+        self.date_ranges = DateRanges()
+        # self.activities = []
+        self.id_activities = {}
+        self.date_activities = {}
+        self.type_activities = {}
+        self.name_activities = {}
+        self._integration_last_end_date: date = None
+        self._integration_last_start_date: date = None
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__} with {len(self.id_activities)} activities and {len(self.date_activities)} dates"
+
+    def __repr__(self) -> str:
+        num_activities = len(self.id_activities)
+        num_dates = len(self.date_activities)
+        num_types = len(self.type_activities)
+        num_names = len(self.name_activities)
+        return (f"{self.__class__.__name__}(num_activities={num_activities}, num_dates={num_dates}, num_types="
+                f"{num_types}, num_names={num_names})")
+
+    @overload
+    def __getitem__(self, item: date) -> list[Activity]: ...
+
+    @overload
+    def __getitem__(self, item: datetime) -> list[Activity]:
+        ...
+
+    @overload
+    def __getitem__(self, item: slice) -> list[Activity]:
+        ...
+
+    @overload
+    def __getitem__(self, item: str) -> list[Activity]:
+        ...
+
+    @overload
+    def __getitem__(self, item: int) -> Activity:
+        ...
+
+    def __getitem__(self, item):
+        # Case where getting a date, datetime, or slice of date or datetime.
+        if isinstance(item, datetime):
+            item = item.date()
+        if isinstance(item, date):
+            return self.date_activities[item]
+        if isinstance(item, slice):
+            if not isinstance(item.start, (date, datetime)) or not isinstance(item.stop, (date, datetime)):
+                raise TypeError("Slicing is only supported for date or datetime objects.")
+            start, end, step = ensure_date(item.start), ensure_date(item.stop), item.step
+            activities = []
+            for date_ in range_date(start, end, step):
+                activities.extend(self.date_activities[date_])
+            return activities
+
+        # Case where getting an activity by ID.
+        if isinstance(item, int):
+            return self.id_activities[item]
+
+        # Case where getting an activity by name or type.
+        if isinstance(item, str):
+            if item in self.__class__.activity_types:
+                return self.type_activities[item]
+            elif item in self.name_activities:
+                return self.name_activities[item]
+            else:
+                raise KeyError(f"Activity with name or type '{item}' not found.")
+
+        raise TypeError(f"Unsupported index type: {type(item)}")
+
+
+
+    def describe(self) -> str:
+        dates_details = pformat({date: len(activities) for date, activities in self.date_activities.items()})
+        types_details = pformat({type_: len(activities) for type_, activities in self.type_activities.items()})
+        names_details = pformat({name: len(activities) for name, activities in self.name_activities.items()})
+        return (f"{self.__class__.__name__} with {len(self.id_activities)} activities.\nActivities by date:\n"
+                f"{dates_details}\nActivities by types:\n{types_details}\nActivities by names:\n{names_details}")
+
+    def integrate_activity(self, activity_data: ActivityDict) -> None:
+        if activity_data["logId"] in self.id_activities:
+            return  # Activity with this ID already exists in the log
+
+        activity = Activity(**activity_data)
+        # self.activities.append(activity)
+        self.id_activities[activity.logId] = activity
+        self.date_activities.setdefault(activity.start_datetime.date(), []).append(activity)
+        self.type_activities.setdefault(activity.logType, []).append(activity)
+        self.name_activities.setdefault(activity.activityName, []).append(activity)
+
+    def integrate_activities_list(self, data: list[ActivityDict], continuous: bool = True) -> None:
+        if continuous:
+            self.date_ranges.add_date_range(datetime.fromisoformat(data[0]["startTime"]), datetime.fromisoformat(data[-1]["startTime"]))
+            end_date = datetime.fromisoformat(data[-1]["startTime"]).date()
+            if self._integration_last_end_date is None or end_date > self._integration_last_end_date:
+                self._integration_last_end_date = end_date
+            start_date = end_date
+            for activity_data in data:
+                self.integrate_activity(activity_data)
+                act_start_date = self.id_activities[activity_data["logId"]].start_date
+                if act_start_date < start_date:
+                    start_date = act_start_date
+
+            if self._integration_last_start_date is None or start_date < self._integration_last_start_date:
+                self._integration_last_start_date = start_date
+
+            if self._integration_last_start_date + timedelta(days=1) < self._integration_last_end_date:
+                self.date_ranges.add_date_range(start_date, end_date)
+                self._integration_last_start_date = None
+                self._integration_last_end_date = None
+        else:
+            for activity_data in data:
+                self.integrate_activity(activity_data)
+
+    def get_by_date(self, date: datetime) -> list[Activity]:
+        return self.date_activities.get(date.date(), [])
+
+    def get_by_type(self, activity_type: Literal['auto_detected', 'manual', 'mobile_run', 'tracker']) -> list[Activity]:
+        return self.type_activities.get(activity_type, [])
+
+    def get_by_name(self, activity_name: str) -> list[Activity]:
+        return self.name_activities.get(activity_name, [])

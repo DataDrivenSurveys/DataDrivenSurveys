@@ -56,8 +56,8 @@ EXPECTED_RESULTS = {
 }
 
 PARAMETERIZED_PROVIDERS = [
-    (provider, EXPECTED_RESULTS[provider]) 
-    for provider in REGISTERED_DATAPROVIDERS 
+    (provider, EXPECTED_RESULTS[provider])
+    for provider in REGISTERED_DATAPROVIDERS
     if provider in EXPECTED_RESULTS
 ]
 
@@ -199,14 +199,20 @@ def test_builtin_variables(provider_name):
     [
         (
             FitbitDataProvider,
-            {
-                'user_profile': fitbit_mock_data["user_profile"],
-                'activities_favorite': fitbit_mock_data["activities_favorite"],
-                'activities_frequent': fitbit_mock_data["activities_frequent"],
-                'activities_recent': fitbit_mock_data["activities_recent"],
-                'lifetime_stats': fitbit_mock_data["lifetime_stats"],
-                'activity_logs': fitbit_mock_data["activity_logs"],
-            },
+            # {
+            #     'user_profile': fitbit_mock_data["user_profile"],
+            #     'activities_favorite': fitbit_mock_data["activities_favorite"],
+            #     'activities_frequent': fitbit_mock_data["activities_frequent"],
+            #     'activities_recent': fitbit_mock_data["activities_recent"],
+            #     'lifetime_stats': fitbit_mock_data["lifetime_stats"],
+            #     'activity_logs': fitbit_mock_data["activity_logs"],
+            #     "daily_stats": fitbit_mock_data["daily_stats"],
+            #     "highest_daily_steps_last_6_months_date_steps": fitbit_mock_data["highest_daily_steps_last_6_months_date_steps"],
+            #     "average_weekly_zone_time_last_6_months": fitbit_mock_data["average_weekly_zone_time_last_6_months"],
+            #     "average_weekly_active_time_last_6_months": fitbit_mock_data["average_weekly_active_time_last_6_months"],
+            #     "average_weekly_activity_time_last_6_months": fitbit_mock_data["average_weekly_activity_time_last_6_months"],
+            # },
+            fitbit_mock_data,
             {
                 "dds.fitbit.builtin.steps.average.exists": True,
                 "dds.fitbit.builtin.steps.average": 8000,
@@ -224,6 +230,7 @@ def test_builtin_variables(provider_name):
                 "dds.fitbit.builtin.activities.by_frequency5": None,
                 "dds.fitbit.builtin.account.creation_date.exists": True,
                 "dds.fitbit.builtin.account.creation_date": "2018-05-05",
+
                 # ... include all other expected key-value pairs here
             }
         ),
@@ -265,7 +272,6 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
         project_custom_variables=custom_variables
     )
 
-    
     # filters keys that contain .builtin
     builtin_data_to_upload = {k: v for k, v in data_to_upload.items() if ".builtin" in k}
 
@@ -320,15 +326,15 @@ def test_get_used_variables(provider_name):
 
             variable = next((v for v in project_buitin_variables if v.get("qualified_name") == used_variable.get("variable_name")), None)
             assert variable, f"Could not find the builtin variable {used_variable['variable_name']}."
-    
+
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
-            
+
             qual_name = variable_to_qualname(variable, used_variable.get("type"))
-            
+
             assert used_variable["variable_name"] == qual_name, f"Wrong qualified name for the used variable {used_variable['variable_name']}."
 
             assert len(used_variable["description"]) > 0, "The description of the used variables should not be empty."
-            
+
 
         if used_variable.get("type") == "Custom":
             # the last part of the qual name
@@ -340,8 +346,8 @@ def test_get_used_variables(provider_name):
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
 
             assert used_variable["data"] is not None, f"The data of the used variables should not be None."
-        
-        
+
+
 
         # must have "data_origin" that is an array of at least one element
         assert variable["data_origin"] and len(variable["data_origin"]) > 0, f"Missing data origin for the used variable {used_variable['variable_name']}."

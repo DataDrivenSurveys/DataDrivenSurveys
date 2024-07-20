@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from dotenv import dotenv_values, load_dotenv
+from dotenv import dotenv_values
 
 
 def get_and_load_env(
@@ -44,13 +44,14 @@ def get_and_load_env(
         path = Path(path).resolve()
     path_dot_local = path.parent.joinpath(f"{path.name}.local")
 
-    # Load environment variables
-    load_dotenv(str(path))
     env = dotenv_values(str(path))
     if path_dot_local.is_file():
-        # Load .local override files to override the default ones
-        load_dotenv(str(path_dot_local))
         env = {**env, **dotenv_values(str(path_dot_local))}
+
+    # Load .env file variables into the environment variables
+    for k, v in env.items():
+        if v is not None:
+            os.environ[k] = v
     return env
 
 

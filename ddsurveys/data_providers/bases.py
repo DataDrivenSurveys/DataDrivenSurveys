@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import os
 import traceback
-from abc import ABC, abstractmethod
-from typing import Any, Type, TypeVar
+from abc import abstractmethod
+from typing import Any, TypeVar
 
 from ..get_logger import get_logger
 from ..shared_bases import FormField as BaseFormField
@@ -34,9 +34,9 @@ __all__ = [
 
 logger = get_logger(__name__)
 
-TDataProviderClass = Type["DataProvider"]
+TDataProviderClass = type["DataProvider"]
 TDataProvider = TypeVar("TDataProvider", bound="DataProvider")
-TOAuthDataProviderClass = Type["OAuthDataProvider"]
+TOAuthDataProviderClass = type["OAuthDataProvider"]
 
 TOAuthDataProvider = TypeVar("TOAuthDataProvider", bound="OAuthDataProvider")
 
@@ -106,6 +106,12 @@ class DataProvider(UIRegistry):
     def __init__(self, *args, **kwargs):
         self._variable_values: dict[str, Any] = {}
 
+    def __str__(self):
+        return f"{self.__class__.__name__}"
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}()"
+
     @classmethod
     def register(cls):
         super().register()
@@ -114,9 +120,9 @@ class DataProvider(UIRegistry):
         for data_category in cls.data_categories:
             cls._all_data_categories[cls.name][data_category.value] = data_category
 
-    @classmethod
-    def get_variable_storage(cls) -> dict[str, list[dict[str, Any]]]:
-        return DataProvider.cls_variables
+    # @classmethod
+    # def get_variable_storage(cls) -> dict[str, list[dict[str, Any]]]:
+    #     return DataProvider.cls_variables
 
     # fields are used to generate the form for the user to fill out
     # the dict object "fields" can be used to create an instance of the class using the ** operator: provider_class(**data_connection.fields)
@@ -152,6 +158,95 @@ class DataProvider(UIRegistry):
             if variable.get("enabled", False)
             and (variable["data_provider"] == self.name_lower)
         ]
+
+    def calculate_variables(
+        self,
+        project_builtin_variables: list[dict] = None,
+        project_custom_variables: list[dict] = None,
+        **kwargs
+    ) -> dict[str, TVariableValue]:
+        """Calculates the values of passed variables.
+
+        Args:
+            project_builtin_variables:
+                List of dicts where each dict contains key/value pairs conforming to the Variable class.
+            project_custom_variables:
+                List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
+
+        Returns:
+            A dict of key value pairs where the key is the name of the variable and the value is the value of the variable.
+            This dict can be passed to SurveyPlatform.upload_variable_values()
+        """
+        if project_builtin_variables is None:
+            project_builtin_variables = []
+        if project_custom_variables is None:
+            project_custom_variables = []
+
+        calculated_variables = {}
+
+        for variable in self.select_relevant_variables(project_builtin_variables):
+            value = None
+            try:
+                value = self.get_variable_value(**variable)
+                exists = value is not None
+            except ValueError:
+                logger.warning(
+                    f"Variable {variable['name']} could not be calculated with the following "
+                    f"error:\n{traceback.format_exc()}"
+                )
+                exists = False
+
+            calculated_variables[variable["qualified_name"]] = value
+            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
+
+        for variable in self.select_relevant_variables(project_custom_variables):
+            # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
+            custom_var_manager = CustomVariable(
+                data_provider=self, custom_variable=variable
+            )
+
+            custom_vars = custom_var_manager.calculate_custom_variables()
+
+            calculated_variables.update(custom_vars)
+
+        return calculated_variables
+
+    def get_variable_value(
+        self,
+        category: str = "",
+        name: str = "",
+        qualified_name: str = "",
+        is_indexed_variable: bool = False,
+        index: int = 0,
+        **kwargs,
+    ) -> TVariableValue:
+
+        if qualified_name in self._variable_values:
+            return self._variable_values[qualified_name]
+
+        data_category_class = self.get_data_category(category.lower())
+
+        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+
+        if data_category_class is None:
+            raise ValueError(f"Data category '{category}' not found")
+
+        variable_func = data_category_class.get_builtin_variable_by_name(
+            name
+        ).extractor_func
+
+        if variable_func:
+            if is_indexed_variable:
+                value = variable_func(self, index)
+            else:
+                value = variable_func(self)
+            self._variable_values[name] = value
+            return value
+        else:
+            raise ValueError(
+                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
+                f"function to build a function for '{name}'"
+            )
 
     @staticmethod
     def get_used_variables(
@@ -336,7 +431,7 @@ class FrontendDataProvider(DataProvider):
         return True
 
     def get_variable_value(
-        self, data: dict[str, Any], variable: dict[str, Any]
+        self, data: dict[str, Any], variable: dict[str, Any], **kwargs
     ) -> TVariableValue:
 
         name = variable["name"]
@@ -377,7 +472,9 @@ class FrontendDataProvider(DataProvider):
             exists = value is not None
             if exists:
                 calculated_variables[variable["qualified_name"]] = value
-            calculated_variables[f"{variable['qualified_name']}_exists"] = exists
+            else:
+                calculated_variables[variable["qualified_name"]] = ""
+            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
 
         return calculated_variables
 
@@ -403,6 +500,7 @@ class OAuthDataProvider(DataProvider):
         refresh_token: str = None,
         builtin_variables: list[dict] = None,
         custom_variables: list[dict] = None,
+        **kwargs,
     ):
         super().__init__()
         self.client_id: str = client_id
@@ -418,10 +516,17 @@ class OAuthDataProvider(DataProvider):
         self.builtin_variables = builtin_variables
         self.custom_variables = custom_variables
 
+    def __repr__(self):
+        return (f"{self.__class__.__name__}(client_id={self.client_id!r}, client_secret={self.client_secret!r}, "
+                f"access_token={self.access_token!r}, refresh_token={self.refresh_token!r}, "
+                f"self.api_client={self.api_client!r}, self.oauth_client={self.oauth_client!r}, "
+                f"self.builtin_variables={self.builtin_variables!r}, self.custom_variables={self.custom_variables!r})")
     @classmethod
     def get_redirect_uri(cls) -> str:
         # TODO: avoid using environment variables.
         frontend_url = os.getenv("FRONTEND_URL")
+        if frontend_url is None or frontend_url == "":
+            logger.critical(f"FRONTEND_URL environment variable not set, empty, or failed to load.")
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
 
     def to_public_dict(self) -> dict:
@@ -437,6 +542,10 @@ class OAuthDataProvider(DataProvider):
         }
 
     # Instance properties
+    @property
+    def scopes(self):
+        return self.__class__._scopes
+
     @property
     def required_scopes(self) -> list[str]:
         return self._required_scopes
@@ -473,117 +582,32 @@ class OAuthDataProvider(DataProvider):
         self.required_scopes = required_scopes
         return required_scopes
 
-    def calculate_variables(
-        self,
-        project_builtin_variables: list[dict],
-        project_custom_variables: list[dict] = None,
-    ) -> dict[str, TVariableValue]:
-        """Calculates the values of passed variables.
-
-        Args:
-            project_builtin_variables:
-                List of dicts where each dict contains key/value pairs conforming to the Variable class.
-            project_custom_variables:
-            List of dicts where each dict contains key/value pairs conforming to the CustomVariable class.
-
-        Returns:
-            A dict of key value pairs where the key is the name of the variable and the value is the value of the variable.
-            This dict can be passed to SurveyPlatform.upload_variable_values()
-        """
-        if project_custom_variables is None:
-            project_custom_variables = []
-
-        calculated_variables = {}
-
-        for variable in self.select_relevant_variables(project_builtin_variables):
-            value = None
-            try:
-                value = self.get_variable_value(**variable)
-                exists = value is not None
-            except ValueError:
-                logger.warning(
-                    f"Variable {variable['name']} could not be calculated with the following "
-                    f"error:\n{traceback.format_exc()}"
-                )
-                exists = False
-
-            calculated_variables[variable["qualified_name"]] = value
-            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
-
-        for variable in self.select_relevant_variables(project_custom_variables):
-            # if variable.get('enabled', False) and variable['data_provider'] == self.name_lower:
-            custom_var_manager = CustomVariable(
-                data_provider=self, custom_variable=variable
-            )
-
-            custom_vars = custom_var_manager.calculate_custom_variables()
-
-            calculated_variables.update(custom_vars)
-
-        return calculated_variables
-
-    def get_variable_value(
-        self,
-        category: str = "",
-        name: str = "",
-        qualified_name: str = "",
-        is_indexed_variable: bool = False,
-        index: int = 0,
-        **kwargs,
-    ) -> TVariableValue:
-        if qualified_name in self._variable_values:
-            return self._variable_values[qualified_name]
-
-        data_category_class = self.get_data_category(category.lower())
-
-        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
-
-        if data_category_class is None:
-            raise ValueError(f"Data category '{category}' not found")
-
-        variable_func = data_category_class.get_builtin_variable_by_name(
-            name
-        ).extractor_func
-
-        if variable_func:
-            if is_indexed_variable:
-                value = variable_func(self, index)
-            else:
-                value = variable_func(self)
-            self._variable_values[name] = value
-            return value
-        else:
-            raise ValueError(
-                f"'{self.__class__.__name__}' object does not have a defined function or a factory "
-                f"function to build a function for '{name}'"
-            )
-
     # Methods that child classes must implement
     @abstractmethod
     def init_api_client(self, *args, **kwargs) -> None:
-        pass
+        ...
 
     @abstractmethod
     def init_oauth_client(self, *args, **kwargs) -> None:
-        pass
+        ...
 
     @abstractmethod
     def get_authorize_url(
         self, builtin_variables: list[dict], custom_variables: list[dict] = None
     ) -> str:
-        pass
+        ...
 
     @abstractmethod
     def get_client_id(self) -> str:
-        pass
+        ...
 
     @abstractmethod
     def request_token(self, code: str) -> dict[str, Any]:
-        pass
+        ...
 
     @abstractmethod
     def revoke_token(self, token: str) -> bool:
-        pass
+        ...
 
 
 class FormField(BaseFormField):

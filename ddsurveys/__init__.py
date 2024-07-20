@@ -10,7 +10,7 @@ Created on 2023-04-27 13:47
 __name__ = "ddsurveys"
 __author__ = "Lev Velykoivanenko"
 __author_email__ = "lev.velykoivanenko@unil.com"
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 __license___ = ""
 __package__ = "ddsurveys"
 

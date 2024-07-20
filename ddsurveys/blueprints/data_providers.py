@@ -63,8 +63,8 @@ def add_data_provider_to_project():
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_value(
-            selected_data_provider["value"]
+        provider_class = DataProvider.get_class_by_name(
+            selected_data_provider["label"]
         )
 
         if not provider_class:
@@ -89,11 +89,13 @@ def add_data_provider_to_project():
         status = provider_instance.test_connection()
 
         # check if the data provider already exists
+        logger.debug(f"{selected_data_provider}")
+        logger.debug(f"{provider_class.name}, {provider_class.label}, {provider_class.provider_type}")
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(
                 name=selected_data_provider["label"],
-                data_provider_name=DataProviderName(selected_data_provider["value"]),
+                data_provider_name=provider_class.name,
             )
             .first()
         )
@@ -101,8 +103,8 @@ def add_data_provider_to_project():
         if not data_provider:
             data_provider = DataProviderModel(
                 name=selected_data_provider["label"],
-                data_provider_name=DataProviderName(selected_data_provider["value"]),
                 data_provider_type=provider_class.provider_type,
+                data_provider_name=provider_class.name,
             )
             db.add(data_provider)
             db.commit()
@@ -119,7 +121,7 @@ def add_data_provider_to_project():
 
         if data_connection:
             logger.info(
-                f"Data connection with {data_provider.data_provider_name} already exists for project "
+                f"Data connection with {data_provider.name} already exists for project "
                 f"{project_id}"
             )
             return (
@@ -134,12 +136,12 @@ def add_data_provider_to_project():
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_value(
-            data_provider.data_provider_name.value
+        provider_class = DataProvider.get_class_by_name(
+            data_provider.name
         )
 
         if not provider_class:
-            logger.error(f"Data provider {data_provider.data_provider_name} not found")
+            logger.error(f"Data provider {data_provider.name} not found")
             return (
                 jsonify(
                     {
@@ -155,7 +157,7 @@ def add_data_provider_to_project():
         # add variables related to the data provider
         variables = provider_class.get_builtin_variables()
 
-        # add enables : false to the variables
+        # add enabled: False to the variables
         variables = [{**variable, "enabled": False} for variable in variables]
 
         # append the variables to the project variables JSON field
@@ -212,12 +214,12 @@ def update_data_provider(data_provider_name):
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_value(
-            selected_data_provider["value"]
+        provider_class = DataProvider.get_class_by_name(
+            selected_data_provider["label"]
         )
 
         if not provider_class:
-            logger.error(f"Data provider {selected_data_provider['value']} not found")
+            logger.error(f"Data provider {selected_data_provider['label']} not found")
             return (
                 jsonify(
                     {
@@ -364,8 +366,8 @@ def check_dataprovider_connection(data_provider_name):
         # check the connection
         data_provider = db.query(DataProviderModel).get(data_provider_name)
 
-        provider_class = DataProvider.get_class_by_value(
-            data_provider.data_provider_name.value
+        provider_class = DataProvider.get_class_by_name(
+            data_provider.name
         )
         provider_instance: DataProvider = provider_class(**data_connection.fields)
         success = provider_instance.test_connection()

@@ -27,6 +27,7 @@ logger = get_logger(__name__)
 
 # This is an example of a data category.
 # In practice, each endpoint can be turned into a data category.
+# 'self' in extractor functions will be an instance of the data provider class.
 class ExampleDataCategory(DataCategory):
 
     data_origin = [

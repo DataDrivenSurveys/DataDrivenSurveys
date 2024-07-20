@@ -7,7 +7,7 @@
 import traceback
 from typing import Any
 
-from flask import Blueprint, current_app, g, jsonify, request
+from flask import Blueprint, g, jsonify, request
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -19,7 +19,7 @@ from ..models import DataConnection
 from ..models import DataProvider as DataProviderModel
 from ..models import DataProviderAccess, DataProviderName, DataProviderType, Distribution, Project, Respondent, get_db
 from ..survey_platforms import SurveyPlatform
-from ._common import get_project_data_connection
+# from ._common import get_project_data_connection
 
 logger = get_logger(__name__)
 
@@ -45,7 +45,7 @@ def get_public_project():
     with get_db() as db:
 
         project_short_id = g.get("project_short_id")
-        project = (
+        project: Project = (
             db.query(Project)
             .options(
                 joinedload(Project.data_connections).joinedload(
@@ -97,7 +97,8 @@ def get_public_project():
                 survey_active = survey_platform_info["active"]
             else:
                 logger.error(
-                    f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info."
+                    f"Survey on {project.survey_platform_name} {project.id} does not exist or there was an error "
+                    f"fetching its info."
                 )
                 response_status = 400
                 all_data_connections_connected = False
@@ -300,6 +301,7 @@ def exchange_code_for_tokens():
                 )
         except Exception as e:
             logger.error(f"Error exchanging code for tokens for: {data_provider_name}")
+            logger.debug(traceback.format_exc())
             return (
                 jsonify(
                     {
@@ -472,7 +474,8 @@ def prepare_survey():
 
             if status != 200 and not survey_platform_info.get("active", False):
                 logger.error(
-                    f"Survey on {project.survey_platform_name} {project.survey_id} does not exist or there was an error fetching its info."
+                    f"Survey on {project.survey_platform_name} {project.id} does not exist or there was an error "
+                    f"fetching its info."
                 )
                 return (
                     jsonify(
@@ -491,6 +494,7 @@ def prepare_survey():
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
+            data_provider: DataProviderAccess
             for data_provider in oauth_data_providers:
 
                 data_provider_name = data_provider.data_provider_name.value
@@ -537,8 +541,9 @@ def prepare_survey():
                 fields.update(
                     {"access_token": access_token, "refresh_token": refresh_token}
                 )
+                logger.debug(f"Data provider fields: {fields}")
 
-                user_data_provider = DataProvider.get_class_by_value(
+                user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
                     data_provider_name
                 )(**fields)
                 data_to_upload.update(
@@ -546,6 +551,13 @@ def prepare_survey():
                         project.variables, project.custom_variables
                     )
                 )
+
+                # revoke the access tokens
+                try:
+                    user_data_provider.revoke_token(data_provider.access_token)
+                except Exception as e:
+                    logger.error(f"Failed to revoke access token for data provider '{data_provider_name}': {e}", exc_info=True)
+                    logger.debug(traceback.format_exc())
 
                 # set the data provider access tokens to Null
                 data_provider.access_token = None
@@ -570,6 +582,9 @@ def prepare_survey():
                         data=frontend_variables,
                     )
                 )
+            # logger.debug(f"Project variables: {project.variables}")
+            # logger.debug(f"Project custom variables: {project.custom_variables}")
+            # logger.debug(f"Data to upload: {data_to_upload}")
 
             success_preparing_survey, unique_url = (
                 platform_instance.handle_prepare_survey(
@@ -619,7 +634,8 @@ def prepare_survey():
                 )
 
     except Exception as e:
-        logger.error(f"Error preparing survey: {traceback.format_exc()}")
+        logger.error(f"Error preparing survey: {e}")
+        logger.debug(f"Error traceback: {traceback.format_exc()}")
         return (
             jsonify(
                 {
@@ -655,7 +671,7 @@ def check_data_provider_access_tokens(
 
         data_provider_name = data_connection.data_provider.data_provider_name.value
 
-        fields = data_connection.fields
+        fields: dict = data_connection.fields
 
         fields.update({"access_token": access_token, "refresh_token": refresh_token})
 
@@ -783,7 +799,7 @@ def connect_respondent():
             )
         elif existing_data_provider_accesses:
             # all data providers already exists, so we can just return the respondent
-            respondent = (
+            respondent: Respondent = (
                 db.query(Respondent).filter_by(project_id=project.id).first()
             )  # There should only be one respondent per project
             logger.info(f"Found existing respondent.")

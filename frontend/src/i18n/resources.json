@@ -111,6 +111,16 @@
               "instructions.helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
               "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
             },
+            "googlecontacts": {
+              "client_id.helper_text": "Copy paste the value in the 'Client ID' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "Copy paste the value in the 'Client secret' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
+              "client_secret.label": "Client secret",
+              "project_id.helper_text": "Copy paste the value in the 'project_id' field in the credentials JSON that you can download from the Google Cloud Credentials section of your Google Cloud Project.",
+              "project_id.label": "Project ID",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:",
+              "instructions.helper_url": "https://developers.google.com/people/quickstart/python"
+            },
             "instagram": {
               "client_id.helper_text": "You need to open your app in the Facebook developer portal, then click on > 'App Settings' > 'Basic'. Copy paste the value in the 'App ID' field.",
               "client_id.label": "App ID",
@@ -205,125 +215,125 @@
         "unauthorized": "Unauthorized"
       },
       "privacy_policy": {
-          "title": "Privacy Policy for DataDrivenSurveys (DDS)",
-          "introduction": {
-            "title": "Introduction",
-            "content": "DDS respects the privacy of its users and is committed to protecting the personal information collected through its platform. This Privacy Policy outlines the types of information we collect, how it is used, and the measures we take to protect your information."
+        "title": "Privacy Policy for DataDrivenSurveys (DDS)",
+        "introduction": {
+          "title": "Introduction",
+          "content": "DDS respects the privacy of its users and is committed to protecting the personal information collected through its platform. This Privacy Policy outlines the types of information we collect, how it is used, and the measures we take to protect your information."
+        },
+        "data_collection_and_use": {
+          "title": "Data Collection and Use",
+          "information_you_provide": {
+            "title": "Information You Provide",
+            "content": "DDS collects data from participants through survey responses. This data includes, but is not limited to, information provided by the participants from their linked accounts on various Data Providers (DPs) such as Fitbit, under explicit authorization using OAuth protocols."
           },
-          "data_collection_and_use": {
-            "title": "Data Collection and Use",
-            "information_you_provide": {
-                "title": "Information You Provide",
-                "content": "DDS collects data from participants through survey responses. This data includes, but is not limited to, information provided by the participants from their linked accounts on various Data Providers (DPs) such as Fitbit, under explicit authorization using OAuth protocols."
-              },
-            "automatically_collected_information": {
-                "title": "Automatically Collected Information",
-                "content": "DDS automatically receives and records information on our server logs from your browser, including your IP address, cookie information, and the page you request."
-              }
-          },
-          "purpose_of_data_collection": {
-            "title": "Purpose of Data Collection",
-            "content": "The data collected by DDS is used exclusively for the following purposes: to enable tailored survey experiences by integrating personal data from DPs; to improve the functionality of our surveys and enhance user experience; to conduct research and analysis aimed at improving our services."
-          },
-          "consent": {
-            "title": "Consent",
-            "content": "By using DDS, participants consent to the collection, transfer, processing, storage, disclosure, and use of their information as described in this Privacy Policy. Consent is obtained through our landing page where participants are informed about the data collection process and provided with a link to this Privacy Policy."
-          },
-          "data_minimization": {
-            "title": "Data Minimization",
-            "content": "DDS adheres to the principle of data minimization by only requesting access to the necessary data classes as authorized by the participant. The data accessed is solely used for computing the variables required for conducting the survey and is not retained post-completion of the survey."
-          },
-          "security": {
-            "title": "Security",
-            "content": "We employ administrative, physical, and electronic measures designed to protect your information from unauthorized access. This includes using OAuth for secure data access, ensuring data is not stored permanently on disk, and deleting all raw data and variables from our system memory once the survey is completed."
-          },
-          "data_retention_and_deletion": {
-            "title": "Data Retention and Deletion",
-            "content": "DDS does not retain any raw data. Data necessary for the survey is temporarily stored in system memory and is deleted immediately after the survey is processed. Access tokens are revoked post-processing to ensure no further data access occurs."
-          },
-          "changes_to_this_privacy_policy": {
-            "title": "Changes to This Privacy Policy",
-            "content": "DDS may update this policy periodically. We will notify you about significant changes by sending a notice to the primary email address specified in your DDS account or by placing a prominent notice on our site."
-          },
-          "contact_information": {
-            "title": "Contact Information",
-            "content": "If you have any questions or concerns about this Privacy Policy or data processing, please contact us at",
-            "contact_email": "dds@unil.ch"
+          "automatically_collected_information": {
+            "title": "Automatically Collected Information",
+            "content": "DDS automatically receives and records information on our server logs from your browser, including your IP address, cookie information, and the page you request."
           }
         },
+        "purpose_of_data_collection": {
+          "title": "Purpose of Data Collection",
+          "content": "The data collected by DDS is used exclusively for the following purposes: to enable tailored survey experiences by integrating personal data from DPs; to improve the functionality of our surveys and enhance user experience; to conduct research and analysis aimed at improving our services."
+        },
+        "consent": {
+          "title": "Consent",
+          "content": "By using DDS, participants consent to the collection, transfer, processing, storage, disclosure, and use of their information as described in this Privacy Policy. Consent is obtained through our landing page where participants are informed about the data collection process and provided with a link to this Privacy Policy."
+        },
+        "data_minimization": {
+          "title": "Data Minimization",
+          "content": "DDS adheres to the principle of data minimization by only requesting access to the necessary data classes as authorized by the participant. The data accessed is solely used for computing the variables required for conducting the survey and is not retained post-completion of the survey."
+        },
+        "security": {
+          "title": "Security",
+          "content": "We employ administrative, physical, and electronic measures designed to protect your information from unauthorized access. This includes using OAuth for secure data access, ensuring data is not stored permanently on disk, and deleting all raw data and variables from our system memory once the survey is completed."
+        },
+        "data_retention_and_deletion": {
+          "title": "Data Retention and Deletion",
+          "content": "DDS does not retain any raw data. Data necessary for the survey is temporarily stored in system memory and is deleted immediately after the survey is processed. Access tokens are revoked post-processing to ensure no further data access occurs."
+        },
+        "changes_to_this_privacy_policy": {
+          "title": "Changes to This Privacy Policy",
+          "content": "DDS may update this policy periodically. We will notify you about significant changes by sending a notice to the primary email address specified in your DDS account or by placing a prominent notice on our site."
+        },
+        "contact_information": {
+          "title": "Contact Information",
+          "content": "If you have any questions or concerns about this Privacy Policy or data processing, please contact us at",
+          "contact_email": "dds@unil.ch"
+        }
+      },
       "terms_of_service": {
-          "title": "Terms of Service for DataDrivenSurveys (DDS)",
-          "introduction": {
-            "title": "Introduction",
-            "content": "Welcome to DDS! By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations."
+        "title": "Terms of Service for DataDrivenSurveys (DDS)",
+        "introduction": {
+          "title": "Introduction",
+          "content": "Welcome to DDS! By accessing or using our platform, you agree to be bound by these Terms of Service and all applicable laws and regulations."
+        },
+        "definitions": {
+          "dds": {
+            "title": "\"DDS\"",
+            "content": "refers to the Data-Driven Surveys platform, which integrates with various Data Providers (DPs) to enhance survey experiences."
           },
-          "definitions": {
-            "dds": {
-              "title": "\"DDS\"",
-              "content": "refers to the Data-Driven Surveys platform, which integrates with various Data Providers (DPs) to enhance survey experiences."
-            },
-            "dp": {
-              "title": "\"DPs\"",
-              "content": "refers to the 'Data Providers' that DDS integrates with to enhance survey experiences. Data Providers are third-party services that provide data to DDS."
-            },
-            "users": {
-              "title": "\"User\", \"You\", or \"Your\"",
-              "content": "refers to anyone who accesses or uses our Service."
-            },
-            "content": {
-              "title": "\"Content\"",
-              "content": "includes all materials displayed or performed on the DDS platform, including but not limited to text, graphics, news articles, photographs, images, illustrations, and software."
-            }
+          "dp": {
+            "title": "\"DPs\"",
+            "content": "refers to the 'Data Providers' that DDS integrates with to enhance survey experiences. Data Providers are third-party services that provide data to DDS."
           },
-          "user_accounts": {
-            "title": "User Accounts",
-            "content1": "To access some features of the platform, you must create an account. You are responsible for maintaining the security of your account, and you are fully responsible for all activities that occur under the account.",
-            "content2": "You must immediately notify DDS of any unauthorized uses of your account or any other breaches of security."
+          "users": {
+            "title": "\"User\", \"You\", or \"Your\"",
+            "content": "refers to anyone who accesses or uses our Service."
           },
-          "use_of_the_service": {
-            "title": "Use of the Service",
-            "content": "DDS grants you permission to use the Service as set forth in these Terms, provided that: (i) you will not copy, distribute, or disclose any part of the Service in any medium; (ii) you will not alter or modify any part of the Service other than as may be reasonably necessary to use the Service for its intended purpose; and (iii) you will otherwise comply with the terms and conditions of these Terms."
-          },
-          "data_integration": {
-            "title": "Data Integration",
-            "content1": "By using DDS, you consent to the automatic collection of data from your linked DP accounts as necessary for the functionality of the Service.",
-            "content2": "You grant DDS permission to access your data via DPs, under the conditions approved by you, solely for the purpose of creating personalized surveys."
-          },
-          "intellectual_property": {
-            "title": "Intellectual Property",
-            "content": "All intellectual property rights in the Service and the Content are owned by DDS or DDS's licensors. You may not use any branding or logos used in the Service without prior written consent from DDS."
-          },
-          "privacy": {
-            "title": "Privacy",
-            "content": "Your privacy is important to us. Our Privacy Policy explains how we treat your personal data and protect your privacy when you use our Service. By using DDS, you agree that DDS can use such data in accordance with our privacy policies."
-          },
-          "termination": {
-            "title": "Termination",
-            "content": "DDS may terminate your access to all or any part of the Service at any time, with or without cause, with or without notice, effective immediately."
-          },
-          "disclaimers": {
-            "title": "Disclaimers",
-            "content1": "The Service is provided \"as is\". DDS and its suppliers and licensors hereby disclaim all warranties of any kind, express or implied, including, without limitation, the warranties of merchantability, fitness for a particular purpose and non-infringement.",
-            "content2": "DDS does not warrant that the Service will be error-free or that access thereto will be continuous or uninterrupted."
-          },
-          "limitation_of_liability": {
-            "title": "Limitation of Liability",
-            "content": "In no event will DDS, its suppliers, or licensors be liable with respect to any subject matter of these terms under any contract, negligence, strict liability or other legal or equitable theory for: (i) any special, incidental or consequential damages; (ii) the cost of procurement for substitute products or services; (iii) for interruption of use or loss or corruption of data."
-          },
-          "general_representation_and_warranty": {
-            "title": "General Representation and Warranty",
-            "content": "You represent and warrant that (i) your use of the Service will be in strict accordance with the DDS Privacy Policy, with these Terms, and with all applicable laws and regulations (including without limitation any local laws or regulations in your country, state, city, or other governmental area, regarding online conduct and acceptable content)."
-          },
-          "changes": {
-            "title": "Changes",
-            "content": "DDS reserves the right, at its sole discretion, to modify or replace any part of these Terms. It is your responsibility to check these Terms periodically for changes."
-          },
-          "contact_information": {
-            "title": "Contact Information",
-            "content": "If you have any questions about these Terms, please contact us at",
-            "contact_email": "dds@unil.ch"
+          "content": {
+            "title": "\"Content\"",
+            "content": "includes all materials displayed or performed on the DDS platform, including but not limited to text, graphics, news articles, photographs, images, illustrations, and software."
           }
         },
+        "user_accounts": {
+          "title": "User Accounts",
+          "content1": "To access some features of the platform, you must create an account. You are responsible for maintaining the security of your account, and you are fully responsible for all activities that occur under the account.",
+          "content2": "You must immediately notify DDS of any unauthorized uses of your account or any other breaches of security."
+        },
+        "use_of_the_service": {
+          "title": "Use of the Service",
+          "content": "DDS grants you permission to use the Service as set forth in these Terms, provided that: (i) you will not copy, distribute, or disclose any part of the Service in any medium; (ii) you will not alter or modify any part of the Service other than as may be reasonably necessary to use the Service for its intended purpose; and (iii) you will otherwise comply with the terms and conditions of these Terms."
+        },
+        "data_integration": {
+          "title": "Data Integration",
+          "content1": "By using DDS, you consent to the automatic collection of data from your linked DP accounts as necessary for the functionality of the Service.",
+          "content2": "You grant DDS permission to access your data via DPs, under the conditions approved by you, solely for the purpose of creating personalized surveys."
+        },
+        "intellectual_property": {
+          "title": "Intellectual Property",
+          "content": "All intellectual property rights in the Service and the Content are owned by DDS or DDS's licensors. You may not use any branding or logos used in the Service without prior written consent from DDS."
+        },
+        "privacy": {
+          "title": "Privacy",
+          "content": "Your privacy is important to us. Our Privacy Policy explains how we treat your personal data and protect your privacy when you use our Service. By using DDS, you agree that DDS can use such data in accordance with our privacy policies."
+        },
+        "termination": {
+          "title": "Termination",
+          "content": "DDS may terminate your access to all or any part of the Service at any time, with or without cause, with or without notice, effective immediately."
+        },
+        "disclaimers": {
+          "title": "Disclaimers",
+          "content1": "The Service is provided \"as is\". DDS and its suppliers and licensors hereby disclaim all warranties of any kind, express or implied, including, without limitation, the warranties of merchantability, fitness for a particular purpose and non-infringement.",
+          "content2": "DDS does not warrant that the Service will be error-free or that access thereto will be continuous or uninterrupted."
+        },
+        "limitation_of_liability": {
+          "title": "Limitation of Liability",
+          "content": "In no event will DDS, its suppliers, or licensors be liable with respect to any subject matter of these terms under any contract, negligence, strict liability or other legal or equitable theory for: (i) any special, incidental or consequential damages; (ii) the cost of procurement for substitute products or services; (iii) for interruption of use or loss or corruption of data."
+        },
+        "general_representation_and_warranty": {
+          "title": "General Representation and Warranty",
+          "content": "You represent and warrant that (i) your use of the Service will be in strict accordance with the DDS Privacy Policy, with these Terms, and with all applicable laws and regulations (including without limitation any local laws or regulations in your country, state, city, or other governmental area, regarding online conduct and acceptable content)."
+        },
+        "changes": {
+          "title": "Changes",
+          "content": "DDS reserves the right, at its sole discretion, to modify or replace any part of these Terms. It is your responsibility to check these Terms periodically for changes."
+        },
+        "contact_information": {
+          "title": "Contact Information",
+          "content": "If you have any questions about these Terms, please contact us at",
+          "contact_email": "dds@unil.ch"
+        }
+      },
       "ui": {
         "auth": {
           "button": {
@@ -349,6 +359,10 @@
           "github": {
             "alt": "GitHub",
             "label": "GitHub"
+          },
+          "googlecontacts": {
+            "alt": "Google Contacts",
+            "label": "Google Contacts"
           },
           "instagram": {
             "alt": "Instagram",
