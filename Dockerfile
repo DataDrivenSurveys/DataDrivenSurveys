@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy only the necessary files for installation
 # This includes pyproject.toml, and other relevant files
-COPY pyproject.toml LICENSE ./
+COPY pyproject.toml LICENSE README.md ./
 # If you have other directories or files needed for the setup, copy them too
 COPY ddsurveys/ ddsurveys/
 
