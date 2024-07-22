@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Copy only the necessary files for installation
 # This includes setup.py, setup.cfg, and other relevant files
-COPY setup.py setup.cfg ./
+COPY pyproject.toml ./
 # If you have other directories or files needed for the setup, copy them too
 COPY ddsurveys/ ddsurveys/
 

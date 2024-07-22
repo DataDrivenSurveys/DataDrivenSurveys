@@ -52,9 +52,6 @@ dependencies = [
     "rpdb~=0.1.6",
     "fitbit~=0.3.1",
     "sonyflake-py~=1.3.0",
-    "pytest~=7.3.1",
-    "pytest-mock~=3.11.1",
-    "pytest-flask~=1.2.0",
     "surveymonkey-python~=0.1.5",
     "validators~=0.22.0",
     "PyGithub~=2.1.1",
@@ -72,6 +69,7 @@ dependencies = [
     "Pyvi",  # Vietnamese
     "Jieba",  # Chinese
     "spacy-pkuseg",  # Chinese
+    "numpy==1.26.4",  # pinned to avoid errors during tests
 ]
 
 [project.urls]
@@ -83,7 +81,12 @@ ddsurveys-app = "ddsurveys.wsgi:app"
 
 [project.optional-dependencies]
 all = []
-test = ["pytest"]
+test = [
+    "pytest~=7.3.1",
+    "pytest-mock~=3.12.0",
+    "pytest-flask~=1.2.0",
+    "numpy==1.26.4",  # pinned to avoid errors during tests
+]
 coverage = [
     "coverage",
     "codecov",
@@ -112,17 +115,32 @@ path = "ddsurveys/__init__.py"
 
 [tool.coverage.run]
 branch = true
+#source = [
+#    "ddsurveys"  # Ensure the package name is correct
+#]
+#concurrency = ["subprocess"]
+
+[tool.coverage.paths]
 source = [
-    "ddsurveys"  # Ensure the package name is correct
+    "ddsurveys/",
 ]
-concurrency = ["subprocess"]
 
 [tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
+exclude_also = [
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+
+    # Don't complain if tests don't hit defensive assertion code:
     "raise AssertionError",
-    # Add other excludes...
-    "if typing.TYPE_CHECKING:"
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+
+    # Don't complain about abstract methods, they aren't run:
+    "@(abc\\.)?abstractmethod",
 ]
 ignore_errors = true
 skip_empty = true
@@ -133,7 +151,7 @@ omit = [
 
 [tool.coverage.html]
 directory = "htmlcov"
-extra_css = "coverage_extra_css.css"
+#extra_css = "coverage_extra_css.css"
 
 [tool.black]
 line-length = 120
