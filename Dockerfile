@@ -11,9 +11,11 @@ WORKDIR /app
 COPY pyproject.toml LICENSE README.md ./
 # If you have other directories or files needed for the setup, copy them too
 COPY ddsurveys/ ddsurveys/
+COPY scripts/post_install.py ./
 
 # Install the application
 RUN pip install -e .
+RUN python3 post_install.py
 
 # Set the PYTHONPATH environment variable (if necessary)
 ENV PYTHONPATH=/app

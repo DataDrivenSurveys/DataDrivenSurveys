@@ -44,11 +44,14 @@ def install_spacy_models() -> None:
         'uk_core_news_sm'
     ]
 
-    for model in models:
+    for idx, model in enumerate(models):
+        print(f"Progress: {idx + 1}/{len(models)} models")
         try:
+            # print(f"Checking if spacy model '{model}' is installed...")
             importlib.import_module(model)
         except ModuleNotFoundError:
             # If the model is not installed, install it
+            # print(f"Installing spacy model '{model}'...")
             download(model, False, False, "--quiet")
 
 

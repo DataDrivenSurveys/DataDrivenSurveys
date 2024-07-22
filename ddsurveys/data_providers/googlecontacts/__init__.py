@@ -11,6 +11,7 @@ __all__ = ["GoogleContactsDataProvider"]
 
 import traceback
 import operator
+from collections import namedtuple
 from functools import cached_property, cache
 from typing import Any, Callable
 
@@ -221,14 +222,17 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     def request_token(self, code: str) -> dict[str, Any]:
         logger.info(f"Requesting token")
-        self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
-        credentials = self.oauth_client.credentials
+        exchange_failed = False
+        try:
+            self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
+            credentials = self.oauth_client.credentials
+        except Warning as e:
+            logger.warning(f"Warning when exchanging tokens: {e}")
+            # Create mock credentials object to fail the granted scopes check
+            credentials = namedtuple("Credentials", ["granted_scopes"])(granted_scopes=[""])
+            exchange_failed = True
 
-        logger.info(f"Credentials: {credentials}")
-        logger.info(credentials.granted_scopes)
-        logger.info(self.required_scopes)
-
-        if set(self.required_scopes) != set(credentials.granted_scopes):
+        if exchange_failed or not set(self.required_scopes).issubset(set(credentials.granted_scopes)):
             logger.error(f"The required scopes were not granted.")
             self.revoke_token(credentials.token)
             return {

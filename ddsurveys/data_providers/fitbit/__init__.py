@@ -525,7 +525,7 @@ class FitbitDataProvider(OAuthDataProvider):
             profile = fitbit.user_profile_get()
 
             # check if all scopes are authorized
-            if set(accepted_scopes).issubset(set(self.required_scopes)):
+            if not set(self.required_scopes).issubset(set(accepted_scopes)):
                 logger.error(
                     f"Incomplete Fitbit scopes: {accepted_scopes} required: {self.required_scopes}"
                 )
