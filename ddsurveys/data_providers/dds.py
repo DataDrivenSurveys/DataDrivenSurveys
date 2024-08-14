@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-08-31 16:59
+"""Created on 2023-08-31 16:59.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -9,16 +7,13 @@ Created on 2023-08-31 16:59
 
 __all__ = ["DDSDataProvider"]
 
-import base64
-from datetime import datetime
-from functools import cached_property
-from typing import Any, Callable, Dict
+from typing import Any, ClassVar
 
-from ..get_logger import get_logger
-from ..variable_types import TVariableValue, VariableDataType
-from .bases import FormTextBlock, FrontendDataProvider
-from .data_categories import DataCategory
-from .variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.bases import FormTextBlock, FrontendDataProvider
+from ddsurveys.data_providers.data_categories import DataCategory
+from ddsurveys.data_providers.variables import BuiltInVariable
+from ddsurveys.get_logger import get_logger
+from ddsurveys.variable_types import VariableDataType
 
 logger = get_logger(__name__)
 
@@ -26,34 +21,31 @@ logger = get_logger(__name__)
 class FrontendActivity(DataCategory):
     """Represents a category of data related to frontend user activities."""
 
-    builtin_variables = [
+    builtin_variables: ClassVar[list[BuiltInVariable]] = [
         BuiltInVariable.create_instances(
             name="open_transparency_table",
             label="Open Transparency Table",
             description="Indicates whether the respondent has accessed the transparency table.",
             data_type=VariableDataType.TEXT,
-            test_value_placeholder="Yes",
-            info="This variable reflects access to the transparency table, set to 'Yes' if accessed and 'No' otherwise.",
+            test_value_placeholder="True",
+            info="This variable reflects access to the transparency table, set to 'True' if accessed and 'False' "
+                 "otherwise.",
             extractor_func=lambda variable, data: (
-                "Yes"
-                if variable["qualified_name"] in data
-                and data[variable["qualified_name"]]["count"] > 0
-                else "No"
+                bool(variable["qualified_name"] in data and data[variable["qualified_name"]]["count"] > 0)
             ),
-            data_origin=[{"documentation": "Monitored by the frontend application."}],
+            data_origin=[{"method": "", "endpoint": "", "documentation": "Monitored by the frontend application."}],
         )
     ]
 
 
 class DDSDataProvider(FrontendDataProvider):
-
     # Class attributes go here
     app_required: bool = False
 
-    fields: list[dict[str, Any]] = {}
+    fields: ClassVar[list[dict[str, Any]]] = {}
 
     # Form fields declarations go here
-    form_fields = [FormTextBlock(name="information", content="information")]
+    form_fields: ClassVar[list[FormTextBlock]] = [FormTextBlock(name="information", content="information")]
 
     # DataCategory declarations go here
     data_categories = [FrontendActivity]

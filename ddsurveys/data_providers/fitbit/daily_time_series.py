@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-08 16:18
+"""Created on 2024-07-08 16:18.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+from collections.abc import Callable, Hashable
 from datetime import datetime
-from typing import Any, Hashable, Callable
+from typing import Any
 
-from .api_response_dicts import ActivityTimeSeriesDayDict, ActivityTimeSeriesResponseDict
+from ddsurveys.data_providers.fitbit.api_response_dicts import ActivityTimeSeriesResponseDict
 
 
 class GroupingFunctions:
@@ -72,7 +71,7 @@ class AggregationFunctions:
             return {
                 key: sum(values)
                 for key, values in {
-                    key: [value for value in values]
+                    key: list(values)
                     for key, values in data.items()
                 }.items()
             }

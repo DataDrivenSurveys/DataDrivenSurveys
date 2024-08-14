@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """This module contains functions to get information from the database that many endpoints require.
 
 Examples:
@@ -35,12 +34,12 @@ Created on 2023-09-08 13:52
 """
 __all__ = ["get_researcher", "get_project", "get_project_data_connection"]
 
-from flask import jsonify, g
+from flask import g, jsonify
 from flask.typing import ResponseReturnValue
 from sqlalchemy.orm.session import Session
 
-from ..models import Collaboration, DataConnection, Project, Researcher
-from ..get_logger import get_logger
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import Collaboration, DataConnection, Project, Researcher
 
 logger = get_logger(__name__)
 
@@ -84,8 +83,11 @@ def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | tup
     return project, None
 
 
-def get_project_data_connection(db: Session, user: dict[str, str], data_provider_name: str
-    ) -> tuple[Project, DataConnection, None] | tuple[None, ResponseReturnValue, int]:
+def get_project_data_connection(
+    db: Session,
+    user: dict[str, str],
+    data_provider_name: str
+) -> tuple[Project, DataConnection, None] | tuple[None, ResponseReturnValue, int]:
     project, satus = get_project(db, user)
     if satus is not None:
         # Case where the user or project could not be found

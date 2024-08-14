@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-10-31 13:53
+"""Created on 2023-10-31 13:53.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
+
 __all__ = ["SurveyMonkeySurveyPlatform"]
 
 import json
 import os
 import uuid
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 import requests
 from surveymonkey.client import Client as SMClient
@@ -30,8 +30,7 @@ from surveymonkey.exceptions import (
 )
 
 from ddsurveys.get_logger import get_logger
-
-from ..bases import FormButton, FormField, OAuthSurveyPlatform
+from ddsurveys.survey_platforms.bases import FormButton, FormField, OAuthSurveyPlatform
 
 logger = get_logger(__name__)
 
@@ -40,7 +39,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     API_URL = "https://api.surveymonkey.com/v3"
 
     # Form fields declarations go here
-    form_fields = [
+    form_fields: ClassVar = [
         FormField(
             name="survey_id",
             type="text",
@@ -91,13 +90,12 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         access_token: str = "",
         **kwargs,
     ) -> None:
-        """
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
 
@@ -118,8 +116,8 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         self,
         client_id: str,
         client_secret: str,
-        redirect_uri: str = None,
-        access_token: str = None,
+        redirect_uri: str | None = None,
+        access_token: str | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -155,7 +153,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         token = self.api_client.exchange_code(code=code)
 
-        if token == False:
+        if token is False:
             return {"success": False, "message": "Error exchanging code for tokens"}
 
         return {"success": True, "data": json.loads(token)}
@@ -163,7 +161,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     def revoke_token(self, token: str) -> bool: ...
 
     # SurveyPlatform methods
-    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
+    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
         survey_platform_info = {
             "connected": False,
             "active": False,
@@ -177,17 +175,18 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         try:
             survey_info = self.get_specific_survey(self.survey_id)
 
-            logger.debug(f"SurveyMonkeySurveyPlatform survey_info: {survey_info}")
+            logger.debug("SurveyMonkeySurveyPlatform survey_info: %s", survey_info)
 
             survey_platform_info["survey_name"] = survey_info["title"]
             survey_platform_info["active"] = True
             survey_platform_info["survey_status"] = "active"
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
-
-            return 200, message_id, survey_platform_info
-        except Exception as e:
+        except Exception:
+            logger.exception("Error fetching survey platform info: %s")
             return 400, "api.survey_platforms.connection_failed", survey_platform_info
+        else:
+            return 200, message_id, survey_platform_info
 
     def handle_project_creation(
         self, project_name: str, use_existing_survey: bool = False
@@ -219,7 +218,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                     survey_name,
                     survey_platform_fields,
                 )
-            except Exception as e:
+            except Exception:
                 return (
                     400,
                     "api.survey.unknown_error_occurred",
@@ -236,7 +235,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                 survey_platform_fields["survey_id"] = self.survey_id
                 survey_platform_fields["survey_name"] = project_name
 
-            except Exception as e:
+            except Exception:
                 return (
                     400,
                     "api.survey.unknown_error_occurred",
@@ -277,7 +276,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                     "api.ddsurveys.survey_platforms.variables_sync.success",
                     "Variables synced successfully!",
                 )
-        except Exception as e:
+        except Exception:
             return (
                 401,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
@@ -286,11 +285,8 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
-    ) -> tuple[bool, Optional[str]]:
-        """
-        Handle the preparation of the survey for data collection in SurveyMonkey.
-        """
-
+    ) -> tuple[bool, str | None]:
+        """Handle the preparation of the survey for data collection in SurveyMonkey."""
         status, _, survey_platform_info = self.fetch_survey_platform_info()
 
         contact_list_id = survey_platform_fields.get("contact_list_id")
@@ -314,7 +310,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             ]
 
             field_id_to_key_map = {}
-            for field_id, (key, value) in zip(contact_field_ids, embedded_data.items()):
+            for field_id, (key, _value) in zip(contact_field_ids, embedded_data.items(), strict=False):
                 self.update_contact_field(field_id, key)
                 field_id_to_key_map[field_id] = key
 
@@ -349,18 +345,14 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             return False, None
 
     def handle_export_survey_responses(self) -> tuple[bool, str, None]:
-        """
-        Handle the downloading of responses from the survey platform.
-        """
+        """Handle the downloading of responses from the survey platform."""
         raise NotImplementedError
 
     @staticmethod
     def get_preview_link(
         survey_platform_fields, enabled_variables
     ) -> tuple[int, str, str, str]:
-        """
-        Handle the previewing of the survey.
-        """
+        """Handle the previewing of the survey."""
         raise NotImplementedError
 
     # Temporary Survey Monkdey SDK methods
@@ -370,9 +362,9 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         logger.debug(
             f"SurveyMonkeySurveyPlatform.get_specific_survey: {self.access_token}"
         )
-        endpoint = "/surveys/{}".format(survey_id)
+        endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint
-        _headers = {"Authorization": "Bearer %s" % self.access_token}
+        _headers = {"Authorization": f"Bearer {self.access_token}"}
         response = requests.get(url, headers=_headers)
         return response.json()
 
@@ -380,10 +372,10 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         self, survey_id: str, custom_variables: dict[str, str]
     ) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-patch-surveys-id-
-        endpoint = "/surveys/{}".format(survey_id)
+        endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint
         _headers = {
-            "Authorization": "Bearer %s" % self.access_token,
+            "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
         _data = {"custom_variables": custom_variables}
@@ -409,8 +401,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         requests.patch(url, headers=headers, json=data)
 
     def create_contact_list(self, list_name: str) -> dict:
-        """
-        Create a new contact list in SurveyMonkey.
+        """Create a new contact list in SurveyMonkey.
 
         Args:
             access_token (str): The OAuth access token for authentication.
@@ -431,13 +422,11 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         # Check for successful response
         if response.status_code == 201:
             return response.json()
-        else:
-            logger.error(f"Failed to create contact list: {response.text}")
-            return {}
+        logger.error("Failed to create contact list: %s", response.text)
+        return {}
 
     def create_or_get_collector(self, survey_id: str) -> dict:
-        """
-        Create or get a web link collector for a SurveyMonkey survey.
+        """Create or get a web link collector for a SurveyMonkey survey.
 
         Args:
             survey_id (str): The ID of the survey for which the collector is needed.
@@ -454,15 +443,15 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         }
 
         # Check for existing collectors
-        check_response = requests.get(check_url, headers=headers)
+        check_response = requests.get(check_url, headers=headers, timeout=10)
         if check_response.status_code == 200:
             collectors = check_response.json().get("data", [])
             if collectors:
                 # Fetch the full details of the first existing collector
                 collector_id = collectors[0]["id"]
-                details_endpoint = f"/collectors/{collector_id}"
-                details_url = SurveyMonkeySurveyPlatform.API_URL + details_endpoint
-                details_response = requests.get(details_url, headers=headers)
+                details_endpoint: str = f"/collectors/{collector_id}"
+                details_url: str = SurveyMonkeySurveyPlatform.API_URL + details_endpoint
+                details_response: requests.Response = requests.get(details_url, headers=headers, timeout=10)
                 if details_response.status_code == 200:
                     return details_response.json()
 
@@ -475,17 +464,15 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             "name": f"Collector for Survey {survey_id}",
         }
 
-        create_response = requests.post(create_url, headers=headers, json=data)
+        create_response = requests.post(create_url, headers=headers, json=data, timeout=10)
 
         if create_response.status_code == 201:
             return create_response.json()
-        else:
-            logger.error(f"Failed to create or get collector: {create_response.text}")
-            return {}
+        logger.error("Failed to create or get collector: %s", create_response.text)
+        return {}
 
     def create_contact(self, contact_list_id: str, filled_contact_fields: dict) -> dict:
-        """
-        Create a new contact in a specified contact list in SurveyMonkey.
+        """Create a new contact in a specified contact list in SurveyMonkey.
 
         Args:
             access_token (str): The OAuth access token for authentication.
@@ -520,11 +507,11 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             "custom_fields": filled_contact_fields,
         }
 
-        response = requests.post(url, headers=headers, json=data)
+        response: requests.Response = requests.post(url, headers=headers, json=data, timeout=10)
 
         # Check for successful response
         if response.status_code == 201:
             return response.json()
-        else:
-            logger.error(f"Failed to create contact: {response.text}")
-            return {}
+
+        logger.error("Failed to create contact: %s", response.text)
+        return {}

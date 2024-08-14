@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
+from unittest.mock import Mock, patch
 
 import pytest
 
 from ddsurveys.survey_platforms.qualtrics.api import SurveysAPI
-from unittest.mock import patch, Mock
 
 dummy_qualtrics_active_survey = {
     "SurveyID": "SV_123456789",
@@ -16,7 +16,7 @@ dummy_qualtrics_active_survey = {
 
 @pytest.fixture
 def mock_surveys_api():
-    with patch.object(SurveysAPI, 'survey_exists', return_value=True) as mock_survey_exists, \
+    with patch.object(SurveysAPI, 'survey_exists', return_value=True), \
          patch.object(SurveysAPI, 'get_survey') as mock_get_survey, \
          patch.object(SurveysAPI, 'create_survey') as mock_create_survey:
 

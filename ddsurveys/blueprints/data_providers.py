@@ -1,20 +1,21 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
-"""
+
+from typing import TYPE_CHECKING
 
 from flask import Blueprint, g, jsonify, request
-from flask.typing import ResponseReturnValue
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from ..data_providers import DataProvider
-from ..get_logger import get_logger
-from ..models import DataConnection
-from ..models import DataProvider as DataProviderModel
-from ..models import DataProviderName, Project, get_db
-from ._common import get_project, get_project_data_connection
+from ddsurveys.blueprints._common import get_project, get_project_data_connection
+from ddsurveys.data_providers import DataProvider
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import DataConnection, DataProviderName, DBManager, Project
+from ddsurveys.models import DataProvider as DataProviderModel
+
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
 
 logger = get_logger(__name__)
 
@@ -25,14 +26,10 @@ data_providers = Blueprint("data-providers", __name__)
 @data_providers.route("/", methods=["POST"])
 @jwt_required()
 def add_data_provider_to_project():
-    """
-
-    Returns:
-
-    """
+    """Returns:"""
     logger.debug("Adding data provider to project")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         project_id = g.get("project_id")
 
@@ -182,7 +179,7 @@ def add_data_provider_to_project():
 def update_data_provider(data_provider_name):
     logger.debug("Updating data provider")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(
@@ -201,7 +198,7 @@ def update_data_provider(data_provider_name):
         selected_data_provider = data.get("selected_data_provider")
 
         if not selected_data_provider:
-            logger.error(f"No data provider selected")
+            logger.error("No data provider selected")
             return (
                 jsonify(
                     {
@@ -294,7 +291,7 @@ def update_data_provider(data_provider_name):
 def delete_data_provider(data_provider_name):
     logger.debug("Deleting data provider")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(
@@ -308,7 +305,7 @@ def delete_data_provider(data_provider_name):
 
         # delete the variables related to the data connection
         if project.variables is not None and isinstance(
-            project.variables, (list, tuple)
+            project.variables, list | tuple
         ):
             project.variables = [
                 variable
@@ -319,7 +316,7 @@ def delete_data_provider(data_provider_name):
 
         # delete the custom variables related to the data connection
         if project.custom_variables is not None and isinstance(
-            project.custom_variables, (list, tuple)
+            project.custom_variables, list | tuple
         ):
             project.custom_variables = [
                 variable
@@ -351,7 +348,7 @@ def delete_data_provider(data_provider_name):
 def check_dataprovider_connection(data_provider_name):
     logger.debug("Checking data provider connection")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(

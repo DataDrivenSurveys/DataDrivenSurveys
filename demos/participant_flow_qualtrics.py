@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-06-06 15:10
+"""Created on 2023-06-06 15:10.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -52,5 +50,3 @@ if __name__ == "__main__":
 
     unique_url = distributions_api.create_unique_distribution_link(survey_id, mailing_list_id, contact_lookup_id)
 
-    print("The unique URL for the new contact is:")
-    print(unique_url)

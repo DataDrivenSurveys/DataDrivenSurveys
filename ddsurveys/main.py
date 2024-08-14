@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module serves as the entry point for the Data-Driven Surveys Flask application. It initializes the Flask app by
+"""This module serves as the entry point for the Data-Driven Surveys Flask application. It initializes the Flask app by
 calling the `create_app` function from the `app` module and then runs the app. This setup is designed to facilitate
 the deployment and execution of the Flask application in a production or development environment.
 
@@ -15,14 +13,17 @@ Usage:
     $ python this_script.py
     ```
 """
-from flask import Flask
 
-from .app import create_app
+from typing import TYPE_CHECKING
+
+from ddsurveys.app import create_app
+
+if TYPE_CHECKING:
+    from flask import Flask
 
 
 def main() -> None:
-    """
-    The main function serves as the entry point for the Flask application. It creates an instance of the Flask app
+    """The main function serves as the entry point for the Flask application. It creates an instance of the Flask app
     by calling the `create_app` function and then runs the app on the local development server.
     """
     app: Flask = create_app()

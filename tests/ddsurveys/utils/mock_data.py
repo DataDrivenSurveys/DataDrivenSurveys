@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-from datetime import datetime
-"""
-activities_frequent
-[{'activityId': 17151, 'calories': 600, 'description': 'Walking less than 2 mph, strolling very slowly', 'distance': 1.86, 'duration': 1800000, 'name': 'Walk'}, {'activityId': 1010, 'calories': 700, 'description': 'Very Leisurely - Less than 10 mph', 'distance': 9.94, 'duration': 2700000, 'name': 'Bike'}, {'activityId': 12030, 'calories': 1000, 'description': 'Running - 5 mph (12 min/mile)', 'distance': 3.11, 'duration': 3600000, 'name': 'Run'}]
-"""
+"""This module contains mock data for API responses."""
+from datetime import UTC, datetime
+
 fitbit_mock_data = {
     "user_profile": {
         "aboutMe": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -197,7 +194,7 @@ fitbit_mock_data = {
         }
     },
     "daily_stats": {},
-    "highest_daily_steps_last_6_months_date_steps": (datetime(2024, 1, 1), 10000),
+    "highest_daily_steps_last_6_months_date_steps": (datetime(2024, 1, 1, tzinfo=UTC), 10000),
     "average_weekly_heart_zone_time_last_6_months": 180,
     "average_weekly_active_time_last_6_months": 180,
     "average_weekly_activity_time_last_6_months": 180,

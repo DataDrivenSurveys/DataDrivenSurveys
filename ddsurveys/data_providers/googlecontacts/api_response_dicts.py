@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-05 12:53
+"""Created on 2024-07-05 12:53.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 
@@ -26,7 +24,7 @@ __all__ = [
     "ContactDict"
 ]
 
-from typing import TypedDict, NotRequired
+from typing import NotRequired, TypedDict
 
 
 class SourceDict(TypedDict):

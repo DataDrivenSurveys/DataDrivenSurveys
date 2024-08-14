@@ -1,4 +1,4 @@
-"""data provider type to name, adjust data provider type
+"""data provider type to name, adjust data provider type.
 
 Revision ID: daf7e3007775
 Revises: 991bc07484f8
@@ -6,9 +6,8 @@ Create Date: 2024-03-14 15:01:41.091442
 
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "daf7e3007775"

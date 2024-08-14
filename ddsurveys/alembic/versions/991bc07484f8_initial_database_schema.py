@@ -1,4 +1,4 @@
-"""Initial database schema
+"""Initial database schema.
 
 Revision ID: 991bc07484f8
 Revises:
@@ -6,9 +6,8 @@ Create Date: 2024-03-06 10:31:19.713267
 
 """
 
-from alembic import op
 import sqlalchemy as sa
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "991bc07484f8"

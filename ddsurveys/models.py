@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module defines the database models and utility functions for the Data-Driven Surveys platform. It includes the
+"""This module defines the database models and utility functions for the Data-Driven Surveys platform. It includes the
 definitions of tables such as Researcher, SurveyStatus, DataProvider, DataConnection, Collaboration, Project,
 Distribution, Respondent, and DataProviderAccess, which are essential for managing the data related to surveys,
 researchers, data providers, and respondents.
@@ -22,17 +20,17 @@ Authors:
 
 Created on 2023-05-23 15:41
 """
+from __future__ import annotations
+
 import os
-from typing import Any
 import uuid
 from enum import Enum as PyEnum
+from typing import TYPE_CHECKING
 
-from flask import Flask
 from sonyflake import SonyFlake
 from sqlalchemy import (
     JSON,
     BigInteger,
-    Boolean,
     Column,
     DateTime,
     Engine,
@@ -44,129 +42,152 @@ from sqlalchemy import (
     create_engine,
     func,
 )
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
+from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
 
 try:
-    from .utils import handle_env_file
+    from ddsurveys.utils import handle_env_file
 except ImportError:
     from utils import handle_env_file
+
+
+if TYPE_CHECKING:
+    from flask import Flask
+
+    from ddsurveys.typings.models import (
+        CollaborationDict,
+        DataConnectionDict,
+        DataConnectionPublicDict,
+        DataProviderAccessDict,
+        DataProviderDict,
+        DistributionDict,
+        ProjectDict,
+        ProjectPublicDict,
+        RespondentDict,
+    )
 
 
 # Global variables
 sony_flake: SonyFlake = SonyFlake()
 
-ENV = handle_env_file()
+# Load environment variables
+handle_env_file()
+
+
+class DBManager:
+    ENGINE: Engine = None
+    SESSION_MAKER: sessionmaker = None
+    DB: Session = None
+
+    @classmethod
+    def get_engine(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> Engine:
+        """Retrieves or initializes the SQLAlchemy engine for database connections.
+
+        This function checks if the global `ENGINE` variable is already initialized.
+        If not, it attempts to create a new engine using the database URL from the
+        Flask application's configuration. If the Flask application is not provided
+        or the configuration key is missing, it falls back to using the `DATABASE_URL`
+        environment variable.
+
+        Args:
+            app (Flask, optional): The Flask application instance. This is used to
+                                retrieve the database URL from the application's
+                                configuration. Defaults to None.
+            database_url (str, optional): The database URL to use for creating the engine.
+                                        If provided, this URL will be used instead of
+                                        the Flask application's configuration or the
+                                        environment variable. Defaults to None.
+            force_new (bool, optional): If True, forces the creation of a new engine even if
+                                        the global `ENGINE` variable is already initialized.
+                                        Defaults to False.
+
+        Returns:
+            Engine: The SQLAlchemy engine instance for database connections.
+        """
+        if cls.ENGINE is None or force_new:
+            if database_url != "":
+                cls.ENGINE = create_engine(url=database_url)
+            elif app is not None:
+                try:
+                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"])
+                except (AttributeError, KeyError):
+                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"))
+            else:
+                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"))
+        return cls.ENGINE
+
+    @classmethod
+    def init_session(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> None:
+        """Initializes the database session creator for the application.
+
+        This function sets up the global SESSION_MAKER instance, which is used to create
+        database sessions.
+
+        Args:
+            app (Flask, optional): The Flask application instance.
+                This is used to retrieve the database URL from the application's
+                configuration.
+                Defaults to None.
+            database_url (str, optional): The database URL to use for creating the
+                engine.
+                If provided, this URL will be used instead of the Flask application's
+                configuration or the environment variable.
+                Defaults to None.
+            force_new (bool, optional): If True, forces the creation of a new engine and
+                session maker even if they are already initialized.
+                Defaults to False.
+
+        Returns:
+            None
+        """
+        cls.SESSION_MAKER = sessionmaker(
+            autocommit=False,
+            autoflush=False,
+            bind=cls.get_engine(app, database_url,
+            force_new=force_new)
+        )
+
+    @classmethod
+    def get_db(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> Session:
+        """Provides a sqlalchemy.orm.session.Session instance for database operations.
+
+        This function returns the global SessionLocal instance, which is configured
+        to manage database sessions. The Session instance is used to create
+        new sessions for interacting with the database, allowing for operations
+        such as querying, adding, updating, and deleting records.
+
+        Args:
+            app (Flask, optional): The Flask application instance. This is used to
+                                retrieve the database URL from the application's
+                                configuration. Defaults to None.
+            database_url (str, optional): The database URL to use for creating the engine.
+                                        If provided, this URL will be used instead of the
+                                        Flask application's configuration or the environment
+                                        variable. Defaults to None.
+            force_new (bool, optional): If True, forces the creation of a new engine and session maker
+                                        even if they are already initialized. Defaults to False.
+
+        Returns:
+            Session: A configured Session instance for database operations.
+
+        Raises:
+            RuntimeError: If the session maker is not initialized and the function is called.
+        """
+        if cls.DB is None:
+            if cls.SESSION_MAKER is None:
+                cls.init_session(app=app, database_url=database_url, force_new=force_new)
+            if cls.SESSION_MAKER is not None:
+                cls.DB = cls.SESSION_MAKER()
+            else:
+                msg = "Database session maker is not initialized. Call init_session() first."
+                raise RuntimeError(msg)
+        return cls.DB
+
 
 Base = declarative_base()
 
 
-ENGINE: Engine = None
-SESSION_MAKER: sessionmaker = None
-DB: Session = None
-
-
-def get_engine(app: Flask = None, database_url: str = None, force_new: bool = False) -> Engine:
-    """
-    Retrieves or initializes the SQLAlchemy engine for database connections.
-
-    This function checks if the global `ENGINE` variable is already initialized.
-    If not, it attempts to create a new engine using the database URL from the
-    Flask application's configuration. If the Flask application is not provided
-    or the configuration key is missing, it falls back to using the `DATABASE_URL`
-    environment variable.
-
-    Args:
-        app (Flask, optional): The Flask application instance. This is used to
-                               retrieve the database URL from the application's
-                               configuration. Defaults to None.
-        database_url (str, optional): The database URL to use for creating the engine.
-                                      If provided, this URL will be used instead of
-                                      the Flask application's configuration or the
-                                      environment variable. Defaults to None.
-        force_new (bool, optional): If True, forces the creation of a new engine even if
-                                    the global `ENGINE` variable is already initialized.
-                                    Defaults to False.
-
-    Returns:
-        Engine: The SQLAlchemy engine instance for database connections.
-    """
-    global ENGINE
-    if ENGINE is None or force_new:
-        if database_url is not None:
-            ENGINE = create_engine(url=database_url)
-        else:
-            try:
-                ENGINE = create_engine(url=app.config["DATABASE_URL"])
-            except (AttributeError, KeyError):
-                ENGINE = create_engine(url=os.getenv("DATABASE_URL"))
-    return ENGINE
-
-
-def init_session(app: Flask = None, database_url: str = None, force_new: bool = False) -> None:
-    """
-    Initializes the database session creator for the application.
-
-    This function sets up the global SESSION_MAKER instance, which is used to create
-    database sessions.
-
-    Args:
-        app (Flask, optional): The Flask application instance. This is used to retrieve
-                               the database URL from the application's configuration.
-                               Defaults to None.
-        database_url (str, optional): The database URL to use for creating the engine.
-                                      If provided, this URL will be used instead of the
-                                      Flask application's configuration or the environment
-                                      variable. Defaults to None.
-        force_new (bool, optional): If True, forces the creation of a new engine and session maker
-                                    even if they are already initialized. Defaults to False.
-
-    Returns:
-        None
-    """
-    global SESSION_MAKER
-    SESSION_MAKER = sessionmaker(autocommit=False, autoflush=False, bind=get_engine(app, database_url, force_new))
-
-
-def get_db(app: Flask = None, database_url: str = None, force_new: bool = False) -> Session:
-    """
-    Provides a sqlalchemy.orm.session.Session instance for database operations.
-
-    This function returns the global SessionLocal instance, which is configured
-    to manage database sessions. The Session instance is used to create
-    new sessions for interacting with the database, allowing for operations
-    such as querying, adding, updating, and deleting records.
-
-    Args:
-        app (Flask, optional): The Flask application instance. This is used to
-                               retrieve the database URL from the application's
-                               configuration. Defaults to None.
-        database_url (str, optional): The database URL to use for creating the engine.
-                                      If provided, this URL will be used instead of the
-                                      Flask application's configuration or the environment
-                                      variable. Defaults to None.
-        force_new (bool, optional): If True, forces the creation of a new engine and session maker
-                                    even if they are already initialized. Defaults to False.
-
-    Returns:
-        Session: A configured Session instance for database operations.
-
-    Raises:
-        RuntimeError: If the session maker is not initialized and the function is called.
-    """
-    global DB
-    if DB is None:
-        if SESSION_MAKER is None:
-            init_session(app, database_url, force_new)
-        if SESSION_MAKER is not None:
-            DB = SESSION_MAKER()
-        else:
-            raise RuntimeError("Database session maker is not initialized. Call init_session() first.")
-    return DB
-
-
 class Researcher(Base):
-    """
-    Represents a researcher in the database.
+    """Represents a researcher in the database.
 
     Attributes:
         id (int): The unique identifier for the researcher.
@@ -185,8 +206,7 @@ class Researcher(Base):
     collaborations = relationship("Collaboration", back_populates="researcher")
 
     def to_dict(self) -> dict[str, Column[int] | Column[str]]:
-        """
-        Converts the Researcher instance to a dictionary.
+        """Converts the Researcher instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the Researcher instance, including
@@ -201,8 +221,7 @@ class Researcher(Base):
 
 
 class SurveyStatus(PyEnum):
-    """
-    Enumeration for different survey statuses.
+    """Enumeration for different survey statuses.
 
     Attributes:
         Active (str): Represents an active survey status.
@@ -216,8 +235,7 @@ class SurveyStatus(PyEnum):
 
 # the enum entry "name" (ex. Fitbit) is used as name for the data provider
 class DataProviderName(PyEnum):
-    """
-    Enumeration for different data provider names.
+    """Enumeration for different data provider names.
 
     Attributes:
         Fitbit (str): Represents the Fitbit data provider.
@@ -234,8 +252,7 @@ class DataProviderName(PyEnum):
 
 
 class DataProviderType(PyEnum):
-    """
-    Enumeration for different types of data providers.
+    """Enumeration for different types of data providers.
 
     Attributes:
         generic (str): Represents a generic data provider type.
@@ -248,8 +265,7 @@ class DataProviderType(PyEnum):
 
 
 class DataProvider(Base):
-    """
-    Represents a data provider in the database.
+    """Represents a data provider in the database.
 
     Attributes:
         data_provider_name (Enum): The name of the data provider, which serves as the primary key.
@@ -269,9 +285,8 @@ class DataProvider(Base):
         "DataProviderAccess", back_populates="data_provider"
     )
 
-    def to_dict(self) -> dict[str, Column[str]]:
-        """
-        Converts the DataProvider instance to a dictionary.
+    def to_dict(self) -> DataProviderDict:
+        """Converts the DataProvider instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the DataProvider instance, including
@@ -285,8 +300,7 @@ class DataProvider(Base):
 
 
 class DataConnection(Base):
-    """
-    Represents a data connection in the database.
+    """Represents a data connection in the database.
 
     Attributes:
         project_id (str): The unique identifier for the project associated with the data connection.
@@ -310,11 +324,8 @@ class DataConnection(Base):
     fields = Column(JSON)
     project = relationship("Project", back_populates="data_connections")
 
-    def to_dict(
-        self,
-    ) -> dict[str, Column[str] | Column[JSON] | Column[None] | Column[Any]]:
-        """
-        Converts the DataConnection instance to a dictionary.
+    def to_dict(self) -> DataConnectionDict:
+        """Converts the DataConnection instance to a dictionary.
 
         Returns:
             dict: A dictionary representation of the DataConnection instance, including
@@ -329,9 +340,8 @@ class DataConnection(Base):
             "fields": self.fields,
         }
 
-    def to_public_dict(self) -> dict[str, Any | None]:
-        """
-        Converts the DataConnection instance to a public dictionary.
+    def to_public_dict(self) -> DataConnectionPublicDict:
+        """Converts the DataConnection instance to a public dictionary.
 
         Returns:
             dict: A public dictionary representation of the DataConnection instance,
@@ -355,7 +365,7 @@ class Collaboration(Base):
     researcher = relationship("Researcher", back_populates="collaborations")
     project = relationship("Project", back_populates="collaborations")
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> CollaborationDict:
         return {
             "project_id": self.project_id,
             "researcher": self.researcher.to_dict() if self.researcher else None,
@@ -388,7 +398,7 @@ class Project(Base):
         "DataProviderAccess", back_populates="project", cascade="all,delete"
     )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> ProjectDict:
         return {
             "id": self.id,
             "short_id": str(self.short_id),
@@ -406,7 +416,7 @@ class Project(Base):
             "respondents": [res.to_dict() for res in self.respondents],
         }
 
-    def to_public_dict(self) -> dict[str, Any]:
+    def to_public_dict(self) -> ProjectPublicDict:
         return {
             "id": self.id,
             "short_id": str(self.short_id),
@@ -429,7 +439,7 @@ class Distribution(Base):
         "Respondent", back_populates="distribution", uselist=False
     )
 
-    def to_dict(self):
+    def to_dict(self) -> DistributionDict:
         return {"id": self.id, "url": self.url}
 
 
@@ -452,7 +462,7 @@ class Respondent(Base):
         "DataProviderAccess", back_populates="respondent", cascade="all, delete"
     )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> RespondentDict:
         return {
             "id": self.id,
             "project_id": self.project_id,
@@ -485,7 +495,7 @@ class DataProviderAccess(Base):
     )
     project = relationship("Project", back_populates="data_provider_accesses")
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> DataProviderAccessDict:
         return {
             "respondent_id": self.respondent_id,
             "data_provider_name": self.data_provider_name.value,

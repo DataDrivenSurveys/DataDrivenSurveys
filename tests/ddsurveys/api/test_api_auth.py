@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
 
-from .utils.auth import signup_endpoint, signin_endpoint, me_endpoint, get_user
+from .utils.auth import get_user, me_endpoint, signin_endpoint, signup_endpoint
 
 
 def test_auth_signup(client):

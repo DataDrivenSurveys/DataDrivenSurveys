@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-10 12:06
+"""Created on 2024-07-10 12:06.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 from bisect import bisect_left, bisect_right
+from collections.abc import Generator
 from datetime import date, datetime, timedelta
-from typing import Generator, overload
 
 
 class DateRanges:
@@ -20,12 +18,12 @@ class DateRanges:
     def __str__(self):
         num_ranges = len(self._start_dates)
         total_days = sum(
-            (end_date - start_date).days + 1 for start_date, end_date in zip(self._start_dates, self._end_dates))
+            (end_date - start_date).days + 1 for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False))
         return f"{self.__class__.__name__} with {num_ranges} ranges covering a total of {total_days} days"
 
     def __repr__(self):
         ranges = ", ".join(
-            f"({start_date}, {end_date})" for start_date, end_date in zip(self._start_dates, self._end_dates))
+            f"({start_date}, {end_date})" for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False))
         return f"{self.__class__.__name__}([{ranges}])"
 
     def add_date_range(self, start_date: date, end_date: date) -> None:
@@ -52,16 +50,13 @@ class DateRanges:
             del self._end_dates[index + 1]
 
     def date_in_range(self, date_: date) -> bool:
-        date = ensure_date(date_)
+        ensure_date(date_)
 
         # Find the index of the range that contains the date
         index = bisect_right(self._start_dates, date_)
 
         # Check if the date is within the range
-        if index > 0 and self._end_dates[index - 1] >= date_:
-            return True
-        else:
-            return False
+        return bool(index > 0 and self._end_dates[index - 1] >= date_)
 
     def range_in_ranges(self, start_date: date, end_date: date) -> bool:
         start_date = ensure_date(start_date)
@@ -71,10 +66,7 @@ class DateRanges:
         start_index = bisect_right(self._start_dates, start_date)
 
         # Check if the end date is within the same range
-        if start_index > 0 and self._end_dates[start_index - 1] >= end_date:
-            return True
-        else:
-            return False
+        return bool(start_index > 0 and self._end_dates[start_index - 1] >= end_date)
 
 
 def ensure_date(date_: datetime | date) -> date:

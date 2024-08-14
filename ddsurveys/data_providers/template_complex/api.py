@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-05-12 20:51
+"""Created on 2024-05-12 20:51.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 

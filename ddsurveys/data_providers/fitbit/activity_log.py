@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-09 14:50
+"""Created on 2024-07-09 14:50.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 from __future__ import annotations
 
-from datetime import datetime, date, timedelta
-from typing import Literal, Optional, overload
+from datetime import date, datetime, timedelta
 from pprint import pformat
+from typing import TYPE_CHECKING, Literal, overload
 
-from .api_response_dicts import ActiveZoneMinutesDict, ActivityDict, ActivityLevelDict, \
-    HeartRateZoneDict, ManualValuesSpecifiedDict, SourceDict
 from ddsurveys.data_providers.date_ranges import DateRanges, ensure_date, range_date
+
+if TYPE_CHECKING:
+    from ddsurveys.data_providers.fitbit.api_response_dicts import (
+        ActiveZoneMinutesDict,
+        ActivityDict,
+        ActivityLevelDict,
+        HeartRateZoneDict,
+        ManualValuesSpecifiedDict,
+        SourceDict,
+    )
 
 
 class Activity:
@@ -65,21 +71,21 @@ class Activity:
         originalDuration: int,
         originalStartTime: str,
         startTime: str,
-        averageHeartRate: Optional[int] = None,
-        activeZoneMinutes: Optional[ActiveZoneMinutesDict] = None,
-        caloriesLink: Optional[str] = None,
-        detailsLink: Optional[str] = None,
-        distance: Optional[float] = None,
-        distanceUnit: Optional[str] = None,
-        elevationGain: Optional[float] = None,
-        hasActiveZoneMinutes: Optional[bool] = None,
-        heartRateLink: Optional[str] = None,
-        heartRateZones: Optional[HeartRateZoneDict] = None,
-        pace: Optional[float] = None,
-        source: Optional[SourceDict] = None,
-        speed: Optional[float] = None,
-        steps: Optional[int] = None,
-        tcxLink: Optional[str] = None,
+        averageHeartRate: int | None = None,
+        activeZoneMinutes: ActiveZoneMinutesDict | None = None,
+        caloriesLink: str | None = None,
+        detailsLink: str | None = None,
+        distance: float | None = None,
+        distanceUnit: str | None = None,
+        elevationGain: float | None = None,
+        hasActiveZoneMinutes: bool | None = None,
+        heartRateLink: str | None = None,
+        heartRateZones: HeartRateZoneDict | None = None,
+        pace: float | None = None,
+        source: SourceDict | None = None,
+        speed: float | None = None,
+        steps: int | None = None,
+        tcxLink: str | None = None,
     ) -> None:
         # Values read from the Fitbit API
         self.activeDuration = activeDuration
@@ -193,8 +199,9 @@ class ActivityLog:
         if isinstance(item, date):
             return self.date_activities[item]
         if isinstance(item, slice):
-            if not isinstance(item.start, (date, datetime)) or not isinstance(item.stop, (date, datetime)):
-                raise TypeError("Slicing is only supported for date or datetime objects.")
+            if not isinstance(item.start, date | datetime) or not isinstance(item.stop, date | datetime):
+                msg = "Slicing is only supported for date or datetime objects."
+                raise TypeError(msg)
             start, end, step = ensure_date(item.start), ensure_date(item.stop), item.step
             activities = []
             for date_ in range_date(start, end, step):
@@ -212,9 +219,11 @@ class ActivityLog:
             elif item in self.name_activities:
                 return self.name_activities[item]
             else:
-                raise KeyError(f"Activity with name or type '{item}' not found.")
+                msg = f"Activity with name or type '{item}' not found."
+                raise KeyError(msg)
 
-        raise TypeError(f"Unsupported index type: {type(item)}")
+        msg = f"Unsupported index type: {type(item)}"
+        raise TypeError(msg)
 
 
 

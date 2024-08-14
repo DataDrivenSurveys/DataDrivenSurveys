@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
 
@@ -28,7 +27,7 @@ def get_user(lastname):
 
 # Utility function for signing up and signing in a test user.
 def authenticate_test_user(client, test_user=users.get("jane_doe")):
-    signup_response = client.post(signup_endpoint, data=json.dumps(test_user), content_type='application/json')
+    client.post(signup_endpoint, data=json.dumps(test_user), content_type='application/json')
     signin_response = client.post(signin_endpoint, data=json.dumps(test_user), content_type='application/json')
     token = json.loads(signin_response.data)['token']
 

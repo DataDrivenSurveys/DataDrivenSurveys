@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module provides various utility functions that can be used in various parts of the system.
+"""This module provides various utility functions that can be used in various parts of the system.
 
 Created on 2024-04-30 13:44
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import Optional
 
 from dotenv import dotenv_values
 
 
-def get_and_load_env(
-    path: Path | str, in_module_root: bool = False
-) -> dict[str, Optional[str]]:
-    """
-    Load environment variables from a specified path or from a path relative to the module root.
+def get_and_load_env(path: Path | str, *, in_module_root: bool = False) -> dict[str, str | None]:
+    """Load environment variables from a specified path or from a path relative to the module root.
 
     This function first resolves the given path to an absolute path. If `in_module_root` is True, the path is treated
     as relative to the module's root directory. It then loads environment variables from the specified `.env` file.
@@ -37,14 +33,11 @@ def get_and_load_env(
         override those from the `.env` file.
     """
     # Prepare paths
-    module_dir = Path(__file__).resolve().parent
-    if in_module_root:
-        path = module_dir.joinpath(path).resolve()
-    else:
-        path = Path(path).resolve()
-    path_dot_local = path.parent.joinpath(f"{path.name}.local")
+    module_dir: Path = Path(__file__).resolve().parent
+    path = module_dir.joinpath(path).resolve() if in_module_root else Path(path).resolve()
+    path_dot_local: Path = path.parent.joinpath(f"{path.name}.local")
 
-    env = dotenv_values(str(path))
+    env: dict[str, str | None] = dotenv_values(str(path))
     if path_dot_local.is_file():
         env = {**env, **dotenv_values(str(path_dot_local))}
 
@@ -55,9 +48,8 @@ def get_and_load_env(
     return env
 
 
-def handle_env_file(path: Optional[str] = None) -> dict[str, Optional[str]]:
-    """
-    Load environment variables from a custom path or from the default environment files located inside the module root.
+def handle_env_file(path: str | None = None) -> dict[str, str | None]:
+    """Load environment variables from a custom path or from the default environment files located inside the module root.
 
     This function is designed to simplify the process of loading environment variables for different deployment stages
     (e.g., development, testing, production) by automatically selecting the appropriate `.env` file based on the

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
-"""
+from __future__ import annotations
+
 import traceback
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from flask import Blueprint, g, jsonify, request
 from sqlalchemy import and_
@@ -13,13 +13,25 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..data_providers import DataProvider, OAuthDataProvider, TOAuthDataProviderClass
-from ..get_logger import get_logger
-from ..models import DataConnection
-from ..models import DataProvider as DataProviderModel
-from ..models import DataProviderAccess, DataProviderName, DataProviderType, Distribution, Project, Respondent, get_db
-from ..survey_platforms import SurveyPlatform
+from ddsurveys.data_providers import DataProvider, OAuthDataProvider
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import (
+    DataConnection,
+    DataProviderAccess,
+    DataProviderName,
+    DataProviderType,
+    DBManager,
+    Distribution,
+    Project,
+    Respondent,
+)
+from ddsurveys.models import DataProvider as DataProviderModel
+from ddsurveys.survey_platforms import SurveyPlatform
+
 # from ._common import get_project_data_connection
+
+if TYPE_CHECKING:
+    from ddsurveys.typings.data_providers.bases import TOAuthDataProviderClass
 
 logger = get_logger(__name__)
 
@@ -42,7 +54,7 @@ def get_public_project():
     It does not give any detailed explanation of why the project is not ready.
 
     """
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         project_short_id = g.get("project_short_id")
         project: Project = (
@@ -151,13 +163,12 @@ def get_public_project():
 
 @respondent.route("/data-providers", methods=["GET"])
 def get_public_data_providers():
-    """Provides the details necessary to connect a respondent to data providers that are linked to a project. (using OAuth2 Code Flow)
+    """Provides the details necessary to connect a respondent to data providers that are linked to a project. (using OAuth2 Code Flow).
 
     This is a public endpoint, so no authentication is required. This endpoint should not provide any sensitive information.
     The respondent is
     """
-
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         project = get_project(db, g.get("project_short_id"))
         if not project:
@@ -198,12 +209,12 @@ def get_public_data_providers():
 
 @respondent.route("/exchange-code", methods=["POST"])
 def exchange_code_for_tokens():
-    """Exchanges the code for an access token. (using OAuth2 Code Flow)
+    """Exchanges the code for an access token. (using OAuth2 Code Flow).
 
     This is a public endpoint, so no authentication is required.
     This endpoint should not provide any sensitive information.
     """
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         data = request.get_json()
 
@@ -299,8 +310,8 @@ def exchange_code_for_tokens():
                     ),
                     500,
                 )
-        except Exception as e:
-            logger.error(f"Error exchanging code for tokens for: {data_provider_name}")
+        except Exception:
+            logger.exception(f"Error exchanging code for tokens for: {data_provider_name}")
             logger.debug(traceback.format_exc())
             return (
                 jsonify(
@@ -317,7 +328,7 @@ def exchange_code_for_tokens():
 
 @respondent.route("/data-provider/was-used", methods=["POST"])
 def was_data_provider_used():
-    with get_db() as db:
+    with DBManager.get_db() as db:
         project_short_id = g.get("project_short_id")
 
         # Get project and its associated data connections.
@@ -364,7 +375,7 @@ def was_data_provider_used():
 @respondent.route("/prepare-survey", methods=["POST"])
 def prepare_survey():
     try:
-        with get_db() as db:
+        with DBManager.get_db() as db:
 
             project_short_id = g.get("project_short_id")
 
@@ -390,7 +401,7 @@ def prepare_survey():
             frontend_variables = data.get("frontend_variables")
 
             if not respondent_id:
-                logger.error(f"Missing respondent id.")
+                logger.error("Missing respondent id.")
                 return (
                     jsonify(
                         {
@@ -415,7 +426,7 @@ def prepare_survey():
             )
 
             if not respondent:
-                logger.error(f"Respondent not found.")
+                logger.error("Respondent not found.")
                 return (
                     jsonify(
                         {
@@ -430,7 +441,7 @@ def prepare_survey():
 
             # check if the respondent already has a distribution
             if respondent.distribution:
-                logger.info(f"Respondent already has a distribution url.")
+                logger.info("Respondent already has a distribution url.")
                 # return the distribution url
                 return (
                     jsonify(
@@ -634,7 +645,7 @@ def prepare_survey():
                 )
 
     except Exception as e:
-        logger.error(f"Error preparing survey: {e}")
+        logger.exception(f"Error preparing survey: {e}")
         logger.debug(f"Error traceback: {traceback.format_exc()}")
         return (
             jsonify(
@@ -652,7 +663,7 @@ def prepare_survey():
 def check_data_provider_access_tokens(
     project_id, data_provider_name, access_token, refresh_token
 ):
-    with get_db() as db:
+    with DBManager.get_db() as db:
         # Get project and its associated data connections.
         project = db.query(Project).get(project_id)
         if not project:
@@ -688,8 +699,7 @@ def check_data_provider_access_tokens(
 
 @respondent.route("/connect", methods=["POST"])
 def connect_respondent():
-    """
-    This function receives a JSON array of data providers and perform checks for each one.
+    """This function receives a JSON array of data providers and perform checks for each one.
     If all data providers exist, it will return the already existing respondent.
     If some exist and some do not, it will return a bad request.
     If none exist, it will create an associated data providers and a new respondent and return it.
@@ -698,7 +708,7 @@ def connect_respondent():
     project_short_id = g.get("project_short_id")
     data_providers = request.get_json().get("data_providers")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         # Get project and its associated data connections.
         project = get_project(db, project_short_id)
         if not project:
@@ -802,7 +812,7 @@ def connect_respondent():
             respondent: Respondent = (
                 db.query(Respondent).filter_by(project_id=project.id).first()
             )  # There should only be one respondent per project
-            logger.info(f"Found existing respondent.")
+            logger.info("Found existing respondent.")
             return (
                 jsonify(
                     {
@@ -827,7 +837,7 @@ def connect_respondent():
             db.add_all(new_data_provider_accesses)
             try:
                 db.commit()
-                logger.info(f"Successfully created a new respondent.")
+                logger.info("Successfully created a new respondent.")
                 return (
                     jsonify(
                         {
@@ -840,9 +850,9 @@ def connect_respondent():
                     ),
                     201,
                 )
-            except IntegrityError as e:
+            except IntegrityError:
                 db.rollback()
-                logger.error(
+                logger.exception(
                     f"Error creating a new respondent: {traceback.format_exc()}"
                 )
                 return (

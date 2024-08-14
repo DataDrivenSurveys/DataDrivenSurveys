@@ -1,23 +1,21 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-27 13:48
+"""Created on 2023-04-27 13:48.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
 
-__all__ = ["TemplateSurveyPlatform"]
+from typing import Any, ClassVar
 
-from typing import Any, Optional
-from urllib.parse import quote_plus
-
-from ...get_logger import get_logger
-
-from ..bases import FormButton, FormField, SurveyPlatform
+from ddsurveys.get_logger import get_logger
+from ddsurveys.survey_platforms.bases import FormButton, FormField, SurveyPlatform
 
 # API related classes
 # from .api import ...
+
+__all__: list[str] = ["TemplateSurveyPlatform"]
+
 
 logger = get_logger(__name__)
 
@@ -25,24 +23,23 @@ logger = get_logger(__name__)
 class TemplateSurveyPlatform(SurveyPlatform):
 
     # Form fields declarations go here
-    form_fields: list[FormField | FormButton] = [
+    form_fields: ClassVar[list[FormField | FormButton]] = [
         #...
     ]
 
     def __init__(
-        self, survey_id: str = None, survey_platform_api_key: str = None, **kwargs
+        self, survey_id: str = "", survey_platform_api_key: str = "", **kwargs
     ) -> None:
         super().__init__(**kwargs)
-        self.survey_id = survey_id
-        self.survey_platform_api_key = survey_platform_api_key
+        self.survey_id: str = survey_id
+        self.survey_platform_api_key: str = survey_platform_api_key
 
-        ...
 
-    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
+    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
         ...
 
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
         ...
 
@@ -51,11 +48,11 @@ class TemplateSurveyPlatform(SurveyPlatform):
 
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         ...
 
     def handle_export_survey_responses(
-        self, project_short_id: str = None
+        self, project_short_id: str = ""
     ) -> tuple[bool, str, None]:
         ...
 

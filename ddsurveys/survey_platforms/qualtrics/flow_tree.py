@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-10 13:47
+"""Created on 2023-05-10 13:47.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from collections.abc import ItemsView, Iterator, KeysView, MutableMapping, ValuesView
 from copy import deepcopy
-from typing import Any, ItemsView, Iterator, KeysView, MutableMapping, NoReturn, TypeVar, Union, ValuesView, overload
+from typing import TypeVar, Union
 
 from _typeshed import SupportsKeysAndGetItem
 
@@ -46,17 +45,16 @@ class Flow(MutableMapping):
         return deepcopy(self._data)
 
     def to_dict(self) -> dict:
-        """
-        Returns the dictionary format of the Flow. The resultant dictionary can be used as the payload for Qualtrics
+        """Returns the dictionary format of the Flow. The resultant dictionary can be used as the payload for Qualtrics
         requests.
 
-        Returns
+        Returns:
         -------
 
         """
         d = self.data
         if "Flow" in d:
-            subflows = list()
+            subflows = []
             for f in d["Flow"]:
                 if isinstance(f, dict):
                     subflows.append(f)

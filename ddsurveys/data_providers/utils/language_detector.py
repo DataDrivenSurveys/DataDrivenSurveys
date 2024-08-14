@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-19 14:47
+"""Created on 2024-07-19 14:47.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
 """
@@ -9,7 +7,6 @@ import os
 
 import lingua
 from lingua import Language, LanguageDetectorBuilder
-
 
 SPACY_MODEL_LANGUAGES = {
     Language.CATALAN, Language.CHINESE, Language.CROATIAN, Language.DUTCH, Language.ENGLISH,

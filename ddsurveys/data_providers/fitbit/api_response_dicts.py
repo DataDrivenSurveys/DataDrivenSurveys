@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-08 16:15
+"""Created on 2024-07-08 16:15.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
@@ -36,7 +34,7 @@ __all__ = [
     "FavoriteActivityDict",
 ]
 
-from typing import Literal, TypedDict, NotRequired
+from typing import Literal, NotRequired, TypedDict
 
 
 # TypedDicts for daily stats summaries API Responses
@@ -105,9 +103,7 @@ class ActiveZoneMinutesDict(TypedDict):
 
 
 class ActivityLevelDict(TypedDict):
-    """A dictionary containing information about a given activity level.
-
-    """
+    """A dictionary containing information about a given activity level."""
     minutes: int
     name: Literal['sedentary', 'lightly', 'fairly', 'very']
 
@@ -147,8 +143,7 @@ class SourceDict(TypedDict):
 
 
 class ActivityDict(TypedDict):
-    """
-    A dictionary representing a single activity's data from the Fitbit API.
+    """A dictionary representing a single activity's data from the Fitbit API.
 
     Parts of this documentation is based on the Fitbit API documentation.
 

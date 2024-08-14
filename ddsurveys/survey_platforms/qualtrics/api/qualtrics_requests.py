@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-27 13:48
+"""Created on 2023-04-27 13:48.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -14,8 +12,7 @@ from datetime import datetime
 import requests
 
 from ddsurveys.get_logger import get_logger
-
-from .exceptions import (
+from ddsurveys.survey_platforms.qualtrics.api.exceptions import (
     AuthorizationError,
     BadRequestError,
     MissingAPIToken,
@@ -28,8 +25,7 @@ logger = get_logger(__name__)
 
 
 class QualtricsDataCenter:
-    """
-    References
+    """References:
     ----------
     `API Documentation <https://api.qualtrics.com/60d24f6897737-qualtrics-survey-api>`_
     """
@@ -71,17 +67,19 @@ class QualtricsDataCenter:
                 key = datacenter_name
                 break
         if key is None:
-            raise ValueError(
+            msg = (
                 f"Could not identify the requested datacenter: {datacenter_name_or_location}\n"
                 f"Here is a list of complete datacenter names and abbreviations to select them:\n"
                 f"{cls.extra_keys}"
+            )
+            raise ValueError(
+                msg
             )
         return cls.data_centers[key]
 
 
 class QualtricsRequests:
-    """
-    Wrapper class that simplifies making requests to the Qualtrics API.
+    """Wrapper class that simplifies making requests to the Qualtrics API.
 
     It provides various methods that child classes can use to conveniently make different REST requests.
     """
@@ -98,7 +96,7 @@ class QualtricsRequests:
 
     def __init__(
         self,
-        api_token=None,
+        api_token: str = "",
         datacenter_location: str = "EU",
         accept_datacenter_redirect: bool = True,
     ) -> None:
@@ -106,14 +104,14 @@ class QualtricsRequests:
         self.base_url: str = QualtricsDataCenter.get_datacenter_url(datacenter_location)
         self._api_token: str = ""
 
-        if api_token:
+        if api_token != "":
             self.api_token = api_token
         else:
             # Try to get token from environment variables
             self.api_token = os.environ.get("QUALTRICS_API_TOKEN", "")
 
         if not self.api_token:
-            raise MissingAPIToken()
+            raise MissingAPIToken
 
         self.headers.update(
             {
@@ -141,7 +139,7 @@ class QualtricsRequests:
                 if match is not None:
                     self.base_url = f"https://{match.group(1)}/API/v3"
                 else:
-                    logger.error(f"Failed to extract the redirected datacenter.")
+                    logger.error("Failed to extract the redirected datacenter.")
         return response
 
     @staticmethod
@@ -207,11 +205,10 @@ class QualtricsRequests:
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.get(
+        return self.session.get(
             f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
         )
 
-        return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
@@ -219,11 +216,10 @@ class QualtricsRequests:
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.put(
+        return self.session.put(
             f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
         )
 
-        return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
@@ -231,11 +227,10 @@ class QualtricsRequests:
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.post(
+        return self.session.post(
             f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
         )
 
-        return resp
 
     @handle_response_status()
     @update_datacenter_wrapper
@@ -243,11 +238,10 @@ class QualtricsRequests:
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
         endpoint = endpoint or self.endpoint
-        resp = self.session.delete(
+        return self.session.delete(
             f"{self.base_url}/{endpoint}", data=data, json=json, *args, **kwargs
         )
 
-        return resp
 
     @staticmethod
     def to_iso8601(dt: datetime) -> str:

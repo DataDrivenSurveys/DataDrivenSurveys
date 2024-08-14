@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-08-31 16:59
+"""Created on 2023-08-31 16:59.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-
-__all__ = ["InstagramDataProvider"]
+from __future__ import annotations
 
 from functools import cached_property
-from typing import Any, Callable, Dict
+from typing import TYPE_CHECKING, Any
 
 import requests
 
-from ..get_logger import get_logger
-from ..variable_types import TVariableFunction, VariableDataType
-from .bases import FormField, OAuthDataProvider
-from .data_categories import DataCategory
-from .variables import BuiltInVariable
+from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
+from ddsurveys.data_providers.data_categories import DataCategory
+from ddsurveys.data_providers.variables import BuiltInVariable
+from ddsurveys.get_logger import get_logger
+from ddsurveys.variable_types import VariableDataType
+
+__all__ = ["InstagramDataProvider"]
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
@@ -59,8 +64,8 @@ class InstagramDataProvider(OAuthDataProvider):
     token_url = "https://api.instagram.com/oauth/access_token"
     base_authorize_url = "https://api.instagram.com/oauth/authorize"
 
-    # Class attributes that need be redeclared or redefined in child classes
-    # The following attributes need to be redeclared in child classes.
+    # Class attributes that need be re-declared or redefined in child classes
+    # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
     all_initial_funcs: dict[str, Callable] = {}
     factory_funcs: dict[str, Callable] = {}
@@ -100,7 +105,7 @@ class InstagramDataProvider(OAuthDataProvider):
     def media_count(self):
         try:
 
-            media_count_url = f"https://graph.instagram.com/{api_version}/{user_id}?fields=media_count&access_token={self.access_token}"
+            media_count_url = f"https://graph.instagram.com/{self.api_version}/{self.user_id}?fields=media_count&access_token={self.access_token}"
 
             response = requests.get(media_count_url)
             response.raise_for_status()
@@ -108,7 +113,7 @@ class InstagramDataProvider(OAuthDataProvider):
             data = response.json()
             return data.get("media_count")
         except Exception as e:
-            logger.error(f"Error fetching media count from Instagram: {e}")
+            logger.exception(f"Error fetching media count from Instagram: {e}")
             return None
 
     # Standard/builtin class methods go here
@@ -123,10 +128,9 @@ class InstagramDataProvider(OAuthDataProvider):
         pass
 
     def get_authorize_url(
-        self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None
+        self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
     ) -> str:
-        """
-        Returns the authorize url.
+        """Returns the authorize url.
 
         Args:
             builtin_variables (list[dict], optional): A list of builtin variables. Defaults to None.
@@ -142,19 +146,17 @@ class InstagramDataProvider(OAuthDataProvider):
             "scope": "user_profile,user_media",
             "response_type": "code",
         }
-        url = (
+        return (
             requests.Request("GET", self.base_authorize_url, params=params)
             .prepare()
             .url
         )
-        return url
 
     def get_client_id(self) -> str:
         return self.client_id
 
     def request_token(self, code: str) -> dict[str, Any]:
-        """
-        Exchange the authorization code for an Instagram User Access Token and retrieve the user's profile.
+        """Exchange the authorization code for an Instagram User Access Token and retrieve the user's profile.
 
         Args:
             code (str): The authorization code provided by Instagram upon user's consent.
@@ -214,7 +216,7 @@ class InstagramDataProvider(OAuthDataProvider):
             }
 
         except requests.HTTPError:
-            logger.error(
+            logger.exception(
                 f"HTTP error when exchanging Instagram code for token. Status code: {response.status_code}"
             )
             return {
@@ -222,7 +224,7 @@ class InstagramDataProvider(OAuthDataProvider):
                 "message_id": "api.data_provider.exchange_code_error.general_error",
             }
         except Exception as e:
-            logger.error(f"Error exchanging Instagram code for token: {e}")
+            logger.exception(f"Error exchanging Instagram code for token: {e}")
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
@@ -245,7 +247,7 @@ class InstagramDataProvider(OAuthDataProvider):
                 return False
 
         except Exception as e:
-            logger.error(f"Error connecting to Instagram: {e}")
+            logger.exception(f"Error connecting to Instagram: {e}")
             return False
         return True
 
@@ -266,13 +268,10 @@ class InstagramDataProvider(OAuthDataProvider):
             success = response.status_code == 200
             if response.status_code != 200:
                 error = response.json().get("error_message")
-                if error == "Invalid platform app" or error == "Invalid Client ID":
-                    success = False
-                else:
-                    success = True
+                success = error not in ("Invalid platform app", "Invalid Client ID")
             return success  # Returns the status code. In real use, you'd want to handle different response codes differently.
         except Exception as e:
-            logger.error(f"Error connecting to Instagram: {e}")
+            logger.exception(f"Error connecting to Instagram: {e}")
             return False
 
     # Properties to access class attributes

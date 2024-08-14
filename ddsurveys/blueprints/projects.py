@@ -1,30 +1,29 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
 import datetime
-import tempfile
-import traceback
 from io import BytesIO
+from typing import TYPE_CHECKING
 
 from flask import Blueprint, g, jsonify, request, send_file
-from flask.typing import ResponseReturnValue
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..data_providers.bases import CustomVariable
-from ..get_logger import get_logger
-from ..models import Collaboration, DataConnection, Project, Researcher, Respondent, get_db
-from ..survey_platforms.qualtrics import SurveyPlatform
-from ._common import get_researcher
-from .custom_variables import custom_variables
-from .data_providers import data_providers
-from .respondent import respondent
+from ddsurveys.blueprints._common import get_researcher
+from ddsurveys.blueprints.custom_variables import custom_variables
+from ddsurveys.blueprints.data_providers import data_providers
+from ddsurveys.blueprints.respondent import respondent
+from ddsurveys.data_providers.bases import CustomVariable
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import Collaboration, DataConnection, DBManager, Project, Researcher, Respondent
+from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
+
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
 
 logger = get_logger(__name__)
 
@@ -59,7 +58,7 @@ def get_project_short_id(endpoint, values):
 def list_projects():
     logger.debug("Listing projects")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         researcher, status = get_researcher(db, user)
@@ -85,7 +84,7 @@ def list_projects():
 def create_project():
     logger.debug("Creating a new project")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         data = request.get_json()
 
         user = get_jwt_identity()
@@ -95,7 +94,7 @@ def create_project():
         survey_platform_name = data.get("survey_platform_name")
 
         if not use_existing_survey and (project_name is None or project_name == ""):
-            logger.error(f"No project name specified")
+            logger.error("No project name specified")
             return (
                 jsonify(
                     {
@@ -228,7 +227,7 @@ def create_project():
 def get_project(id):
     logger.debug(f"Getting project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         user = get_jwt_identity()
 
@@ -277,7 +276,7 @@ def get_project(id):
 def update_project(id):
     logger.debug(f"Updating project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         data = request.get_json()
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
@@ -343,7 +342,7 @@ def update_project(id):
 def delete_project(id):
     logger.debug(f"Deleting project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         # Get the current researcher's identity
         user = get_jwt_identity()
@@ -399,7 +398,7 @@ def delete_project(id):
 def delete_respondents(id):
     logger.debug(f"Deleting project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
@@ -477,7 +476,7 @@ def get_survey_platform_connection(project):
     try:
         platform = platform_class(**project.survey_platform_fields)
         return platform.fetch_survey_platform_info()
-    except Exception as e:
+    except Exception:
         return (400, "api.survey.failed_to_check_connection", survey_platform_info)
 
 
@@ -486,7 +485,7 @@ def get_survey_platform_connection(project):
 def check_survey_platform_connection(id):
     logger.debug(f"Checking survey platform connection for project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
@@ -568,7 +567,7 @@ def check_survey_platform_connection(id):
 def sync_variables(id):
     logger.debug(f"Syncing variables for project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
@@ -612,6 +611,8 @@ def sync_variables(id):
                     if variable.get("enabled", False)
                 ]
             )
+            logger.info(f"Stored custom variables: {project.custom_variables}")
+            logger.info(f"Upload custom variables: {enabled_custom_variables}")
             enabled_variables.extend(enabled_custom_variables)
 
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
@@ -655,7 +656,7 @@ def sync_variables(id):
 def export_survey_responses(id):
     logger.debug(f"Exporting survey responses for project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
@@ -752,7 +753,7 @@ def export_survey_responses(id):
 def preview_survey(id):
     logger.debug(f"Previewing survey for project with id: {id}")
 
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:

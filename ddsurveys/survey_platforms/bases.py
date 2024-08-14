@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-23 14:08
+"""Created on 2023-05-23 14:08.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -11,12 +9,12 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, Optional
+from typing import Any, ClassVar
 
-from ..get_logger import get_logger
-from ..shared_bases import FormButton as BaseFormButton
-from ..shared_bases import FormField as BaseFormField
-from ..shared_bases import UIRegistry
+from ddsurveys.get_logger import get_logger
+from ddsurveys.shared_bases import FormButton as BaseFormButton
+from ddsurveys.shared_bases import FormField as BaseFormField
+from ddsurveys.shared_bases import UIRegistry
 
 logger = get_logger(__name__)
 
@@ -31,36 +29,35 @@ TSurveyPlatformClass = type["SurveyPlatform"]
 
 
 class SurveyPlatform(UIRegistry):
-    """
-    Interface class defining methods and attributes that survey platforms should support.
-    """
+    """Interface class defining methods and attributes that survey platforms should support."""
 
     # General class attributes
     # base_name will decide the key in the class registry where each child class of SurveyPlatform will be stored.
     base_name: str = "SurveyPlatform"
-    registry_exclude: list[str] = ["SurveyPlatform", "OAuthSurveyPlatform"]
+    registry_exclude: ClassVar[list[str]] = ["SurveyPlatform", "OAuthSurveyPlatform"]
 
     # mainly used to generate the full qualified name for message ids
     _package = __package__
 
-    # The following attributes (normally) do not need to be redeclared in child classes
+    # The following attributes (normally) do not need to be re-declared in child classes
     name: str = ""
     name_lower: str = ""
     label: str = ""
     value: str = ""  # TODO: remove cls.value once Enum nomenclature is removed
     instructions: str = ""
 
-    # Class attributes that need be redeclared or redefined in child classes
-    # The following attributes need to be redeclared in child classes.
+    # Class attributes that need be re-declared or redefined in child classes
+    # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
-    fields: list[dict[str, Any]] = []
+    fields: ClassVar[list[dict[str, Any]]] = []
 
     # Unique class attributes go here
 
     # Form fields declarations go here
-    # Child classes should redeclare the form_fields attribute and populate the list with instances of FormField.
+    # Child classes should redeclare the form_fields attribute and populate the list
+    # with instances of FormField.
     # These instances are used to create the form when adding a data provider in the UI.
-    form_fields: list[FormField | FormButton] = []
+    form_fields: ClassVar[list[FormField | FormButton]] = []
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
@@ -69,19 +66,26 @@ class SurveyPlatform(UIRegistry):
     def check_input_fields(
         cls,
         fields: list[dict],
-        override_required_fields: list[str] = None,
-        class_: type = None,
-    ) -> tuple[bool, Optional[str]]:
-        """
-        Check if all the required fields are present and not empty.
+        override_required_fields: list[str] | None = None,
+        class_: type | None = None,
+    ) -> tuple[bool, str | None]:
+        """Check if all the required fields are present and not empty.
 
         Args:
-            fields
-            override_required_fields
-            class_
+            fields (list[dict]): A list of dictionaries representing the fields to be
+                checked.
+            override_required_fields (list[str] | None, optional): A list of field names
+                that should be considered required, overriding the default required fields.
+                Defaults to None.
+            class_ (type | None, optional): The class type to be used for checking the
+                fields.
+                Defaults to None.
 
         Returns:
-
+            tuple[bool, str | None]: A tuple where the first element is a boolean
+                indicating whether all required fields are present and not empty,
+                and the second element is a string containing an error message
+                if any required field is missing or empty, otherwise None.
         """
         if override_required_fields is None:
             override_required_fields = []
@@ -95,12 +99,11 @@ class SurveyPlatform(UIRegistry):
         )
 
     @abstractmethod
-    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
-        """
-        Fetch information about the survey platform. And translate it into the DDS format.
-        Each survey platform should implement this method and decide what any of these keys mean in its own platform context.
+    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
+        """Fetch information about the survey platform and translate it into the DDS format.
 
-        Args:
+        Each survey platform should implement this method and decide what any of these keys mean in its own platform
+        context.
 
         Returns:
             dict with the following keys: {
@@ -108,7 +111,8 @@ class SurveyPlatform(UIRegistry):
                 "active": False,           # Whether the survey is active or not.
                 "exists": False,           # Whether the survey exists or not.
                 "survey_name": None,       # The name of the survey.
-                "survey_status": "unknown" # The status of the survey. Allowed values are: "active", "inactive", "unknown"
+                "survey_status": "unknown" # The status of the survey. Allowed values are: "active", "inactive",
+                "unknown"
             }
         """
         ...
@@ -116,13 +120,13 @@ class SurveyPlatform(UIRegistry):
     @abstractmethod
     def handle_project_creation(
         self, project_name: str, use_existing_survey: bool = False
-    ) -> tuple[int, str, str, Optional[str], dict[str, Any]]:
-        """
-        Create a project in the survey platform and return the tuple with:
+    ) -> tuple[int, str, str, str | None, dict[str, Any]]:
+        """Create a project in the survey platform and return the tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
-        - Project Name (str) - The project name can be conditional (user input or survey name) and should be returned here.
+        - Project Name (str) - The project name can be conditional (user input or survey name) and should be returned
+        here.
         - Fields for the survey platform (dict)
         - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
 
@@ -137,8 +141,7 @@ class SurveyPlatform(UIRegistry):
 
     @abstractmethod
     def handle_variable_sync(self, enabled_variables: dict) -> tuple[int, str, str]:
-        """
-        Sync the variables in the survey platform and return the tuple with:
+        """Sync the variables in the survey platform and return the tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
@@ -156,9 +159,8 @@ class SurveyPlatform(UIRegistry):
     @abstractmethod
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: str, embedded_data: dict
-    ) -> tuple[bool, Optional[str]]:
-        """
-        Prepare the survey in the survey platform and return the tuple with:
+    ) -> tuple[bool, str | None]:
+        """Prepare the survey in the survey platform and return the tuple with:
         - Boolean representing whether the survey was successfully prepared or not.
         - Unique Distribution URL (str) - The URL that will be used to distribute the survey.
 
@@ -168,16 +170,16 @@ class SurveyPlatform(UIRegistry):
             embedded_data:
 
         Returns:
-            tuple made of the: bool representing whether the survey was successfully prepared or not, and the unique distribution URL.
+            tuple made of the: bool representing whether the survey was successfully prepared or not, and the unique
+            distribution URL.
         """
         ...
 
     @abstractmethod
     def handle_export_survey_responses(
-        self, project_short_id: str = None
+        self, project_short_id: str | None = None
     ) -> tuple[int, str, str, str]:
-        """
-        Download the responses from the survey platform and return a tuple with:
+        """Download the responses from the survey platform and return a tuple with:
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
@@ -196,8 +198,7 @@ class SurveyPlatform(UIRegistry):
     def get_preview_link(
         survey_platform_fields: dict, enabled_variables: dict
     ) -> tuple[int, str, str, str]:
-        """
-        Get the preview link for the survey.
+        """Get the preview link for the survey.
         - Status code (200 or 40x)
         - Message ID (str)
         - Message English Text (str)
@@ -220,14 +221,14 @@ class OAuthSurveyPlatform(SurveyPlatform):
     revoke_url: str = ""
     base_authorize_url: str = ""
 
-    _scopes: list[str] = []
+    _scopes: ClassVar[list[str]] = []
 
     def __init__(
         self,
-        client_id: str = None,
-        client_secret: str = None,
-        access_token: str = None,
-        refresh_token: str = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
         **kwargs,
     ) -> None:
         super().__init__()
@@ -283,7 +284,6 @@ class OAuthSurveyPlatform(SurveyPlatform):
 
 class FormField(BaseFormField):
     """This class is used to declare fields that a data provider needs to be filled when it is added in the UI.
-
 
     Attributes:
         name (str):

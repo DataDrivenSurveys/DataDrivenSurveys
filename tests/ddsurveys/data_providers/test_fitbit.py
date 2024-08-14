@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
+
 Created on 2023-11-16 13:50
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -8,7 +8,8 @@ Created on 2023-11-16 13:50
 """
 
 import pytest
-from ddsurveys.data_providers.fitbit import FitbitDataProvider, Activities, Account, Steps, Badges
+
+from ddsurveys.data_providers.fitbit import Account, Activities, Badges, FitbitDataProvider, Steps
 
 
 # DATA CATEGORY TESTS

@@ -1,20 +1,17 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 from __future__ import annotations
 
 import traceback
-from datetime import timedelta
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from ..get_logger import get_logger
-from ..models import Researcher, get_db
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import DBManager, Researcher
 
 logger = get_logger(__name__)
 
@@ -26,7 +23,7 @@ auth = Blueprint("auth", __name__)
 def signup():
 
     try:
-        with get_db() as db:
+        with DBManager.get_db() as db:
             data = request.get_json()
 
             # check if user already exists
@@ -48,7 +45,7 @@ def signup():
             lastname = data.get("lastname")
 
             if not firstname or firstname == "":
-                logger.debug(f"Failed to register: no firstname")
+                logger.debug("Failed to register: no firstname")
                 return (
                     jsonify(
                         {
@@ -62,7 +59,7 @@ def signup():
                 )
 
             if not lastname or lastname == "":
-                logger.debug(f"Failed to register: no lastname")
+                logger.debug("Failed to register: no lastname")
                 return (
                     jsonify(
                         {
@@ -76,7 +73,7 @@ def signup():
                 )
 
             if not data["email"] or data["email"] == "":
-                logger.debug(f"Failed to register: no email")
+                logger.debug("Failed to register: no email")
                 return (
                     jsonify(
                         {
@@ -90,7 +87,7 @@ def signup():
                 )
 
             if not data["password"] or data["password"] == "":
-                logger.debug(f"Failed to register: no password")
+                logger.debug("Failed to register: no password")
                 return (
                     jsonify(
                         {
@@ -127,7 +124,7 @@ def signup():
             )
     except Exception as e:
         logger.critical(f"This error should be excepted correctly: {e}")
-        logger.error(f"Failed to register: {traceback.format_exc()}")
+        logger.exception(f"Failed to register: {traceback.format_exc()}")
         return (
             jsonify(
                 {
@@ -143,7 +140,7 @@ def signup():
 
 @auth.route("/signin", methods=["POST"])
 def signin():
-    with get_db() as db:
+    with DBManager.get_db() as db:
         data = request.get_json()
         user = db.query(Researcher).filter_by(email=data["email"]).first()
         if not user or not check_password_hash(user.password, data["password"]):

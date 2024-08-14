@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # not used yet
 custom_variables_processing_scenarios = [
     (

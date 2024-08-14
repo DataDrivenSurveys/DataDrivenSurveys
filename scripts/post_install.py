@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-19 11:57
+"""Created on 2024-07-19 11:57.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 import importlib
+
 from spacy.cli.download import download
 
 

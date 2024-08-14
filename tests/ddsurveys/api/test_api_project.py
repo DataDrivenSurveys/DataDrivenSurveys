@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
+
 import pytest
-from .mocks import mock_surveys_api  # it is used
+
+from .mocks import mock_surveys_api  # noqa: F401
 from .utils.auth import authenticate_test_user, users
 
 project_endpoint = '/projects/'
@@ -20,7 +21,7 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
 
 
 @pytest.mark.parametrize(
-    "name, use_existing_survey, survey_platform_name, fields, expected_status_code, expected_message_id", [
+    ('name', 'use_existing_survey', 'survey_platform_name', 'fields', 'expected_status_code', 'expected_message_id'), [
         ("Test Project", False, "qualtrics", fields_valid, 201, "api.projects.project_created_successfully"),
         ("Test Project", False, "qualtrics", fields_missing_survey_id, 201, "api.projects.project_created_successfully"),
         ("Test Project", False, "qualtrics", fields_missing_survey_platform_api_key, 400, "api.ddsurveys.survey_platforms.bases.survey_platform_api_key.missing"),
@@ -33,8 +34,7 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
     ])
 def test_create_project(client, mock_surveys_api, name, use_existing_survey, survey_platform_name, fields,
                         expected_status_code, expected_message_id):
-    """
-    Test the create project endpoint.
+    """Test the create project endpoint.
     Using parametrize to test various scenarios.
     """
     headers = authenticate_test_user(

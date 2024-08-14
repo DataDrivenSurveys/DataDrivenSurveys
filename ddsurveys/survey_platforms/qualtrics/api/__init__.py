@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-08 16:20
+"""Created on 2023-05-08 16:20.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
-from .qualtrics_requests import QualtricsRequests
-
-from .distributions import DistributionsAPI
-from .exceptions import (
+from ddsurveys.survey_platforms.qualtrics.api.distributions import DistributionsAPI
+from ddsurveys.survey_platforms.qualtrics.api.exceptions import (
     AuthorizationError,
     BadRequestError,
     FailedQualtricsRequest,
@@ -21,4 +17,5 @@ from .exceptions import (
     ServerError,
     UnhandledStatusCodeError,
 )
-from .surveys import SurveysAPI
+from ddsurveys.survey_platforms.qualtrics.api.qualtrics_requests import QualtricsRequests
+from ddsurveys.survey_platforms.qualtrics.api.surveys import SurveysAPI

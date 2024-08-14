@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module contains classes that are specs for important types and data standards, type declarations,
+"""This module contains classes that are specs for important types and data standards, type declarations,
 and Data types used for variables.
 
 The module is designed to provide a structured way to define and interact with variables within a data processing
@@ -15,19 +13,24 @@ Authors:
     - Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
     - Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
+
+import re
+from datetime import UTC, datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Any, ClassVar
+
+from ddsurveys.get_logger import get_logger
+
+if TYPE_CHECKING:
+    from ddsurveys.typings.variable_types import OperatorDict, OperatorsDict, TDataClass
+
+
 __all__: list[str] = [
-    # Type and TypeVar exports
-    "TData",
-    "TDataClass",
-    "TVariableValue",
-    "TVariable",
-    "TVariableFunction",
-    # Variable specification class exports
-    "Variable",
-    "VariableFunction",
     # Enum class exports
-    # "Operators",
+    "Operator",
     "VariableType",
+
     "VariableDataType",
     # Data type class exports
     "Data",
@@ -36,223 +39,12 @@ __all__: list[str] = [
     "Text",
 ]
 
-import re
-from abc import ABC, abstractmethod
-from collections.abc import Callable
-from datetime import date, datetime
-from enum import Enum
-from typing import Any, Optional, TypeAlias, TypeVar, TypedDict, Union
-
-from .get_logger import get_logger
 
 logger = get_logger(__name__)
 
 
-# Class types (used for type hinting that something is that class object)
-TDataClass = type["Data"]
-
-# TypeVars (used for type hinting that something is an instance of that class)
-TVariableValue = Union[str, float, int, bool, None]
-TVariableFunction = TypeVar("TVariableFunction", bound="VariableFunction")
-TVariable = TypeVar("TVariable", bound="Variable")
-TData = TypeVar("TData", bound="Data")
-
-
-class OperatorDict(TypedDict):
-    label: str
-    func: Callable[[TVariableValue, TVariableValue], bool]
-
-
-OperatorsDict: TypeAlias = dict[str, OperatorDict]
-
-
-class VariableFunction(Callable):
-    """
-    This class is used for type hinting only and should not be used directly.
-
-    Functions that calculate variable values have additional attributes that this class describes.
-
-    Attributes:
-        variable_name (str): The name of the variable that gets calculated.
-        is_indexed_variable (bool): Whether the variable is indexed or not.
-        index_start (int): The start index of the variable.
-        index_end (int): The end index of the variable.
-        fully_indexed (bool): Whether all indexed references of the variable have been added to a `DataProvider`'s variable_funcs dictionary.
-    """
-
-    def __init__(
-        self,
-        variable_name: str = "",
-        is_indexed_variable: bool = None,
-        index_start: int = None,
-        index_end: int = None,
-        fully_indexed: bool = False,
-        *args,
-        **kwargs,
-    ) -> None:
-        """
-        Initializes a new instance of the VariableFunction class.
-
-        Parameters:
-            variable_name (str): The name of the variable to be calculated. Defaults to an empty string.
-            is_indexed_variable (bool, optional): Flag indicating whether the variable is indexed. Defaults to None.
-            index_start (int, optional): The starting index for indexed variables. Defaults to None.
-            index_end (int, optional): The ending index for indexed variables. Defaults to None.
-            fully_indexed (bool): Flag indicating whether all indexed references of the variable have been fully added. Defaults to False.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-        """
-        super().__init__(*args, **kwargs)
-        self.variable_name: str = variable_name
-        self.is_indexed_variable: bool = is_indexed_variable
-        self.index_start: int = index_start
-        self.index_end: int = index_end
-        self.fully_indexed: bool = fully_indexed
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs) -> TVariableValue:
-        """
-        Abstract method that when implemented, should calculate and return the value of the variable.
-
-        This method must be overridden by subclasses to provide the specific logic for calculating the variable's value.
-
-        Parameters:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Returns:
-            TVariableValue: The calculated value of the variable. This can be of type Union[str, float, int, bool, None].
-        """
-        ...
-
-
-class Variable(Callable):
-    """
-    A class to define the structure and behavior of variables within a data provider context.
-
-    This class is designed to encapsulate the attributes and functionalities of variables that are used in data
-    processing and analysis. It allows for the standardized handling of variables, including their definition,
-    categorization, and value computation. Variables can be either built-in or custom-defined, and they may also
-    be indexed to represent a series of values rather than a single value.
-
-    Attributes:
-        data_provider (str): Identifier for the data provider to which the variable belongs.
-        category (str): A classification or grouping for the variable, aiding in its organization.
-        type (str): Specifies whether the variable is 'Builtin' or 'Custom', indicating its origin.
-        name (str): The unique name of the variable, used for identification.
-        description (str): A brief description of the variable, explaining its purpose or usage.
-        data_type (str): The type of data the variable represents (e.g., 'Number', 'Text', 'Date').
-        test_value_placeholder (str): A placeholder value used for testing or in documentation, which may include
-            an index for indexed variables.
-        info (str): Additional information about the variable, typically displayed in a UI element like an info bubble.
-        is_indexed_variable (bool): Indicates whether the variable is indexed, meaning it can represent multiple
-            values based on an index range.
-        index_start (Optional[int]): The starting index for indexed variables, defaulting to 0 if not specified.
-        index_end (Optional[int]): The ending index for indexed variables, defaulting to 5 if not specified.
-        value (Optional[TVariableValue]): The computed or assigned value of the variable, which can be of various
-            types including string, float, int, bool, or None.
-
-    Methods:
-        __init__: Initializes a new instance of the Variable class with specified attributes.
-        to_dict: Converts the variable's attributes into a dictionary format.
-        __call__: An abstract method that must be implemented by subclasses to define how the variable's value
-            is computed or retrieved.
-    """
-
-    def __init__(
-        self,
-        data_provider: str = "",
-        category: str = "",
-        type: str = "",
-        name: str = "",
-        description: str = "",
-        data_type: str = "",
-        test_value_placeholder: str = "",
-        info: str = "",
-        is_indexed_variable: bool = False,
-        index_start: Optional[int] = 0,
-        index_end: Optional[int] = 5,
-        value: Optional[TVariableValue] = None,
-    ) -> None:
-        """
-        Initializes a new instance of the Variable class with the provided attributes.
-
-        Parameters:
-            data_provider (str): The identifier for the data provider.
-            category (str): The category or group to which the variable belongs.
-            type (str): Indicates if the variable is 'Builtin' or 'Custom'.
-            name (str): The name of the variable.
-            description (str): A brief description of the variable.
-            data_type (str): The type of data (e.g., 'Number', 'Text', 'Date').
-            test_value_placeholder (str): A placeholder for the variable's test value.
-            info (str): Additional information about the variable.
-            is_indexed_variable (bool): Flag indicating if the variable is indexed.
-            index_start (Optional[int]): The starting index for indexed variables.
-            index_end (Optional[int]): The ending index for indexed variables.
-            value (Optional[TVariableValue]): The value of the variable.
-
-        Returns:
-            None
-        """
-        self.data_provider: str = data_provider
-        self.category: str = category
-        self.type: str = type
-        self.name: str = name
-        self.description: str = description
-        self.data_type: str = data_type
-        self.test_value_placeholder: str = test_value_placeholder
-        self.info: str = info
-        self.is_indexed_variable: bool = is_indexed_variable
-        self.index_start: Optional[int] = index_start
-        self.index_end: Optional[int] = index_end
-        self.value: Optional[TVariableValue] = value
-
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Converts the variable's attributes into a dictionary.
-
-        This method facilitates the serialization of the variable's attributes, making it easier to store or
-        transmit the variable's definition.
-
-        Returns:
-            dict[str, Any]: A dictionary containing the variable's attributes as key-value pairs.
-        """
-        return {
-            "data_provider": self.data_provider,
-            "category": self.category,
-            "type": self.type,
-            "name": self.name,
-            "description": self.description,
-            "data_type": self.data_type,
-            "test_value_placeholder": self.test_value_placeholder,
-            "info": self.info,
-            "is_indexed_variable": self.is_indexed_variable,
-            "index_start": self.index_start,
-            "index_end": self.index_end,
-            "value": self.value,
-        }
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs):
-        """
-        An abstract method that, when implemented, computes or retrieves the variable's value.
-
-        This method must be overridden in subclasses to provide the specific logic for calculating or retrieving
-        the variable's value based on the given arguments.
-
-        Parameters:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Returns:
-            The computed or retrieved value of the variable.
-        """
-        ...
-
-
 class Operator(Enum):
-    """
-    Enum representing various operators used for filtering and comparison.
+    """Enum representing various operators used for filtering and comparison.
 
     Attributes:
         IS: Represents the equality operator.
@@ -282,8 +74,7 @@ class Operator(Enum):
 
 
 class VariableType(Enum):
-    """
-    Enum for defining the types of variables.
+    """Enum for defining the types of variables.
 
     This enumeration defines two types of variables:
     - BUILTIN: Represents a variable that is built into the system.
@@ -299,8 +90,7 @@ class VariableType(Enum):
 
 
 class VariableDataType(Enum):
-    """
-    Enum for defining the data types of variables.
+    """Enum for defining the data types of variables.
 
     This enumeration classifies variables into three fundamental data types:
     - NUMBER: Represents numeric data, including integers and floating-point numbers.
@@ -319,9 +109,8 @@ class VariableDataType(Enum):
 
 
 # TODO: make Data inherit from Registry
-class Data(ABC):
-    """
-    Abstract base class for data types in the system. It provides a registry for data type classes,
+class Data:
+    """Base class for data types in the system. It provides a registry for data type classes,
     methods to register and retrieve data type classes, and abstract methods for subclasses to implement
     specific behaviors.
 
@@ -332,24 +121,22 @@ class Data(ABC):
             and their metadata or functions for filtering and comparison.
     """
 
-    _registry: dict[VariableDataType, "Data"] = {}
-    operators: OperatorsDict = {}
+    _registry: ClassVar[dict[VariableDataType, TDataClass]] = {}
+    operators: ClassVar[OperatorsDict] = {}
 
     @staticmethod
-    def register(data_type: VariableDataType, cls) -> None:
-        """
-        Registers a data type class to the `_registry` using its `VariableDataType` enum as the key.
+    def register(data_type: VariableDataType, class_: TDataClass) -> None:
+        """Registers a data type class to the `_registry` using its `VariableDataType` enum as the key.
 
         Parameters:
             data_type (VariableDataType): The enum value representing the data type.
-            cls (type): The class to be registered for the specified data type.
+            class_ (type): The class to be registered for the specified data type.
         """
-        Data._registry[data_type] = cls
+        Data._registry[data_type] = class_
 
     @staticmethod
     def get_class_by_type(data_type: VariableDataType) -> Any:
-        """
-        Retrieves a registered data type class from the `_registry` based on the `VariableDataType` enum.
+        """Retrieves a registered data type class from the `_registry` based on the `VariableDataType` enum.
 
         Parameters:
             data_type (VariableDataType): The enum value representing the data type.
@@ -360,17 +147,31 @@ class Data(ABC):
         return Data._registry[data_type]
 
     @classmethod
-    @abstractmethod
-    def get_filter_operators(cls) -> list[dict[str, Any]]:
-        """
-        An abstract method that subclasses should implement to return their specific filter operators.
-        """
-        ...
+    def get_filter_operators(cls, operator: str = "") -> list[dict[str, Any]]:
+        """Converts the operators dictionary to a list format suitable for filtering operations.
 
-    @staticmethod
-    def is_this_data_type(data) -> bool:
+        Parameters:
+            operator (Optional[str]): An optional operator string to filter the operators list by. If not provided,
+                                      all operators are returned.
+
+        Returns:
+            list[dict[str, Any]]: A list of dictionaries, each representing an operator with its label and value.
         """
-        Checks if the given data is an instance of a class that inherits from `Data`.
+        if operator != "":
+            return [
+                {"label": op_info["label"], "value": op_key}
+                for op_key, op_info in cls.operators.items()
+                if op_key == operator
+            ]
+        # Convert the operators dictionary to the desired list format
+        return [
+            {"label": op_info["label"], "value": op_key}
+            for op_key, op_info in cls.operators.items()
+        ]
+
+    @classmethod
+    def is_this_data_type(cls, data: Any) -> bool:
+        """Checks if the given data is an instance of a class that inherits from `Data`.
 
         Parameters:
             data: The data to check.
@@ -378,12 +179,11 @@ class Data(ABC):
         Returns:
             bool: True if `data` is an instance of a class that inherits from `Data`, False otherwise.
         """
-        return isinstance(type(data), Data)
+        return isinstance(data, cls)
 
     @staticmethod
-    def determine_type(value) -> TDataClass | type:
-        """
-        Determines the data type class for the given value based on its type or content.
+    def determine_type(value: Any) -> type[list | dict] | TDataClass:
+        """Determines the data type class for the given value based on its type or content.
 
         Parameters:
             value: The value whose data type class is to be determined.
@@ -391,25 +191,24 @@ class Data(ABC):
         Returns:
             TDataClass | type: The data type class that best matches the given value.
         """
-        if Data.is_this_data_type(value):  # Check for Data type
-            return type(value)
-        elif isinstance(value, list):  # Check for List type
-            return type(value)
-        elif isinstance(value, dict):  # Check for Object (dictionary) type
-            return type(value)
-        elif Date.is_this_data_type(value):  # Check for Date type
+        if Data.is_this_data_type(value):
+            return Data
+        if isinstance(value, list):
+            return list
+        if isinstance(value, dict):
+            return dict
+        if Date.is_this_data_type(value):
             return Date
-        elif Number.is_this_data_type(value):  # Check for Number type
+        if Number.is_this_data_type(value):
             return Number
-        else:  # Default to Text type
-            if not Text.is_this_data_type(value):
-                logger.error(f"Unable to determine data type for value: {value}")
+        if Text.is_this_data_type(value):
             return Text
+        logger.error("Unable to determine data type for value: %s", value)
+        return Text
 
     @classmethod
-    def get_all_filter_operators(cls) -> dict[Any, Any]:
-        """
-        Retrieves all filter operators for each registered data type class.
+    def get_all_filter_operators(cls) -> dict[str, Any]:
+        """Retrieves all filter operators for each registered data type class.
 
         Returns:
             dict[Any, Any]: A dictionary mapping data type names to their respective filter operators.
@@ -420,36 +219,34 @@ class Data(ABC):
         return result
 
     @classmethod
-    def get_operator(cls, operator: str) -> dict[str, str | Callable]:
-        """
-        Retrieves the operator function or metadata based on the operator string.
+    def get_operator(cls, operator: str) -> OperatorDict:
+        """Retrieves the operator function and metadata based on the operator name.
 
         Parameters:
             operator (str): The string identifier of the operator.
 
         Returns:
-            dict[str, str | Callable]: The operator's metadata or function.
+            dict[str, OperatorDict]: The operator's metadata or function.
 
         Raises:
-            ValueError: If the operator is not found in the `operators` dictionary.
+            KeyError: If the operator is not found in the `operators` dictionary.
         """
-        # check if operators has the key corresponding to the operator
         if operator in cls.operators:
             return cls.operators[operator]
-        else:
-            raise ValueError(f"Unknown operator: {operator}")
+
+        msg = f"Unknown operator: {operator}"
+        raise KeyError(msg)
 
 
 class Date(Data):
-    """
-    A subclass of Data that represents date data types and provides functionality for date comparison and validation.
+    """A subclass of Data that represents date data types and provides functionality for date comparison and validation.
 
     Attributes:
         operators (dict): A dictionary mapping operator strings to their respective label and lambda function for
                           performing the comparison operation between two date values.
     """
 
-    operators: OperatorsDict = {
+    operators: ClassVar[OperatorsDict] = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.date.is",
             "func": lambda a, b: Date._parse_date(a) == Date._parse_date(b),
@@ -476,10 +273,9 @@ class Date(Data):
         },
     }
 
-    @staticmethod
-    def is_this_data_type(data: str) -> bool:
-        """
-        Determines if the given data can be parsed as a date.
+    @classmethod
+    def is_this_data_type(cls, data: str) -> bool:
+        """Determines if the given data can be parsed as a date.
 
         Parameters:
             data (str): The data to be checked.
@@ -488,15 +284,15 @@ class Date(Data):
             bool: True if the data can be parsed as a date, False otherwise.
         """
         try:
-            Date._parse_date(data)
-            return True
+            cls._parse_date(data)
         except ValueError:
             return False
+        else:
+            return True
 
     @staticmethod
     def _parse_date(date_str: str) -> datetime:
-        """
-        Parses a string into a datetime object using predefined date formats.
+        """Parses a string into a datetime object using predefined date formats.
 
         Parameters:
             date_str (str): The date string to be parsed.
@@ -509,7 +305,7 @@ class Date(Data):
         """
         if isinstance(date_str, int):
             try:
-                return datetime.fromtimestamp(date_str)
+                return datetime.fromtimestamp(date_str, tz=UTC)
             except ValueError:
                 pass
 
@@ -518,52 +314,42 @@ class Date(Data):
         except ValueError:
             pass
 
-
         formats = [
             "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%S.%f",
-            "%Y-%m-%dT%H:%M:%S.%f%z",
-            "%Y-%m-%dT%H:%M:%S%z",
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%d %H:%M:%S.%f",
             "%Y%m%d",
         ]
 
-        for fmt in formats:
+        formats_with_tz = [
+            "%Y-%m-%dT%H:%M:%S.%f%z",
+            "%Y-%m-%dT%H:%M:%S%z",
+        ]
+
+        for fmt_with_tz in formats_with_tz:
             try:
-                return datetime.strptime(date_str, fmt)
+                return datetime.strptime(date_str, fmt_with_tz)  # noqa: DTZ007
             except ValueError:
                 pass
-        raise ValueError(f"Unknown date format: {date_str}")
 
-    @classmethod
-    def get_filter_operators(cls, operator=None) -> list[dict[str, Any]]:
-        """
-        Converts the operators dictionary to a list format suitable for filtering operations.
-
-        Parameters:
-            operator (Optional[str]): An optional operator string to filter the operators list by. If not provided,
-                                      all operators are returned.
-
-        Returns:
-            list[dict[str, Any]]: A list of dictionaries, each representing an operator with its label and value.
-        """
-        # Convert the operators dictionary to the desired list format
-        return [
-            {"label": op_info["label"], "value": op_key}
-            for op_key, op_info in cls.operators.items()
-        ]
+        for fmt in formats:
+            try:
+                return datetime.strptime(date_str, fmt).replace(tzinfo=UTC)
+            except ValueError:
+                pass
+        msg = f"Unknown date format: {date_str}"
+        raise ValueError(msg)
 
 
 class Number(Data):
-    """
-    Represents numeric data types and provides functionality for numeric comparison and validation.
+    """Represents numeric data types and provides functionality for numeric comparison and validation.
 
     This class inherits from the abstract base class `Data` and implements methods and properties specific to numeric data types.
     It defines a set of operators for numeric comparison and provides methods to check if a given data is a numeric type and to parse numeric values.
     """
 
-    operators: OperatorsDict = {
+    operators: ClassVar[OperatorsDict] = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.number.is",
             "func": lambda a, b: Number._parse_number(a) == Number._parse_number(b),
@@ -590,10 +376,9 @@ class Number(Data):
         },
     }
 
-    @staticmethod
-    def is_this_data_type(data) -> bool:
-        """
-        Checks if the given data can be parsed as a numeric value.
+    @classmethod
+    def is_this_data_type(cls, data: Any) -> bool:
+        """Checks if the given data can be parsed as a numeric value.
 
         Parameters:
             data: The data to be checked, which can be of any type.
@@ -603,14 +388,14 @@ class Number(Data):
         """
         try:
             float(data)
-            return True
         except ValueError:
             return False
+        else:
+            return True
 
     @staticmethod
-    def _parse_number(numeric_value: Union[int, float, str]) -> Union[int, float]:
-        """
-        Parses the given numeric value to an integer or float.
+    def _parse_number(numeric_value: float | str) -> int | float:
+        """Parses the given numeric value to an integer or float.
 
         Parameters:
             numeric_value (Union[int, float, str]): The numeric value to be parsed, which can be an integer, float, or string.
@@ -622,38 +407,20 @@ class Number(Data):
             If the input is a string that represents an integer, it will be converted to an integer.
             Otherwise, it will be converted to a float.
         """
-        if isinstance(numeric_value, int) or isinstance(numeric_value, float):
+        if isinstance(numeric_value, float | int):
             return numeric_value
 
         return int(numeric_value) if numeric_value.isnumeric() else float(numeric_value)
 
-    @classmethod
-    def get_filter_operators(cls, operator=None) -> list[dict[str, Any]]:
-        """
-        Converts the operators dictionary to a list format suitable for filtering operations.
-
-        Parameters:
-            operator (Optional[str]): An optional operator string to filter the operators list by. If not provided,
-                                      all operators are returned.
-
-        Returns:
-            list[dict[str, Any]]: A list of dictionaries, each representing an operator with its label and value.
-        """
-        return [
-            {"label": op_info["label"], "value": op_key}
-            for op_key, op_info in cls.operators.items()
-        ]
-
 
 class Text(Data):
-    """
-    Represents textual data types and provides functionality for text comparison and validation.
+    """Represents textual data types and provides functionality for text comparison and validation.
 
     This class inherits from the abstract base class `Data` and implements methods and properties specific to textual data types.
     It defines a set of operators for text comparison and provides methods to check if a given data is a textual type and to perform text-specific operations.
     """
 
-    operators: OperatorsDict = {
+    operators: ClassVar[OperatorsDict] = {
         Operator.IS.value: {
             "label": "api.custom_variables.filters.operators.text.is",
             "func": lambda a, b: a == b,
@@ -680,14 +447,13 @@ class Text(Data):
         },
         Operator.REGEXP.value: {
             "label": "api.custom_variables.filters.operators.text.regexp",
-            "func": lambda a, b: re.match(b, a),
+            "func": lambda a, b: re.match(b, a) is not None,
         },
     }
 
-    @staticmethod
-    def is_this_data_type(data) -> bool:
-        """
-        Determines if the given data is of textual type.
+    @classmethod
+    def is_this_data_type(cls, data: Any) -> bool:
+        """Determines if the given data is of textual type.
 
         Parameters:
             data: The data to be checked, which can be of any type.
@@ -695,24 +461,7 @@ class Text(Data):
         Returns:
             bool: True if the data is a string, indicating it is of textual type; False otherwise.
         """
-        return isinstance(data, str)
-
-    @classmethod
-    def get_filter_operators(cls, operator=None) -> list[dict[str, Any]]:
-        """
-        Converts the operators dictionary to a list format suitable for filtering operations.
-
-        Parameters:
-            operator (Optional[str]): An optional operator string to filter the operators list by. If not provided,
-                                      all operators are returned.
-
-        Returns:
-            list[dict[str, Any]]: A list of dictionaries, each representing an operator with its label and value.
-        """
-        return [
-            {"label": op_info["label"], "value": op_key}
-            for op_key, op_info in cls.operators.items()
-        ]
+        return isinstance(data, str | Text)
 
 
 # Register the specific data type classes with the Data class.

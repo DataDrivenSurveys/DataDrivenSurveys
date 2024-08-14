@@ -1,39 +1,47 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-27 13:48
+"""Created on 2023-04-27 13:48.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
 
-__all__ = ["QualtricsSurveyPlatform"]
-
-from typing import Any, Optional
+from typing import Any, ClassVar
 from urllib.parse import quote_plus
 
 from ddsurveys.get_logger import get_logger
-
-from ..bases import FormField, SurveyPlatform
+from ddsurveys.survey_platforms.bases import FormField, SurveyPlatform
 
 # API related classes
-from .api import AuthorizationError, DistributionsAPI, FailedQualtricsRequest, SurveysAPI
+from ddsurveys.survey_platforms.qualtrics.api import (
+    AuthorizationError,
+    DistributionsAPI,
+    FailedQualtricsRequest,
+    SurveysAPI,
+)
 
 # Classes used to conveniently create objects that get sent to Qualtrics
-from .embedded_data import EmbeddedData, EmbeddedDataBlock
-from .flow import Flow
+from ddsurveys.survey_platforms.qualtrics.embedded_data import EmbeddedDataBlock
+from ddsurveys.survey_platforms.qualtrics.flow import Flow
 
 # Main platform class
 # from .qualtrics_platform import QualtricsSI
+
+__all__ = ["QualtricsSurveyPlatform"]
 
 
 logger = get_logger(__name__)
 
 
 class QualtricsSurveyPlatform(SurveyPlatform):
+    """Qualtrics survey platform class.
+
+    This class provides the methods needed to integrate and interact with the Qualtrics
+    survey platform.
+    """
 
     # Form fields declarations go here
-    form_fields = [
+    form_fields: ClassVar = [
         FormField(
             name="survey_id",
             type="text",
@@ -51,8 +59,23 @@ class QualtricsSurveyPlatform(SurveyPlatform):
     ]
 
     def __init__(
-        self, survey_id: str = None, survey_platform_api_key: str = None, **kwargs
+        self, survey_id: str | None = None, survey_platform_api_key: str | None = None, **kwargs
     ) -> None:
+        """Initialize the QualtricsSurveyPlatform instance.
+
+        This constructor initializes the QualtricsSurveyPlatform with the provided
+        survey ID and API key.
+        It also sets up the necessary API clients for interacting with the Qualtrics
+        platform.
+
+        Args:
+            survey_id: The ID of the survey.
+                Default is None.
+            survey_platform_api_key: The API key for accessing the Qualtrics platform.
+                Default is None.
+            **kwargs: Additional keyword arguments passed to the parent class
+                constructor.
+        """
         super().__init__(**kwargs)
         self.survey_id = survey_id
         self.survey_platform_api_key = survey_platform_api_key
@@ -62,8 +85,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             api_token=self.survey_platform_api_key
         )
 
-    def fetch_survey_platform_info(self) -> tuple[int, Optional[str], dict[str, Any]]:
-
+    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
         survey_platform_info = {
             "connected": False,
             "active": False,
@@ -74,38 +96,36 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         message_id = None
 
+        if not self.surveys_api.survey_exists(self.survey_id):
+            return (
+                400,
+                "api.survey_platforms.connection_failed",
+                survey_platform_info,
+            )
+
         try:
-            if self.surveys_api.survey_exists(self.survey_id):
+            survey_info = self.surveys_api.get_survey(self.survey_id).json()
+            survey_active = survey_info["result"]["SurveyStatus"] == "Active"
 
-                survey_info = self.surveys_api.get_survey(self.survey_id).json()
-                survey_active = survey_info["result"]["SurveyStatus"] == "Active"
-
-                survey_platform_info["survey_name"] = survey_info["result"][
-                    "SurveyName"
-                ]
-                survey_platform_info["active"] = survey_active
-                survey_platform_info["survey_status"] = (
-                    "active" if survey_active else "inactive"
-                )
-                survey_platform_info["exists"] = True
-                survey_platform_info["connected"] = True
-
-                return 200, message_id, survey_platform_info
-            else:
-                return (
-                    400,
-                    "api.survey_platforms.connection_failed",
-                    survey_platform_info,
-                )
-
+            survey_platform_info["survey_name"] = survey_info["result"][
+                "SurveyName"
+            ]
+            survey_platform_info["active"] = survey_active
+            survey_platform_info["survey_status"] = (
+                "active" if survey_active else "inactive"
+            )
+            survey_platform_info["exists"] = True
+            survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
             return 400, None, survey_platform_info
+        else:
+            return 200, message_id, survey_platform_info
 
     def handle_project_creation(
         self, project_name: str, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
         # survey_platform_fields to update project.survey_platform_fields
-        logger.debug(f"Creating project with name: {project_name}")
+        logger.debug("Creating project with name: %s", project_name)
 
         survey_platform_fields = {
             "survey_id": self.survey_id,
@@ -185,10 +205,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         return 200, "", "", project_name, survey_platform_fields
 
     def handle_variable_sync(self, enabled_variables) -> tuple[int, str, str]:
-        """
-        Handle the syncing of variables for the given survey.
-        """
-
+        """Handle the syncing of variables for the given survey."""
         # Get the initial flow
         try:
             flow = Flow(self.surveys_api.get_flow(self.survey_id).json()["result"])
@@ -224,11 +241,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
-    ) -> tuple[bool, Optional[str]]:
-        """
-        Handle the preparation of the survey for data collection.
-        """
-
+    ) -> tuple[bool, str | None]:
+        """Handle the preparation of the survey for data collection."""
         try:
             status, _, survey_platform_info = self.fetch_survey_platform_info()
 
@@ -272,7 +286,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     unique_url = self.distributions_api.create_unique_distribution_link(
                         survey_id, mailing_list_id, contact_lookup_id
                     )
-                except FailedQualtricsRequest as e:
+                except FailedQualtricsRequest:
                     return False, None
 
                 if unique_url:
@@ -284,10 +298,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         except FailedQualtricsRequest:
             return False, None
 
-    def handle_export_survey_responses(self) -> tuple[bool, str, None]:
-        """
-        Handle the downloading of responses from the survey platform.
-        """
+    def handle_export_survey_responses(self) -> tuple[int, str, str, bytes | str | None]:
+        """Handle the downloading of responses from the survey platform."""
         try:
             content = self.surveys_api.export_survey_responses(self.survey_id)
             if content:
@@ -297,7 +309,6 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     "Exported survey responses successfully!",
                     content,
                 )
-
             return (
                 400,
                 "api.ddsurveys.survey_platforms.export_survey_responses.failed",
@@ -315,7 +326,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
     @staticmethod
     def get_preview_link(
-        survey_platform_fields: dict, enabled_variables: dict
+        survey_platform_fields: dict, enabled_variables: list[dict]
     ) -> tuple[int, str, str, str]:
         if (
             "base_url" not in survey_platform_fields
@@ -333,7 +344,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         url_params = "&".join(
             [
-                f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value_placeholder'])}"
+                f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value'])}"
                 for var in enabled_variables
             ]
         )

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-26 12:18
+"""Created on 2023-04-26 12:18.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 
-References
+References:
 ----------
 `Qualtrics Survey API Documentation <https://api.qualtrics.com/60d24f6897737-qualtrics-survey-api>`_
 """
@@ -14,29 +12,18 @@ import functools
 import re
 import time
 from datetime import datetime
-from typing import Optional
 
 import requests
 
 from ddsurveys.get_logger import get_logger
-
-from .exceptions import (
-    AuthorizationError,
-    BadRequestError,
-    FailedQualtricsRequest,
-    MissingSurveyID,
-    NotFoundError,
-    ServerError,
-    UnhandledStatusCodeError,
-)
-from .qualtrics_requests import QualtricsRequests
+from ddsurveys.survey_platforms.qualtrics.api.exceptions import FailedQualtricsRequest, MissingSurveyID
+from ddsurveys.survey_platforms.qualtrics.api.qualtrics_requests import QualtricsRequests
 
 logger = get_logger(__name__)
 
 
 class SurveysAPI(QualtricsRequests):
-    """
-    References
+    """References:
     ----------
     `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
     """
@@ -50,7 +37,7 @@ class SurveysAPI(QualtricsRequests):
         api_token: str = "",
         datacenter_location: str = "EU",
         accept_datacenter_redirect: bool = True,
-        survey_id: Optional[str] = None,
+        survey_id: str | None = None,
     ) -> None:
         super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
         self._survey_id = survey_id
@@ -74,11 +61,12 @@ class SurveysAPI(QualtricsRequests):
         assert self.__class__._re_survey_id.match(value) is not None
         self._survey_id = value
 
-    def get_survey_url(self, survey_id: Optional[str] = None) -> str:
+    def get_survey_url(self, survey_id: str | None = None) -> str:
         survey_id = survey_id or self.survey_id
         if survey_id is None:
+            msg = "No survey id is currently set. Set it by setting the `survey_id` property."
             raise MissingSurveyID(
-                "No survey id is currently set. Set it by setting the `survey_id` property."
+                msg
             )
 
         survey = self.get_survey(survey_id)
@@ -89,13 +77,10 @@ class SurveysAPI(QualtricsRequests):
     def survey_id_wrapper(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if len(args) > 0:
-                args_0 = args[0]
-            else:
-                args_0 = None
+            args_0 = args[0] if len(args) > 0 else None
             survey_id = args_0 or kwargs.get("survey_id") or self._survey_id
             if survey_id is None:
-                raise MissingSurveyID()
+                raise MissingSurveyID
             self._survey_id = survey_id
             return func(self, *args, **kwargs)
 
@@ -104,8 +89,7 @@ class SurveysAPI(QualtricsRequests):
     def create_survey(
         self, survey_name: str, language: str = "EN", project_category: str = "CORE"
     ) -> requests.Response:
-        """
-        Creates a new survey on Qualtrics.
+        """Creates a new survey on Qualtrics.
 
         Parameters
         ----------
@@ -113,10 +97,10 @@ class SurveysAPI(QualtricsRequests):
         language
         project_category
 
-        Returns
+        Returns:
         -------
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
         """
@@ -128,14 +112,13 @@ class SurveysAPI(QualtricsRequests):
         return self.post(json=json_data)
 
     def survey_exists(self, survey_id: str) -> bool:
-        """
-        Checks if a survey exists in Qualtrics.
+        """Checks if a survey exists in Qualtrics.
 
         Parameters
         ----------
         survey_id
 
-        Returns
+        Returns:
         -------
         Boolean - True if the survey exists, False otherwise.
         """
@@ -153,43 +136,41 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def get_survey(
-        self, survey_id: str = None, get_qsf_format: bool = False
+        self, survey_id: str | None = None, get_qsf_format: bool = False
     ) -> requests.Response:
-        """
-        Gets the survey information from the Qualtrics platform for a given survey.
+        """Gets the survey information from the Qualtrics platform for a given survey.
 
         Parameters
         ----------
         survey_id
         get_qsf_format
 
-        Returns
+        Returns:
         -------
 
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/9d0928392673d-get-survey>`_
         """
-        params = dict()
+        params = {}
         if get_qsf_format:
             params = {"format": "qsf"}
 
         return self.get(f"{self.endpoint}/{survey_id}", params=params)
 
     @survey_id_wrapper
-    def delete_survey(self, survey_id: str = None) -> requests.Response:
-        """
-        Deletes a given survey on the Qualtrics platform.
+    def delete_survey(self, survey_id: str | None = None) -> requests.Response:
+        """Deletes a given survey on the Qualtrics platform.
 
         Parameters
         ----------
         survey_id
 
-        Returns
+        Returns:
         -------
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/6d155f86c65ae-delete-survey>`_
         """
@@ -197,16 +178,14 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def get_survey_metadata(self, survey_id: str) -> requests.Response:
-        """
-
-        Parameters
+        """Parameters
         ----------
         survey_id
 
-        Returns
+        Returns:
         -------
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/a92bfbc7e58fe-get-survey-metadata>`_
         """
@@ -220,11 +199,9 @@ class SurveysAPI(QualtricsRequests):
         survey_status: str,
         survey_start_date: datetime,
         survey_expiration_date: datetime,
-        survey_description: Optional[str] = None,
+        survey_description: str | None = None,
     ) -> requests.Response:
-        """
-
-        Parameters
+        """Parameters
         ----------
         survey_id
         survey_name
@@ -233,15 +210,16 @@ class SurveysAPI(QualtricsRequests):
         survey_expiration_date
         survey_description
 
-        Returns
+        Returns:
         -------
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/ae7f40bbcb91a-update-metadata>`_
         """
         assert survey_status in ["Active", "Inactive"]
-        assert isinstance(survey_start_date, datetime) and isinstance(
+        assert isinstance(survey_start_date, datetime)
+        assert isinstance(
             survey_expiration_date, datetime
         )
 
@@ -258,17 +236,15 @@ class SurveysAPI(QualtricsRequests):
 
     # Survey Flows
     @survey_id_wrapper
-    def get_flow(self, survey_id: str = None) -> requests.Response:
-        """
-
-        Parameters
+    def get_flow(self, survey_id: str | None = None) -> requests.Response:
+        """Parameters
         ----------
         survey_id
 
-        Returns
+        Returns:
         -------
 
-        References
+        References:
         ----------
         `API Documentation <https://api.qualtrics.com/773d3d5865ca9-get-flow>`_
         """
@@ -276,10 +252,9 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def update_flow(
-        self, survey_id: str = None, flow: dict = None
+        self, survey_id: str | None = None, flow: dict | None = None
     ) -> requests.Response:
-        """
-        Update a survey flow.
+        """Update a survey flow.
 
         The previous flow is overwritten by the new one. If updating an existing survey, make sure to use a flow that
         contains all the previous blocks to avoid deleting everything except for the custom variables block.
@@ -298,8 +273,7 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def start_export_request(self, survey_id: str, format: str = "csv") -> str:
-        """
-        Initiates the export of survey responses.
+        """Initiates the export of survey responses.
 
         Parameters
         ----------
@@ -308,7 +282,7 @@ class SurveysAPI(QualtricsRequests):
         format : str, optional
             The format of the export file (default is "csv").
 
-        Returns
+        Returns:
         -------
         progressId : str
             The ID used to check the progress of the export.
@@ -319,13 +293,11 @@ class SurveysAPI(QualtricsRequests):
         response = requests.post(endpoint, headers=headers, json=data)
         response.raise_for_status()  # Raises an error for bad responses
 
-        progress_id = response.json()["result"]["progressId"]
-        return progress_id
+        return response.json()["result"]["progressId"]
 
     @survey_id_wrapper
     def check_export_progress(self, survey_id: str, progress_id: str) -> str:
-        """
-        Checks the progress of an export operation.
+        """Checks the progress of an export operation.
 
         Parameters
         ----------
@@ -334,7 +306,7 @@ class SurveysAPI(QualtricsRequests):
         progress_id : str
             The progress ID of the export operation.
 
-        Returns
+        Returns:
         -------
         fileId : str
             The ID of the file to download once the export is complete.
@@ -352,8 +324,7 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def download_export_file(self, survey_id: str, file_id: str) -> bytes:
-        """
-        Downloads the exported file.
+        """Downloads the exported file.
 
         Parameters
         ----------
@@ -362,7 +333,7 @@ class SurveysAPI(QualtricsRequests):
         file_id : str
             The ID of the file to download.
 
-        Returns
+        Returns:
         -------
         file_contents : bytes
             The contents of the exported file.
@@ -378,8 +349,7 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id_wrapper
     def export_survey_responses(self, survey_id: str, format: str = "csv") -> bytes:
-        """
-        High-level method to export survey responses, wait for completion, and download the file.
+        """High-level method to export survey responses, wait for completion, and download the file.
 
         Parameters
         ----------
@@ -388,7 +358,7 @@ class SurveysAPI(QualtricsRequests):
         format : str
             The format of the export file.
 
-        Returns
+        Returns:
         -------
         file_contents : bytes
             The contents of the exported file.

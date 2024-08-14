@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module provides logging functionalities tailored for the Data-Driven Surveys application.
+"""This module provides logging functionalities tailored for the Data-Driven Surveys application.
 It includes custom logger creation, configuration, and filtering mechanisms to enhance logging output and management.
 The module facilitates the creation of loggers with a consistent naming convention, allows for dynamic log level
 adjustments, and provides utilities to restrict logging output to specific parts of the application.
@@ -16,7 +14,6 @@ Created on 2023-09-05 17:52
 """
 
 import logging
-from typing import Union
 
 import coloredlogs
 
@@ -27,8 +24,7 @@ old_logger = logging.getLogger
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Creates or retrieves a logger with a hierarchical name that starts with 'ddsurveys'.
+    """Creates or retrieves a logger with a hierarchical name that starts with 'ddsurveys'.
     If the provided name does not start with 'ddsurveys', it is prefixed accordingly.
     This ensures that all loggers used within the application follow a consistent naming convention,
     facilitating easier management and filtering of log messages.
@@ -47,10 +43,7 @@ def get_logger(name: str) -> logging.Logger:
         If the logger for the specified name already exists, it will be retrieved instead of created.
     """
     name_: str
-    if not name.startswith("ddsurveys"):
-        name_ = f"ddsurveys.{name}"
-    else:
-        name_ = name
+    name_ = f"ddsurveys.{name}" if not name.startswith("ddsurveys") else name
 
     parts: list[str] = name_.split(".")
     current_name: str = ""
@@ -72,8 +65,7 @@ module_logger: logging.Logger = get_logger(__name__)
 
 
 def only_log_ddsurveys() -> None:
-    """
-    Filters the logging output to only include messages from loggers that start with 'ddsurveys'.
+    """Filters the logging output to only include messages from loggers that start with 'ddsurveys'.
 
     This function specifically targets and silences the output from common imported packages such as 'urllib3' and
     'requests_oauthlib' by setting their log level to CRITICAL. Additionally, it adds a filter to the root logger
@@ -89,13 +81,12 @@ def only_log_ddsurveys() -> None:
 
 
 def set_logger_level(
-    logger: Union[str, logging.Logger],
-    level: Union[int, str] = logging.INFO,
+    logger: str | logging.Logger,
+    level: int | str = logging.INFO,
     recursive: bool = False,
     include_root: bool = False,
 ) -> None:
-    """
-    Sets the logging level for a specified logger. This function allows for the adjustment of logging levels
+    """Sets the logging level for a specified logger. This function allows for the adjustment of logging levels
     dynamically,
     facilitating more granular control over logging output. It can operate on both individual loggers and hierarchies
     of loggers,
@@ -142,8 +133,7 @@ def set_logger_level(
 
 
 def match_app_logger_level(only_log_ddsurveys_: bool = False) -> None:
-    """
-    Matches the logging level of the application's custom loggers with the Flask application's current logging level.
+    """Matches the logging level of the application's custom loggers with the Flask application's current logging level.
     This function ensures that the logging output from the custom loggers ('ddsurveys' prefixed) is consistent with
     the Flask application's logging level, providing a unified logging verbosity across the application. Additionally,
     it can filter the logging output to only include messages from 'ddsurveys' prefixed loggers, reducing noise from

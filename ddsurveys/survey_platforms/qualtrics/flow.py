@@ -1,29 +1,24 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-02 16:38
+"""Created on 2023-05-02 16:38.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-from collections import OrderedDict
 from copy import deepcopy
-from typing import Any, MutableMapping, NoReturn, TypeVar, Union
+from typing import Any, NoReturn
 
 from ddsurveys.get_logger import get_logger
-
-from . import EmbeddedData, EmbeddedDataBlock
+from ddsurveys.survey_platforms.qualtrics import EmbeddedDataBlock
 
 logger = get_logger(__name__)
 
 
 # CustomVariables = dict[str, Union[str, list[dict[str, Any]]]]
-FlowType = dict[str, Union[str, list[dict[str, Any]]]]
+FlowType = dict[str, str | list[dict[str, Any]]]
 
 
 class Flow:
-    """
-    Attributes
+    """Attributes:
     ----------
     flow
     _custom_variables : CustomVariables
@@ -57,9 +52,7 @@ class Flow:
     ]
 
     def __init__(self, flow: dict) -> None:
-        """
-
-        Parameters
+        """Parameters
         ----------
         flow
         """
@@ -97,9 +90,8 @@ class Flow:
             self._cv_block = EmbeddedDataBlock(flow)
 
     @classmethod
-    def _get_flow_ids(cls, flow_blocks: Union[list, dict], flow_ids: list) -> NoReturn:
-        """
-        This function recursively searches the passed `flow_blocks` and appends all the ids to the `flow_ids` list.
+    def _get_flow_ids(cls, flow_blocks: list | dict, flow_ids: list) -> NoReturn:
+        """This function recursively searches the passed `flow_blocks` and appends all the ids to the `flow_ids` list.
 
         Parameters
         ----------
@@ -108,7 +100,7 @@ class Flow:
         flow_ids
             The list to which found flow ids will be appended.
 
-        Returns
+        Returns:
         -------
 
         """
@@ -122,8 +114,9 @@ class Flow:
             if "Flow" in flow_blocks:
                 cls._get_flow_ids(flow_blocks["Flow"], flow_ids)
         else:
+            msg = f"Expected flow_blocks to be of type list or dict. Received type: {type(flow_blocks)}"
             raise ValueError(
-                f"Expected flow_blocks to be of type list or dict. Received type: {type(flow_blocks)}"
+                msg
             )
 
     def _identify_custom_variables_flow_id(
@@ -139,8 +132,8 @@ class Flow:
             flow_blocks = flow
 
         flow_id = None
-        candidates = list()
-        flow_ids = list()
+        candidates = []
+        flow_ids = []
         # Check for existing embedded data blocks
         for block in flow_blocks:
             if block["Type"] == "EmbeddedData":
@@ -149,17 +142,15 @@ class Flow:
 
         # No existing custom variables block
         if len(candidates) > 0:
-            valid_candidates = list()
+            valid_candidates = []
             for candidate in candidates:
                 if all(
-                    [
-                        data["Field"].startswith(variables_namespaces)
+                    data["Field"].startswith(variables_namespaces)
                         for data in candidate["EmbeddedData"]
-                    ]
                 ):
                     valid_candidates.append(candidate)
             if len(valid_candidates) > 1:
-                logger.error(f"Multiple custom variable blocks found.")
+                logger.error("Multiple custom variable blocks found.")
                 # raise ValueError(f"Only a single block can contain custom variables. "
                 #                  f"Remove the extra custom variable blocks.")
             if len(valid_candidates) > 0:
@@ -171,7 +162,7 @@ class Flow:
 
         return flow_id
 
-    def _get_block_index(self, flow_id: str) -> Union[int, None]:
+    def _get_block_index(self, flow_id: str) -> int | None:
         if self._flow["Type"] == "EmbeddedData":
             return 0
 

@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
-from ..get_logger import get_logger
-from ..survey_platforms import SurveyPlatform
+from ddsurveys.get_logger import get_logger
+from ddsurveys.survey_platforms import SurveyPlatform
 
 logger = get_logger(__name__)
 
@@ -19,12 +17,11 @@ survey_platforms = Blueprint("survey-platforms", __name__)
 @jwt_required()
 @survey_platforms.route("/<string:survey_platform>/exchange-code", methods=["POST"])
 def exchange_code_for_tokens(survey_platform):
-    """Exchanges the code for an access token. (using OAuth2 Code Flow)
+    """Exchanges the code for an access token. (using OAuth2 Code Flow).
 
     This is a public endpoint, so no authentication is required.
     This endpoint should not provide any sensitive information.
     """
-
     data = request.get_json()
 
     survey_platform_type = survey_platform
@@ -118,8 +115,8 @@ def exchange_code_for_tokens(survey_platform):
                 ),
                 500,
             )
-    except Exception as e:
-        logger.error(f"Error exchanging code for tokens for: {survey_platform_type}")
+    except Exception:
+        logger.exception(f"Error exchanging code for tokens for: {survey_platform_type}")
         return (
             jsonify(
                 {

@@ -1,22 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-06-05 14:42
+"""Created on 2023-06-05 14:42.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import functools
 from datetime import date
-from typing import Optional
 
 from dateutil.relativedelta import relativedelta
-from requests import Response
 
 from ddsurveys.get_logger import get_logger
-
-from .exceptions import FailedQualtricsRequest, MissingMailingListID, MissingSurveyID
-from .qualtrics_requests import QualtricsRequests
+from ddsurveys.survey_platforms.qualtrics.api.exceptions import MissingMailingListID, MissingSurveyID
+from ddsurveys.survey_platforms.qualtrics.api.qualtrics_requests import QualtricsRequests
 
 logger = get_logger(__name__)
 
@@ -29,7 +24,7 @@ class DistributionsAPI(QualtricsRequests):
         api_token="",
         datacenter_location: str = "EU",
         accept_datacenter_redirect: bool = True,
-        mailing_list_id: Optional[str] = None,
+        mailing_list_id: str | None = None,
     ):
         super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
         self.mailing_list_id = mailing_list_id
@@ -38,13 +33,10 @@ class DistributionsAPI(QualtricsRequests):
     def directory_id_wrapper(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if len(args) > 0:
-                args_0 = args[0]
-            else:
-                args_0 = None
+            args_0 = args[0] if len(args) > 0 else None
             mailing_list_id = args_0 or kwargs.get("_survey_id") or self.mailing_list_id
             if mailing_list_id is None:
-                raise MissingMailingListID()
+                raise MissingMailingListID
             self.mailing_list_id = mailing_list_id
             return func(self, *args, **kwargs)
 
@@ -54,13 +46,10 @@ class DistributionsAPI(QualtricsRequests):
     def survey_id_wrapper(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            if len(args) > 0:
-                args_0 = args[0]
-            else:
-                args_0 = None
+            args_0 = args[0] if len(args) > 0 else None
             survey_id = args_0 or kwargs.get("survey_id") or self._survey_id
             if survey_id is None:
-                raise MissingSurveyID()
+                raise MissingSurveyID
             self._survey_id = survey_id
             return func(self, *args, **kwargs)
 
@@ -70,7 +59,7 @@ class DistributionsAPI(QualtricsRequests):
         return self.get("whoami").json()["result"]["userId"]
 
     def list_directories(self):
-        return self.get(f"directories").json()["result"]["elements"]
+        return self.get("directories").json()["result"]["elements"]
 
     def get_first_directory_id(self):
         return self.list_directories()[0]["directoryId"]
@@ -103,7 +92,7 @@ class DistributionsAPI(QualtricsRequests):
         unsubscribed: bool = False,
     ):
 
-        data = dict()
+        data = {}
         for k, v in embedded_data.items():
             if isinstance(v, bool):
                 data[k] = str(v)

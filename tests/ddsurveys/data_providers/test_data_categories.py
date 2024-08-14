@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-import pytest
-from ddsurveys.data_providers.bases import DataCategory, DataProvider
-from ddsurveys.data_providers.fitbit import Activities, Account, Steps, Badges
-from ddsurveys.data_providers.instagram import Media
+from ddsurveys.data_providers.bases import DataProvider
 
 
 def test_get_all_data_categories():
-    """
-    Validate the retrieval of all data categories in form of dictionary.
+    """Validate the retrieval of all data categories in form of dictionary.
     Used to send data categories to the frontend.
     """
     # Ensure the data categories are returned in the expected order.
@@ -38,13 +33,13 @@ def test_get_all_data_categories():
 
         for variable in data_category["builtin_variables"]:
             for attribute in builtin_variable_attributes:
-                assert attribute in variable, f"The {attribute} should be included in the builtin variable dict."
-                assert variable[attribute], f"Builtin Variable {variable.get('name', 'Unknown')} in DataCategory {data_category.get('label', 'Unknown')} has empty or None for {attribute}."
+                assert attribute in variable, f"'{attribute}' should be included in the builtin variable dict."
+                assert variable[attribute], f"Builtin Variable '{variable.get('name', 'Unknown')}' in DataCategory '{data_category.get('label', 'Unknown')}' has empty or None for '{attribute}'."
 
         for attribute in data_category["cv_attributes"]:
             for field in cv_attribute_fields:
-                assert field in attribute, f"The {field} should be included in the custom variable dict."
-                assert attribute[field], f"Custom Variable {attribute.get('name', 'Unknown')} in DataCategory {data_category.get('label', 'Unknown')} has empty or None for {field}."
+                assert field in attribute, f"'{field}' should be included in the custom variable dict."
+                assert attribute[field], f"Custom Variable '{attribute.get('name', 'Unknown')}' in DataCategory '{data_category.get('label', 'Unknown')}' has empty or None for '{field}'."
 
         # a data category must have at least some builtin variables or some custom variables
         assert len(data_category['cv_attributes']) > 0 or len(data_category['builtin_variables']) > 0, "A data category must have at least some builtin variables or some custom variables"

@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 # test_data_provider.py
 # (.venv) C:\UNIL\DataDrivenSurveys\ddsurveys>python -m pytest
+from typing import TYPE_CHECKING
+
 import pytest
+from flask import Flask
 
 from ddsurveys.data_providers.bases import DataProvider, OAuthDataProvider
+
+# TODO: for some reason the directly imported classes are not initialized correctly, as if they were not registered.
 from ddsurveys.data_providers.fitbit import FitbitDataProvider
 from ddsurveys.data_providers.instagram import InstagramDataProvider
 
-
+from ..utils.functions import (
+    builtin_variable_to_qualname,
+    custom_variable_to_qualname,
+    generate_builtin_variables,
+    generate_custom_variables,
+)
 from ..utils.mock_data import fitbit_mock_data, instagram_mock_data
-from ..utils.functions import generate_builtin_variables, generate_custom_variables, variable_to_qualname, validate_url
 
-from flask import Flask
+if TYPE_CHECKING:
+    from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict
 
 app = Flask(__name__)
 
-print("keys", DataProvider.get_registry().keys())
 
-REGISTERED_DATAPROVIDERS = [k for k in DataProvider.get_registry().keys()]
+REGISTERED_DATAPROVIDERS = list(DataProvider.get_registry().keys())
 
 
 @pytest.mark.parametrize('provider_name', REGISTERED_DATAPROVIDERS)
@@ -61,7 +69,7 @@ PARAMETERIZED_PROVIDERS = [
     if provider in EXPECTED_RESULTS
 ]
 
-@pytest.mark.parametrize("provider_name, expected_result", PARAMETERIZED_PROVIDERS)
+@pytest.mark.parametrize(("provider_name", "expected_result"), PARAMETERIZED_PROVIDERS)
 def test_select_relevant_variables(provider_name, expected_result):
     """Test the select_relevant_variables method."""
     # Access the data_provider fixture using the provider name.
@@ -76,10 +84,7 @@ def test_select_relevant_variables(provider_name, expected_result):
  DataProvider.get_all_form_fields()
 """
 def test_get_all_form_fields():
-    """
-    Validate the retrieval of all form fields for DataProviders.
-    """
-
+    """Validate the retrieval of all form fields for DataProviders."""
     # Retrieve the form fields using the superclass method
     data_provider_data = DataProvider.get_all_form_fields()
 
@@ -136,9 +141,10 @@ REQUIRED_FIELDS = {
 
 @pytest.mark.parametrize('provider_name', REGISTERED_DATAPROVIDERS)
 def test_data_provider_required_fields(provider_name):
-    """
-    Validate the required fields for each DataProvider.
-    Checks that the required form fields for each data providers are present, well-defined, and have non-empty or non-None values.
+    """Validate the required fields for each DataProvider.
+
+    Checks that the required form fields for each data providers are present,
+    well-defined, and have non-empty or non-None values.
     """
     form_fields = DataProvider.get_all_form_fields()
     lower_name = provider_name.lower()
@@ -164,16 +170,14 @@ def test_data_provider_required_fields(provider_name):
 
 
 
-"""
-Testing the builtin variables of each registered data provider.
-"""
 # Only need the provider_name from the registry for this test
 @pytest.mark.parametrize("provider_name", REGISTERED_DATAPROVIDERS)
 def test_builtin_variables(provider_name):
+    """Testing the builtin variables of each registered data provider."""
     provider_class = DataProvider.get_class_by_value(provider_name.lower())
     data_provider = provider_class()  # Assuming you instantiate the class here
 
-    builtin_variables = data_provider.get_builtin_variables()
+    builtin_variables: list[BuiltinVariableDict] = data_provider.get_builtin_variables()
 
     assert len(builtin_variables) > 0, f"{provider_name} should have at least one builtin variable."
 
@@ -190,28 +194,15 @@ def test_builtin_variables(provider_name):
             assert variable[field], f"Provider: {provider_name}, Variable: {var_name}, key: {field} has empty or None value."
 
         assert variable["type"] == "Builtin", "The type of the builtin variables should be builtin."
-        assert variable["qualified_name"] == variable_to_qualname(variable, "builtin"), "The qualified name should be the data provider name concatenated with the variable name."
+        assert variable["qualified_name"] == builtin_variable_to_qualname(variable), "The qualified name should be the data provider name concatenated with the variable name."
         assert variable["data_provider"] == provider_name.lower(), f"The data provider of the builtin variables should be {provider_name.lower()}."
 
 
 @pytest.mark.parametrize(
-    "data_provider_class, mock_properties, expected_upload_data",
+    ("data_provider_class", "mock_properties", "expected_upload_data"),
     [
         (
             FitbitDataProvider,
-            # {
-            #     'user_profile': fitbit_mock_data["user_profile"],
-            #     'activities_favorite': fitbit_mock_data["activities_favorite"],
-            #     'activities_frequent': fitbit_mock_data["activities_frequent"],
-            #     'activities_recent': fitbit_mock_data["activities_recent"],
-            #     'lifetime_stats': fitbit_mock_data["lifetime_stats"],
-            #     'activity_logs': fitbit_mock_data["activity_logs"],
-            #     "daily_stats": fitbit_mock_data["daily_stats"],
-            #     "highest_daily_steps_last_6_months_date_steps": fitbit_mock_data["highest_daily_steps_last_6_months_date_steps"],
-            #     "average_weekly_zone_time_last_6_months": fitbit_mock_data["average_weekly_zone_time_last_6_months"],
-            #     "average_weekly_active_time_last_6_months": fitbit_mock_data["average_weekly_active_time_last_6_months"],
-            #     "average_weekly_activity_time_last_6_months": fitbit_mock_data["average_weekly_activity_time_last_6_months"],
-            # },
             fitbit_mock_data,
             {
                 "dds.fitbit.builtin.steps.average.exists": True,
@@ -249,11 +240,11 @@ def test_builtin_variables(provider_name):
     ids=lambda param: param.name_lower if isinstance(param, type) and issubclass(param, DataProvider) else type(param).__name__
 )
 def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_properties, expected_upload_data):
-    """
-    Test the data extraction of the builtin variables for multiple data providers.
-    """
+    """Test the data extraction of the builtin variables for multiple data providers."""
     ctx = app.app_context()
     ctx.push()
+
+    data_provider_class = DataProvider.get_class_by_name(data_provider_class.__name__.replace("DataProvider", ""))
 
     # Mock the properties
     for prop, value in mock_properties.items():
@@ -264,8 +255,8 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
 
     data_provider_name = data_provider_instance.name_lower
 
-    builtin_variables = generate_builtin_variables(data_provider_name)
-    custom_variables = generate_custom_variables(data_provider_name)
+    builtin_variables: list[BuiltinVariableDict] = generate_builtin_variables(data_provider_name)
+    custom_variables: list[CustomVariableDict] = generate_custom_variables(data_provider_name)
 
     data_to_upload = data_provider_instance.calculate_variables(
         project_builtin_variables=builtin_variables,
@@ -285,13 +276,13 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
     assert len(custom_data_to_upload) == custom_variables_attributes_count, f"Check the total number of custom variables to upload for {data_provider_name}, including .exists."
 
     for variable in builtin_variables:
-        qual_name = variable_to_qualname(variable, "builtin")
+        qual_name: str = builtin_variable_to_qualname(variable)
         assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
         assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
 
     for variable in custom_variables:
         for attribute in variable["cv_attributes"]:
-            qual_name = variable_to_qualname(variable, "custom", attribute)
+            qual_name = custom_variable_to_qualname(variable, attribute)
             assert qual_name in data_to_upload, f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
             assert f"{qual_name}.exists" in data_to_upload, f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
 
@@ -305,11 +296,10 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
 
 @pytest.mark.parametrize("provider_name", REGISTERED_DATAPROVIDERS)
 def test_get_used_variables(provider_name):
-    """
-    Test the get_used_variables method.
+    """Test the get_used_variables method.
+
     This method is used to present the variables used in the project to the respondent.
     """
-
     project_buitin_variables = generate_builtin_variables(provider_name.lower())
     project_custom_variables = generate_custom_variables(provider_name.lower())
 
@@ -329,7 +319,7 @@ def test_get_used_variables(provider_name):
 
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
 
-            qual_name = variable_to_qualname(variable, used_variable.get("type"))
+            qual_name = builtin_variable_to_qualname(variable)
 
             assert used_variable["variable_name"] == qual_name, f"Wrong qualified name for the used variable {used_variable['variable_name']}."
 
@@ -345,7 +335,7 @@ def test_get_used_variables(provider_name):
 
             assert used_variable["data_provider"] == provider_name.lower(), f"The data provider of the used variables should be {provider_name}."
 
-            assert used_variable["data"] is not None, f"The data of the used variables should not be None."
+            assert used_variable["data"] is not None, "The data of the used variables should not be None."
 
 
 

@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-05-14 11:40
+"""Created on 2024-05-14 11:40.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
 """
 
-from typing import Any, Callable, Dict
+from typing import Any
 
-from ...get_logger import get_logger
-from ..data_categories import DataCategory
-from ..variables import BuiltInVariable, CVAttribute
-from ...variable_types import TVariableFunction, VariableDataType
+from data_providers.data_categories import DataCategory
+
+from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
+from ddsurveys.get_logger import get_logger
+from ddsurveys.variable_types import VariableDataType
 
 # Import the required libraries to make this work
-from .api import MyAPI
 
 logger = get_logger(__name__)
 
@@ -36,8 +34,7 @@ class ExampleDataCategory(DataCategory):
     api = None
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        user = self.api.get_user()
-        return user
+        return self.api.get_user()
 
     cv_attributes = [
         CVAttribute(

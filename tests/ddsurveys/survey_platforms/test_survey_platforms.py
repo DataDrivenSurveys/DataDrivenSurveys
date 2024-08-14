@@ -1,30 +1,22 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""Test the UI feeder methods.
 
-# test_data_provider.py
-# (.venv) C:\UNIL\DataDrivenSurveys\ddsurveys>python -m pytest
+SurveyPlatform.get_all_form_fields()
+"""
 import pytest
-from ddsurveys.survey_platforms.bases import SurveyPlatform
-import inspect
 from flask import Flask
+
+from ddsurveys.survey_platforms.bases import SurveyPlatform
 
 app = Flask(__name__)
 
-REGISTERED_SURVEY_PLATFORMS =  [k for k in SurveyPlatform.get_registry().keys()]
+REGISTERED_SURVEY_PLATFORMS = list(SurveyPlatform.get_registry().keys())
 
 
-
-"""
- Test the UI feeder methods.
- SurveyPlatform.get_all_form_fields()
-"""
 def test_get_all_form_fields():
-    """
-    Validate the retrieval of all form fields for SurveyPlatforms.
-    """
-
+    """Validate the retrieval of all form fields for SurveyPlatforms."""
     # Retrieve the form fields using the superclass method
-    survey_platform_data = SurveyPlatform.get_all_form_fields()
+    survey_platforms_form_fields = SurveyPlatform.get_all_form_fields()
 
     field_types = ["text", "button"]
 
@@ -35,39 +27,39 @@ def test_get_all_form_fields():
     field_key_mappings  = {
         'text': text_keys,
         'button': button_keys
-    };
+    }
 
     # Base pattern for survey platforms
-    base_pattern = "api.ddsurveys.survey_platforms."
+    base_pattern = "api.ddsurveys.survey_platforms"
     # TODO : Fix the __package__ issue for survey platforms
 
-    for si in survey_platform_data:
+    for survey_platform_form_fields in survey_platforms_form_fields:
         # Extract the name from the value for use in string pattern checks
-        platform_name = si['value'].lower()
+        platform_name = survey_platform_form_fields['value'].lower()
 
         # Check main structure
         for key in main_keys:
-            assert key in si, f"Key {key} missing in survey platform {si.get('label', 'Unknown')}."
-            assert si[key], f"Key {key} in survey platform {si.get('label', 'Unknown')} has empty or None value."
+            assert key in survey_platform_form_fields, f"Key {key} missing in survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
+            assert survey_platform_form_fields[key], f"Key {key} in survey platform {survey_platform_form_fields.get('label', 'Unknown')} has empty or None value."
 
         # Check if 'instructions' follow the expected pattern
-        expected_instruction_pattern = f"{base_pattern}{platform_name}.instructions.text"
-        assert si['instructions'] == expected_instruction_pattern, \
-            f"Instructions pattern mismatch for survey platform {platform_name}. Expected: {expected_instruction_pattern}, Got: {si['instructions']}."
+        expected_instruction_pattern = f"{base_pattern}.{platform_name}.instructions.text"
+        assert survey_platform_form_fields['instructions'] == expected_instruction_pattern, \
+            f"Instructions pattern mismatch for survey platform {platform_name}. Expected: {expected_instruction_pattern}, Got: {survey_platform_form_fields['instructions']}."
 
         # Check fields
-        for field in si['fields']:
+        for field in survey_platform_form_fields['fields']:
             required_keys = field_key_mappings.get(field["type"], [])
             for f_key in required_keys:
-                assert f_key in field, f"Key {f_key} missing in field {field.get('name', 'Unknown')} of survey platform {si.get('label', 'Unknown')}."
-                assert field[f_key] is not None, f"Key {f_key} in field {field.get('name', 'Unknown')} of survey platform {si.get('label', 'Unknown')} has empty or None value."
-            
+                assert f_key in field, f"Key {f_key} missing in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
+                assert field[f_key] is not None, f"Key {f_key} in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')} has empty or None value."
+
             # Check if type is one of the known types, e.g., "text".
-            assert field['type'] in field_types, f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of survey platform {si.get('label', 'Unknown')}."
+            assert field['type'] in field_types, f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
 
             # Check if 'label' and 'helper_text' follow the expected pattern
-            expected_label_pattern = f"{base_pattern}{platform_name}.{field['name']}.label"
-            expected_helper_pattern = f"{base_pattern}{platform_name}.{field['name']}.helper_text"
+            expected_label_pattern = f"{base_pattern}.{platform_name}.{field['name']}.label"
+            expected_helper_pattern = f"{base_pattern}.{platform_name}.{field['name']}.helper_text"
 
             assert field['label'] == expected_label_pattern, \
                 f"Label pattern mismatch in field {field['name']} of survey platform {platform_name}. Expected: {expected_label_pattern}, Got: {field['label']}."
@@ -91,8 +83,7 @@ REQUIRED_FIELDS = {
 
 @pytest.mark.parametrize('survey_platform_name', REGISTERED_SURVEY_PLATFORMS)
 def test_survey_platform_required_fields(survey_platform_name):
-    """
-    Validate the required fields for each SurveyPlatform.
+    """Validate the required fields for each SurveyPlatform.
     Checks that the required form fields for each data providers are present, well-defined, and have non-empty or non-None values.
     """
     form_fields = SurveyPlatform.get_all_form_fields()

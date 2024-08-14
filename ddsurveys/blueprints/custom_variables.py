@@ -1,21 +1,22 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
 import traceback
 from keyword import iskeyword
+from typing import TYPE_CHECKING
 
-from flask import Blueprint, g, jsonify, request
-from flask.typing import ResponseReturnValue
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.orm.attributes import flag_modified
 
-from ..get_logger import get_logger
-from ..models import Collaboration, Project, Researcher, get_db
-from ._common import get_project
+from ddsurveys.blueprints._common import get_project
+from ddsurveys.get_logger import get_logger
+from ddsurveys.models import DBManager, Project
+
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,7 @@ custom_variables = Blueprint("custom-variabls", __name__)
 @jwt_required()
 def get_project_custom_variables():
     logger.debug("Getting project custom variables")
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         user = get_jwt_identity()
 
@@ -44,11 +45,9 @@ def get_project_custom_variables():
 
 
 def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
-    """
-    Validate if the given variable name adheres to Python naming conventions.
+    """Validate if the given variable name adheres to Python naming conventions.
     Returns a triple (is_valid, message_id, text).
     """
-
     # Shortcut for valid variable names
     if variable_name.isidentifier():
         return True, "", ""
@@ -60,7 +59,7 @@ def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
             "Variable name is required.",
         )
 
-    if not variable_name[0].isalpha() and not variable_name[0] == "_":
+    if not variable_name[0].isalpha() and variable_name[0] != "_":
         return (
             False,
             "api.custom_variables.error.must_start_with_letter_or_underscore",
@@ -85,8 +84,7 @@ def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
 
 
 def check_custom_variable_data(data):
-    """
-    Check if the custom variable data is valid.
+    """Check if the custom variable data is valid.
     Returns a triple (is_valid, message_id, text).
     """
     # Check if variable name is valid
@@ -174,7 +172,7 @@ def check_custom_variable_data(data):
 @jwt_required()
 def add_custom_variable_to_project():
     logger.debug("Adding custom variable")
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         user = get_jwt_identity()
 
@@ -238,7 +236,7 @@ def add_custom_variable_to_project():
 
         except Exception as e:
             logger.critical(f"This error should be excepted correctly: {e}")
-            logger.error(f"Failed to add custom variable: {traceback.format_exc()}")
+            logger.exception(f"Failed to add custom variable: {traceback.format_exc()}")
             return (
                 jsonify(
                     {
@@ -257,7 +255,7 @@ def add_custom_variable_to_project():
 @custom_variables.route("/<int:variable_id>", methods=["GET"])
 @jwt_required()
 def get_project_custom_variable(variable_id):
-    with get_db() as db:
+    with DBManager.get_db() as db:
 
         user = get_jwt_identity()
 
@@ -300,7 +298,7 @@ def get_project_custom_variable(variable_id):
 @custom_variables.route("/<int:variable_id>", methods=["PUT"])
 @jwt_required()
 def update_project_custom_variable(variable_id):
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         project, status = get_project(db, user)
@@ -375,7 +373,7 @@ def update_project_custom_variable(variable_id):
 @jwt_required()
 def delete_project_custom_variable(variable_id):
     logger.debug(f"Deleting custom variable: {variable_id}")
-    with get_db() as db:
+    with DBManager.get_db() as db:
         user = get_jwt_identity()
 
         project, status = get_project(db, user)

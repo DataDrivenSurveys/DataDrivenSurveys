@@ -1,34 +1,28 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-05-12 20:52
+"""Created on 2024-05-12 20:52
 You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 __all__ = ["TemplateComplexDataProvider"]
 
+from collections.abc import Callable
 from functools import cached_property
-from typing import Any, Callable, Dict
+from typing import Any
 
-import requests
-
-from ...get_logger import get_logger
-from ...variable_types import TVariableFunction, VariableDataType
-from ..bases import FormField, OAuthDataProvider
-from ..data_categories import DataCategory
-from ..variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 
 # Import the required libraries to make this work
-from .api import MyAPI, MyAPIOAuthClient
-from .data_category import ExampleDataCategory
+from ddsurveys.data_providers.template_complex.data_category import ExampleDataCategory
+from ddsurveys.get_logger import get_logger
+from ddsurveys.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
 
 class TemplateComplexDataProvider(OAuthDataProvider):
-    # Class attributes that need be redeclared or redefined in child classes
-    # The following attributes need to be redeclared in child classes.
+    # Class attributes that need be re-declared or redefined in child classes
+    # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
     all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
@@ -61,14 +55,12 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         # Declare the instance annotations for the API and OAuth clients
@@ -83,24 +75,22 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # OAuthBase methods
     def init_api_client(
-        self, access_token: str = None, refresh_token: str = None, code: str = None
+        self, access_token: str | None = None, refresh_token: str | None = None, code: str | None = None
     ) -> None:
-        ...
 
         self.api_client = ...
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-        ...
 
         self.oauth_client = ...
 
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
     ) -> str: ...
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> Dict[str, Any]: ...
+    def request_token(self, code: str) -> dict[str, Any]: ...
 
     def revoke_token(self, token: str) -> bool: ...
 

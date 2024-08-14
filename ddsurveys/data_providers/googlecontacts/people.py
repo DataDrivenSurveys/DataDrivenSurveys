@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-05 13:23
+"""Created on 2024-07-05 13:23.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ...variable_types import TVariableFunction, VariableDataType
-from ..data_categories import DataCategory
-from ..variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.data_categories import DataCategory
+from ddsurveys.data_providers.variables import BuiltInVariable
+from ddsurveys.variable_types import VariableDataType
+
+if TYPE_CHECKING:
+    from ddsurveys.data_providers.googlecontacts import GoogleContactsDataProvider
 
 data_origin = [
     {
@@ -31,11 +32,10 @@ class People(DataCategory):
 
     def __init__(self, data_provider: "GoogleContactsDataProvider"):
         super().__init__(data_provider)
-        self.data_provider: "GoogleContactsDataProvider"
+        self.data_provider: GoogleContactsDataProvider
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        contacts = self.data_provider.contacts
-        return contacts
+        return self.data_provider.contacts
 
     cv_attributes = []
 

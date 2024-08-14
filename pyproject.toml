@@ -60,9 +60,6 @@ dependencies = [
     # Spacy dependencies
     "SudachiPy",  # Japanese
     # Korean packages did not install correctly on Windows
-#    "mecab-ko",  # Korean
-#    "mecab-ko-dic",  # Korean
-#    "natto-py",  # Korean
     "pymorphy3",  # Ukrainian and Russian
     "pythainlp",  # Thai
     "pymorphy3-dicts-uk",  # Ukrainian
@@ -87,11 +84,6 @@ test = [
     "pytest-flask~=1.2.0",
     "numpy==1.26.4",  # pinned to avoid errors during tests
 ]
-coverage = [
-    "coverage",
-    "codecov",
-    "codacy-coverage"
-]
 doc = [
     "sphinx~=3.0",
     "groundwork-sphinx-theme~=1.1.1",
@@ -99,12 +91,24 @@ doc = [
 ]
 dev = [
     "hatch",
-    "mypy",
-    "black",
-    "isort",
     "docutils",
-    # Add remaining dev dependencies...
-    "funcy"
+    "funcy",
+
+    "ruff",
+
+    # Coverage
+    "coverage[toml]",
+    "codecov",
+    "codacy-coverage",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+
+    # mypy
+    "mypy",
+
+    # Typeshed stubs
+
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -113,12 +117,38 @@ packages = ["ddsurveys"]
 [tool.hatch.version]
 path = "ddsurveys/__init__.py"
 
+[tool.hatch.envs.style]
+dependencies = [
+    "mypy",
+    "ruff",
+]
+
+[tool.hatch.envs.style.scripts]
+lint = "ruff --config ruff_defaults.toml check"
+type-check = "mypy ddsurveys"
+
+[tool.hatch.envs.test]
+dependencies = [
+    "coverage[toml]",
+    "codecov",
+    "codacy-coverage",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[tool.hatch.envs.test.scripts]
+run-coverage = "pytest --cov-config=pyproject.toml --cov=pkg --cov=tests"
+run = "run-coverage --no-cov"
+
+[tool.ruff]
+extend = "ruff_defaults.toml"
+
+[tool.hatch.envs.hatch-static-analysis]
+config-path = "ruff_defaults.toml"
+
 [tool.coverage.run]
 branch = true
-#source = [
-#    "ddsurveys"  # Ensure the package name is correct
-#]
-#concurrency = ["subprocess"]
 
 [tool.coverage.paths]
 source = [
@@ -144,43 +174,14 @@ exclude_also = [
 ]
 ignore_errors = true
 skip_empty = true
-show_missing = false
+show_missing = true
+
 omit = [
     "tests/*"
 ]
 
 [tool.coverage.html]
 directory = "htmlcov"
-#extra_css = "coverage_extra_css.css"
-
-[tool.black]
-line-length = 120
-target-version = "py312"
-
-[tool.isort]
-profile = "black"
-
-[tool.pydocstyle]
-inherit = false
-match-dir = "(?!tests)(?!resources)(?!docs)[^\\.].*"
-match = "(?!test)(?!setup)[^\\._].*\\.py"
-ignore = ["D200", "D203", "D213", "D406", "D407"]
-
-[tool.flake8]
-max-line-length = 120
-doctests = true
-ignore = ["D200", "D203", "D213", "D406", "D407"]
-exclude = [
-    ".git",
-    ".eggs",
-    ".idea",
-    "__pycache__",
-    "tests/",
-    "docs/",
-    "build/",
-    "dist/",
-    "setup.py"
-]
 
 [tool.mypy]
 disallow_any_decorated = false
@@ -192,4 +193,3 @@ disallow_untyped_defs = false
 ignore_missing_imports = true
 warn_unused_ignores = true
 warn_return_any = false
-

@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-@author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
-"""
-__all__ = ["GitHubDataProvider"]
+from __future__ import annotations
 
 import traceback
 from functools import cached_property
-from typing import Any, Callable, Dict
+from typing import TYPE_CHECKING, Any
 
 from github import ApplicationOAuth, Auth, Github
-from github.AccessToken import AccessToken
 from github.GithubException import BadCredentialsException, GithubException
 
-from ..get_logger import get_logger
-from ..variable_types import TVariableFunction, VariableDataType
-from .bases import FormField, OAuthDataProvider
-from .data_categories import DataCategory
-from .variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
+from ddsurveys.data_providers.data_categories import DataCategory
+from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
+from ddsurveys.get_logger import get_logger
+from ddsurveys.variable_types import VariableDataType
+
+__all__ = ["GitHubDataProvider"]
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from github.AccessToken import AccessToken
+
+    from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
@@ -38,8 +44,7 @@ class Account(DataCategory):
     api: Github = None
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        user = self.api.get_user()
-        return user
+        return self.api.get_user()
 
     cv_attributes = [
         CVAttribute(
@@ -94,8 +99,7 @@ class Repositories(DataCategory):
     ]
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        repos = self.data_provider.get_user_repositories
-        return repos
+        return self.data_provider.get_user_repositories
 
     cv_attributes = [
         CVAttribute(
@@ -179,8 +183,8 @@ class Repositories(DataCategory):
 
 
 class GitHubDataProvider(OAuthDataProvider):
-    # Class attributes that need be redeclared or redefined in child classes
-    # The following attributes need to be redeclared in child classes.
+    # Class attributes that need be re-declared or redefined in child classes
+    # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
     all_initial_funcs: dict[str, Callable] = {}
     factory_funcs: dict[str, Callable] = {}
@@ -224,14 +228,12 @@ class GitHubDataProvider(OAuthDataProvider):
     data_categories = [Account, Repositories]
 
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Github
@@ -245,7 +247,7 @@ class GitHubDataProvider(OAuthDataProvider):
 
     # OAuthBase methods
     def init_api_client(
-        self, access_token: str = None, refresh_token: str = None, code: str = None
+        self, access_token: str | None = None, refresh_token: str | None = None, code: str | None = None
     ) -> None:
         if access_token is not None:
             self.access_token = access_token
@@ -268,7 +270,7 @@ class GitHubDataProvider(OAuthDataProvider):
         self.oauth_client: ApplicationOAuth = app
 
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
     ) -> str:
         # required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
         #
@@ -325,15 +327,13 @@ class GitHubDataProvider(OAuthDataProvider):
         return self.test_connection()
 
     def test_connection(self) -> bool:
-        """
-        We try to send a wrong code to get_access_token and check if we get a BadCredentialsException
+        """We try to send a wrong code to get_access_token and check if we get a BadCredentialsException
         If the request fails for bad_verification_code then the connection is valid
-        If the request fails for any other reason, then the connection is not valid
+        If the request fails for any other reason, then the connection is not valid.
 
         Returns:
             True if the connection is valid, False otherwise.
         """
-
         try:
             self.oauth_client.get_access_token("wrong_code")
             return True

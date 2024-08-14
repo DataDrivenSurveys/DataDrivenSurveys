@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
-# test_data_provider.py
-# (.venv) C:\UNIL\DataDrivenSurveys\ddsurveys>python -m pytest
+from typing import Literal
 import pytest
 from flask import Flask
 
@@ -17,7 +15,7 @@ from ..utils.mock_data import fitbit_mock_data
 app = Flask(__name__)
 
 
-def variable_to_qualname(variable, v_type = "builtin") -> str:
+def variable_to_qualname(variable, v_type: Literal["builtin", "custom"] = "builtin") -> str:
     """Return the qualified name of a variable."""
     qual_name = f"dds.{variable['data_provider']}.{v_type}.{variable['category'].lower()}.{variable['name']}"
     if variable["is_indexed_variable"]:
@@ -42,7 +40,6 @@ def instagram_data_provider() -> InstagramDataProvider:
 
 def data_category_to_custom_variable(data_category, data_provider_name, filters, selection):# -> dict[str, Any]:
     """Return the custom variable format based on a data category."""
-
     return {
         "id": 9,
         "cv_attributes": [
@@ -59,20 +56,19 @@ def data_category_to_custom_variable(data_category, data_provider_name, filters,
 
 
 @pytest.mark.parametrize(
-    "label, filters, selection, expected_attribute_value",
+    ("label", "filters", "selection", "expected_attribute_value"),
     get_scenarios(),
     ids=[scenario[0] for scenario in get_scenarios()]
 )
 def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider, label, filters, selection, expected_attribute_value):
-    """
-        Test the data extraction of the custom variables.
-        Testing the filter and selection on the list of data.
-        Filtering tested using a single filter at a time.
-        All operators and data types are tested.
-        All selection operators are tested.
-        Mock the FitbitDataProvider activities_frequent property with the mock data.
-        Check that the data is extracted correctly.
-        Check the variable values are properly computed and the data to upload is properly formatted.
+    """Test the data extraction of the custom variables.
+    Testing the filter and selection on the list of data.
+    Filtering tested using a single filter at a time.
+    All operators and data types are tested.
+    All selection operators are tested.
+    Mock the FitbitDataProvider activities_frequent property with the mock data.
+    Check that the data is extracted correctly.
+    Check the variable values are properly computed and the data to upload is properly formatted.
     """
 
     def find_name_by_attr(data_category, expected_attribute_value):
@@ -85,7 +81,6 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
 
     ctx = app.app_context()
     ctx.push()
-
 
     mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
 
@@ -117,11 +112,12 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
                     return
 
                 if str(expected_value) != str(value):
-                    print(f"Expected value for key '{key}' is {expected_value}, but got {value}")
+                    pass
 
                 assert str(value) == str(expected_value), f"Expected value for key '{key}' is {expected_value}, but got {value}"
                 return
-        raise KeyError(f"No key ending with '{key_suffix}' found in the data_to_upload dictionary.")
+        msg = f"No key ending with '{key_suffix}' found in the data_to_upload dictionary."
+        raise KeyError(msg)
 
     # Check the data to upload
     assert_value_by_key_suffix(data_to_upload, cv_attribute_name, expected_attribute_value.get("value"))
@@ -131,7 +127,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
 
 
 @pytest.mark.parametrize(
-    "label, filters, selection, expected_attribute_value",
+    ("label", "filters", "selection", "expected_attribute_value"),
     get_scenarios(),
     ids=[scenario[0] for scenario in get_scenarios()]
 )
@@ -173,10 +169,13 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
         assert_has_value(filter, 'value', "The filter value should be set.")
 
     def assert_selection(selection):
-        operator = selection.get('operator')
         assert_has_value(selection, 'operator', "The selection operator should be set.")
-        assert_has_value(selection, 'attribute', "The selection attribute should be set.")
-        assert_attribute(selection.get('attribute'))
+        operator = selection.get('operator')
+        if operator["operator"] == "random":
+            assert selection["attribute"] is None, "The selection attribute should be 'None'"
+        else:
+            assert_has_value(selection, 'attribute', "The selection attribute should be set.")
+            assert_attribute(selection.get('attribute'))
 
         # Check the selection operator
         assert_has_value(operator, 'strategy', "The selection operator strategy should be set.")

@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-08 12:16
+"""Created on 2023-05-08 12:16.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
-import sys
 import os
-from pprint import pprint
+import sys
 
 # Insert project root into the path to allow imports
 sys.path.insert(0, os.path.join(os.getcwd(), ".."))
 
 from survey_platforms.qualtrics import EmbeddedData, EmbeddedDataBlock, Flow, SurveysAPI
-
 
 if __name__ == "__main__":
     #
@@ -35,42 +31,42 @@ if __name__ == "__main__":
              'VariableType': 'Scale', 'DataVisibility': []}
         ]
     }
-    
+
     test2 = {
-        'FlowID': 'FL_2', 
-        'Type': 'EmbeddedData', 
+        'FlowID': 'FL_2',
+        'Type': 'EmbeddedData',
         'EmbeddedData': [
             {
-                'Description': 'dds.fitbit.account.creation_date', 
-                'Field': 'dds.fitbit.account.creation_date', 
-                'Type': 'Recipient', 
-                'VariableType': 'Date', 
-                'DataVisibility': {'Private': False, 'Hidden': False}, 
-                'AnalyzeText': False, 
+                'Description': 'dds.fitbit.account.creation_date',
+                'Field': 'dds.fitbit.account.creation_date',
+                'Type': 'Recipient',
+                'VariableType': 'Date',
+                'DataVisibility': {'Private': False, 'Hidden': False},
+                'AnalyzeText': False,
                 'Value': ''
             }, {
-                'Description': 'dds.fitbit.activities_by_frequency[0]', 
-                'Field': 'dds.fitbit.activities_by_frequency[0]', 
-                'Type': 'Recipient', 
-                'VariableType': 'String', 
-                'DataVisibility': {'Private': False, 'Hidden': False}, 
-                'AnalyzeText': False, 
+                'Description': 'dds.fitbit.activities_by_frequency[0]',
+                'Field': 'dds.fitbit.activities_by_frequency[0]',
+                'Type': 'Recipient',
+                'VariableType': 'String',
+                'DataVisibility': {'Private': False, 'Hidden': False},
+                'AnalyzeText': False,
                 'Value': ''
             }, {
-                'Description': 'dds.fitbit.activities_by_frequency[1]', 
-                'Field': 'dds.fitbit.activities_by_frequency[1]', 
-                'Type': 'Recipient', 
-                'VariableType': 'String', 
-                'DataVisibility': {'Private': False, 'Hidden': False}, 
-                'AnalyzeText': False, 
+                'Description': 'dds.fitbit.activities_by_frequency[1]',
+                'Field': 'dds.fitbit.activities_by_frequency[1]',
+                'Type': 'Recipient',
+                'VariableType': 'String',
+                'DataVisibility': {'Private': False, 'Hidden': False},
+                'AnalyzeText': False,
                 'Value': ''
             }, {
-                    'Description': 'dds.fitbit.steps.average', 
-                    'Field': 'dds.fitbit.steps.average', 
-                    'Type': 'Recipient', 
-                    'VariableType': 'Scale', 
-                    'DataVisibility': {'Private': False, 'Hidden': False}, 
-                    'AnalyzeText': False, 
+                    'Description': 'dds.fitbit.steps.average',
+                    'Field': 'dds.fitbit.steps.average',
+                    'Type': 'Recipient',
+                    'VariableType': 'Scale',
+                    'DataVisibility': {'Private': False, 'Hidden': False},
+                    'AnalyzeText': False,
                     'Value': ''
             }
         ]
@@ -99,12 +95,9 @@ if __name__ == "__main__":
     # Update the variables on Qualtrics
     resp = surveys_api.update_flow(survey_id, flow.to_dict())
 
-    print(f"The survey can now be viewed on Qualtrics at the following URL:\n{surveys_api.get_survey_url(survey_id)}")
 
     # Check if the new flow is valid and has a root block:
     qualtrics_flow = Flow(surveys_api.get_flow(survey_id).json()["result"])
-    print(qualtrics_flow)
-    pprint(qualtrics_flow.to_dict())
 
     # The result should be this:
     # Flow(2 blocks, custom variables block id: FL_3)
@@ -141,7 +134,6 @@ if __name__ == "__main__":
     # Comment the following line if you want to check how the survey looks like on Qualtrics
     delete_resp = surveys_api.delete_survey(survey_id)
     if delete_resp.status_code == 200:
-        print("Deleted successfully.")
+        pass
     else:
-        print("Failed to delete with the following error:")
-        pprint(delete_resp.json())
+        pass

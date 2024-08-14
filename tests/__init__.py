@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-27 13:51
+"""Created on 2023-04-27 13:51.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 
 import json
-from os import PathLike
+import os
+from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Iterator, Mapping
+
+os.environ["DDS_ENV"] = "testing"
+
+from ddsurveys.utils import handle_env_file
+
+handle_env_file()
+
 
 CURRENT_DIR = Path(__file__).resolve().parent
 
@@ -18,7 +23,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 class TestsConfig(Mapping):
     _config: dict = {}
 
-    def __init__(self, config_path: PathLike = None):
+    def __init__(self, config_path: Path | None = None):
         if config_path is None:
             config_path = CURRENT_DIR.joinpath("test_config.json")
         self.config_path = config_path
@@ -32,23 +37,21 @@ class TestsConfig(Mapping):
         if len(self.__class__._config) == 0:
             self.__class__._config = value
         else:
-            raise ValueError("Tests configuration is already loaded.")
+            msg = "Tests configuration is already loaded."
+            raise ValueError(msg)
 
     def save_config(self) -> None:
-        """
-        Saves the tests configuration file.
-        """
+        """Saves the tests configuration file."""
         with open(CURRENT_DIR.joinpath("test_config.json"), "w") as f:
             json.dump(self.config, f)
 
     def load_config(self) -> None:
-        """
-        Loads the tests configuration file.
+        """Loads the tests configuration file.
 
         Returns:
             A dictionary containing the configuration.
         """
-        with open(CURRENT_DIR.joinpath("test_config.json"), "r") as f:
+        with open(CURRENT_DIR.joinpath("test_config.json")) as f:
             self.config = json.load(f)
 
     def __len__(self) -> int:
@@ -73,8 +76,7 @@ class TestsConfig(Mapping):
         return str(self.config)
 
     def __del__(self) -> None:
-        """
-        Saves the tests configuration file when the object is destroyed.
+        """Saves the tests configuration file when the object is destroyed.
 
         Returns:
 

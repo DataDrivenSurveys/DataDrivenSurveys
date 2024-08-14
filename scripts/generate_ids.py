@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-16 11:18
+"""Created on 2023-05-16 11:18.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import argparse
-import string
 import random
-
+import string
 
 CHARACTERS = string.ascii_letters + string.digits
 
 
-def parse_args(args: list[str] = None):
+def parse_args(args: list[str] | None = None):
     parser = argparse.ArgumentParser()
 
     return parser.parse_args(args)

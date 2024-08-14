@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module is a template file that can be used as a starting point for creating your own data providers.
+"""This module is a template file that can be used as a starting point for creating your own data providers.
 You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-__all__ = ["GoogleContactsDataProvider"]
+from __future__ import annotations
 
-import traceback
 import operator
+import traceback
 from collections import namedtuple
-from functools import cached_property, cache
-from typing import Any, Callable
+from functools import cache, cached_property
+from typing import TYPE_CHECKING, Any
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -21,16 +19,20 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
 
-from ..utils.text_structure_analyzer import SpacyTextStructureAnalyzer
+from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
+from ddsurveys.data_providers.googlecontacts.api_response_dicts import *
+from ddsurveys.data_providers.googlecontacts.people import People
+from ddsurveys.data_providers.utils.text_structure_analyzer import SpacyTextStructureAnalyzer
+
 # from textblob import TextBlob
+from ddsurveys.get_logger import get_logger
 
-from ...get_logger import get_logger
-from ...variable_types import TVariableFunction
-from ..bases import FormField, OAuthDataProvider
+__all__ = ["GoogleContactsDataProvider"]
 
-from .api_response_dicts import *
-from .people import People
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
+    from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
@@ -40,8 +42,8 @@ logger = get_logger(__name__)
 
 
 class GoogleContactsDataProvider(OAuthDataProvider):
-    # Class attributes that need be redeclared or redefined in child classes
-    # The following attributes need to be redeclared in child classes.
+    # Class attributes that need be re-declared or redefined in child classes
+    # The following attributes need to be re-declared in child classes.
     # You can copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
     all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
@@ -117,14 +119,12 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Resource
@@ -148,10 +148,10 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     # OAuthBase methods
     def init_api_client(
         self,
-        token: str = None,
-        refresh_token: str = None,
-        client_id: str = None,
-        client_secret: str = None,
+        token: str | None = None,
+        refresh_token: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
     ) -> None:
         if token is not None:
             self.access_token = token
@@ -173,7 +173,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.api_client = build("people", "v1", credentials=self.credentials)
 
     def init_oauth_client(
-        self, client_id: str = None, client_secret: str = None, project_id: str = None
+        self, client_id: str | None = None, client_secret: str | None = None, project_id: str | None = None
     ) -> None:
         client_config = {
             "web": {
@@ -195,7 +195,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.oauth_client.redirect_uri = self.redirect_uri
 
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] = None
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
     ) -> str:
         url, state = self.oauth_client.authorization_url(
             # Recommended, enable offline access so that you can refresh an access token without
@@ -215,13 +215,13 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return self.client_id
 
     def get_required_scopes(
-        self, builtin_variables: list[dict] = None, custom_variables: list[dict] = None
+        self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
     ) -> list[str]:
         self.required_scopes = self.__class__._scopes
         return self.required_scopes
 
     def request_token(self, code: str) -> dict[str, Any]:
-        logger.info(f"Requesting token")
+        logger.info("Requesting token")
         exchange_failed = False
         try:
             self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
@@ -233,7 +233,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             exchange_failed = True
 
         if exchange_failed or not set(self.required_scopes).issubset(set(credentials.granted_scopes)):
-            logger.error(f"The required scopes were not granted.")
+            logger.error("The required scopes were not granted.")
             self.revoke_token(credentials.token)
             return {
                 "success": False,
@@ -271,7 +271,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         )
 
         if r.status_code == 200:
-            logger.info(f"Successfully revoked google token")
+            logger.info("Successfully revoked google token")
             return True
         else:
             logger.error(f"Failed to revoke google token: {r.status_code}")
@@ -296,8 +296,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return True
 
     def test_connection(self) -> bool:
-        """
-        Tests the connection to the Google People API using the provided OAuth credentials.
+        """Tests the connection to the Google People API using the provided OAuth credentials.
 
         This method verifies the client credentials by attempting to list the connections
         of the authenticated user. It checks the validity of the client ID, client secret,
@@ -340,9 +339,9 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             ):
                 return True
             else:
-                raise e
+                raise
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"An unexpected error occurred when verifying the client credentials: {e}"
             )
             logger.debug(traceback.format_exc())
@@ -355,7 +354,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     @cached_property
     def contacts(self) -> list[ContactDict]:
         # Fetch all contacts from the API and return them as a list of dictionaries.
-        connections: list[dict] = list()
+        connections: list[dict] = []
         has_next_page = True
         next_page_token = None
         while has_next_page:
@@ -396,7 +395,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             for c in self.contacts
             if ((cat := c.get(category, [])) or True)
                and len(cat) > 0
-               and any([subcat.get(subcategory, "") != "" for subcat in cat])
+               and any(subcat.get(subcategory, "") != "" for subcat in cat)
         ]
 
     @cache
@@ -444,7 +443,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 for c in self.contacts
                 if ((organizations := c.get("organizations", [])) or True)
                 and len(organizations) > 0
-                and any([org.get("name", "") != "" or org.get("title", "") != "" for org in organizations])
+                and any(org.get("name", "") != "" or org.get("title", "") != "" for org in organizations)
             ]
 
     @cached_property

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-04-27 16:02
+"""Created on 2023-04-27 16:02.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -17,7 +15,7 @@ def extract_qualtrics_error(resp: Response) -> str:
     json_error = json_meta.get("error", {})
     error_message = json_error.get("errorMessage", "")
     specific_error = json_error.get("messsage", "")
-    detailed_errors = list()
+    detailed_errors = []
 
     if "validationErrors" in json_error:
         for error in json_error["validationErrors"]:
@@ -77,7 +75,7 @@ class BadRequestError(FailedQualtricsRequest):
     """Exception raised when a 400 Bad Request error occurs."""
 
     def __init__(self, resp: Response):
-        message = f"Possible cause: Your request is malformed. Check the syntax and structure of your request."
+        message = "Possible cause: Your request is malformed. Check the syntax and structure of your request."
         super().__init__(resp, message)
 
 
@@ -85,7 +83,7 @@ class AuthorizationError(FailedQualtricsRequest):
     """Exception raised when a 401 Unauthorized error occurs."""
 
     def __init__(self, resp: Response):
-        message = f"Possible cause: You're not authenticated or don't have permission to access the requested resource."
+        message = "Possible cause: You're not authenticated or don't have permission to access the requested resource."
         super().__init__(resp, message)
 
 
@@ -93,7 +91,7 @@ class NotFoundError(FailedQualtricsRequest):
     """Exception raised when a 404 Not Found error occurs."""
 
     def __init__(self, resp: Response):
-        message = f"Possible cause: The requested resource could not be found."
+        message = "Possible cause: The requested resource could not be found."
         super().__init__(resp, message)
 
 
@@ -101,7 +99,7 @@ class ServerError(FailedQualtricsRequest):
     """Exception raised when a 500 Internal Server Error occurs."""
 
     def __init__(self, resp: Response):
-        message = f"Possible cause: The server encountered an internal error."
+        message = "Possible cause: The server encountered an internal error."
         super().__init__(resp, message)
 
 

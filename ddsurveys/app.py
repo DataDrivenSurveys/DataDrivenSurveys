@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-23 15:41
+"""Created on 2023-05-23 15:41.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
 
 import datetime
 from functools import wraps
@@ -16,17 +15,17 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required
 
-from .blueprints.auth import auth
-from .blueprints.projects import projects
-from .blueprints.survey_platforms import survey_platforms
-from .data_providers.bases import DataProvider
+from ddsurveys.blueprints.auth import auth
+from ddsurveys.blueprints.projects import projects
+from ddsurveys.blueprints.survey_platforms import survey_platforms
+from ddsurveys.data_providers.bases import DataProvider
 
 # Import project libraries
-from .get_logger import get_logger, only_log_ddsurveys, set_logger_level
-from .models import get_db, init_session
-from .survey_platforms.bases import SurveyPlatform
-from .utils import handle_env_file
-from .variable_types import Data, VariableDataType
+from ddsurveys.get_logger import get_logger, only_log_ddsurveys, set_logger_level
+from ddsurveys.models import DBManager
+from ddsurveys.survey_platforms.bases import SurveyPlatform
+from ddsurveys.utils import handle_env_file
+from ddsurveys.variable_types import Data, VariableDataType
 
 logger = get_logger(__name__)
 
@@ -115,7 +114,7 @@ def create_app() -> Flask:
 
     app.config.from_mapping(APP_CONFIG)
 
-    init_session(app)  # Initialize the database session
+    DBManager.init_session(app=app)  # Initialize the database session
 
     jwt = JWTManager(app)  # initializing the JWTManager
 
@@ -131,7 +130,7 @@ def create_app() -> Flask:
     # App configuration
     @app.before_request
     def create_db_session() -> None:
-        flask.g.db = get_db()  # Store the database session in the Flask global context
+        flask.g.db = DBManager.get_db()  # Store the database session in the Flask global context
 
     @app.teardown_appcontext
     def shutdown_session(response_or_exc) -> None:

@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-07-05 13:03
+"""Created on 2024-07-05 13:03.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+import importlib
+import inspect
 import os
 import re
 import traceback
-
-import spacy
-import importlib
-import inspect
 from abc import ABC, abstractmethod
 
-from ...get_logger import get_logger
-from .language_detector import LanguageDetector
+import spacy
+
+from ddsurveys.data_providers.utils.language_detector import LanguageDetector
+from ddsurveys.get_logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -126,7 +124,8 @@ class SpacyTextStructureAnalyzer(TextStructureAnalyzer):
         elif isinstance(value, spacy.language.Doc):
             self._doc = value
         else:
-            raise TypeError(f"value must be a string or a spaCy Doc object. Received: {value} of type {type(value).__name__}")
+            msg = f"value must be a string or a spaCy Doc object. Received: {value} of type {type(value).__name__}"
+            raise TypeError(msg)
 
     @classmethod
     def get_model(cls, language: str, prefer_external: bool = False) -> spacy.Language:
@@ -171,7 +170,7 @@ class SpacyTextStructureAnalyzer(TextStructureAnalyzer):
             try:
                 nlp("abcdefghijklmnopqrstuvwxyz")
             except Exception as e:
-                logger.error(f"Failed to load standard Spacy model for language {language}: {e}")
+                logger.exception(f"Failed to load standard Spacy model for language {language}: {e}")
                 logger.debug(traceback.format_exc())
                 cls.failed_standard_models.add(language)
                 return None
@@ -190,20 +189,20 @@ class SpacyTextStructureAnalyzer(TextStructureAnalyzer):
     @classmethod
     def load_all_working_models(cls):
         module = importlib.import_module("spacy.lang")
-        for name, obj in inspect.getmembers(module, inspect.ismodule):
+        for name, _obj in inspect.getmembers(module, inspect.ismodule):
             if len(name) == 2 and name not in cls.working_models:
                 cls.get_model(name)
 
     @classmethod
     def load_all_standard_models(cls):
         module = importlib.import_module("spacy.lang")
-        for name, obj in inspect.getmembers(module, inspect.ismodule):
+        for name, _obj in inspect.getmembers(module, inspect.ismodule):
             if len(name) == 2:
                 nlp = cls.get_standard_model(name)
                 try:
                     nlp("")
                 except Exception as e:
-                    logger.error(f"Failed to load standard Spacy model for language {name}: {e}")
+                    logger.exception(f"Failed to load standard Spacy model for language {name}: {e}")
                     logger.debug(traceback.format_exc())
                     del cls.standard_models[name]
                     cls.failed_standard_models.add(name)
