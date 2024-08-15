@@ -1,26 +1,20 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2024-05-12 20:52
+"""Created on 2024-05-12 20:52
 You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
 __all__ = ["TemplateComplexDataProvider"]
 
+from collections.abc import Callable
 from functools import cached_property
-from typing import Any, Callable, Dict
-
-import requests
+from typing import Any
 
 from ...get_logger import get_logger
-from ...variable_types import TVariableFunction, VariableDataType
+from ...variable_types import TVariableFunction
 from ..bases import FormField, OAuthDataProvider
-from ..data_categories import DataCategory
-from ..variables import BuiltInVariable, CVAttribute
 
 # Import the required libraries to make this work
-from .api import MyAPI, MyAPIOAuthClient
 from .data_category import ExampleDataCategory
 
 logger = get_logger(__name__)
@@ -61,14 +55,12 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         # Declare the instance annotations for the API and OAuth clients
@@ -85,12 +77,10 @@ class TemplateComplexDataProvider(OAuthDataProvider):
     def init_api_client(
         self, access_token: str = None, refresh_token: str = None, code: str = None
     ) -> None:
-        ...
 
         self.api_client = ...
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-        ...
 
         self.oauth_client = ...
 
@@ -100,7 +90,7 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> Dict[str, Any]: ...
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]: ...
 
     def revoke_token(self, token: str) -> bool: ...
 

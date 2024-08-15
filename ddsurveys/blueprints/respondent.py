@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
 import traceback
@@ -15,10 +13,19 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ..data_providers import DataProvider, OAuthDataProvider, TOAuthDataProviderClass
 from ..get_logger import get_logger
-from ..models import DataConnection
+from ..models import (
+    DataConnection,
+    DataProviderAccess,
+    DataProviderName,
+    DataProviderType,
+    Distribution,
+    Project,
+    Respondent,
+    get_db,
+)
 from ..models import DataProvider as DataProviderModel
-from ..models import DataProviderAccess, DataProviderName, DataProviderType, Distribution, Project, Respondent, get_db
 from ..survey_platforms import SurveyPlatform
+
 # from ._common import get_project_data_connection
 
 logger = get_logger(__name__)
@@ -156,7 +163,6 @@ def get_public_data_providers():
     This is a public endpoint, so no authentication is required. This endpoint should not provide any sensitive information.
     The respondent is
     """
-
     with get_db() as db:
 
         project = get_project(db, g.get("project_short_id"))
@@ -262,15 +268,15 @@ def exchange_code_for_tokens():
             )
 
             # Exchange the code for an access token
-
             provider_instance.get_required_scopes(
                 project.variables, project.custom_variables
             )
-            response = provider_instance.request_token(data["code"])
+            logger.debug(data)
+            response = provider_instance.request_token(data)
 
             if response["success"]:
                 logger.info(
-                    f"Successfully exchanged code for tokens for: {data_provider_name}"
+                    "Successfully exchanged code for tokens for: %s", data_provider_name
                 )
                 return (
                     jsonify(
@@ -284,23 +290,22 @@ def exchange_code_for_tokens():
                     ),
                     200,
                 )
-            else:
-                logger.error(
-                    f"Error exchanging code for tokens for: {data_provider_name}"
-                )
-                return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": response["message_id"],
-                                "text": "Full scope not granted",
-                            },
-                        }
-                    ),
-                    500,
-                )
-        except Exception as e:
-            logger.error(f"Error exchanging code for tokens for: {data_provider_name}")
+            logger.error(
+                "Error exchanging code for tokens for: %s", data_provider_name
+            )
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": response["message_id"],
+                            "text": response.get("text", "Full scope not granted"),
+                        },
+                    }
+                ),
+                400,
+            )
+        except Exception:
+            logger.exception("Error exchanging code for tokens for: %s\n", data_provider_name)
             logger.debug(traceback.format_exc())
             return (
                 jsonify(
@@ -390,7 +395,7 @@ def prepare_survey():
             frontend_variables = data.get("frontend_variables")
 
             if not respondent_id:
-                logger.error(f"Missing respondent id.")
+                logger.error("Missing respondent id.")
                 return (
                     jsonify(
                         {
@@ -415,7 +420,7 @@ def prepare_survey():
             )
 
             if not respondent:
-                logger.error(f"Respondent not found.")
+                logger.error("Respondent not found.")
                 return (
                     jsonify(
                         {
@@ -430,7 +435,7 @@ def prepare_survey():
 
             # check if the respondent already has a distribution
             if respondent.distribution:
-                logger.info(f"Respondent already has a distribution url.")
+                logger.info("Respondent already has a distribution url.")
                 # return the distribution url
                 return (
                     jsonify(
@@ -688,8 +693,7 @@ def check_data_provider_access_tokens(
 
 @respondent.route("/connect", methods=["POST"])
 def connect_respondent():
-    """
-    This function receives a JSON array of data providers and perform checks for each one.
+    """This function receives a JSON array of data providers and perform checks for each one.
     If all data providers exist, it will return the already existing respondent.
     If some exist and some do not, it will return a bad request.
     If none exist, it will create an associated data providers and a new respondent and return it.
@@ -802,7 +806,7 @@ def connect_respondent():
             respondent: Respondent = (
                 db.query(Respondent).filter_by(project_id=project.id).first()
             )  # There should only be one respondent per project
-            logger.info(f"Found existing respondent.")
+            logger.info("Found existing respondent.")
             return (
                 jsonify(
                     {
@@ -827,7 +831,7 @@ def connect_respondent():
             db.add_all(new_data_provider_accesses)
             try:
                 db.commit()
-                logger.info(f"Successfully created a new respondent.")
+                logger.info("Successfully created a new respondent.")
                 return (
                     jsonify(
                         {
@@ -840,7 +844,7 @@ def connect_respondent():
                     ),
                     201,
                 )
-            except IntegrityError as e:
+            except IntegrityError:
                 db.rollback()
                 logger.error(
                     f"Error creating a new respondent: {traceback.format_exc()}"

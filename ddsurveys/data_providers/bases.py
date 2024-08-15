@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-05-23 14:01
+"""Created on 2023-05-23 14:01
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -46,8 +44,7 @@ DATA_PROVIDER_BASE_CLASSES = ["DataProvider", "OAuthBase"]
 
 # TODO: stop using Enum attribute nomenclature and use attribute names that make sense
 class DataProvider(UIRegistry):
-    """
-    Base class for data providers that provides common functionality for all data providers.
+    """Base class for data providers that provides common functionality for all data providers.
 
     Child classes should follow the same class layout to standardize the code base and to facilitate development.
     Comments declare what type of methods are meant to go where.
@@ -252,8 +249,7 @@ class DataProvider(UIRegistry):
     def get_used_variables(
         project_builtin_variables=None, project_custom_variables=None
     ):
-        """
-        Returns a list of dicts containing the name and description of the project enabled variables
+        """Returns a list of dicts containing the name and description of the project enabled variables
         Used by the respondent page to display the variables used in the project
         """
         used_variables = []
@@ -295,8 +291,7 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_data_category(cls, data_category_name: str) -> DataCategory:
-        """
-        Get a specific data category by its name.
+        """Get a specific data category by its name.
 
         Args:
             data_category_name (str): The name of the data category to retrieve.
@@ -311,8 +306,7 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_data_categories(cls) -> list[dict[str, Any]]:
-        """
-        Get a list of data categories along with their associated data provider and built-in variables.
+        """Get a list of data categories along with their associated data provider and built-in variables.
 
         Returns:
             list[dict[str, Any]]: A list of dictionaries, where each dictionary represents a data category and its associated data provider, along with a list of built-in variables.
@@ -357,8 +351,7 @@ class DataProvider(UIRegistry):
 
     @classmethod
     def get_all_form_fields(cls) -> list[dict[str, Any]]:
-        """
-        Get a list of all form fields along with their associated metadata.
+        """Get a list of all form fields along with their associated metadata.
 
         Returns:
             list[dict[str, Any]]: A list of dictionaries, where each dictionary represents a form field and its associated metadata.
@@ -526,7 +519,7 @@ class OAuthDataProvider(DataProvider):
         # TODO: avoid using environment variables.
         frontend_url = os.getenv("FRONTEND_URL")
         if frontend_url is None or frontend_url == "":
-            logger.critical(f"FRONTEND_URL environment variable not set, empty, or failed to load.")
+            logger.critical("FRONTEND_URL environment variable not set, empty, or failed to load.")
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
 
     def to_public_dict(self) -> dict:
@@ -602,7 +595,7 @@ class OAuthDataProvider(DataProvider):
         ...
 
     @abstractmethod
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
         ...
 
     @abstractmethod
@@ -612,7 +605,6 @@ class OAuthDataProvider(DataProvider):
 
 class FormField(BaseFormField):
     """This class is used to declare fields that a data provider needs to be filled when it is added in the UI.
-
 
     Attributes:
         name (str):

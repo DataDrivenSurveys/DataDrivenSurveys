@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on 2023-08-31 16:59
+"""Created on 2023-08-31 16:59
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -12,24 +10,25 @@ __all__ = ["FitbitDataProvider"]
 import base64
 import re
 import urllib.parse
-from datetime import datetime, date, timedelta
+from collections.abc import Callable, Generator
+from datetime import date, datetime, timedelta
 from functools import cache, cached_property
-from typing import Any, Callable, Generator
+from typing import Any
 
 import requests
 from dateutil.relativedelta import relativedelta
 from fitbit.api import Fitbit, FitbitOauth2Client
 
-from .activity_log import Activity, ActivityLog
-from .daily_time_series import AggregationFunctions, GroupingFunctions, group_time_series, merge_time_series
+from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek, range_date
+
 from ...get_logger import get_logger
 from ...variable_types import TVariableFunction, VariableDataType
 from ..bases import FormField, OAuthDataProvider
 from ..data_categories import DataCategory
 from ..variables import BuiltInVariable, CVAttribute
-
+from .activity_log import Activity, ActivityLog
 from .api_response_dicts import *
-from ddsurveys.data_providers.date_ranges import get_isoweek, range_date, ensure_date
+from .daily_time_series import AggregationFunctions, GroupingFunctions, group_time_series, merge_time_series
 
 logger = get_logger(__name__)
 
@@ -456,14 +455,12 @@ class FitbitDataProvider(OAuthDataProvider):
 
     # Standard class methods go here
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Fitbit
@@ -511,17 +508,35 @@ class FitbitDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> dict[str, Any]:
-        """
-        Exchange the authorization code for an access token and retrieve the user's Fitbit profile.
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Exchange the authorization code for an access token and retrieve the user's Fitbit profile.
 
         Args:
-            code (str): The authorization code provided by Fitbit upon user's consent.
+            data: The authorization code provided by Fitbit upon user's consent.
 
         Returns:
             dict: A dictionary containing the result, which includes tokens, user information,
                 or an error message in case of failure.
         """
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+
+        if code is None:
+            response = {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
+
+            error = url_params.get("error", "")
+            error_description = url_params.get("error_description", "")
+
+            if error == "access_denied" and error_description == "The user denied the request.":
+                response["message_id"] = "api.data_provider.exchange_code_error.access_denied"
+                response["text"] = error_description
+
+            return response
+
         try:
             token = self.oauth_client.fetch_access_token(code, self.redirect_uri)
 
@@ -561,16 +576,15 @@ class FitbitDataProvider(OAuthDataProvider):
                 "user_id": user_id,
                 "user_name": profile["user"]["displayName"],
             }
-        except Exception as e:
-            logger.error(f"Error exchanging Fitbit code for token: {e}")
+        except Exception:
+            logger.exception("Error exchanging Fitbit code for token.\n")
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
             }
 
     def revoke_token(self, token: str) -> bool:
-        """
-        Revoke a token using Fitbit's OAuth 2.0 revoke endpoint.
+        """Revoke a token using Fitbit's OAuth 2.0 revoke endpoint.
         The Fitbit SDK do not provide a method for revoking tokens.
         Thus, we need to make a request to the revoke endpoint ourselves.
 
@@ -581,7 +595,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
         """
         headers = {
-            "Authorization": f"Basic {base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode('utf-8')).decode('utf-8')}",
+            "Authorization": f"Basic {base64.b64encode(f'{self.client_id}:{self.client_secret}'.encode()).decode('utf-8')}",
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {"token": token}
@@ -589,10 +603,10 @@ class FitbitDataProvider(OAuthDataProvider):
         response = requests.post(self.revoke_url, headers=headers, data=data)
 
         if response.status_code == 200:
-            logger.info(f"Fitbit access_token revoked.")
+            logger.info("Fitbit access_token revoked.")
             return True
         else:
-            logger.error(f"Error revoking Fitbit access_token.")
+            logger.error("Error revoking Fitbit access_token.")
             return False
 
     def test_connection_before_extraction(self) -> bool:
@@ -609,7 +623,7 @@ class FitbitDataProvider(OAuthDataProvider):
         # using client credentials flow to check if the client id and secret are valid
 
         authorization_header = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode("utf-8")
+            f"{self.client_id}:{self.client_secret}".encode()
         ).decode("utf-8")
 
         headers = {
@@ -786,9 +800,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def lifetime_stats(self):
-        """
-
-        Returns:
+        """Returns:
 
         Examples:
             {
@@ -849,9 +861,7 @@ class FitbitDataProvider(OAuthDataProvider):
     def daily_stats(
         self, activity: str, start_date: datetime, end_date: datetime
     ) -> ActivityTimeSeriesResponseDict | ActiveZoneMinutesSeriesResponseDict:
-        """
-
-        Args:
+        """Args:
             activity: The type of activity to retrieve.
                 Allowed values are: 'activityCalories', 'calories', 'caloriesBMR', 'distance', 'elevation', 'floors',
                 'minutesSedentary', 'minutesLightlyActive', 'minutesFairlyActive', 'minutesVeryActive', and 'steps'.

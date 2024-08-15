@@ -14,9 +14,10 @@ function Footer() {
         height="100%"
         padding={2}
       >
-        <Link href="/privacy-policy" color="primary">Privacy Policy</Link>
 
-        <Link href="/terms-of-service" color="primary">Terms of Service</Link>
+        <Link href="/privacy-policy" variant="body1" color="primary">Privacy Policy</Link>
+
+        <Link href="/terms-of-service" variant="body1" color="primary">Terms of Service</Link>
 
         <Typography variant="body1" align="center">
           © 2024 DataDriven Surveys (DDS)

@@ -83,6 +83,7 @@
           "connection_not_found": "Data connection not found",
           "connection_status": "Data connection status",
           "exchange_code_error": "Failed to get the access to the data provider.",
+          "exchange_code_error.access_denied": "You denied granting access to your data.",
           "exchange_code_error.general_error": "An unexpected error occurred while processing your request.",
           "exchange_code_error.incomplete_scopes": "You need to grant all the permissions to continue",
           "exchange_code_success": "Successfully exchanged the code for access token",

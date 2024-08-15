@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module is a template file that can be used as a starting point for creating your own data providers.
+"""This module is a template file that can be used as a starting point for creating your own data providers.
 You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -9,11 +7,12 @@ You will need to replace the elipses (...) with the correct classes and code.
 """
 __all__ = ["GoogleContactsDataProvider"]
 
-import traceback
 import operator
+import traceback
 from collections import namedtuple
-from functools import cached_property, cache
-from typing import Any, Callable
+from collections.abc import Callable
+from functools import cache, cached_property
+from typing import Any
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -21,16 +20,13 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
 
-from ..utils.text_structure_analyzer import SpacyTextStructureAnalyzer
 # from textblob import TextBlob
-
 from ...get_logger import get_logger
 from ...variable_types import TVariableFunction
 from ..bases import FormField, OAuthDataProvider
-
+from ..utils.text_structure_analyzer import SpacyTextStructureAnalyzer
 from .api_response_dicts import *
 from .people import People
-
 
 logger = get_logger(__name__)
 
@@ -117,14 +113,12 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Resource
@@ -220,8 +214,18 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.required_scopes = self.__class__._scopes
         return self.required_scopes
 
-    def request_token(self, code: str) -> dict[str, Any]:
-        logger.info(f"Requesting token")
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+
+        if code is None:
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
+
+        logger.info("Requesting token")
         exchange_failed = False
         try:
             self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
@@ -233,7 +237,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             exchange_failed = True
 
         if exchange_failed or not set(self.required_scopes).issubset(set(credentials.granted_scopes)):
-            logger.error(f"The required scopes were not granted.")
+            logger.error("The required scopes were not granted.")
             self.revoke_token(credentials.token)
             return {
                 "success": False,
@@ -271,7 +275,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         )
 
         if r.status_code == 200:
-            logger.info(f"Successfully revoked google token")
+            logger.info("Successfully revoked google token")
             return True
         else:
             logger.error(f"Failed to revoke google token: {r.status_code}")
@@ -296,8 +300,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return True
 
     def test_connection(self) -> bool:
-        """
-        Tests the connection to the Google People API using the provided OAuth credentials.
+        """Tests the connection to the Google People API using the provided OAuth credentials.
 
         This method verifies the client credentials by attempting to list the connections
         of the authenticated user. It checks the validity of the client ID, client secret,
@@ -448,6 +451,18 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             ]
 
     @cached_property
+    def with_photos(self) -> list[ContactDict]:
+        return [
+            c
+            for c in self.contacts
+            if ((photos := c.get("photos", [])) or True) and len(photos) > 0
+                and any([
+                    photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
+                    for photo in photos
+                ])
+        ]
+
+    @cached_property
     def with_birthday_year(self) -> list[ContactDict]:
         return [
             c
@@ -523,7 +538,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     @cached_property
     def num_with_photos(self) -> int:
-        return len(self.with_category("photos"))
+        return len(self.with_photos)
 
     @cached_property
     def num_with_birthday(self) -> int:

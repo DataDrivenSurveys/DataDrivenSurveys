@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-This module is a template file that can be used as a starting point for creating your own data providers.
+"""This module is a template file that can be used as a starting point for creating your own data providers.
 You will need to replace the elipses (...) with the correct classes and code.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -9,10 +7,9 @@ You will need to replace the elipses (...) with the correct classes and code.
 """
 __all__ = ["TemplateDataProvider"]
 
+from collections.abc import Callable
 from functools import cached_property
-from typing import Any, Callable, Dict
-
-import requests
+from typing import Any
 
 from ..get_logger import get_logger
 from ..variable_types import TVariableFunction, VariableDataType
@@ -118,14 +115,12 @@ class TemplateDataProvider(OAuthDataProvider):
     # In the functions below, update the elipses (...) with the correct classes and code.
 
     def __init__(self, **kwargs):
-        """
-
-        Args:
-            client_id:
-            client_secret:
-            access_token:
-            refresh_token:
-            **kwargs:
+        """Args:
+        client_id:
+        client_secret:
+        access_token:
+        refresh_token:
+        **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: ...  # e.g.,  MyAPI
@@ -141,12 +136,10 @@ class TemplateDataProvider(OAuthDataProvider):
     def init_api_client(
         self, access_token: str = None, refresh_token: str = None, code: str = None
     ) -> None:
-        ...
 
         self.api_client = ...
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-        ...
 
         self.oauth_client = ...
 
@@ -156,7 +149,7 @@ class TemplateDataProvider(OAuthDataProvider):
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> Dict[str, Any]: ...
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]: ...
 
     def revoke_token(self, token: str) -> bool: ...
 
