@@ -43,7 +43,6 @@ def upgrade():
     op.drop_constraint("data_provider_pkey", "data_provider", type_="primary")
 
     # Step 2: Add 'data_provider_name' column
-
     op.add_column(
         "data_provider",
         sa.Column(
@@ -138,7 +137,7 @@ def upgrade():
     op.create_primary_key(
         "data_provider_access_pkey",
         "data_provider_access",
-        ["project_id", "data_provider_name"],
+        ["user_id", "project_id", "respondent_id"],
     )
 
     # Add foreign key constraint to 'data_connection' referencing 'data_provider_name'

@@ -12,7 +12,7 @@ from ddsurveys.data_providers.instagram import InstagramDataProvider
 
 from ..utils.custom_variables_scenarios_data import get_scenarios
 from ..utils.functions import assert_has_value
-from ..utils.mock_data import fitbit_mock_data
+from ..utils.mock_data import fitbit_mock_properties
 
 app = Flask(__name__)
 
@@ -87,7 +87,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     ctx.push()
 
 
-    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_properties["activity_logs"])
 
     # get all the attributes of the Activities class as dict
     activity = Activities.to_dict()
@@ -140,7 +140,7 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
     ctx = app.app_context()
     ctx.push()
 
-    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_properties["activity_logs"])
 
     custom_variable_instance = CustomVariable(
         data_provider=fitbit_data_provider,

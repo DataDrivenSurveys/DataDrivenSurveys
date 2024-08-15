@@ -12,7 +12,6 @@ __all__ = ["FitbitDataProvider"]
 import base64
 import re
 import urllib.parse
-from abc import ABC
 from datetime import datetime, date, timedelta
 from functools import cache, cached_property
 from typing import Any, Callable, Generator
@@ -30,7 +29,7 @@ from ..data_categories import DataCategory
 from ..variables import BuiltInVariable, CVAttribute
 
 from .api_response_dicts import *
-from ddsurveys.data_providers.date_ranges import get_isoweek, get_weeks_difference, range_date, ensure_date
+from ddsurveys.data_providers.date_ranges import get_isoweek, range_date, ensure_date
 
 logger = get_logger(__name__)
 
@@ -191,13 +190,30 @@ class ActiveMinutes(DataCategory):
         ),
         BuiltInVariable.create_instances(
             name="average_weekly_active_time_last_6_months",
-            label="Average Weekly Active Minutes Last 6 Months",
-            description="Average weekly active minutes",
+            label="Average Weekly Active Minutes Only From A Tracker Last 6 Months",
+            description="Average weekly active minutes only from a tracker",
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="120",
             unit="minutes",
-            info="Average weekly active minutes over the last 6 months.",
+            info="Average weekly active minutes only from a tracker over the last 6 months.",
             extractor_func=lambda self: self.average_weekly_active_time_last_6_months,
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/[activityType]/date/[start-date]/[end-date].json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity-timeseries-by-date-range/",
+                }
+            ],
+        ),
+        BuiltInVariable.create_instances(
+            name="average_weekly_active_time_all_sources_last_6_months",
+            label="Average Weekly Active Minutes From All sources Last 6 Months",
+            description="Average weekly active minutes from all sources (tracker and manual entry)",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="120",
+            unit="minutes",
+            info="Average weekly active minutes from all sources (tracker and manual entry) over the last 6 months.",
+            extractor_func=lambda self: self.average_weekly_active_time_all_sources_last_6_months,
             data_origin=[
                 {
                     "method": "",
@@ -939,9 +955,6 @@ class FitbitDataProvider(OAuthDataProvider):
         end_date: datetime = date.today()
         start_date: datetime = end_date - relativedelta(months=6)
         activity_types = [
-            # "minutesLightlyActive",
-            # "minutesFairlyActive",
-            # "minutesVeryActive",
             "tracker/minutesLightlyActive",
             "tracker/minutesFairlyActive",
             "tracker/minutesVeryActive",
@@ -949,6 +962,33 @@ class FitbitDataProvider(OAuthDataProvider):
         data = merge_time_series([
             group_time_series(
                 self.daily_stats(activity_type, start_date, end_date),
+                GroupingFunctions.by_calendar_week
+            )
+            for activity_type in activity_types
+        ])
+
+        average = sum(AggregationFunctions.sum(data).values()) / 26
+        if average > 0:
+            return round(average, 1)
+        else:
+            return None
+
+    @cached_property
+    def average_weekly_active_time_all_sources_last_6_months(self) -> float | None:
+        end_date: datetime = date.today()
+        start_date: datetime = end_date - relativedelta(months=6)
+        activity_types = [
+            "minutesLightlyActive",
+            "minutesFairlyActive",
+            "minutesVeryActive",
+        ]
+        data = merge_time_series([
+            group_time_series(
+                self.daily_stats(
+                    activity=activity_type,
+                    start_date=start_date,
+                    end_date=end_date
+                ),
                 GroupingFunctions.by_calendar_week
             )
             for activity_type in activity_types
@@ -974,7 +1014,7 @@ class FitbitDataProvider(OAuthDataProvider):
         average = (
             sum(sum(durations) for durations in weekly_stats.values())
             / 26
-            / 60_000  # convert miliseconds to minutes
+            / 60_000  # convert milliseconds to minutes
         )
         if average > 0:
             return round(average, 1)

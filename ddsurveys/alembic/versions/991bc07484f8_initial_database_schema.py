@@ -124,7 +124,7 @@ def upgrade() -> None:
             ["respondent_id"], ["respondent.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint(
-            "data_provider_type", "user_id", "project_id", "respondent_id"
+            "user_id", "project_id", "respondent_id"
         ),
     )
     # ### end Alembic commands ###
