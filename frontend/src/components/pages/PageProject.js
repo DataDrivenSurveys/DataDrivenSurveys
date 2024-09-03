@@ -80,7 +80,7 @@ const PageProject = () => {
 
   const navigate = useNavigate();
 
-  
+
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
   const {projectId} = useParams();
@@ -106,7 +106,7 @@ const PageProject = () => {
       console.log("status", status, "data", data);
       showSnackbar(t(data.message.id), 'error');
       if(status === 404) {
-        navigate('/');
+        navigate('/projects');
       }
     });
   }, [showSnackbar, t, navigate]);
@@ -141,8 +141,8 @@ const PageProject = () => {
   }, [projectId, showSnackbar, t, project]);
 
   const downloadRespondentResponses = useCallback(async () => {
-  
-    setDownloadLoading(true); 
+
+    setDownloadLoading(true);
     const response = await POST_BLOB(`/projects/${projectId}/export_survey_responses`);
     setDownloadLoading(false);
 
@@ -164,7 +164,7 @@ const PageProject = () => {
 
     response.on('5xx', (_, data) => {
       showSnackbar(data.error, 'error');
-    }); 
+    });
 
   }, [projectId, showSnackbar, t]);
 
@@ -186,7 +186,7 @@ const PageProject = () => {
       showSnackbar(data.error, 'error');
     });
   }, [projectId, showSnackbar, t]);
-  
+
 
   const clearRespondentData = useCallback(async () => {
     const response = await DEL(`/projects/${projectId}/respondents`);
@@ -213,7 +213,7 @@ const PageProject = () => {
     <Authorization>
       {project &&
         <LayoutMain
-          backUrl="/"
+          backUrl="/projects"
           header={
             <Stack direction="row" alignItems="center" spacing={2}>
               <Stack flex={1}>

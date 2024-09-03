@@ -1,7 +1,10 @@
 import React from 'react';
+import {useTranslation} from 'react-i18next';
 import {Typography, Link, Stack, AppBar} from '@mui/material';
 
 function Footer() {
+  const {t} = useTranslation();
+
   return (
     <AppBar position="static" color="transparent">
       <Stack
@@ -14,13 +17,14 @@ function Footer() {
         height="100%"
         padding={2}
       >
+        <Link href="/" variant="body1" color="primary">{t('ui.footer.homepage')}</Link>
 
-        <Link href="/privacy-policy" variant="body1" color="primary">Privacy Policy</Link>
+        <Link href="/privacy-policy" variant="body1" color="primary">{t('ui.footer.privacy_policy')}</Link>
 
-        <Link href="/terms-of-service" variant="body1" color="primary">Terms of Service</Link>
+        <Link href="/terms-of-service" variant="body1" color="primary">{t('ui.footer.terms_of_service')}</Link>
 
         <Typography variant="body1" align="center">
-          © 2024 DataDriven Surveys (DDS)
+          {t('ui.footer.copyright')}
         </Typography>
       </Stack>
     </AppBar>

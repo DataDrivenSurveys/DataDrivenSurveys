@@ -26,7 +26,7 @@ const creationTypes = [
   {label: 'ui.project.create.select.type.from_existing_survey', value: "from_existing", icon: <AddLinkIcon/>},
 ];
 
-const hiddeeFieldsFromScratch = ['survey_id']; 
+const hiddeeFieldsFromScratch = ['survey_id'];
 
 
 // Helper functions for local storage
@@ -60,7 +60,7 @@ const PageCreateProject = () => {
 
   const {t} = useTranslation();
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
@@ -81,7 +81,7 @@ const PageCreateProject = () => {
       const response = await GET('/survey-platforms');
       response.on('2xx', (status, data) => {
         const platforms = data.map((si) => ({...si, label: undefined, icon: <ConnectionBadge name={si.value} />}));
-        
+
         setSurveyPlatforms(platforms);
         // Moved the state updates for selectedSurveyPlatform and surveyPlatformFields here
         // to avoid the dependency on surveyPlatforms in another useEffect
@@ -147,7 +147,7 @@ const PageCreateProject = () => {
     response.on('2xx', (status, data) => {
       if (status === 201) {
         showSnackbar(t(data.message.id), 'success');
-        navigate(`/${data.entity.id}`)
+        navigate(`/projects/${data.entity.id}`)
         // remove all fields from local storage
         localStorage.removeItem('projectName');
         localStorage.removeItem('creationMode');
@@ -163,11 +163,11 @@ const PageCreateProject = () => {
   }, [name, checkInputs, selectedSurveyPlatform, surveyPlatformFields, creationMode, errorName, showSnackbar, navigate, t]);
 
   return (
-    
+
     <Authorization>
       <Loading loading={surveyPlatforms.length === 0}>
       <LayoutMain
-        backUrl="/"
+        backUrl="/projects"
         headerRightCorner={<AuthUser/>}
         header={
           <Typography variant="h6">
@@ -175,8 +175,8 @@ const PageCreateProject = () => {
           </Typography>
         }
       >
-        { 
-        
+        {
+
         selectedSurveyPlatform && (
           <Stack spacing={4} width={"400px"}>
           <DropDown
@@ -195,23 +195,23 @@ const PageCreateProject = () => {
             items={surveyPlatforms}
             label={t('ui.project.create.select.survey_platform.label')}
             value={selectedSurveyPlatform.value}
-            onChange={(e) => { 
+            onChange={(e) => {
               const surveyPlatform = surveyPlatforms.find((platform) => platform.value === e.target.value);
               setSelectedSurveyPlatform(surveyPlatform)
               setSurveyPlatformFields(surveyPlatform.fields);
             }}
           />
-         
+
           <SurveyPlatformFields
             selectedSurveyPlatform={selectedSurveyPlatform}
             surveyPlatformFields={surveyPlatformFields?.map(field => ({
-              ...field, 
+              ...field,
               required: !shouldHideField(field.name),
-              
+
             }))}
             hiddenFields={creationMode === "from_scratch" ? hiddeeFieldsFromScratch : []}
             onChange={setSurveyPlatformFields}
-          />          
+          />
 
           <Button
             variant="contained"
@@ -228,11 +228,11 @@ const PageCreateProject = () => {
 
         </Stack>
         )}
-        
+
       </LayoutMain>
       </Loading>
     </Authorization>
-    
+
   )
 }
 

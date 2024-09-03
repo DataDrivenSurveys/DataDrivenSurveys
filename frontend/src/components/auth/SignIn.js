@@ -11,6 +11,9 @@ import {useSnackbar} from "../../context/SnackbarContext";
 
 import {useTranslation} from 'react-i18next';
 import Footer from "../layout/Footer";
+import LayoutMain from "../layout/LayoutMain";
+import {Typography} from '@mui/material';
+
 
 const SignIn = () => {
 
@@ -51,40 +54,45 @@ const SignIn = () => {
   }, [errorEmail, errorPassword, signin, showSnackbar, email, password, t]);
 
   return (
-    <Stack height={'100vh'} width={'100vw'}>
-      <Stack alignItems={"center"} justifyContent={"center"} height={"100vh"} pb={12}>
-        <form onSubmit={handleSignIn}>
-          <Stack spacing={2} alignItems={"center"} width={"400px"}>
-            <Stack sx={{width: '60px', height: '60px'}}>
-              <img src="/svg/unauthorized.svg" alt="Logo"/>
-            </Stack>
+    <LayoutMain
+    backUrl={-1}
+    header={<Typography variant="h3">{t('ui.auth.titles.signin')}</Typography>}
+    >
+      <Stack height={'100vh'} width={'100vw'}>
+        <Stack alignItems={"center"} justifyContent={"center"} height={"100vh"} pb={12}>
+          <form onSubmit={handleSignIn}>
+            <Stack spacing={2} alignItems={"center"} width={"400px"}>
+              <Stack sx={{width: '60px', height: '60px'}}>
+                <img src="/svg/unauthorized.svg" alt="Logo"/>
+              </Stack>
 
-            <TextInput
-              autoFocus
-              showClear
-              {...bindEmail}
-              sx={{width: '100%'}}
-            />
-            <TextInput
-              showClear
-              {...bindPassword}
-              type={"password"}
-              sx={{width: '100%'}}
-            />
+              <TextInput
+                autoFocus
+                showClear
+                {...bindEmail}
+                sx={{width: '100%'}}
+              />
+              <TextInput
+                showClear
+                {...bindPassword}
+                type={"password"}
+                sx={{width: '100%'}}
+              />
 
-            <Stack direction={"row"} justifyContent={"space-between"} width={"100%"}>
-              <Button component={Link} to="/signup" variant="text" color="primary">
-                {t('ui.auth.button.signup')}
-              </Button>
-              <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">
-                {t('ui.auth.button.signin')}
-              </LoadingButton>
+              <Stack direction={"row"} justifyContent={"space-between"} width={"100%"}>
+                <Button component={Link} to="/signup" variant="text" color="primary">
+                  {t('ui.auth.button.signup')}
+                </Button>
+                <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">
+                  {t('ui.auth.button.signin')}
+                </LoadingButton>
+              </Stack>
             </Stack>
-          </Stack>
-        </form>
+          </form>
+        </Stack>
+        <Footer/>
       </Stack>
-      <Footer/>
-    </Stack>
+    </LayoutMain>
   );
 }
 
