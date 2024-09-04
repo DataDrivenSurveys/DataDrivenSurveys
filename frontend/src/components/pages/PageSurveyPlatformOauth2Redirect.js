@@ -9,7 +9,7 @@ import LoadingAnimation from "../feedback/LoadingAnimation";
 const PageSurveyPlatformOauth2Redirect = () => {
 
     const { t } = useTranslation();
-    
+
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -17,19 +17,19 @@ const PageSurveyPlatformOauth2Redirect = () => {
         failed: false,
         message: t('ui.project.survey_platform.code_exchange.redirecting')
     });
-    
+
     const { surveyPlatform } = useParams();
-    
+
     // Use the useSnackbar hook to show a snackbar notification. This is useful to
     // display a message after a successful login or logout.
     const { showBottomCenter } = useSnackbar();
-    
+
     // Get the authorization code from the URL query parameters.
     const code = new URLSearchParams(location.search).get("code");
 
 
     useEffect(() => {
-    
+
         // Define an async function that will call the OAuth callback endpoint
         (async () => {
 
@@ -42,7 +42,7 @@ const PageSurveyPlatformOauth2Redirect = () => {
                 acc[field.name] = field.value;
                 return acc;
               }, {});
-        
+
             // Send the authorization code to the backend to exchange it for an access token
             const response = await POST(`/survey-platforms/${surveyPlatform}/exchange-code`, {
                 fields: fieldValues,
@@ -72,11 +72,11 @@ const PageSurveyPlatformOauth2Redirect = () => {
                     message: t(data.message.id)
                 });
             });
-            
+
         })();
-        
+
     }, [code, navigate, showBottomCenter, surveyPlatform, t]);
-    
+
     return  (
         <Stack sx={{ width: '100%', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
             <LoadingAnimation
@@ -84,8 +84,8 @@ const PageSurveyPlatformOauth2Redirect = () => {
                     <Stack spacing={1}>
                         <Alert severity={status.failed ? 'error' : 'info'} sx={{ width: '100%' }}>
                             {status.message}
-                        </Alert> 
-                        {status.failed && <Button onClick={() => navigate(`/create`)}>{t('ui.project.survey_platform.code_exchange.connection.button.go_back')}</Button>}
+                        </Alert>
+                        {status.failed && <Button onClick={() => navigate(`/projects/create`)}>{t('ui.project.survey_platform.code_exchange.connection.button.go_back')}</Button>}
                     </Stack>
                 }
                 failed={status.failed}

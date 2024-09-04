@@ -61,13 +61,13 @@ export const AuthProvider = ({ children }) => {
                 localStorage.setItem('token', token);
                 setToken(token);
             }
-        }); 
+        });
 
         response.on('4xx', (status, data) => {
             if(status === 401) {
                showSnackbar(t(data.message.id), "error");
             }
-        }); // 4xx       
+        }); // 4xx
     };
 
     const signup = async (firstname, lastname, email, password) => {
@@ -81,13 +81,13 @@ export const AuthProvider = ({ children }) => {
         response.on('2xx', (status, data) => {
             if(status === 200) {
                 showSnackbar(t(data.message.id), "success");
-                navigate('/');
+                navigate('/projects');
             }
-        }); 
+        });
 
         response.on('4xx', (status, data) => {
             showSnackbar(t(data.message.id), "error");
-        }); 
+        });
 
 
     };
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
                     <LoadingAnimation />
                 </Stack>
             }
-            
+
             {!loading && children}
         </AuthContext.Provider>
     );

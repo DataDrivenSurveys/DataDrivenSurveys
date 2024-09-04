@@ -115,12 +115,14 @@ class TemplateDataProvider(OAuthDataProvider):
     # In the functions below, update the elipses (...) with the correct classes and code.
 
     def __init__(self, **kwargs):
-        """Args:
-        client_id:
-        client_secret:
-        access_token:
-        refresh_token:
-        **kwargs:
+        """Initialization function.
+
+        Args:
+            client_id:
+            client_secret:
+            access_token:
+            refresh_token:
+            **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: ...  # e.g.,  MyAPI
@@ -149,7 +151,7 @@ class TemplateDataProvider(OAuthDataProvider):
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> dict[str, Any]: ...
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]: ...
 
     def revoke_token(self, token: str) -> bool: ...
 

@@ -18,8 +18,9 @@ from ..utils.functions import (
     custom_variable_to_qualname,
     generate_builtin_variables,
     generate_custom_variables,
+    validate_url,
 )
-from ..utils.mock_data import fitbit_mock_data, instagram_mock_data
+from ..utils.mock_data import fitbit_mock_functions, fitbit_mock_properties, instagram_mock_properties
 
 if TYPE_CHECKING:
     from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict
@@ -69,7 +70,7 @@ PARAMETERIZED_PROVIDERS = [
     if provider in EXPECTED_RESULTS
 ]
 
-@pytest.mark.parametrize(("provider_name", "expected_result"), PARAMETERIZED_PROVIDERS)
+@pytest.mark.parametrize("provider_name, expected_result", PARAMETERIZED_PROVIDERS)
 def test_select_relevant_variables(provider_name, expected_result):
     """Test the select_relevant_variables method."""
     # Access the data_provider fixture using the provider name.
@@ -199,16 +200,14 @@ def test_builtin_variables(provider_name):
 
 
 @pytest.mark.parametrize(
-    ("data_provider_class", "mock_properties", "expected_upload_data"),
+    "data_provider_class, mock_properties, mock_functions, expected_upload_data",
     [
         (
             FitbitDataProvider,
-            fitbit_mock_data,
+            fitbit_mock_properties,
+            fitbit_mock_functions,
             {
-                "dds.fitbit.builtin.steps.average.exists": True,
-                "dds.fitbit.builtin.steps.average": 8000,
-                "dds.fitbit.builtin.steps.highest.exists": True,
-                "dds.fitbit.builtin.steps.highest": 30123,
+                # Activities
                 "dds.fitbit.builtin.activities.by_frequency1.exists": True,
                 "dds.fitbit.builtin.activities.by_frequency1": "Walk",
                 "dds.fitbit.builtin.activities.by_frequency2.exists": True,
@@ -219,17 +218,42 @@ def test_builtin_variables(provider_name):
                 "dds.fitbit.builtin.activities.by_frequency4": None,
                 "dds.fitbit.builtin.activities.by_frequency5.exists": False,
                 "dds.fitbit.builtin.activities.by_frequency5": None,
+
+                # Account
                 "dds.fitbit.builtin.account.creation_date.exists": True,
                 "dds.fitbit.builtin.account.creation_date": "2018-05-05",
+                "dds.fitbit.builtin.account.account_created_at_least_1_year_ago.exists": True,
+                "dds.fitbit.builtin.account.account_created_at_least_1_year_ago": True,
+
+                # ActiveMinutes
+                "dds.fitbit.builtin.activeminutes.average_weekly_active_time_all_sources_last_6_months.exists": True,
+                "dds.fitbit.builtin.activeminutes.average_weekly_active_time_all_sources_last_6_months": 29.5,
+                "dds.fitbit.builtin.activeminutes.average_weekly_active_time_last_6_months.exists": True,
+                "dds.fitbit.builtin.activeminutes.average_weekly_active_time_last_6_months": 120,
+                "dds.fitbit.builtin.activeminutes.average_weekly_activity_time_last_6_months.exists": True,
+                "dds.fitbit.builtin.activeminutes.average_weekly_activity_time_last_6_months": 120,
+                "dds.fitbit.builtin.activeminutes.average_weekly_heart_zone_time_last_6_months.exists": True,
+                "dds.fitbit.builtin.activeminutes.average_weekly_heart_zone_time_last_6_months": 120,
+
+                # Daily
+                "dds.fitbit.builtin.daily.highest_steps_last_6_months_date.exists": True,
+                "dds.fitbit.builtin.daily.highest_steps_last_6_months_date": "2024-01-01",
+                "dds.fitbit.builtin.daily.highest_steps_last_6_months_steps.exists": True,
+                "dds.fitbit.builtin.daily.highest_steps_last_6_months_steps": 20000,
+
+                # Steps
+                "dds.fitbit.builtin.steps.average.exists": True,
+                "dds.fitbit.builtin.steps.average": 8000,
+                "dds.fitbit.builtin.steps.highest.exists": True,
+                "dds.fitbit.builtin.steps.highest": 30123,
 
                 # ... include all other expected key-value pairs here
             }
         ),
         (
             InstagramDataProvider,
-            {
-                'media_count': instagram_mock_data["media_count"]
-            },
+            instagram_mock_properties,
+            {},
             {
                 "dds.instagram.builtin.media.media_count.exists": True,
                 "dds.instagram.builtin.media.media_count": 1234,
@@ -239,8 +263,16 @@ def test_builtin_variables(provider_name):
     ],
     ids=lambda param: param.name_lower if isinstance(param, type) and issubclass(param, DataProvider) else type(param).__name__
 )
-def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_properties, expected_upload_data):
-    """Test the data extraction of the builtin variables for multiple data providers."""
+def test_data_extraction_builtin_variables(
+    mocker,
+    data_provider_class,
+    mock_properties,
+    mock_functions,
+    expected_upload_data
+):
+    """
+    Test the data extraction of the builtin variables for multiple data providers.
+    """
     ctx = app.app_context()
     ctx.push()
 
@@ -250,6 +282,23 @@ def test_data_extraction_builtin_variables(mocker, data_provider_class, mock_pro
     for prop, value in mock_properties.items():
         # Patch each property with a PropertyMock to return the desired value
         mocker.patch.object(data_provider_class, prop, new_callable=lambda: mocker.PropertyMock(return_value=value))
+
+    # Mock the functions specified in daily_stats_params_responses
+    for function_name, params_list in mock_functions.items():
+        def side_effect(*args, **kwargs):
+            for params in params_list:
+                if (
+                    ((len(args) == 0 and len(params["args"]) == 0) or (args == params["args"]))
+                    and ((len(kwargs) == 0 and len(params["kwargs"]) == 0) or kwargs == params["kwargs"])
+                ):
+                    return params["return"]
+            raise ValueError("No matching args/kwargs found for the mock.")
+
+        mocker.patch.object(
+            data_provider_class,
+            function_name,
+            side_effect=side_effect
+        )
 
     data_provider_instance = data_provider_class()
 

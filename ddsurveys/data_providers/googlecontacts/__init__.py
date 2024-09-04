@@ -119,12 +119,14 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """Args:
-        client_id:
-        client_secret:
-        access_token:
-        refresh_token:
-        **kwargs:
+        """Initialization function.
+
+        Args:
+            client_id:
+            client_secret:
+            access_token:
+            refresh_token:
+            **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Resource
@@ -220,7 +222,17 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.required_scopes = self.__class__._scopes
         return self.required_scopes
 
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+
+        if code is None:
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
+
         logger.info("Requesting token")
         exchange_failed = False
         try:
@@ -340,9 +352,9 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 return True
             else:
                 raise
-        except Exception as e:
+        except Exception:
             logger.exception(
-                f"An unexpected error occurred when verifying the client credentials: {e}"
+                "An unexpected error occurred when verifying the client credentials.\n"
             )
             logger.debug(traceback.format_exc())
             return False
@@ -447,6 +459,18 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             ]
 
     @cached_property
+    def with_photos(self) -> list[ContactDict]:
+        return [
+            c
+            for c in self.contacts
+            if ((photos := c.get("photos", [])) or True) and len(photos) > 0
+                and any([
+                    photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
+                    for photo in photos
+                ])
+        ]
+
+    @cached_property
     def with_birthday_year(self) -> list[ContactDict]:
         return [
             c
@@ -522,7 +546,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     @cached_property
     def num_with_photos(self) -> int:
-        return len(self.with_category("photos"))
+        return len(self.with_photos)
 
     @cached_property
     def num_with_birthday(self) -> int:

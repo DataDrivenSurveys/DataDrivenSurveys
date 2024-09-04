@@ -10,7 +10,7 @@ from ddsurveys.data_providers.instagram import InstagramDataProvider
 
 from ..utils.custom_variables_scenarios_data import get_scenarios
 from ..utils.functions import assert_has_value
-from ..utils.mock_data import fitbit_mock_data
+from ..utils.mock_data import fitbit_mock_properties
 
 app = Flask(__name__)
 
@@ -56,7 +56,7 @@ def data_category_to_custom_variable(data_category, data_provider_name, filters,
 
 
 @pytest.mark.parametrize(
-    ("label", "filters", "selection", "expected_attribute_value"),
+    "label, filters, selection, expected_attribute_value",
     get_scenarios(),
     ids=[scenario[0] for scenario in get_scenarios()]
 )
@@ -82,7 +82,8 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     ctx = app.app_context()
     ctx.push()
 
-    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
+
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_properties["activity_logs"])
 
     # get all the attributes of the Activities class as dict
     activity = Activities.to_dict()
@@ -111,9 +112,6 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
                 if expected_value is None: # Random selection on multiple rows
                     return
 
-                if str(expected_value) != str(value):
-                    pass
-
                 assert str(value) == str(expected_value), f"Expected value for key '{key}' is {expected_value}, but got {value}"
                 return
         msg = f"No key ending with '{key_suffix}' found in the data_to_upload dictionary."
@@ -127,7 +125,7 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
 
 
 @pytest.mark.parametrize(
-    ("label", "filters", "selection", "expected_attribute_value"),
+    "label, filters, selection, expected_attribute_value",
     get_scenarios(),
     ids=[scenario[0] for scenario in get_scenarios()]
 )
@@ -136,7 +134,7 @@ def test_custom_variable_dictionary(mocker, fitbit_data_provider, label, filters
     ctx = app.app_context()
     ctx.push()
 
-    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_data["activity_logs"])
+    mocker.patch.object(FitbitDataProvider, 'activity_logs', new_callable=mocker.PropertyMock, return_value=fitbit_mock_properties["activity_logs"])
 
     custom_variable_instance = CustomVariable(
         data_provider=fitbit_data_provider,

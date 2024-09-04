@@ -39,7 +39,7 @@ DATA_PROVIDER_BASE_CLASSES = ["DataProvider", "OAuthBase"]
 class DataProvider(UIRegistry):
     """Base class for data providers.
 
-    Thi class provides common functionality for all data providers.
+    This class provides common functionality for all data providers.
 
     Child classes should follow the same class layout to standardize the code base and
     to facilitate development.
@@ -251,9 +251,7 @@ class DataProvider(UIRegistry):
                 f"'{self.__class__.__name__}' object does not have a defined function or a factory "
                 f"function to build a function for '{name}'"
             )
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
     @staticmethod
     def get_used_variables(
@@ -479,9 +477,7 @@ class FrontendDataProvider(DataProvider):
                 f"'{self.__class__.__name__}' object does not have a defined function or a factory "
                 f"function to build a function for '{name}'"
             )
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
 
     def calculate_variables(
         self, project_builtin_variables: dict[str, Any], data: dict[str, Any]
@@ -628,7 +624,7 @@ class OAuthDataProvider(DataProvider):
         ...
 
     @abstractmethod
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
         ...
 
     @abstractmethod

@@ -11,12 +11,10 @@ function PrivacyPolicyContent() {
 
   return (
     <Container>
-      {/*<Typography variant="h1">{t('privacy_policy.title')}</Typography>*/}
-
-      <Typography variant="h2">{t('privacy_policy.introduction.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.introduction.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.introduction.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.data_collection_and_use.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.data_collection_and_use.title')}</Typography>
       <Typography paragraph>
          <span style={{fontWeight: 'bold'}}>
            1. {t('privacy_policy.data_collection_and_use.information_you_provide.title')}
@@ -28,25 +26,25 @@ function PrivacyPolicyContent() {
          </span>: {t('privacy_policy.data_collection_and_use.automatically_collected_information.content')}
       </Typography>
 
-      <Typography variant="h2">{t('privacy_policy.purpose_of_data_collection.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.purpose_of_data_collection.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.purpose_of_data_collection.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.consent.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.consent.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.consent.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.data_minimization.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.data_minimization.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.data_minimization.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.security.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.security.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.security.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.data_retention_and_deletion.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.data_retention_and_deletion.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.data_retention_and_deletion.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.changes_to_this_privacy_policy.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.changes_to_this_privacy_policy.title')}</Typography>
       <Typography paragraph>{t('privacy_policy.changes_to_this_privacy_policy.content')}</Typography>
 
-      <Typography variant="h2">{t('privacy_policy.contact_information.title')}</Typography>
+      <Typography variant="h4">{t('privacy_policy.contact_information.title')}</Typography>
       <Typography paragraph>
         {t('privacy_policy.contact_information.content')}: {
         <Link href={`mailto:${t('privacy_policy.contact_information.email')}`} rel="noopener noreferrer"
@@ -64,7 +62,7 @@ function PrivacyPolicy() {
 
   return (
     <LayoutMain
-      header={<Typography variant="h2">{t('privacy_policy.title')}</Typography>}
+      header={<Typography variant="h3">{t('privacy_policy.title')}</Typography>}
       backUrl={-1}
     >
       <Stack spacing={2} width={"80%"}>

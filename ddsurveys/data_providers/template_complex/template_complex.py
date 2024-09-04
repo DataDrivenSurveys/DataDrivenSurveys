@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Created on 2024-05-12 20:52
-You will need to replace the elipses (...) with the correct classes and code.
+"""You will need to replace the elipses (...) with the correct classes and code.
+
+Created on 2024-05-12 20:52
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
@@ -55,12 +56,14 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):
-        """Args:
-        client_id:
-        client_secret:
-        access_token:
-        refresh_token:
-        **kwargs:
+        """Initialization function.
+
+        Args:
+            client_id:
+            client_secret:
+            access_token:
+            refresh_token:
+            **kwargs:
         """
         super().__init__(**kwargs)
         # Declare the instance annotations for the API and OAuth clients
@@ -90,7 +93,7 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     def get_client_id(self) -> str: ...
 
-    def request_token(self, code: str) -> dict[str, Any]: ...
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]: ...
 
     def revoke_token(self, token: str) -> bool: ...
 

@@ -51,7 +51,7 @@ const CellActions = ({params, onDelete}) => {
         onClose={handleCloseContext}
       >
         <Stack padding={1} spacing={2} alignItems={'flex-start'}>
-          <Button startIcon={<FileOpenOutlinedIcon/>} onClick={() => navigate(`/${params.row.id}`)}>
+          <Button startIcon={<FileOpenOutlinedIcon/>} onClick={() => navigate(`/projects/${params.row.id}`)}>
             {t('ui.project.selection.grid.context.open')}
           </Button>
           <Button color={"error"} startIcon={<DeleteForeverOutlinedIcon/>} onClick={
@@ -62,7 +62,7 @@ const CellActions = ({params, onDelete}) => {
                 if (status === 200) {
                   showSnackbar(t(data.message.id), 'success');
                   onDelete(params.row.id);
-                  navigate('/');
+                  navigate('/projects');
                 }
               });
             }
@@ -173,7 +173,7 @@ const PageProjectSelection = () => {
     <Authorization>
       <LayoutMain
         header={
-          <Typography variant="h6">Project Selection</Typography>
+          <Typography variant="h4">Project Selection</Typography>
         }
         headerRightCorner={<AuthUser/>}
       >
@@ -183,7 +183,7 @@ const PageProjectSelection = () => {
               // startIcon={<AddIcon />}
               variant="contained"
               color="primary"
-              onClick={() => navigate('/create')}
+              onClick={() => navigate('/projects/create')}
             >
               {t('ui.project.selection.button.create')}
             </Button>
@@ -200,7 +200,7 @@ const PageProjectSelection = () => {
                   // Check if the click was on a cell in the Action column or an element with the 'action-cell' class
                   // or its child
                   if (event.target.dataset.field !== "actions" && !event.target.closest('button, .action-cell')) {
-                    navigate(`/${params.row.id}`);
+                    navigate(`/projects/${params.row.id}`);
                   }
                 }}
                 sx={(theme) => ({

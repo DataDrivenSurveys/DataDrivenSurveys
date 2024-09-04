@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Created on 2023-08-31 16:59.
+"""This module provides the InstagramDataProvider class.
+
+Created on 2023-08-31 16:59.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -113,7 +115,7 @@ class InstagramDataProvider(OAuthDataProvider):
             data = response.json()
             return data.get("media_count")
         except Exception as e:
-            logger.exception(f"Error fetching media count from Instagram: {e}")
+            logger.exception("Error fetching media count from Instagram.\n")
             return None
 
     # Standard/builtin class methods go here
@@ -155,16 +157,25 @@ class InstagramDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
         """Exchange the authorization code for an Instagram User Access Token and retrieve the user's profile.
 
         Args:
-            code (str): The authorization code provided by Instagram upon user's consent.
+            data: The authorization code provided by Instagram upon user's consent.
 
         Returns:
             dict: A dictionary containing the result, which includes tokens, user information,
                 or an error message in case of failure.
         """
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+        if code is None:
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
+
         try:
             # Exchange the authorization code for a short-lived Instagram User Access Token.
             headers = {
@@ -189,6 +200,7 @@ class InstagramDataProvider(OAuthDataProvider):
                 return {
                     "success": False,
                     "message_id": "api.data_provider.exchange_code_error.general_error",
+                    "text": "Full scope not granted",
                 }
 
             # At this point, for Instagram, we know the user has accepted the full scope.

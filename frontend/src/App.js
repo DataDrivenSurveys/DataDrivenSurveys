@@ -20,6 +20,7 @@ import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatf
 
 import PrivacyPolicy from "./components/pages/PagePrivacyPolicy";
 import TermsOfService from "./components/pages/PageTermsOfService";
+import Homepage from "./components/pages/PageHomepage";
 
 
 export const themeOptions = {
@@ -99,12 +100,20 @@ function App() {
                 path="/"
                 element={
                   <AuthProvider>
+                    <Homepage/>
+                  </AuthProvider>
+                }
+              />
+              <Route
+                path="/projects"
+                element={
+                  <AuthProvider>
                     <PageProjectSelection/>
                   </AuthProvider>
                 }
               />
               <Route
-                path="/create"
+                path="/projects/create"
                 element={
                   <AuthProvider>
                     <PageCreateProject/>
@@ -112,7 +121,7 @@ function App() {
                 }
               />
               <Route
-                path="/:projectId"
+                path="/projects/:projectId"
                 element={
                   <AuthProvider>
                     <PageProject/>

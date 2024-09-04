@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides the GithubDataProvider class.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 from __future__ import annotations
@@ -228,12 +230,14 @@ class GitHubDataProvider(OAuthDataProvider):
     data_categories = [Account, Repositories]
 
     def __init__(self, **kwargs):
-        """Args:
-        client_id:
-        client_secret:
-        access_token:
-        refresh_token:
-        **kwargs:
+        """Initialization function.
+
+        Args:
+            client_id:
+            client_secret:
+            access_token:
+            refresh_token:
+            **kwargs:
         """
         super().__init__(**kwargs)
         self.api_client: Github
@@ -285,7 +289,16 @@ class GitHubDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+
+        if code is None:
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
 
         try:
 
@@ -327,8 +340,8 @@ class GitHubDataProvider(OAuthDataProvider):
         return self.test_connection()
 
     def test_connection(self) -> bool:
-        """We try to send a wrong code to get_access_token and check if we get a BadCredentialsException
-        If the request fails for bad_verification_code then the connection is valid
+        """We try to send a wrong code to get_access_token and check if we get a BadCredentialsException.
+        If the request fails for bad_verification_code then the connection is valid.
         If the request fails for any other reason, then the connection is not valid.
 
         Returns:

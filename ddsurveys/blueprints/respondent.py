@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for respondent backend requests.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 from __future__ import annotations
@@ -273,15 +275,15 @@ def exchange_code_for_tokens():
             )
 
             # Exchange the code for an access token
-
             provider_instance.get_required_scopes(
                 project.variables, project.custom_variables
             )
-            response = provider_instance.request_token(data["code"])
+            logger.debug(data)
+            response = provider_instance.request_token(data)
 
             if response["success"]:
                 logger.info(
-                    f"Successfully exchanged code for tokens for: {data_provider_name}"
+                    "Successfully exchanged code for tokens for: %s", data_provider_name
                 )
                 return (
                     jsonify(
@@ -295,23 +297,22 @@ def exchange_code_for_tokens():
                     ),
                     200,
                 )
-            else:
-                logger.error(
-                    f"Error exchanging code for tokens for: {data_provider_name}"
-                )
-                return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": response["message_id"],
-                                "text": "Full scope not granted",
-                            },
-                        }
-                    ),
-                    500,
-                )
+            logger.error(
+                "Error exchanging code for tokens for: %s", data_provider_name
+            )
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": response["message_id"],
+                            "text": response.get("text", "Full scope not granted"),
+                        },
+                    }
+                ),
+                400,
+            )
         except Exception:
-            logger.exception(f"Error exchanging code for tokens for: {data_provider_name}")
+            logger.exception("Error exchanging code for tokens for: %s\n", data_provider_name)
             logger.debug(traceback.format_exc())
             return (
                 jsonify(
@@ -644,8 +645,8 @@ def prepare_survey():
                     status,
                 )
 
-    except Exception as e:
-        logger.exception(f"Error preparing survey: {e}")
+    except Exception:
+        logger.exception(f"Error preparing survey.\n")
         logger.debug(f"Error traceback: {traceback.format_exc()}")
         return (
             jsonify(
@@ -853,7 +854,7 @@ def connect_respondent():
             except IntegrityError:
                 db.rollback()
                 logger.exception(
-                    f"Error creating a new respondent: {traceback.format_exc()}"
+                    "Error creating a new respondent:\n%s", traceback.format_exc()
                 )
                 return (
                     jsonify(

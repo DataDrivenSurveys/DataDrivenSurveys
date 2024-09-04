@@ -208,13 +208,30 @@ class ActiveMinutes(DataCategory):
         ),
         BuiltInVariable.create_instances(
             name="average_weekly_active_time_last_6_months",
-            label="Average Weekly Active Minutes Last 6 Months",
-            description="Average weekly active minutes",
+            label="Average Weekly Active Minutes Only From A Tracker Last 6 Months",
+            description="Average weekly active minutes only from a tracker",
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="120",
             unit="minutes",
-            info="Average weekly active minutes over the last 6 months.",
+            info="Average weekly active minutes only from a tracker over the last 6 months.",
             extractor_func=lambda self: self.average_weekly_active_time_last_6_months,
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/[activityType]/date/[start-date]/[end-date].json",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity-timeseries-by-date-range/",
+                }
+            ],
+        ),
+        BuiltInVariable.create_instances(
+            name="average_weekly_active_time_all_sources_last_6_months",
+            label="Average Weekly Active Minutes From All sources Last 6 Months",
+            description="Average weekly active minutes from all sources (tracker and manual entry)",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="120",
+            unit="minutes",
+            info="Average weekly active minutes from all sources (tracker and manual entry) over the last 6 months.",
+            extractor_func=lambda self: self.average_weekly_active_time_all_sources_last_6_months,
             data_origin=[
                 {
                     "method": "",
@@ -515,16 +532,35 @@ class FitbitDataProvider(OAuthDataProvider):
     def get_client_id(self) -> str:
         return self.client_id
 
-    def request_token(self, code: str) -> dict[str, Any]:
+    def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
         """Exchange the authorization code for an access token and retrieve the user's Fitbit profile.
 
         Args:
-            code (str): The authorization code provided by Fitbit upon user's consent.
+            data: The authorization code provided by Fitbit upon user's consent.
 
         Returns:
             dict: A dictionary containing the result, which includes tokens, user information,
                 or an error message in case of failure.
         """
+        url_params = data["url_params"]
+        code: str | None = url_params.get("code", None)
+
+        if code is None:
+            response = {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error",
+                "text": "Failed to get the access to the data provider.",
+            }
+
+            error = url_params.get("error", "")
+            error_description = url_params.get("error_description", "")
+
+            if error == "access_denied" and error_description == "The user denied the request.":
+                response["message_id"] = "api.data_provider.exchange_code_error.access_denied"
+                response["text"] = error_description
+
+            return response
+
         try:
             token = self.oauth_client.fetch_access_token(code, self.redirect_uri)
 
@@ -564,8 +600,8 @@ class FitbitDataProvider(OAuthDataProvider):
                 "user_id": user_id,
                 "user_name": profile["user"]["displayName"],
             }
-        except Exception as e:
-            logger.exception(f"Error exchanging Fitbit code for token: {e}")
+        except Exception:
+            logger.exception("Error exchanging Fitbit code for token.\n")
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
@@ -602,8 +638,8 @@ class FitbitDataProvider(OAuthDataProvider):
             profile = self.api_client.user_profile_get()
             if not profile:
                 return False
-        except Exception as e:
-            logger.exception(f"Error connecting to Fitbit: {e}")
+        except Exception:
+            logger.exception("Error connecting to Fitbit.\n")
             return False
         return True
 
@@ -788,7 +824,9 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def lifetime_stats(self):
-        """Returns:
+        """Fetches the user's lifetime statistics.
+
+        Returns:
 
         Examples:
             {
@@ -840,7 +878,7 @@ class FitbitDataProvider(OAuthDataProvider):
               }
             }
         """
-        url = "{}/{}/user/{}/activities.json".format(
+        url = "{0}/{1}/user/{2}/activities.json".format(
             *self.api_client._get_common_args()
         )
         return self.api_client.make_request(url)
@@ -849,7 +887,9 @@ class FitbitDataProvider(OAuthDataProvider):
     def daily_stats(
         self, activity: str, start_date: datetime, end_date: datetime
     ) -> ActivityTimeSeriesResponseDict | ActiveZoneMinutesSeriesResponseDict:
-        """Args:
+        """Fetches the user's daily activity statistics.
+
+        Args:
             activity: The type of activity to retrieve.
                 Allowed values are: 'activityCalories', 'calories', 'caloriesBMR', 'distance', 'elevation', 'floors',
                 'minutesSedentary', 'minutesLightlyActive', 'minutesFairlyActive', 'minutesVeryActive', and 'steps'.
@@ -953,9 +993,6 @@ class FitbitDataProvider(OAuthDataProvider):
         end_date: datetime = date.today()
         start_date: datetime = end_date - relativedelta(months=6)
         activity_types = [
-            # "minutesLightlyActive",
-            # "minutesFairlyActive",
-            # "minutesVeryActive",
             "tracker/minutesLightlyActive",
             "tracker/minutesFairlyActive",
             "tracker/minutesVeryActive",
@@ -963,6 +1000,33 @@ class FitbitDataProvider(OAuthDataProvider):
         data = merge_time_series([
             group_time_series(
                 self.daily_stats(activity_type, start_date, end_date),
+                GroupingFunctions.by_calendar_week
+            )
+            for activity_type in activity_types
+        ])
+
+        average = sum(AggregationFunctions.sum(data).values()) / 26
+        if average > 0:
+            return round(average, 1)
+        else:
+            return None
+
+    @cached_property
+    def average_weekly_active_time_all_sources_last_6_months(self) -> float | None:
+        end_date: datetime = date.today()
+        start_date: datetime = end_date - relativedelta(months=6)
+        activity_types = [
+            "minutesLightlyActive",
+            "minutesFairlyActive",
+            "minutesVeryActive",
+        ]
+        data = merge_time_series([
+            group_time_series(
+                self.daily_stats(
+                    activity=activity_type,
+                    start_date=start_date,
+                    end_date=end_date
+                ),
                 GroupingFunctions.by_calendar_week
             )
             for activity_type in activity_types
@@ -988,7 +1052,7 @@ class FitbitDataProvider(OAuthDataProvider):
         average = (
             sum(sum(durations) for durations in weekly_stats.values())
             / 26
-            / 60_000  # convert miliseconds to minutes
+            / 60_000  # convert milliseconds to minutes
         )
         if average > 0:
             return round(average, 1)
