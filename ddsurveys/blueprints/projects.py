@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for managing projects.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
@@ -120,7 +122,7 @@ def create_project():
         platform_class = SurveyPlatform.get_class_by_value(survey_platform_name)
 
         if not platform_class:
-            logger.error(f"Unknown Survey Platform: {survey_platform_name}")
+            logger.error("Unknown Survey Platform: %s", survey_platform_name)
             return (
                 jsonify(
                     {
@@ -139,7 +141,7 @@ def create_project():
         )
 
         if not are_fields_valid:
-            logger.error(f"Missing required field: {missing_field_key}")
+            logger.error("Missing required field: %s", missing_field_key)
             return (
                 jsonify(
                     {
@@ -170,7 +172,7 @@ def create_project():
 
         # Check if an error occurred
         if status != 200:
-            logger.error(f"Error during project creation: {text_message}")
+            logger.error("Error during project creation: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
                 status,
@@ -222,10 +224,21 @@ def create_project():
 
 
 # Read
-@projects.route("/<string:id>", methods=["GET"])
+@projects.route("/<string:id_>", methods=["GET"])
 @jwt_required()
-def get_project(id):
-    logger.debug(f"Getting project with id: {id}")
+def get_project(id_: str):
+    """Retrieves the details of a specific project based on its unique identifier.
+
+    Args:
+        id_: The unique identifier of the project to be retrieved.
+
+    Returns:
+        Response: A JSON response containing the project details if found.
+        - 200: If the project is successfully retrieved.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Getting project with id: %s", id_)
 
     with DBManager.get_db() as db:
 
@@ -250,7 +263,7 @@ def get_project(id):
                 ),
             )
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -271,10 +284,21 @@ def get_project(id):
 
 
 # Update
-@projects.route("/<string:id>", methods=["PUT"])
+@projects.route("/<string:id_>", methods=["PUT"])
 @jwt_required()
-def update_project(id):
-    logger.debug(f"Updating project with id: {id}")
+def update_project(id_: str):
+    """Updates the details of an existing project.
+
+    Args:
+        id_: The unique identifier of the project to be updated.
+
+    Returns:
+        Response: A JSON response indicating the result of the update operation.
+        - 200: If the project is successfully updated.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Updating project with id: %s", id_)
 
     with DBManager.get_db() as db:
         data = request.get_json()
@@ -292,16 +316,16 @@ def update_project(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
         if project:
             for key, value in data.items():
-                # is it the JSON field ?
+                # is it the JSON field?
                 current_value = getattr(project, key, None)
                 if current_value is None:
-                    logger.warning(f"Project does not have attribute {key}")
+                    logger.warning("Project does not have attribute %s", key)
                     continue
                 if isinstance(current_value, dict):
                     for k, v in value.items():
@@ -322,25 +346,36 @@ def update_project(id):
                 ),
                 200,
             )
-        else:
-            return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_not_found",
-                            "text": "Project not found",
-                        }
+
+        return (
+            jsonify(
+                {
+                    "message": {
+                        "id": "api.projects.project_not_found",
+                        "text": "Project not found",
                     }
-                ),
-                404,
-            )
+                }
+            ),
+            404,
+        )
 
 
 # Delete
-@projects.route("/<string:id>", methods=["DELETE"])
+@projects.route("/<string:id_>", methods=["DELETE"])
 @jwt_required()
-def delete_project(id):
-    logger.debug(f"Deleting project with id: {id}")
+def delete_project(id_: str):
+    """Deletes a project and its associated collaboration.
+
+    Args:
+        id_: The unique identifier of the project to be deleted.
+
+    Returns:
+        Response: A JSON response indicating the result of the deletion operation.
+        - 200: If the project and collaboration are successfully deleted.
+        - 401: If the user is unauthorized.
+        - 404: If the project or collaboration is not found.
+    """
+    logger.debug("Deleting project with id: %s", id_)
 
     with DBManager.get_db() as db:
 
@@ -356,10 +391,10 @@ def delete_project(id):
             )
 
         # Get the project and collaboration
-        project = db.query(Project).get(id)
+        project = db.query(Project).get(id_)
         collaboration = (
             db.query(Collaboration)
-            .filter_by(project_id=id, researcher_id=researcher.id)
+            .filter_by(project_id=id_, researcher_id=researcher.id)
             .first()
         )
 
@@ -378,28 +413,38 @@ def delete_project(id):
                 ),
                 200,
             )
-        else:
-            return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_and_collaboration_not_found",
-                            "text": "Project and collaboration not found",
-                        }
+
+        return (
+            jsonify(
+                {
+                    "message": {
+                        "id": "api.projects.project_and_collaboration_not_found",
+                        "text": "Project and collaboration not found",
                     }
-                ),
-                404,
-            )
+                }
+            ),
+            404,
+        )
 
 
 # DELETE all respondents for a project
-@projects.route("/<string:id>/respondents", methods=["DELETE"])
+@projects.route("/<string:id_>/respondents", methods=["DELETE"])
 @jwt_required()
-def delete_respondents(id):
-    logger.debug(f"Deleting project with id: {id}")
+def delete_respondents(id_: str):
+    """Deletes all respondents associated with a specific project.
+
+    Args:
+        id_: The unique identifier of the project.
+
+    Returns:
+        Response: A JSON response indicating the result of the deletion operation.
+        - 200: If all respondents are successfully deleted.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Deleting project with id: %s", id_)
 
     with DBManager.get_db() as db:
-
         user = get_jwt_identity()
         researcher = db.query(Researcher).filter_by(email=user["email"]).first()
 
@@ -414,7 +459,7 @@ def delete_respondents(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -434,7 +479,7 @@ def delete_respondents(id):
         respondents = (
             db.query(Respondent)
             .filter(
-                Respondent.project_id == id,
+                Respondent.project_id == id_,
             )
             .all()
         )
@@ -480,10 +525,23 @@ def get_survey_platform_connection(project):
         return (400, "api.survey.failed_to_check_connection", survey_platform_info)
 
 
-@projects.route("/<string:id>/survey_platform/check_connection", methods=["GET"])
+@projects.route("/<string:id_>/survey_platform/check_connection", methods=["GET"])
 @jwt_required()
-def check_survey_platform_connection(id):
-    logger.debug(f"Checking survey platform connection for project with id: {id}")
+def check_survey_platform_connection(id_: str):
+    """Checks the connection status of the survey platform for a given project.
+
+    Args:
+        id_: The unique identifier of the project.
+
+    Returns:
+        Response: A JSON response indicating the result of the connection check.
+        - 200: If the connection check is successful.
+        - 400: If the survey platform is not supported or there is a failure in checking
+            the connection.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Checking survey platform connection for project with id: %s", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -499,7 +557,7 @@ def check_survey_platform_connection(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -543,7 +601,8 @@ def check_survey_platform_connection(id):
 
         # Check for the existence of the survey in the survey platform info
         if survey_platform_info.get("exists"):
-            # If the survey name from the survey platform info doesn't match the current survey name in project.survey_platform_fields, update it
+            # If the survey name from the survey platform info doesn't match the current
+            # survey name in project.survey_platform_fields, update it
             if survey_platform_info.get(
                 "survey_name"
             ) != project.survey_platform_fields.get("survey_name"):
@@ -551,7 +610,8 @@ def check_survey_platform_connection(id):
                     survey_platform_info.get("survey_name")
                 )
         else:
-            # If the survey doesn't exist in the survey platform info, set the survey_name in project.survey_platform_fields to None
+            # If the survey doesn't exist in the survey platform info, set the
+            # survey_name in project.survey_platform_fields to None
             project.survey_platform_fields["survey_name"] = None
 
         # Commit the changes to the database
@@ -562,10 +622,23 @@ def check_survey_platform_connection(id):
         return jsonify(survey_platform_info), status
 
 
-@projects.route("/<string:id>/sync_variables", methods=["POST"])
+@projects.route("/<string:id_>/sync_variables", methods=["POST"])
 @jwt_required()
-def sync_variables(id):
-    logger.debug(f"Syncing variables for project with id: {id}")
+def sync_variables(id_: str):
+    """Synchronizes the variables for a specific project with the survey platform.
+
+    Args:
+        id_ : The unique identifier of the project.
+
+    Returns:
+        Response: A JSON response indicating the result of the synchronization
+            operation.
+        - 200: If the variables are successfully synchronized.
+        - 400: If the survey platform is not supported.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Syncing variables for project with id: %s", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -581,7 +654,7 @@ def sync_variables(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -611,14 +684,14 @@ def sync_variables(id):
                     if variable.get("enabled", False)
                 ]
             )
-            logger.info(f"Stored custom variables: {project.custom_variables}")
-            logger.info(f"Upload custom variables: {enabled_custom_variables}")
+            logger.info("Stored custom variables: %s", project.custom_variables)
+            logger.info("Upload custom variables: %s", enabled_custom_variables)
             enabled_variables.extend(enabled_custom_variables)
 
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
-            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+            logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
                 jsonify(
                     {
@@ -639,7 +712,7 @@ def sync_variables(id):
 
         # Check if an error occurred
         if status != 200:
-            logger.error(f"Error during variable syncing: {text_message}")
+            logger.error("Error during variable syncing: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
                 status,
@@ -651,10 +724,23 @@ def sync_variables(id):
         return jsonify({"message": {"id": message_id, "text": text_message}}), status
 
 
-@projects.route("/<string:id>/export_survey_responses", methods=["POST"])
+@projects.route("/<string:id_>/export_survey_responses", methods=["POST"])
 @jwt_required()
-def export_survey_responses(id):
-    logger.debug(f"Exporting survey responses for project with id: {id}")
+def export_survey_responses(id_: str):
+    """Exports survey responses for a specific project.
+
+    Args:
+        id_ (str): The unique identifier of the project.
+
+    Returns:
+        Response: A JSON response indicating the result of the export operation.
+        - 200: If the survey responses are successfully exported and the file is sent.
+        - 400: If the survey platform is not supported.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+        - 500: If there is an error during the export process.
+    """
+    logger.debug("Exporting survey responses for project with id: %s", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -670,7 +756,7 @@ def export_survey_responses(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -690,7 +776,7 @@ def export_survey_responses(id):
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
-            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+            logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
                 jsonify(
                     {
@@ -711,7 +797,7 @@ def export_survey_responses(id):
 
         # Check if an error occurred
         if status != 200:
-            logger.error(f"Error during survey response export: {text_message}")
+            logger.error("Error during survey response export: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
                 status,
@@ -748,10 +834,22 @@ def export_survey_responses(id):
         )
 
 
-@projects.route("/<string:id>/preview_survey", methods=["GET"])
+@projects.route("/<string:id_>/preview_survey", methods=["GET"])
 @jwt_required()
-def preview_survey(id):
-    logger.debug(f"Previewing survey for project with id: {id}")
+def preview_survey(id_: str):
+    """Generates a preview link for a survey associated with a specific project.
+
+    Args:
+        id_: The unique identifier of the project.
+
+    Returns:
+        Response: A JSON response containing the preview link if successful.
+        - 200: If the preview link is successfully generated.
+        - 400: If the survey platform is not supported.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.debug("Previewing survey for project with id: %s", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -767,7 +865,7 @@ def preview_survey(id):
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
@@ -787,7 +885,7 @@ def preview_survey(id):
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
-            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+            logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
                 jsonify(
                     {
@@ -822,7 +920,7 @@ def preview_survey(id):
         )
 
         if status != 200:
-            logger.error(f"Error during survey preview: {link}")
+            logger.error("Error during survey preview: %s", link)
             return jsonify({"message": {"id": message_id, "text": message}}), status
 
         return link, status

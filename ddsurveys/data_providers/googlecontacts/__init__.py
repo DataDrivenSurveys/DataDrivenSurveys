@@ -239,7 +239,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
             credentials = self.oauth_client.credentials
         except Warning as e:
-            logger.warning(f"Warning when exchanging tokens: {e}")
+            logger.warning("Warning when exchanging tokens: %s", e)
             # Create mock credentials object to fail the granted scopes check
             credentials = namedtuple("Credentials", ["granted_scopes"])(granted_scopes=[""])
             exchange_failed = True
@@ -260,7 +260,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         people_service = build("people", "v1", credentials=credentials)
         profile = people_service.people().get(resourceName='people/me', personFields='names').execute()
 
-        logger.info(f"Profile: {profile}")
+        logger.info("Profile: %s", profile)
         self.credentials = credentials
 
         return {
@@ -285,10 +285,10 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         if r.status_code == 200:
             logger.info("Successfully revoked google token")
             return True
-        else:
-            logger.error(f"Failed to revoke google token: {r.status_code}")
-            logger.error(f"Response: {r.content}")
-            return False
+
+        logger.error("Failed to revoke google token: %s", r.status_code)
+        logger.error("Response: %s", r.content)
+        return False
 
     # DataProvider methods
     def test_connection_before_extraction(self) -> bool:
@@ -303,9 +303,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             )
             .execute()
         )
-        if results.get("connections") is None:
-            return False
-        return True
+        return results.get("connections") is not None
 
     def test_connection(self) -> bool:
         """Tests the connection to the Google People API using the provided OAuth credentials.
@@ -464,10 +462,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((photos := c.get("photos", [])) or True) and len(photos) > 0
-                and any([
-                    photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
-                    for photo in photos
-                ])
+                and any(photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
+                    for photo in photos)
         ]
 
     @cached_property

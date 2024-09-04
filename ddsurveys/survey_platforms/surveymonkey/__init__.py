@@ -205,7 +205,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
             try:
                 survey_info = self.get_specific_survey(self.survey_id)
-                logger.debug(f"SurveyMonkeySurveyPlatform survey_info: {survey_info}")
+                logger.debug("SurveyMonkeySurveyPlatform survey_info: %s", survey_info)
                 survey_name = survey_info["title"]
 
                 survey_platform_fields["survey_name"] = survey_name
@@ -262,7 +262,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             response = self.modify_specific_survey(
                 self.survey_id, custom_variables=modified_variables
             )
-            logger.debug(f"SurveyMonkeySurveyPlatform response: {response}")
+            logger.debug("SurveyMonkeySurveyPlatform response: %s", response)
 
             if response.get("error"):
                 return (
@@ -360,7 +360,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     def get_specific_survey(self, survey_id: str) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-surveys-id-
         logger.debug(
-            f"SurveyMonkeySurveyPlatform.get_specific_survey: {self.access_token}"
+            "SurveyMonkeySurveyPlatform.get_specific_survey: %s", self.access_token
         )
         endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint

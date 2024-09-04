@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for handling survey platforms.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
@@ -60,7 +62,7 @@ def exchange_code_for_tokens(survey_platform):
 
         if not survey_platform_class:
             logger.error(
-                f"Error exchanging code for tokens for: {survey_platform_type}"
+                "Error exchanging code for tokens for: %s", survey_platform_type
             )
             return (
                 jsonify(
@@ -86,7 +88,7 @@ def exchange_code_for_tokens(survey_platform):
 
         if response["success"]:
             logger.info(
-                f"Successfully exchanged code for tokens for: {survey_platform_type}"
+                "Successfully exchanged code for tokens for: %s", survey_platform_type
             )
             return (
                 jsonify(
@@ -102,7 +104,7 @@ def exchange_code_for_tokens(survey_platform):
             )
         else:
             logger.error(
-                f"Error exchanging code for tokens for: {survey_platform_type}"
+                "Error exchanging code for tokens for: %s", survey_platform_type
             )
             return (
                 jsonify(
@@ -116,7 +118,7 @@ def exchange_code_for_tokens(survey_platform):
                 500,
             )
     except Exception:
-        logger.exception(f"Error exchanging code for tokens for: {survey_platform_type}")
+        logger.exception("Error exchanging code for tokens for: %s\n", survey_platform_type)
         return (
             jsonify(
                 {

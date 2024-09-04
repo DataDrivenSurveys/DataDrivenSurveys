@@ -607,4 +607,4 @@ class CustomVariable:
         filtered_vars = self.filter_custom_variables(custom_vars_rows)
         self.selected_row = self.apply_selection(filtered_vars)
         return self.to_data()
-        # logger.debug(f"Selected Row: {data}")
+        # logger.debug("Selected Row: %s", data)

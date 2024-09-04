@@ -71,7 +71,7 @@ def get_public_project():
         )
 
         if not project:
-            logger.error(f"Project with id {project_short_id} not found.")
+            logger.error("Project with id %s not found.", project_short_id)
             return (
                 jsonify(
                     {
@@ -95,7 +95,7 @@ def get_public_project():
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
-            logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+            logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             response_status = 400
             all_data_connections_connected = False
         else:
@@ -111,8 +111,8 @@ def get_public_project():
                 survey_active = survey_platform_info["active"]
             else:
                 logger.error(
-                    f"Survey on {project.survey_platform_name} {project.id} does not exist or there was an error "
-                    f"fetching its info."
+                    "Survey on %s %s does not exist or there was an error fetching its info.",
+                    project.survey_platform_name, project.id
                 )
                 response_status = 400
                 all_data_connections_connected = False
@@ -228,7 +228,7 @@ def exchange_code_for_tokens():
         project = get_project(db, project_short_id)
 
         if not project:
-            logger.error(f"No project found for project_short_id: {project_short_id}")
+            logger.error("No project found for project_short_id: %s", project_short_id)
             return (
                 jsonify(
                     {
@@ -252,7 +252,7 @@ def exchange_code_for_tokens():
         )
 
         if not project_data_connection:
-            logger.error(f"No data connection for data provider: {data_provider_name}")
+            logger.error("No data connection for data provider: %s", data_provider_name)
             return (
                 jsonify(
                     {
@@ -336,7 +336,7 @@ def was_data_provider_used():
         project = get_project(db, project_short_id)
 
         if not project:
-            logger.error(f"Project not found: {project_short_id}")
+            logger.error("Project not found: %s", project_short_id)
             return (
                 jsonify(
                     {
@@ -383,7 +383,7 @@ def prepare_survey():
             project = get_project(db, project_short_id)
 
             if not project:
-                logger.error(f"Project not found: {project_short_id}")
+                logger.error("Project not found: %s", project_short_id)
                 return (
                     jsonify(
                         {
@@ -464,7 +464,7 @@ def prepare_survey():
             )
 
             if not platform_class:
-                logger.error(f"Unknown Survey Platform: {project.survey_platform_name}")
+                logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
                 return (
                     jsonify(
                         {
@@ -486,8 +486,8 @@ def prepare_survey():
 
             if status != 200 and not survey_platform_info.get("active", False):
                 logger.error(
-                    f"Survey on {project.survey_platform_name} {project.id} does not exist or there was an error "
-                    f"fetching its info."
+                    "Survey on %s %s does not exist or there was an error fetching its info.",
+                    project.survey_platform_name, project.id
                 )
                 return (
                     jsonify(
@@ -515,7 +515,7 @@ def prepare_survey():
 
                 if not access_token:
                     logger.error(
-                        f"Missing access token for data provider: {data_provider_name}"
+                        "Missing access token for data provider: %s", data_provider_name
                     )
                     return (
                         jsonify(
@@ -537,7 +537,7 @@ def prepare_survey():
                 )
 
                 if not project_data_connection:
-                    logger.error(f"Data provider not found: {data_provider_name}")
+                    logger.error("Data provider not found: %s", data_provider_name)
                     return (
                         jsonify({
                             "message": {
@@ -553,7 +553,7 @@ def prepare_survey():
                 fields.update(
                     {"access_token": access_token, "refresh_token": refresh_token}
                 )
-                logger.debug(f"Data provider fields: {fields}")
+                logger.debug("Data provider fields: %s", fields)
 
                 user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
                     data_provider_name
@@ -567,8 +567,8 @@ def prepare_survey():
                 # revoke the access tokens
                 try:
                     user_data_provider.revoke_token(data_provider.access_token)
-                except Exception as e:
-                    logger.error(f"Failed to revoke access token for data provider '{data_provider_name}': {e}", exc_info=True)
+                except Exception:
+                    logger.exception("Failed to revoke access token for data provider '%s'\n", data_provider_name)
                     logger.debug(traceback.format_exc())
 
                 # set the data provider access tokens to Null
@@ -594,9 +594,9 @@ def prepare_survey():
                         data=frontend_variables,
                     )
                 )
-            # logger.debug(f"Project variables: {project.variables}")
-            # logger.debug(f"Project custom variables: {project.custom_variables}")
-            # logger.debug(f"Data to upload: {data_to_upload}")
+            # logger.debug("Project variables: %s", project.variables)
+            # logger.debug("Project custom variables: %s", project.custom_variables)
+            # logger.debug("Data to upload: %s", data_to_upload)
 
             success_preparing_survey, unique_url = (
                 platform_instance.handle_prepare_survey(
@@ -646,8 +646,8 @@ def prepare_survey():
                 )
 
     except Exception:
-        logger.exception(f"Error preparing survey.\n")
-        logger.debug(f"Error traceback: {traceback.format_exc()}")
+        logger.exception("Error preparing survey.\n")
+        logger.debug("Error traceback: %s", traceback.format_exc())
         return (
             jsonify(
                 {
@@ -668,7 +668,7 @@ def check_data_provider_access_tokens(
         # Get project and its associated data connections.
         project = db.query(Project).get(project_id)
         if not project:
-            logger.debug(f"Project not found: {project_id}")
+            logger.debug("Project not found: %s", project_id)
             return False
 
         data_connection = (
@@ -678,7 +678,7 @@ def check_data_provider_access_tokens(
         )
 
         if not data_connection:
-            logger.debug(f"Data connection not found for: {data_provider_name}")
+            logger.debug("Data connection not found for: %s", data_provider_name)
             return False
 
         data_provider_name = data_connection.data_provider.data_provider_name.value
@@ -690,7 +690,7 @@ def check_data_provider_access_tokens(
         provider_class = DataProvider.get_class_by_value(data_provider_name)
 
         if not provider_class:
-            logger.error(f"Data provider type not found: {data_provider_name}")
+            logger.error("Data provider type not found: %s", data_provider_name)
             return False
 
         user_data_provider: OAuthDataProvider = provider_class(**fields)
@@ -701,6 +701,7 @@ def check_data_provider_access_tokens(
 @respondent.route("/connect", methods=["POST"])
 def connect_respondent():
     """This function receives a JSON array of data providers and perform checks for each one.
+
     If all data providers exist, it will return the already existing respondent.
     If some exist and some do not, it will return a bad request.
     If none exist, it will create an associated data providers and a new respondent and return it.
@@ -713,7 +714,7 @@ def connect_respondent():
         # Get project and its associated data connections.
         project = get_project(db, project_short_id)
         if not project:
-            logger.error(f"Project {project_short_id} not found")
+            logger.error("Project %s not found", project_short_id)
             return (
                 jsonify(
                     {
@@ -738,7 +739,7 @@ def connect_respondent():
             # Get the data provider
             data_provider = db.query(DataProviderModel).get(data_provider_name)
             if not data_provider:
-                logger.warning(f"Data provider not found: {data_provider_name}")
+                logger.warning("Data provider not found: %s", data_provider_name)
                 return (
                     jsonify(
                         {
@@ -760,7 +761,7 @@ def connect_respondent():
             if not check_data_provider_access_tokens(
                 project.id, data_provider_name, access_token, refresh_token
             ):
-                logger.error(f"Invalid token for data provider: {data_provider_name}")
+                logger.error("Invalid token for data provider: %s", data_provider_name)
                 return (
                     jsonify(
                         {

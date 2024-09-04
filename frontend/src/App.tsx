@@ -1,26 +1,22 @@
 import {ThemeProvider, createTheme} from '@mui/material/styles';
-import {AuthProvider} from './context/AuthContext';
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
-
-import PageProjectSelection from './components/pages/PageProjectSelection';
-import PageProject from './components/pages/PageProject';
-import PageCreateProject from './components/pages/PageCreateProject';
-import SignUp from './components/auth/SignUp';
-
-
-import {SnackbarProvider} from './context/SnackbarContext';
-
 import './styles/normalize.css'
-import PageParticipantConnection from './components/pages/PageParticipantConnection';
-import PageParticipantOauth2Redirect from './components/pages/PageParticipantOauth2Redirect';
 
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
-import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatformOauth2Redirect';
+import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 
-import PrivacyPolicy from "./components/pages/PagePrivacyPolicy";
-import TermsOfService from "./components/pages/PageTermsOfService";
+import SignUp from './components/auth/SignUp';
+import PageCreateProject from './components/pages/PageCreateProject';
 import Homepage from "./components/pages/PageHomepage";
+import PageParticipantConnection from './components/pages/PageParticipantConnection';
+import PageParticipantOauth2Redirect from './components/pages/PageParticipantOauth2Redirect';
+import PrivacyPolicy from "./components/pages/PagePrivacyPolicy";
+import PageProject from './components/pages/PageProject';
+import PageProjectSelection from './components/pages/PageProjectSelection';
+import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatformOauth2Redirect';
+import TermsOfService from "./components/pages/PageTermsOfService";
+import {AuthProvider} from './context/AuthContext';
+import {SnackbarProvider} from './context/SnackbarContext';
 
 
 export const themeOptions = {

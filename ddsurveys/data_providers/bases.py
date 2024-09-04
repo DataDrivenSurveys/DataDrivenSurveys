@@ -11,7 +11,7 @@ import traceback
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute, CustomVariable
+from ddsurveys.data_providers.variables import BuiltInVariable, CustomVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import FormTextBlock as BaseFormTextBlock
@@ -232,7 +232,7 @@ class DataProvider(UIRegistry):
 
         data_category_class = self.get_data_category(category.lower())
 
-        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+        logger.debug("Calculating variable '%s' for data category '%s'", name, category)
 
         if data_category_class is None:
             msg = f"Data category '{category}' not found"
@@ -460,7 +460,7 @@ class FrontendDataProvider(DataProvider):
 
         data_category_class = self.get_data_category(category.lower())
 
-        logger.debug(f"Calculating variable '{name}' for data category '{category}'")
+        logger.debug("Calculating variable '%s' for data category '%s'", name, category)
 
         if data_category_class is None:
             msg = f"Data category '{category}' not found"

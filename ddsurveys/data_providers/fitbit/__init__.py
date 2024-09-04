@@ -522,7 +522,7 @@ class FitbitDataProvider(OAuthDataProvider):
         self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
     ) -> str:
         required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
-        logger.info(f"Fitbit redirect_uri: {self.redirect_uri}")
+        logger.info("Fitbit redirect_uri: %s", self.redirect_uri)
         if len(required_scopes) == 0:
             required_scopes = self.__class__._scopes
         return self.oauth_client.authorize_token_url(
@@ -582,7 +582,7 @@ class FitbitDataProvider(OAuthDataProvider):
             # check if all scopes are authorized
             if not set(self.required_scopes).issubset(set(accepted_scopes)):
                 logger.error(
-                    f"Incomplete Fitbit scopes: {accepted_scopes} required: {self.required_scopes}"
+                    "Incomplete Fitbit scopes: %s required: %s", accepted_scopes, self.required_scopes
                 )
                 # if all scopes were not authorized, revoke the token
                 self.revoke_token(access_token)
@@ -878,7 +878,7 @@ class FitbitDataProvider(OAuthDataProvider):
               }
             }
         """
-        url = "{0}/{1}/user/{2}/activities.json".format(
+        url = "{}/{}/user/{}/activities.json".format(
             *self.api_client._get_common_args()
         )
         return self.api_client.make_request(url)

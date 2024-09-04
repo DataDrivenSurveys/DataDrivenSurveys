@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""This module contains functions to get information from the database that many endpoints require.
+"""This module provides common functions for interacting with the database.
 
 Examples:
     get_researcher(db, user):
@@ -53,11 +53,12 @@ def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None]
 
     Returns:
         The researcher from the database and None if the user could be found.
-        If the user could not be found, returns a ResponseReturnValue and the status code.
+        If the user could not be found, returns a ResponseReturnValue and the status
+        code.
     """
     researcher = db.query(Researcher).filter_by(email=user["email"]).first()
     if not researcher:
-        logger.error(f"User {user['email']} not found")
+        logger.error("User %s not found", user['email'])
         return jsonify({"message": {"id": "api.unauthorised", "text": "Unauthorised"}}), 401
 
     return researcher, None
@@ -77,7 +78,7 @@ def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | tup
     ).first()
 
     if not project:
-        logger.error(f"Project {project_id} not found")
+        logger.error("Project %s not found", project_id)
         return jsonify({"message": {"id": "api.projects.not_found", "text": "Project not found"}}), 404
 
     return project, None
@@ -100,7 +101,7 @@ def get_project_data_connection(
     )
 
     if not data_connection:
-        logger.error(f"Data connection for {data_provider_name} not found in project {project.id}")
+        logger.error("Data connection for %s not found in project %s", data_provider_name, project.id)
         return (None,
                 jsonify({"message": {"id": "api.data_provider.connection_not_found",
                                      "text": "Data connection not found"}}),

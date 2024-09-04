@@ -322,7 +322,7 @@ class GitHubDataProvider(OAuthDataProvider):
                 "user_name": user.login,
             }
         except GithubException as e:
-            logger.exception(f"Failed to request token: {e}")
+            logger.exception("Failed to request token: %s", e)
             logger.debug(traceback.format_exc())
             return {
                 "success": False,
@@ -357,12 +357,10 @@ class GitHubDataProvider(OAuthDataProvider):
             if reason.get("error") == "bad_verification_code":
                 return True
 
-            logger.exception(
-                f"Failed to connect to GitHub BadCredentialsException: {e}"
-            )
+            logger.exception("Failed to connect to GitHub BadCredentialsException:\n")
             return False
         except GithubException as e:
-            logger.exception(f"Failed to connect to GitHub: {e}")
+            logger.exception("Failed to connect to GitHub: %s", e)
             return False
 
     @cached_property

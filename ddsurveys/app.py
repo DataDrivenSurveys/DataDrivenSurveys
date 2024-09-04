@@ -44,7 +44,7 @@ if env.get("DDS_SET_LEVEL_FOR_ALL_LOGGERS", "true").casefold() == "true":
 if env.get("DDS_ONLY_LOG_DDS", "true").casefold() == "true":
     only_log_ddsurveys()
 
-logger.debug(f"Loaded environment variables: {env}")
+logger.debug("Loaded environment variables: %s", env)
 
 # Flask app config
 APP_CONFIG = {

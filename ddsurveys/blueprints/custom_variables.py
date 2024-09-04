@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for handling custom variables.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
@@ -188,7 +190,7 @@ def add_custom_variable_to_project():
         # Validate variable name using the new function
         is_valid, message_id, validation_msg = check_custom_variable_data(data)
         if not is_valid:
-            logger.error(f"Failed to add custom variable: {validation_msg}")
+            logger.error("Failed to add custom variable: %s", validation_msg)
             return jsonify({"message": {"id": message_id, "text": validation_msg}}), 400
 
         # Check if variable name already exists
@@ -213,7 +215,7 @@ def add_custom_variable_to_project():
         variable_name = data.get("variable_name")
 
         if variable_name in existing_variable_names:
-            logger.debug(f"Variable name '{variable_name}' already exists.")
+            logger.debug("Variable name '%s' already exists.", variable_name)
             return (
                 jsonify(
                     {
@@ -235,8 +237,8 @@ def add_custom_variable_to_project():
             db.commit()
 
         except Exception as e:
-            logger.critical(f"This error should be excepted correctly: {e}")
-            logger.exception(f"Failed to add custom variable: {traceback.format_exc()}")
+            logger.critical("This error should be excepted correctly: %s", e)
+            logger.exception("Failed to add custom variable:\n%s\n", traceback.format_exc())
             return (
                 jsonify(
                     {
@@ -290,11 +292,6 @@ def get_project_custom_variable(variable_id):
         return jsonify(variable), 200
 
 
-"""
-{'variable_name': 'act1vity22', 'type': 'Custom', 'data_provider': 'fitbit', 'data_category': 'activities', 'custom': [{'attribute': 'startTime', 'data_type': 'Date', 'description': 'Activity Date', 'info': 'The date of the activity'}, {'attribute': 'steps', 'data_type': 'Number', 'description': 'Total Steps', 'info': 'The total number of steps taken during the activity'}, {'attribute': 'originalDuration', 'data_type': 'Number', 'description': 'Activity Duration', 'info': 'The duration of the activity in seconds'}, {'attribute': 'activityName', 'data_type': 'Text', 'description': 'Type', 'info': 'The type of activity'}], 'filters': [{'attr': 'startTime', 'operator': '__gt__', 'value': '2023-08-06T22:00:00.000Z'}, {'attr': 'steps', 'operator': '__ge__', 'value': '345345'}, {'attr': 'activityName', 'operator': '__contains__', 'value': 'hello'}], 'selection': {'attr': 'steps', 'operator': 'max'}}
-"""
-
-
 @custom_variables.route("/<int:variable_id>", methods=["PUT"])
 @jwt_required()
 def update_project_custom_variable(variable_id):
@@ -337,7 +334,7 @@ def update_project_custom_variable(variable_id):
         )
         if not is_valid:
             logger.error(
-                f"Failed to update custom variable: {message_id}: {validation_msg}"
+                "Failed to update custom variable: %s: %s", message_id, validation_msg
             )
             return jsonify({"message": {"id": message_id, "text": validation_msg}}), 400
 
@@ -372,7 +369,7 @@ def update_project_custom_variable(variable_id):
 @custom_variables.route("/<int:variable_id>", methods=["DELETE"])
 @jwt_required()
 def delete_project_custom_variable(variable_id):
-    logger.debug(f"Deleting custom variable: {variable_id}")
+    logger.debug("Deleting custom variable: %s", variable_id)
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
@@ -392,7 +389,7 @@ def delete_project_custom_variable(variable_id):
             None,
         )
         if not variable:
-            logger.error(f"Variable not found: {variable_id}")
+            logger.error("Variable not found: %s", variable_id)
             return (
                 jsonify(
                     {
@@ -414,5 +411,5 @@ def delete_project_custom_variable(variable_id):
 
         db.commit()
 
-        logger.debug(f"Deleted custom variable: {variable_id}")
+        logger.debug("Deleted custom variable: %s", variable_id)
         return jsonify(project.custom_variables), 200

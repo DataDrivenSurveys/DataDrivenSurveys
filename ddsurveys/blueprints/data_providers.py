@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for handling data providers.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 
@@ -26,7 +28,7 @@ data_providers = Blueprint("data-providers", __name__)
 @data_providers.route("/", methods=["POST"])
 @jwt_required()
 def add_data_provider_to_project():
-    """Returns:"""
+    """"""
     logger.debug("Adding data provider to project")
 
     with DBManager.get_db() as db:
@@ -65,7 +67,7 @@ def add_data_provider_to_project():
         )
 
         if not provider_class:
-            logger.error(f"Data provider {selected_data_provider['value']} not found")
+            logger.error("Data provider %s not found", selected_data_provider['value'])
             return (
                 jsonify(
                     {
@@ -86,8 +88,8 @@ def add_data_provider_to_project():
         status = provider_instance.test_connection()
 
         # check if the data provider already exists
-        logger.debug(f"{selected_data_provider}")
-        logger.debug(f"{provider_class.name}, {provider_class.label}, {provider_class.provider_type}")
+        logger.debug("%s", selected_data_provider)
+        logger.debug("%s, %s, %s", provider_class.name, provider_class.label, provider_class.provider_type)
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(
@@ -118,8 +120,7 @@ def add_data_provider_to_project():
 
         if data_connection:
             logger.info(
-                f"Data connection with {data_provider.name} already exists for project "
-                f"{project_id}"
+                "Data connection with %s already exists for project %s", data_provider.name, project_id
             )
             return (
                 jsonify(
@@ -138,7 +139,7 @@ def add_data_provider_to_project():
         )
 
         if not provider_class:
-            logger.error(f"Data provider {data_provider.name} not found")
+            logger.error("Data provider %s not found", data_provider.name)
             return (
                 jsonify(
                     {
@@ -216,7 +217,7 @@ def update_data_provider(data_provider_name):
         )
 
         if not provider_class:
-            logger.error(f"Data provider {selected_data_provider['label']} not found")
+            logger.error("Data provider %s not found", selected_data_provider['label'])
             return (
                 jsonify(
                     {
@@ -253,7 +254,7 @@ def update_data_provider(data_provider_name):
 
         if not data_provider:
             logger.error(
-                f"Data provider '{selected_data_provider['value']}' does not exist"
+                "Data provider '%s' does not exist", selected_data_provider['value']
             )
             return (
                 jsonify(

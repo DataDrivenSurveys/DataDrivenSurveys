@@ -1,5 +1,7 @@
 #!/usr/bin/env python
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module provides blueprints for handling authentication requests.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
 from __future__ import annotations
@@ -110,7 +112,7 @@ def signup():
             )
             db.add(new_researcher)
             db.commit()
-            logger.info(f"Successfully registered: {new_researcher.email}")
+            logger.info("Successfully registered: %s", new_researcher.email)
             return (
                 jsonify(
                     {
@@ -123,8 +125,8 @@ def signup():
                 200,
             )
     except Exception as e:
-        logger.critical(f"This error should be excepted correctly: {e}")
-        logger.exception(f"Failed to register: {traceback.format_exc()}")
+        logger.critical("This error should be excepted correctly: %s", e)
+        logger.exception("Failed to register: %s", traceback.format_exc())
         return (
             jsonify(
                 {
@@ -163,7 +165,7 @@ def signin():
                 "email": user.email,
             }
         )
-        logger.info(f"Successfully signed in: {user.email}")
+        logger.info("Successfully signed in: %s", user.email)
         return jsonify({"token": token}), 200
 
 

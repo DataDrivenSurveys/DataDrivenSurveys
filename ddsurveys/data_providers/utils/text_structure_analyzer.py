@@ -169,8 +169,8 @@ class SpacyTextStructureAnalyzer(TextStructureAnalyzer):
 
             try:
                 nlp("abcdefghijklmnopqrstuvwxyz")
-            except Exception as e:
-                logger.exception(f"Failed to load standard Spacy model for language {language}: {e}")
+            except Exception:
+                logger.exception("Failed to load standard Spacy model for language %s:\n", language)
                 logger.debug(traceback.format_exc())
                 cls.failed_standard_models.add(language)
                 return None
@@ -201,8 +201,8 @@ class SpacyTextStructureAnalyzer(TextStructureAnalyzer):
                 nlp = cls.get_standard_model(name)
                 try:
                     nlp("")
-                except Exception as e:
-                    logger.exception(f"Failed to load standard Spacy model for language {name}: {e}")
+                except Exception:
+                    logger.exception("Failed to load standard Spacy model for language %s:\n", name)
                     logger.debug(traceback.format_exc())
                     del cls.standard_models[name]
                     cls.failed_standard_models.add(name)

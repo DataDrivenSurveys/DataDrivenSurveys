@@ -114,7 +114,7 @@ class InstagramDataProvider(OAuthDataProvider):
 
             data = response.json()
             return data.get("media_count")
-        except Exception as e:
+        except Exception:
             logger.exception("Error fetching media count from Instagram.\n")
             return None
 
@@ -228,15 +228,13 @@ class InstagramDataProvider(OAuthDataProvider):
             }
 
         except requests.HTTPError:
-            logger.exception(
-                f"HTTP error when exchanging Instagram code for token. Status code: {response.status_code}"
-            )
+            logger.exception("HTTP error when exchanging Instagram code for token. Status code: %s", response.status_code)
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
             }
         except Exception as e:
-            logger.exception(f"Error exchanging Instagram code for token: {e}")
+            logger.exception("Error exchanging Instagram code for token: %s", e)
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
@@ -259,7 +257,7 @@ class InstagramDataProvider(OAuthDataProvider):
                 return False
 
         except Exception as e:
-            logger.exception(f"Error connecting to Instagram: {e}")
+            logger.exception("Error connecting to Instagram: %s", e)
             return False
         return True
 
@@ -283,7 +281,7 @@ class InstagramDataProvider(OAuthDataProvider):
                 success = error not in ("Invalid platform app", "Invalid Client ID")
             return success  # Returns the status code. In real use, you'd want to handle different response codes differently.
         except Exception as e:
-            logger.exception(f"Error connecting to Instagram: {e}")
+            logger.exception("Error connecting to Instagram: %s", e)
             return False
 
     # Properties to access class attributes
