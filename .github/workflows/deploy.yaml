@@ -22,13 +22,14 @@ jobs:
         echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >> ddsurveys/.env.production.local
         echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production.local
         echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env
+        echo "${{ secrets.GOOGLE_VERIFICATION_FILE_CONTENT }}" > "frontend/public/${{ secrets.GOOGLE_VERIFICATION_FILE_NAME }}"
 
     - name: Build the Frontend
       working-directory: frontend
       run: |
         npm install
         npm run build
-    
+
 
     - name: Copy the project to the server
       uses: appleboy/scp-action@master

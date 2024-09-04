@@ -668,7 +668,7 @@ def check_data_provider_access_tokens(
         # Get project and its associated data connections.
         project = db.query(Project).get(project_id)
         if not project:
-            logger.debug("Project not found: %s", project_id)
+            logger.error("Project not found: %s", project_id)
             return False
 
         data_connection = (
@@ -678,7 +678,7 @@ def check_data_provider_access_tokens(
         )
 
         if not data_connection:
-            logger.debug("Data connection not found for: %s", data_provider_name)
+            logger.error("Data connection not found for: %s", data_provider_name)
             return False
 
         data_provider_name = data_connection.data_provider.data_provider_name.value

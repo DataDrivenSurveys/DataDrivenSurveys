@@ -11,7 +11,7 @@ import operator
 import traceback
 from collections import namedtuple
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -20,7 +20,6 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import Resource, build
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
-from ddsurveys.data_providers.googlecontacts.api_response_dicts import *
 from ddsurveys.data_providers.googlecontacts.people import People
 from ddsurveys.data_providers.utils.text_structure_analyzer import SpacyTextStructureAnalyzer
 
@@ -32,6 +31,8 @@ __all__ = ["GoogleContactsDataProvider"]
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ddsurveys.data_providers.googlecontacts.api_response_dicts import ContactDict
+    from ddsurveys.typings.data_providers.data_categories import DataCategory
     from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
@@ -60,18 +61,18 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     )
 
     # Unique class attributes go here
-    _scopes = [
+    _scopes: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/contacts.readonly"
     ]
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
-    _categories_scopes = {
+    _categories_scopes: ClassVar = {
     }
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
-    form_fields = [
+    form_fields: ClassVar[list[FormField]] = [
         FormField(name="client_id", type="text", required=True, data={}),
         FormField(name="client_secret", type="text", required=True, data={}),
         FormField(name="project_id", type="text", required=True, data={}),
@@ -79,11 +80,11 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
-    data_categories = [
+    data_categories: ClassVar[list[DataCategory]] = [
         People,
     ]
 
-    _person_fields_list = [
+    _person_fields_list: ClassVar[list[str]] = [
         "addresses",
         "ageRanges",
         "biographies",
@@ -293,17 +294,24 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     # DataProvider methods
     def test_connection_before_extraction(self) -> bool:
         self.init_api_client()
-        results = (
-            self.api_client.people()
-            .connections()
-            .list(
-                resourceName="people/me",
-                pageSize=10,
-                personFields=self._person_fields,
+        try:
+            (
+                self.api_client.people()
+                .connections()
+                .list(
+                    resourceName="people/me",
+                    pageSize=10,
+                    personFields=self._person_fields,
+                )
+                .execute()
             )
-            .execute()
-        )
-        return results.get("connections") is not None
+        except Exception:
+            logger.exception("An exception occurred while testing the connection.\n")
+            logger.debug(traceback.format_exc())
+            return False
+        else:
+            # return results.get("connections") is not None
+            return True
 
     def test_connection(self) -> bool:
         """Tests the connection to the Google People API using the provided OAuth credentials.
@@ -380,7 +388,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 .execute()
             )
 
-            connections.extend(results.get("connections"))
+            connections.extend(results.get("connections", []))
 
             if "nextPageToken" in results:
                 next_page_token = results["nextPageToken"]
@@ -409,7 +417,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         ]
 
     @cache
-    def with_category_count(self, category: str, operator_: callable = operator.gt, count: int = 0) -> list[ContactDict]:
+    def with_category_count(self, category: str, operator_: callable = operator.gt, count: int = 0) -> list[
+        ContactDict]:
         return [
             c
             for c in self.contacts
@@ -449,12 +458,12 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     @cached_property
     def with_company_or_job_title(self) -> list[ContactDict]:
         return [
-                c
-                for c in self.contacts
-                if ((organizations := c.get("organizations", [])) or True)
-                and len(organizations) > 0
-                and any(org.get("name", "") != "" or org.get("title", "") != "" for org in organizations)
-            ]
+            c
+            for c in self.contacts
+            if ((organizations := c.get("organizations", [])) or True)
+               and len(organizations) > 0
+               and any(org.get("name", "") != "" or org.get("title", "") != "" for org in organizations)
+        ]
 
     @cached_property
     def with_photos(self) -> list[ContactDict]:
@@ -462,8 +471,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((photos := c.get("photos", [])) or True) and len(photos) > 0
-                and any(photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
-                    for photo in photos)
+               and any(photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
+                       for photo in photos)
         ]
 
     @cached_property
@@ -472,8 +481,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((birthdays := c.get("birthdays", [])) or True)
-            and len(birthdays) > 0
-            and birthdays[0].get("date", {}).get("year") is not None
+               and len(birthdays) > 0
+               and birthdays[0].get("date", {}).get("year") is not None
         ]
 
     @cached_property
@@ -593,7 +602,6 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         words, sentences, paragraphs = self.text_structure_analyzer.analyze_text(text)
         if sentences == 1 and words <= few_words_threshold:
             return 'few words'
-        elif sentences <= few_sentences_threshold:
+        if sentences <= few_sentences_threshold:
             return 'few sentences'
-        else:
-            return 'few paragraphs'
+        return 'few paragraphs'

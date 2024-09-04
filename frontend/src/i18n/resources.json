@@ -218,18 +218,24 @@
       "homepage": {
         "title": "Data-Driven Surveys (DDS)",
         "introduction": {
-          "title": "Introduction",
-          "content": "Data-Driven Surveys (DDS) is a platform that enables researchers to create data-driven surveys. A data-driven survey is a survey that uses respondents' data from various online platforms (e.g., Fitbit, Instagram, Github, Google Contacts, etc.) for survey customization, personalization, pre-answering, and background information collection."
+          "title": "What is Data-Driven Surveys (DDS)?",
+          "content": "Data-Driven Surveys (DDS) is a platform that enables survey designers to create data-driven surveys. A data-driven survey is a survey that uses respondents' data from various online platforms (e.g., Fitbit, Instagram, Github, Google Contacts, etc.) for survey customization, personalization, pre-answering, and background information collection."
+        },
+        "supported_data_providers": {
+          "title": "Supported Data Providers",
+          "content": "DDS supports the following data providers:"
         },
         "when_using_dds": {
-          "title": "When Using DDS",
-          "content": "When a researcher uses DDS for their survey, respondents will be asked to connect and to authorize access to their for the online platforms that the researcher(s) want(s) to include in their survey. Respondents can always access a variables table that summarizes all the data that will be collected for a given survey using DDS before authorizing access to their data."
+          "title": "For Survey Respondents",
+          "content": "As a survey respondent, when a survey uses DDS you can choose to grant access to your data for the online platforms that that are used by the survey that you are about to take. You can always access a variables table that summarizes all the data that will be collected by the survey using DDS before authorizing access to your data."
         },
         "more_information": {
           "title": "More Information",
-          "content": "For more information about Data-Driven Surveys (DDS), please see our:",
-          "privacy_policy": "Privacy Policy",
-          "terms_of_service": "Terms of Service"
+          "content": "For more information about DDS, please see our:",
+          "source_code": "Source Code",
+          "source_code_link": "https://github.com/DataDrivenSurveys/DataDrivenSurveys",
+          "paper": "Research Paper that gives an in-depth presentation of DDS",
+          "paper_link": "https://dl.acm.org/doi/10.1145/3613904.3642572"
         },
         "contact_information": {
           "title": "Contact Information",
@@ -237,9 +243,9 @@
           "contact_email": "dds@unil.ch"
         },
         "researcher_login": {
-          "title": "Researcher Login",
-          "content": "If you are a researcher, please log in using your email address and password.",
-          "login_button": "Researcher Sign In"
+          "title": "Survey Designer Login",
+          "content": "If you are a survey designer, please log in using your email address and password.",
+          "login_button": "Survey Designer Sign In"
         }
       },
       "privacy_policy": {
@@ -366,8 +372,8 @@
       "ui": {
         "auth": {
           "titles": {
-            "signup": "Researcher Sign Up",
-            "signin": "Researcher Sign In"
+            "signup": "Survey Designer Sign Up",
+            "signin": "Survey Designer Sign In"
           },
           "button": {
             "signin": "Sign In",
