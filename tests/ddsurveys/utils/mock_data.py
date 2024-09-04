@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """This module contains mock data for API responses."""
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-fitbit_mock_data = {
+from dateutil.relativedelta import relativedelta
+
+today = date.today()
+six_months_ago = today - relativedelta(months=6)
+
+fitbit_mock_properties = {
     "user_profile": {
         "aboutMe": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
         "age": 30,
@@ -60,14 +65,7 @@ fitbit_mock_data = {
         "weight": 70,  # in kilograms
         "weightUnit": "kg",
     },
-    "activities_favorite": [
-        {
-            "activityId": 15680,
-            "description": "",
-            "mets": 6,
-            "name": "Tennis, doubles"
-        }
-    ],
+    "activities_favorite": [{"activityId": 15680, "description": "", "mets": 6, "name": "Tennis, doubles"}],
     "activities_frequent": [
         {
             "activityId": 90013,
@@ -77,14 +75,7 @@ fitbit_mock_data = {
             "duration": 1178000,
             "name": "Walk",
         },
-        {
-            "activityId": 15000,
-            "calories": 234,
-            "description": "",
-            "distance": 0,
-            "duration": 1228000,
-            "name": "Sport"
-        },
+        {"activityId": 15000, "calories": 234, "description": "", "distance": 0, "duration": 1228000, "name": "Sport"},
         {
             "activityId": 1071,
             "calories": 790,
@@ -145,51 +136,21 @@ fitbit_mock_data = {
     ],
     "lifetime_stats": {
         "best": {
-        "total": {
-            "distance": {
-                "date": "2021-01-01",
-                "value": 15.33423820935418
-            },
-            "floors": {
-                "date": "2016-01-01",
-                "value": 140.00000029608
-            },
-            "steps": {
-                "date": "2021-01-01",
-                "value": 30123
-            }
-        },
-        "tracker": {
-            "distance": {
-                "date": "2021-01-01",
-                "value": 15.33423820935418
-            },
-            "floors": {
-                "date": "2016-01-01",
-                "value": 140.00000029608
-            },
-            "steps": {
-                "date": "2021-01-01",
-                "value": 30123
-            }
-        }
-        },
-        "lifetime": {
             "total": {
-                "activeScore": -1,
-                "caloriesOut": -1,
-                "distance": 1234,
-                "floors": 9876,
-                "steps": 7654321
+                "distance": {"date": "2021-01-01", "value": 15.33423820935418},
+                "floors": {"date": "2016-01-01", "value": 140.00000029608},
+                "steps": {"date": "2021-01-01", "value": 30123},
             },
             "tracker": {
-                "activeScore": -1,
-                "caloriesOut": -1,
-                "distance": 1234,
-                "floors": 9876,
-                "steps": 1234567
-            }
-        }
+                "distance": {"date": "2021-01-01", "value": 15.33423820935418},
+                "floors": {"date": "2016-01-01", "value": 140.00000029608},
+                "steps": {"date": "2021-01-01", "value": 30123},
+            },
+        },
+        "lifetime": {
+            "total": {"activeScore": -1, "caloriesOut": -1, "distance": 1234, "floors": 9876, "steps": 7654321},
+            "tracker": {"activeScore": -1, "caloriesOut": -1, "distance": 1234, "floors": 9876, "steps": 1234567},
+        },
     },
     # Active Minutes
     "average_weekly_heart_zone_time_last_6_months": 120,
