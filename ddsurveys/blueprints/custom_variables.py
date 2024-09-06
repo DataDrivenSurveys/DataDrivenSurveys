@@ -4,6 +4,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+from __future__ import annotations
 
 import traceback
 from keyword import iskeyword
@@ -30,7 +31,7 @@ custom_variables = Blueprint("custom-variabls", __name__)
 
 @custom_variables.route("/", methods=["GET"])
 @jwt_required()
-def get_project_custom_variables():
+def get_project_custom_variables() -> ResponseReturnValue:
     logger.debug("Getting project custom variables")
     with DBManager.get_db() as db:
 
@@ -172,7 +173,7 @@ def check_custom_variable_data(data):
 
 @custom_variables.route("/", methods=["POST"])
 @jwt_required()
-def add_custom_variable_to_project():
+def add_custom_variable_to_project() -> ResponseReturnValue:
     logger.debug("Adding custom variable")
     with DBManager.get_db() as db:
 
@@ -256,7 +257,7 @@ def add_custom_variable_to_project():
 
 @custom_variables.route("/<int:variable_id>", methods=["GET"])
 @jwt_required()
-def get_project_custom_variable(variable_id):
+def get_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     with DBManager.get_db() as db:
 
         user = get_jwt_identity()
@@ -294,7 +295,7 @@ def get_project_custom_variable(variable_id):
 
 @custom_variables.route("/<int:variable_id>", methods=["PUT"])
 @jwt_required()
-def update_project_custom_variable(variable_id):
+def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
@@ -368,7 +369,7 @@ def update_project_custom_variable(variable_id):
 
 @custom_variables.route("/<int:variable_id>", methods=["DELETE"])
 @jwt_required()
-def delete_project_custom_variable(variable_id):
+def delete_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     logger.debug("Deleting custom variable: %s", variable_id)
     with DBManager.get_db() as db:
         user = get_jwt_identity()

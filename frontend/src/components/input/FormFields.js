@@ -1,13 +1,14 @@
-import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
+import {Button, Typography} from '@mui/material';
+import React, {useCallback} from 'react';
+import {useTranslation} from 'react-i18next';
+
 import TextInput from './TextInput';
 import HelperText from '../HelperText';
-import { Button, Typography } from '@mui/material';
-import formatString, { formatURL } from '../utils/formatString';
+import formatString, {formatURL} from '../utils/formatString';
 
 /**
  * Replaces placeholders in the given string with actual values from fields.
- * 
+ *
  * @param {string} value - The string containing placeholders to replace.
  * @param {Array} fields - The fields containing the data to use for replacement.
  * @returns {string} - The string with placeholders replaced by actual values.
@@ -38,7 +39,7 @@ const replacePlaceholders = (value, fields) => {
 
 /**
  * Applies interaction effects based on field changes.
- * 
+ *
  * @param {string} name - The name of the field that changed.
  * @param {any} value - The new value of the field.
  * @param {Array} fields - The current list of fields.
@@ -55,7 +56,7 @@ const applyInteractionEffects = (name, value, fields) => {
     if (effect.action === 'set_value') {
       updatedFields = updatedFields.map(field => {
         if (field.name === effect.field) {
-          return { ...field, value: effect.args.value };
+          return {...field, value: effect.args.value};
         }
         return field;
       });
@@ -66,8 +67,8 @@ const applyInteractionEffects = (name, value, fields) => {
   return updatedFields;
 };
 
-const FormFields = ({ fields, onChange, buttonActionReducer }) => {
-  const { t } = useTranslation();
+const FormFields = ({fields, onChange, buttonActionReducer}) => {
+  const {t} = useTranslation();
 
   const checkVisibility = useCallback((field) => {
     const evaluateCondition = (condition) => {
@@ -98,7 +99,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
 
   const handleChange = useCallback((name, value) => {
     console.log('Handling change:', name, value)
-    let updatedFields = fields.map(field => field.name === name ? { ...field, value: value } : field);
+    let updatedFields = fields.map(field => field.name === name ? {...field, value: value} : field);
     console.log('Updated fields:', updatedFields)
     updatedFields = applyInteractionEffects(name, value, updatedFields);
     onChange(updatedFields);
@@ -130,7 +131,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
             onChange={(value) => handleChange(field.name, value)}
             required={field.required}
             disabled={field.disabled}
-            helperText={<HelperText text={t(field.helper_text)} url={field.data?.helper_url || ''} />}
+            helperText={<HelperText text={t(field.helper_text)} url={field.data?.helper_url || ''}/>}
           />
         );
       case 'text_area':
@@ -144,7 +145,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
             disabled={field.disabled}
             multiline
             rows={4}
-            helperText={<HelperText text={t(field.helper_text)} url={field.data?.helper_url || ''} />}
+            helperText={<HelperText text={t(field.helper_text)} url={field.data?.helper_url || ''}/>}
           />
         );
       case 'button':
@@ -155,7 +156,7 @@ const FormFields = ({ fields, onChange, buttonActionReducer }) => {
         );
       case 'textblock':
         return (
-          <Typography key={index} component="div" variant="body1" style={{ margin: '20px 0' }}>
+          <Typography key={index} component="div" variant="body1" style={{margin: '20px 0'}}>
             {t(field.content)}
           </Typography>
         );

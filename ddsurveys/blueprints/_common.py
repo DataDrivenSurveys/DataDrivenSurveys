@@ -32,14 +32,21 @@ Created on 2023-09-08 13:52
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-__all__ = ["get_researcher", "get_project", "get_project_data_connection"]
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from flask import g, jsonify
-from flask.typing import ResponseReturnValue
-from sqlalchemy.orm.session import Session
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import Collaboration, DataConnection, Project, Researcher
+
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
+    from sqlalchemy.orm.session import Session
+
+__all__ = ["get_researcher", "get_project", "get_project_data_connection"]
+
 
 logger = get_logger(__name__)
 

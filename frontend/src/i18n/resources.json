@@ -225,9 +225,28 @@
           "title": "Supported Data Providers",
           "content": "DDS supports the following data providers:"
         },
-        "when_using_dds": {
-          "title": "For Survey Respondents",
-          "content": "As a survey respondent, when a survey uses DDS you can choose to grant access to your data for the online platforms that that are used by the survey that you are about to take. You can always access a variables table that summarizes all the data that will be collected by the survey using DDS before authorizing access to your data."
+        "why_we_request_access_to_your_data": {
+          "title": "Why We Request Access to Your Data",
+          "content": "To provide a customized survey experience, DDS may request access to your data from the following platforms (the platforms requested vary for each survey):",
+          "content2": "We use this data to enhance the relevance and personalization of the surveys, ensuring that the questions you receive are more meaningful and tailored to you. We never share your data with third parties, and you maintain full control over which data you choose to share.",
+          "fitbit": "Your fitness activity and health data (average steps, weekly active minutes, etc.) to tailor survey questions related to health and wellness.",
+          "instagram": "Your Instagram activity (number of posts made, etc.) enables customizing surveys for instagram users. For example, by avoiding having to ask about basic information about your social media profiles.",
+          "github": " Information from your Github profile (number of starred repositories, etc.) allows us to customize surveys for developers or tech professionals.",
+          "googlecontacts": "Your Google Contacts data allows calculating various statistics related to how you use Google Contacts. For example, the total number of contacts you have and how many of your contacts have a phone number."
+        },
+        "how_we_use_your_data": {
+          "title": "How We Use Your Data",
+          "content": "Here is a summary of how DDS uses your data:",
+          "content1": "Before any survey begins, DDS provides a summary of the data that will be accessed and how it will be used in the survey. This summary takes on the form of a variables table, where each variable has an explanation for how it is calculated. You can review this information before granting access, and you have the option to decline any data sharing requests for each individual data provider. No data is actually accessed until you have chosen to proceed with the survey.",
+          "content2": "Once you choose to proceed to your survey, DDS will download only the data needed to compute the variables mentioned in the variables table. After computing the variables, DDS will delete all the data that was downloaded from your accounts. DDS will also revoke access to your account(s). DDS will then upload the calculated variables to the survey platform, ensuring that your data remains secure and private. DDS will then delete the calculated variables on its end. After this you will be redirected to the survey platform where you can begin answering the questions.",
+          "step0": "Before any survey begins, DDS provides a summary of the data that will be accessed and how it will be used in the survey. This summary takes on the form of a variables table, where each variable has an explanation for how it is calculated.",
+          "step1": "Next, you can choose to grant access to the data providers that are requested for the given survey. You have the option to decline any data sharing requests for each individual data provider. No data is actually accessed until you have chosen to proceed with the survey.",
+          "step2": "Once you choose to proceed to your survey, DDS will download only the data needed to compute the variables mentioned in the variables table. After computing the variables, DDS will delete all the data that was downloaded from your accounts. DDS will also revoke access to your account(s). DDS will then upload the calculated variables to the survey platform, ensuring that your data remains secure and private. DDS will then delete the calculated variables on its end.",
+          "step3": "Finally, you will be redirected to the survey platform where you can begin answering the questions."
+        },
+        "privacy_and_security": {
+          "title": "Privacy and Security",
+          "content": "Your privacy is our priority. DDS only collects the minimum amount of data necessary to personalize your survey experience. We use encryption to protect your data during transmission, and your data is deleted immediately after processing. Your data is never shared with third parties, and you can revoke access at any time. If you do not revoke access yourself, DDS will revoke access automatically after calculating all the required variables."
         },
         "more_information": {
           "title": "More Information",

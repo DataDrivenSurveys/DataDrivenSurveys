@@ -1,21 +1,20 @@
-import {useCallback, useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
-import {DEL, GET} from "../../../../code/http_requests";
+import AddIcon from '@mui/icons-material/Add';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditIcon from '@mui/icons-material/Edit';
+import SyncIcon from '@mui/icons-material/Sync';
 import {Button, ButtonGroup, Stack, Typography} from "@mui/material";
 import {DataGrid} from "@mui/x-data-grid";
+import {useCallback, useEffect, useState} from "react";
+import React from 'react';
+import {useTranslation} from 'react-i18next';
+import {useParams} from "react-router-dom";
 
 import AddDataProviderDialog from "./AddDataProviderDialog";
 import EditDataProviderDialog from "./EditDataProviderDialog";
-
-import EditIcon from '@mui/icons-material/Edit';
-import SyncIcon from '@mui/icons-material/Sync';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import {DEL, GET} from "../../../../code/http_requests";
+import {useSnackbar} from "../../../../context/SnackbarContext";
 import ConnectedStatus from "../../../feedback/ConnectedStatus";
 import ConnectionBadge from "../../../feedback/ConnectionBadge";
-
-import {useTranslation} from 'react-i18next';
-import {useSnackbar} from "../../../../context/SnackbarContext";
 import DialogFeedback from "../../../feedback/DialogFeedback";
 
 
@@ -108,10 +107,10 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       width: 250,
       align: 'right',
       renderCell: (params) => {
-        
+
         return (
           <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
-            { 
+            {
               params.row.data_provider_type === "oauth" && (
                 <>
                 <Button
@@ -143,7 +142,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
                 </>
               )
             }
-            
+
             <Button
               size={"small"}
               color="error"
@@ -208,7 +207,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
         }}
         projectName={project.name}
       />
-      
+
       <EditDataProviderDialog
         projectId={projectId}
         data={selected}
@@ -223,7 +222,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
         }}
 
       />
-      
+
       <DialogFeedback
         open={openDeleteDataProviderDialog}
         title={t('ui.project.data_providers.delete.title')}

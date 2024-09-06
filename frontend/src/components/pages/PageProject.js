@@ -1,35 +1,26 @@
-import {useCallback, useEffect, useState} from "react";
-import {Button, ButtonGroup, Stack, TextField, Typography} from "@mui/material"
-
-import {useNavigate, useParams} from "react-router-dom";
-
-import Authorization from "../auth/Authorization"
-import LayoutMain from "../layout/LayoutMain"
-import {useSnackbar} from "../../context/SnackbarContext";
-
-import {GET, POST, POST_BLOB, PUT, DEL} from "../../code/http_requests";
-import CopyClipboard from "../input/CopyClipboard";
-
-import SyncIcon from '@mui/icons-material/Sync';
-import ScienceIcon from '@mui/icons-material/Science';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RestoreIcon from '@mui/icons-material/Restore';
-
-
-import DataProviders from "./project/data_provider/DataProviders";
-import SurveyPlatformIntegration from "./project/SurveyPlatformIntegration";
-
-import VariableManagement from "./project/variables/VariableManagement";
+import ScienceIcon from '@mui/icons-material/Science';
+import SyncIcon from '@mui/icons-material/Sync';
 import {LoadingButton} from "@mui/lab";
-import AuthUser from "../auth/AuthUser";
+import {Button, ButtonGroup, Stack, TextField, Typography} from "@mui/material"
+import {useCallback, useEffect, useState} from "react";
+import React from 'react';
+import {useTranslation} from 'react-i18next';
+import {useNavigate, useParams} from "react-router-dom";
 import {useDebouncedCallback} from "use-debounce";
 
-import {useTranslation} from 'react-i18next';
+import {GET, POST, POST_BLOB, PUT, DEL} from "../../code/http_requests";
+import {useSnackbar} from "../../context/SnackbarContext";
+import Authorization from "../auth/Authorization"
+import AuthUser from "../auth/AuthUser";
 import DialogFeedback from "../feedback/DialogFeedback";
-
+import CopyClipboard from "../input/CopyClipboard";
+import LayoutMain from "../layout/LayoutMain"
 import {formatDateStringToLocale} from "../utils/FormatDate";
-
-// import ReactTimeAgo from 'react-time-ago';
+import DataProviders from "./project/data_provider/DataProviders";
+import SurveyPlatformIntegration from "./project/SurveyPlatformIntegration";
+import VariableManagement from "./project/variables/VariableManagement";
 
 
 const ProjectNameField = ({project}) => {

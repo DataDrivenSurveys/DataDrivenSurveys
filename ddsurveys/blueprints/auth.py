@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import traceback
+from typing import TYPE_CHECKING
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
@@ -15,6 +16,9 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import DBManager, Researcher
 
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
+
 logger = get_logger(__name__)
 
 
@@ -22,7 +26,7 @@ auth = Blueprint("auth", __name__)
 
 
 @auth.route("/signup", methods=["POST"])
-def signup():
+def signup() -> ResponseReturnValue:
 
     try:
         with DBManager.get_db() as db:
@@ -141,7 +145,7 @@ def signup():
 
 
 @auth.route("/signin", methods=["POST"])
-def signin():
+def signin() -> ResponseReturnValue:
     with DBManager.get_db() as db:
         data = request.get_json()
         user = db.query(Researcher).filter_by(email=data["email"]).first()
@@ -171,6 +175,6 @@ def signin():
 
 @auth.route("/me", methods=["GET"])
 @jwt_required()
-def session():
+def session() -> ResponseReturnValue:
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200

@@ -33,6 +33,8 @@ from ddsurveys.survey_platforms import SurveyPlatform
 # from ._common import get_project_data_connection
 
 if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
+
     from ddsurveys.typings.data_providers.bases import TOAuthDataProviderClass
 
 logger = get_logger(__name__)
@@ -49,12 +51,20 @@ def get_project(db, short_id) -> Project:
 
 
 @respondent.route("/", methods=["GET"])
-def get_public_project():
-    """READ public project data.
-    It also checks the readiness of the project by checking the connection status of all data providers and the survey platform.
-    The survey must also be active.
-    It does not give any detailed explanation of why the project is not ready.
+def get_public_project() -> ResponseReturnValue:
+    """Reads public project data and checks the readiness of the project.
 
+    This function checks the connection status of all data providers and the survey
+    platform.
+    The survey must also be active.
+    It does not provide any detailed explanation of why the project is not ready.
+
+    Returns:
+        ResponseReturnValue: A JSON response containing the public project data and readiness status.
+            Possible status codes are:
+            - 200: Successfully retrieved project data.
+            - 400: Bad request, e.g., unknown survey platform.
+            - 404: Project not found.
     """
     with DBManager.get_db() as db:
 
@@ -164,11 +174,18 @@ def get_public_project():
 
 
 @respondent.route("/data-providers", methods=["GET"])
-def get_public_data_providers():
-    """Provides the details necessary to connect a respondent to data providers that are linked to a project. (using OAuth2 Code Flow).
+def get_public_data_providers() -> ResponseReturnValue:
+    """Provides the details necessary to connect a respondent to data providers linked to a project using OAuth2 Code Flow.
 
-    This is a public endpoint, so no authentication is required. This endpoint should not provide any sensitive information.
-    The respondent is
+    This is a public endpoint, so no authentication is required.
+    This endpoint should not provide any sensitive information.
+
+    Returns:
+        ResponseReturnValue: A JSON response containing the details of data providers
+            linked to the project.
+            Possible status codes are:
+            - 200: Successfully retrieved data providers.
+            - 404: Project not found.
     """
     with DBManager.get_db() as db:
 
@@ -210,7 +227,7 @@ def get_public_data_providers():
 
 
 @respondent.route("/exchange-code", methods=["POST"])
-def exchange_code_for_tokens():
+def exchange_code_for_tokens() -> ResponseReturnValue:
     """Exchanges the code for an access token. (using OAuth2 Code Flow).
 
     This is a public endpoint, so no authentication is required.
@@ -328,7 +345,7 @@ def exchange_code_for_tokens():
 
 
 @respondent.route("/data-provider/was-used", methods=["POST"])
-def was_data_provider_used():
+def was_data_provider_used() -> ResponseReturnValue:
     with DBManager.get_db() as db:
         project_short_id = g.get("project_short_id")
 
@@ -374,7 +391,7 @@ def was_data_provider_used():
 
 
 @respondent.route("/prepare-survey", methods=["POST"])
-def prepare_survey():
+def prepare_survey() -> ResponseReturnValue:
     try:
         with DBManager.get_db() as db:
 
@@ -699,7 +716,7 @@ def check_data_provider_access_tokens(
 
 
 @respondent.route("/connect", methods=["POST"])
-def connect_respondent():
+def connect_respondent() -> ResponseReturnValue:
     """This function receives a JSON array of data providers and perform checks for each one.
 
     If all data providers exist, it will return the already existing respondent.

@@ -4,6 +4,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
@@ -27,8 +28,18 @@ data_providers = Blueprint("data-providers", __name__)
 # Create
 @data_providers.route("/", methods=["POST"])
 @jwt_required()
-def add_data_provider_to_project():
-    """"""
+def add_data_provider_to_project() -> ResponseReturnValue:
+    """Adds a data provider to a project.
+
+    This function handles the addition of a data provider to a project. It validates the provided data,
+    checks if the data provider exists, and creates a new data connection if it does not already exist.
+
+    Returns:
+        ResponseReturnValue: A JSON response indicating the result of the operation. Possible status codes are:
+            - 201: Data connection created successfully.
+            - 400: Bad request, e.g., missing data provider or data connection already exists.
+            - 404: Data provider not found or not supported.
+    """
     logger.debug("Adding data provider to project")
 
     with DBManager.get_db() as db:
@@ -177,7 +188,23 @@ def add_data_provider_to_project():
 # Update
 @data_providers.route("/<string:data_provider_name>", methods=["PUT"])
 @jwt_required()
-def update_data_provider(data_provider_name):
+def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
+    """Updates the data provider for a project.
+
+    This function handles the update of a data provider for a project.
+    It validates the provided data, checks if the data provider exists,
+    and updates the data connection if it does.
+
+    Args:
+        data_provider_name: The name of the data provider to be updated.
+
+    Returns:
+        ResponseReturnValue: A JSON response indicating the result of the operation.
+            Possible status codes are:
+            - 200: Data provider updated successfully.
+            - 400: Bad request, e.g., missing data provider.
+            - 404: Data provider not found or not supported.
+    """
     logger.debug("Updating data provider")
 
     with DBManager.get_db() as db:
@@ -289,7 +316,23 @@ def update_data_provider(data_provider_name):
 # delete
 @data_providers.route("/<string:data_provider_name>", methods=["DELETE"])
 @jwt_required()
-def delete_data_provider(data_provider_name):
+def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
+    """Deletes a data provider from a project.
+
+    This function handles the deletion of a data provider from a project.
+    It validates the provided data, checks if the data provider exists,
+    and deletes the data connection if it does.
+
+    Args:
+        data_provider_name: The name of the data provider to be deleted.
+
+    Returns:
+        ResponseReturnValue: A JSON response indicating the result of the operation.
+            Possible status codes are:
+            - 200: Data connection deleted successfully.
+            - 400: Bad request, e.g., missing data provider.
+            - 404: Data provider not found or not supported.
+    """
     logger.debug("Deleting data provider")
 
     with DBManager.get_db() as db:
@@ -312,7 +355,7 @@ def delete_data_provider(data_provider_name):
                 variable
                 for variable in project.variables
                 if variable["data_provider"]
-                != data_connection.data_provider.data_provider_name.value
+                   != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the custom variables related to the data connection
@@ -323,7 +366,7 @@ def delete_data_provider(data_provider_name):
                 variable
                 for variable in project.custom_variables
                 if variable["data_provider"]
-                != data_connection.data_provider.data_provider_name.value
+                   != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the data connection and update the project variables
@@ -346,7 +389,24 @@ def delete_data_provider(data_provider_name):
 # Check Connection
 @data_providers.route("/<string:data_provider_name>/check-connection", methods=["GET"])
 @jwt_required()
-def check_dataprovider_connection(data_provider_name):
+def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValue:
+    """Checks the connection status of a data provider.
+
+    This function handles the checking of a data provider's connection status for a
+    project.
+    It validates the provided data, checks if the data provider exists, and tests the
+    connection.
+
+    Args:
+        data_provider_name: The name of the data provider to check the connection for.
+
+    Returns:
+        ResponseReturnValue: A JSON response indicating the result of the operation.
+            Possible status codes are:
+            - 200: Data connection is successful.
+            - 400: Data connection failed.
+            - 404: Data provider not found or not supported.
+    """
     logger.debug("Checking data provider connection")
 
     with DBManager.get_db() as db:

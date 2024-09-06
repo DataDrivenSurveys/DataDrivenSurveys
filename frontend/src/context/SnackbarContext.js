@@ -1,8 +1,9 @@
 import React, { createContext, useState, useContext, useCallback } from 'react'
+
 import SnackbarFeedback from '../components/feedback/SnackbarFeedback'
 
-const SnackbarContext = createContext()
-export const useSnackbar = () => useContext(SnackbarContext)
+const SnackbarContext = createContext();
+export const useSnackbar = () => useContext(SnackbarContext);
 
 const defaultPosition = {
   vertical: 'bottom',

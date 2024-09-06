@@ -4,6 +4,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+from __future__ import annotations
 
 import datetime
 from io import BytesIO
@@ -57,7 +58,7 @@ def get_project_short_id(endpoint, values):
 # List
 @projects.route("/", methods=["GET"])
 @jwt_required()
-def list_projects():
+def list_projects() -> ResponseReturnValue:
     logger.debug("Listing projects")
 
     with DBManager.get_db() as db:
@@ -83,7 +84,7 @@ def list_projects():
 
 @projects.route("/", methods=["POST"])
 @jwt_required()
-def create_project():
+def create_project() -> ResponseReturnValue:
     logger.debug("Creating a new project")
 
     with DBManager.get_db() as db:
@@ -226,7 +227,7 @@ def create_project():
 # Read
 @projects.route("/<string:id_>", methods=["GET"])
 @jwt_required()
-def get_project(id_: str):
+def get_project(id_: str) -> ResponseReturnValue:
     """Retrieves the details of a specific project based on its unique identifier.
 
     Args:
@@ -286,7 +287,7 @@ def get_project(id_: str):
 # Update
 @projects.route("/<string:id_>", methods=["PUT"])
 @jwt_required()
-def update_project(id_: str):
+def update_project(id_: str) -> ResponseReturnValue:
     """Updates the details of an existing project.
 
     Args:
@@ -363,7 +364,7 @@ def update_project(id_: str):
 # Delete
 @projects.route("/<string:id_>", methods=["DELETE"])
 @jwt_required()
-def delete_project(id_: str):
+def delete_project(id_: str) -> ResponseReturnValue:
     """Deletes a project and its associated collaboration.
 
     Args:
@@ -430,7 +431,7 @@ def delete_project(id_: str):
 # DELETE all respondents for a project
 @projects.route("/<string:id_>/respondents", methods=["DELETE"])
 @jwt_required()
-def delete_respondents(id_: str):
+def delete_respondents(id_: str) -> ResponseReturnValue:
     """Deletes all respondents associated with a specific project.
 
     Args:
@@ -502,7 +503,7 @@ def delete_respondents(id_: str):
         )
 
 
-def get_survey_platform_connection(project):
+def get_survey_platform_connection(project) -> ResponseReturnValue:
 
     survey_platform_info = {
         "survey_platform_name": project.survey_platform_name,
@@ -527,7 +528,7 @@ def get_survey_platform_connection(project):
 
 @projects.route("/<string:id_>/survey_platform/check_connection", methods=["GET"])
 @jwt_required()
-def check_survey_platform_connection(id_: str):
+def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
     """Checks the connection status of the survey platform for a given project.
 
     Args:
@@ -624,7 +625,7 @@ def check_survey_platform_connection(id_: str):
 
 @projects.route("/<string:id_>/sync_variables", methods=["POST"])
 @jwt_required()
-def sync_variables(id_: str):
+def sync_variables(id_: str) -> ResponseReturnValue:
     """Synchronizes the variables for a specific project with the survey platform.
 
     Args:
@@ -726,7 +727,7 @@ def sync_variables(id_: str):
 
 @projects.route("/<string:id_>/export_survey_responses", methods=["POST"])
 @jwt_required()
-def export_survey_responses(id_: str):
+def export_survey_responses(id_: str) -> ResponseReturnValue:
     """Exports survey responses for a specific project.
 
     Args:
@@ -836,7 +837,7 @@ def export_survey_responses(id_: str):
 
 @projects.route("/<string:id_>/preview_survey", methods=["GET"])
 @jwt_required()
-def preview_survey(id_: str):
+def preview_survey(id_: str) -> ResponseReturnValue:
     """Generates a preview link for a survey associated with a specific project.
 
     Args:

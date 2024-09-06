@@ -1,6 +1,6 @@
 // Homepage
 import LoginIcon from '@mui/icons-material/Login';
-import {Container, Link, Stack, Typography, Divider, Button} from '@mui/material';
+import {Container, Link, Stack, Typography, Divider, Button, List, ListItem, ListItemText} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {NavLink} from 'react-router-dom';
@@ -14,7 +14,7 @@ interface AvailableDataProvidersProps {
 }
 
 
-function AvailableDataProviders({ dataProviderNames }: AvailableDataProvidersProps): JSX.Element | null {
+function AvailableDataProviders({dataProviderNames}: AvailableDataProvidersProps): JSX.Element | null {
   return dataProviderNames && (
     <Stack
       direction="row"
@@ -24,12 +24,36 @@ function AvailableDataProviders({ dataProviderNames }: AvailableDataProvidersPro
     >
       {dataProviderNames.map((name, index) => (
         <Stack
+          key={index}
           direction="row"
           spacing={1}
         >
           <Logo name={name} size={18}/>
-          <Typography key={index} variant="body1">
+          <Typography variant="body1">
             {name}
+          </Typography>
+        </Stack>
+      ))}
+    </Stack>
+  )
+}
+
+function DataProviderUsage({dataProviderNames}: AvailableDataProvidersProps): JSX.Element | null {
+  const {t} = useTranslation();
+  return dataProviderNames && (
+    <Stack
+      spacing={2}
+      sx={{marginBottom: '24px'}}
+    >
+      {dataProviderNames.map((name, index) => (
+        <Stack
+          key={index}
+          direction="row"
+          spacing={1}
+        >
+          <Logo name={name} size={18}/>
+          <Typography variant="body1">
+            {name}: {t(`homepage.why_we_request_access_to_your_data.${name.toLowerCase()}`)}
           </Typography>
         </Stack>
       ))}
@@ -42,10 +66,10 @@ function HomePageContent(): JSX.Element {
   const {t} = useTranslation();
 
   const dataProviderNames: string[] = [
-            "Fitbit",
-            "Instagram",
-            "Github",
-            "GoogleContacts"
+    "Fitbit",
+    "Instagram",
+    "Github",
+    "GoogleContacts"
   ];
 
   return (
@@ -57,8 +81,27 @@ function HomePageContent(): JSX.Element {
       <Typography paragraph>{t('homepage.supported_data_providers.content')}</Typography>
       <AvailableDataProviders dataProviderNames={dataProviderNames}/>
 
-      <Typography variant="h4">{t('homepage.when_using_dds.title')}</Typography>
-      <Typography paragraph>{t('homepage.when_using_dds.content')}</Typography>
+      <Typography variant="h4">{t('homepage.why_we_request_access_to_your_data.title')}</Typography>
+      <Typography paragraph>{t('homepage.why_we_request_access_to_your_data.content')}</Typography>
+      <DataProviderUsage dataProviderNames={dataProviderNames}/>
+      <Typography paragraph>{t('homepage.why_we_request_access_to_your_data.content2')}</Typography>
+
+      <Typography variant="h4">{t('homepage.how_we_use_your_data.title')}</Typography>
+      <Typography paragraph sx={{marginBottom: "0px"}}>{t('homepage.how_we_use_your_data.content')}</Typography>
+      {/*<Typography paragraph>{t('homepage.how_we_use_your_data.content2')}</Typography>*/}
+      <Typography component="div">
+        <ol style={{ paddingLeft: '20px', listStyleType: 'decimal' }}>
+          {Array.from({length: 3}, (_, index) => (
+            <li key={index} style={{marginBottom: '8px'}}>
+              {t(`homepage.how_we_use_your_data.step${index + 1}`)}
+            </li>
+          ))}
+        </ol>
+      </Typography>
+
+
+      <Typography variant="h4">{t('homepage.privacy_and_security.title')}</Typography>
+      <Typography paragraph>{t('homepage.privacy_and_security.content')}</Typography>
 
       <Typography variant="h4">{t('homepage.more_information.title')}</Typography>
       <Typography paragraph sx={{marginBottom: '0px'}}>
@@ -71,7 +114,7 @@ function HomePageContent(): JSX.Element {
         sx={{marginBottom: '16px', alignContent: 'center'}}
       >
         <Typography variant="body1" sx={{alignContent: 'center', display: 'flex'}}>
-           <Logo name="github" size={18}/>&nbsp;
+          <Logo name="github" size={18}/>&nbsp;
           <Link href={t('homepage.more_information.source_code_link')} rel="noopener">
             {t('homepage.more_information.source_code')}
           </Link>

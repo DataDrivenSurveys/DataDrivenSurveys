@@ -4,12 +4,18 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.survey_platforms import SurveyPlatform
+
+if TYPE_CHECKING:
+    from flask.typing import ResponseReturnValue
 
 logger = get_logger(__name__)
 
@@ -18,11 +24,21 @@ survey_platforms = Blueprint("survey-platforms", __name__)
 
 @jwt_required()
 @survey_platforms.route("/<string:survey_platform>/exchange-code", methods=["POST"])
-def exchange_code_for_tokens(survey_platform):
-    """Exchanges the code for an access token. (using OAuth2 Code Flow).
+def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
+    """Exchanges the code for an access token using OAuth2 Code Flow.
 
     This is a public endpoint, so no authentication is required.
     This endpoint should not provide any sensitive information.
+
+    Args:
+        survey_platform (str): The name of the survey platform.
+
+    Returns:
+        ResponseReturnValue: A JSON response indicating the result of the operation.
+            Possible status codes are:
+            - 200: Successfully exchanged code for tokens.
+            - 400: Bad request, e.g., missing survey platform or code.
+            - 500: Internal server error, e.g., error exchanging code for tokens.
     """
     data = request.get_json()
 

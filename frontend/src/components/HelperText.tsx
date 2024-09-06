@@ -1,12 +1,30 @@
-import {Box, Link, Typography} from "@mui/material";
+import {Box, Link, Typography, TypographyProps} from "@mui/material";
+import React from 'react';
+
 import updateObject from "./utils/updateObject";
 
 
-const HelperText = ({
-                      text, url = "", urlText = "", typographyProps = {}, urlInline = true,
-                      maxURLLength = -1, textPostfix = true
-                    }) => {
-  let defaultTypographyProps = {
+interface HelperTextProps {
+  text: string;
+  url?: string;
+  urlText?: string;
+  typographyProps?: TypographyProps;
+  urlInline?: boolean;
+  maxURLLength?: number;
+  textPostfix?: boolean;
+}
+
+
+const HelperText: React.FC<HelperTextProps> = ({
+  text,
+  url = '',
+  urlText = '',
+  typographyProps = {},
+  urlInline = true,
+  maxURLLength = -1,
+  textPostfix = true,
+}) => {
+  const defaultTypographyProps: TypographyProps = {
     variant: "caption",
     color: "textSecondary",
   };
@@ -70,7 +88,6 @@ const HelperText = ({
             </>
           )}
         </Typography>
-
       </Box>
     );
   }

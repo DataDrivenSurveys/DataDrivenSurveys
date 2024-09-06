@@ -1,10 +1,12 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { GET, POST } from '../code/http_requests';
-import { useSnackbar } from './SnackbarContext';
 import { Stack } from '@mui/material';
-import LoadingAnimation from '../components/feedback/LoadingAnimation';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+
+import { useSnackbar } from './SnackbarContext';
+import { GET, POST } from '../code/http_requests';
+import LoadingAnimation from '../components/feedback/LoadingAnimation';
+
 
 const AuthContext = createContext();
 

@@ -1,8 +1,8 @@
 import {ThemeProvider, createTheme} from '@mui/material/styles';
 import './styles/normalize.css'
-
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
+import React from 'react';
 import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
 
 import SignUp from './components/auth/SignUp';
