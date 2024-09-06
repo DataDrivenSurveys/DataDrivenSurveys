@@ -1,6 +1,6 @@
 // Homepage
 import LoginIcon from '@mui/icons-material/Login';
-import {Container, Link, Stack, Typography, Divider, Button, List, ListItem, ListItemText} from '@mui/material';
+import {Container, Link, Stack, Typography, Divider, Button} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {NavLink} from 'react-router-dom';
