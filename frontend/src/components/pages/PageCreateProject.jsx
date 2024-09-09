@@ -1,24 +1,21 @@
-import {useCallback, useEffect, useState} from "react";
-import Authorization from "../auth/Authorization"
-import LayoutMain from "../layout/LayoutMain"
-import {Stack, Typography, Button} from "@mui/material"
-
 import AddIcon from '@mui/icons-material/Add';
 import AddLinkIcon from '@mui/icons-material/AddLink';
-
-import DropDown from "../input/DropDown";
-import TextInput from "../input/TextInput";
+import {Stack, Typography, Button} from "@mui/material"
+import {useCallback, useEffect, useState} from "react";
+import React from "react";
+import {useTranslation} from 'react-i18next';
+import {useNavigate} from 'react-router-dom';
 
 import {GET, POST} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
 import useInput from "../../hook/useInput";
-import {useNavigate} from 'react-router-dom';
+import Authorization from "../auth/Authorization"
 import AuthUser from "../auth/AuthUser";
-
-import {useTranslation} from 'react-i18next';
-
 import ConnectionBadge from "../feedback/ConnectionBadge";
 import Loading from "../feedback/Loading";
+import DropDown from "../input/DropDown";
+import TextInput from "../input/TextInput";
+import LayoutMain from "../layout/LayoutMain"
 import SurveyPlatformFields from "./project/survey_platform/SurveyPlatformFields";
 
 const creationTypes = [
@@ -26,7 +23,7 @@ const creationTypes = [
   {label: 'ui.project.create.select.type.from_existing_survey', value: "from_existing", icon: <AddLinkIcon/>},
 ];
 
-const hiddeeFieldsFromScratch = ['survey_id'];
+const hiddenFieldsFromScratch = ['survey_id'];
 
 
 // Helper functions for local storage
@@ -108,7 +105,7 @@ const PageCreateProject = () => {
   useEffect(() => saveToLocalStorage('selectedSurveyPlatform', selectedSurveyPlatform), [selectedSurveyPlatform]);
 
   // Hide fields that are not required when creating from scratch
-  const shouldHideField = useCallback((fieldName) => creationMode === "from_scratch" && hiddeeFieldsFromScratch.includes(fieldName), [creationMode]);
+  const shouldHideField = useCallback((fieldName) => creationMode === "from_scratch" && hiddenFieldsFromScratch.includes(fieldName), [creationMode]);
 
   const checkInputs = useCallback(() => {
 
@@ -209,7 +206,7 @@ const PageCreateProject = () => {
               required: !shouldHideField(field.name),
 
             }))}
-            hiddenFields={creationMode === "from_scratch" ? hiddeeFieldsFromScratch : []}
+            hiddenFields={creationMode === "from_scratch" ? hiddenFieldsFromScratch : []}
             onChange={setSurveyPlatformFields}
           />
 

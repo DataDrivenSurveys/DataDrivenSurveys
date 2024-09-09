@@ -275,42 +275,107 @@
         },
         "data_collection_and_use": {
           "title": "Data Collection and Use",
+          "content": "DDS collects and uses personal information in the following ways:",
           "information_you_provide": {
             "title": "Information You Provide",
-            "content": "DDS collects data from participants through survey responses. This data includes, but is not limited to, information provided by the participants from their linked accounts on various Data Providers (DPs) such as Fitbit, under explicit authorization using OAuth protocols."
+            "content": "DDS offers the possibility to collect data from various online platforms that survey respondents may use. This data includes, but is not limited to, information provided by the survey respondent from their linked accounts on the various Data Providers (DPs) such as Fitbit, Google Contacts, and others, under explicit authorization using OAuth protocols."
           },
           "automatically_collected_information": {
             "title": "Automatically Collected Information",
             "content": "DDS automatically receives and records information on our server logs from your browser, including your IP address, cookie information, and the page you request."
+          },
+          "google_user_data": {
+            "title": "Google User Data",
+            "content": "As part of integrating with Google Contacts and Google account information, DDS may access the following Google user data:",
+            "google_account_information": {
+              "title": "Google Account Information",
+              "content": "Basic account information such as the account name and email address associated with the Google account, used to identify the user and display the account that provided access."
+            },
+            "google_contacts_information": {
+              "title": "Google Contacts Information",
+              "content": "Names, email addresses, phone numbers, and other details stored in Google Contacts."
+            }
           }
         },
-        "purpose_of_data_collection": {
-          "title": "Purpose of Data Collection",
-          "content": "The data collected by DDS is used exclusively for the following purposes: to enable tailored survey experiences by integrating personal data from DPs; to improve the functionality of our surveys and enhance user experience; to conduct research and analysis aimed at improving our services."
+        "how_we_use_your_data": {
+          "title": "How We Use Your Data",
+          "content": "The data we collect from Google and other Data Providers is used to personalize and customize the survey experience and for displaying information in the DDS user interface. Specifically, we use your data for:",
+          "dds_user_interface": {
+            "title": "DDS User Interface",
+            "content": "The username from a given Data Provider (e.g., Google) is displayed in the DDS user interface to inform survey respondents which account they authorized access to."
+          },
+          "survey_personalization": {
+            "title": "Survey Personalization and Customization",
+            "content": "Data from Google and other Data Providers is used to compute variables that survey designers can use to personalize and customize surveys. This can include using templated questions and answers and applying survey logic."
+          },
+          "automated_data_collection": {
+            "title": "Automated Data Collection",
+            "content": "Computed variables allow for the automatic collection of information, removing the need for respondents to manually input data that the system already has access to (e.g., number of contacts)."
+          },
+          "google_data": {
+            "title": "Google User Data",
+            "content": "Google user data is used to calculate variables such as the total number of contacts and the number of contacts with phone numbers. Only aggregate data or summary statistics are calculated from Google Contacts data. No raw Google user data is shared with third parties. Specifically:",
+            "dds_user_interface": {
+              "title": "DDS User Interface",
+              "content": "The Google account username is displayed in the DDS interface to show which account authorized access."
+            },
+            "survey_personalization": {
+              "title": "Survey Personalization and Customization",
+              "content": "Variables computed from Google user data are used to personalize and customize surveys."
+            },
+            "automated_data_collection": {
+              "title": "Automated Data Collection",
+              "content": "Variables computed from Google user data enable the automatic collection of information without needing respondents to answer questions that would collect the same information."
+            }
+          }
+        },
+        "sharing_and_disclosure": {
+          "title": "Sharing and Disclosure of User Data",
+          "content": "DDS does <strong>not</strong> sell, transfer, or disclose any user data to third parties except in the following situations:",
+          "survey_platforms": {
+            "title": "Survey Platforms",
+            "content": "Aggregated or anonymized data is shared with survey platforms such as Qualtrics and SurveyMonkey. This data is only accessible by the survey designers responsible for the given survey."
+          },
+          "legal_compliance": {
+            "title": "Legal Compliance",
+            "content": "In cases where DDS is required to comply with court orders or governmental requests, data may be disclosed in accordance with the law."
+          },
+          "google_data": {
+            "title": "Google Data",
+            "content": "DDS does <strong>not</strong> share, transfer, or disclose raw Google user data to any third parties, including Google. Google user data is solely used within DDS to compute variables necessary for survey customization. Only aggregated data or summary statistics are shared with survey platforms, and no raw Google Contacts or Google account data is ever disclosed"
+          }
         },
         "consent": {
           "title": "Consent",
-          "content": "By using DDS, participants consent to the collection, transfer, processing, storage, disclosure, and use of their information as described in this Privacy Policy. Consent is obtained through our landing page where participants are informed about the data collection process and provided with a link to this Privacy Policy."
+          "content": "By using DDS, survey respondents consent to the collection, transfer, processing, storage, disclosure, and use of their information as described in this Privacy Policy. Consent is obtained through our landing page where survey respondents are informed about the data collection process and provided with a link to this Privacy Policy."
         },
         "data_minimization": {
           "title": "Data Minimization",
-          "content": "DDS adheres to the principle of data minimization by only requesting access to the necessary data classes as authorized by the participant. The data accessed is solely used for computing the variables required for conducting the survey and is not retained post-completion of the survey."
+          "content": "DDS adheres to the principle of data minimization by only requesting access to the necessary data from Google Contacts and other Data Providers, as authorized by the survey respondent. The data accessed is solely used for calculating the required variables for the survey and is deleted after the survey respondent is redirected to take their survey."
         },
         "security": {
           "title": "Security",
-          "content": "We employ administrative, physical, and electronic measures designed to protect your information from unauthorized access. This includes using OAuth for secure data access, ensuring data is not stored permanently on disk, and deleting all raw data and variables from our system memory once the survey is completed."
+          "content": "We employ administrative, physical, and electronic measures designed to protect your information from unauthorized access. All of the mentioned security measures <strong>also</strong> apply to <strong>Google user data</strong>. This includes:",
+          "oauth": {
+            "title": "OAuth for Secure Data Access",
+            "content": "OAuth protocols are used to ensure secure access to the survey respondents' Google and Data Provider accounts."
+          },
+          "automatic_access_token_revocation": {
+            "title": "Automatic Access Token Revocation",
+            "content": "For Data Providers that support remote access token revocation, such as Google Contacts, we automatically revoke the access token once the survey respondent is redirected to their survey."
+          }
         },
         "data_retention_and_deletion": {
           "title": "Data Retention and Deletion",
-          "content": "DDS does not retain any raw data. Data necessary for the survey is temporarily stored in system memory and is deleted immediately after the survey is processed. Access tokens are revoked post-processing to ensure no further data access occurs."
+          "content": "DDS does not retain any raw Google user data or other Data Provider data. All data necessary for the survey is temporarily stored in system memory and is deleted immediately after the survey respondent is redirected to take their survey. Access tokens used to retrieve data from Google Contacts and other Data Providers are revoked after the data has been processed."
         },
         "changes_to_this_privacy_policy": {
           "title": "Changes to This Privacy Policy",
-          "content": "DDS may update this policy periodically. We will notify you about significant changes by sending a notice to the primary email address specified in your DDS account or by placing a prominent notice on our site."
+          "content": "DDS may update this policy periodically. We will notify you about significant changes by sending a notice to the primary email address specified in a survey designer's DDS account or by placing a prominent notice on our site."
         },
         "contact_information": {
           "title": "Contact Information",
-          "content": "If you have any questions or concerns about this Privacy Policy or data processing, please contact us at",
+          "content": "If you have any questions or concerns about this Privacy Policy or data processing, please contact us at: <email>{{contact_email}}</email>",
           "contact_email": "dds@unil.ch"
         }
       },

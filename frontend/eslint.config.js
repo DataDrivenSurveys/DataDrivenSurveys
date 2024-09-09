@@ -1,13 +1,23 @@
-import pluginJs from "@eslint/js";
-import importPlugin from "eslint-plugin-import";
-import pluginReact from "eslint-plugin-react";
-import globals from "globals";
-import tseslint from "typescript-eslint";
+const pluginJs = require("@eslint/js");
+const importPlugin = require("eslint-plugin-import");
+const pluginReact = require("eslint-plugin-react");
+const globals = require("globals");
+const tseslint = require("typescript-eslint");
 
 
-export default [
+module.exports = [
   {files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
-  {languageOptions: {globals: globals.browser}},
+  // {languageOptions: {globals: globals.browser}},
+  {
+    languageOptions: {
+      ecmaVersion: 2020, // ECMAScript version
+      sourceType: "module", // Specify using ES modules
+      globals: {
+        ...globals.node, // Node.js global variables (like `module`, `__dirname`)
+        ...globals.browser, // Browser globals (for React)
+      },
+    }
+  },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   pluginReact.configs.flat.recommended,

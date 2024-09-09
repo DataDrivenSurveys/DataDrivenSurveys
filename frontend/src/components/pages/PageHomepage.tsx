@@ -88,7 +88,6 @@ function HomePageContent(): JSX.Element {
 
       <Typography variant="h4">{t('homepage.how_we_use_your_data.title')}</Typography>
       <Typography paragraph sx={{marginBottom: "0px"}}>{t('homepage.how_we_use_your_data.content')}</Typography>
-      {/*<Typography paragraph>{t('homepage.how_we_use_your_data.content2')}</Typography>*/}
       <Typography component="div">
         <ol style={{ paddingLeft: '20px', listStyleType: 'decimal' }}>
           {Array.from({length: 3}, (_, index) => (
