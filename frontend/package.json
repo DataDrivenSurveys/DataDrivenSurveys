@@ -65,7 +65,7 @@
     "start": "react-scripts start",
     "dev": "WATCHPACK_POLLING=true react-scripts start",
     "build": "react-scripts build",
-    "serve-build": "serve -s build -l 5000",
+    "serve-build": "serve -s build -l 3000",
     "snap": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
