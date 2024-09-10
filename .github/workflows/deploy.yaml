@@ -58,6 +58,18 @@ jobs:
         npm run update-browserslist
         npm run build
 
+    - name: Serve the build directory for react-snap
+      working-directory: frontend
+      run: npm run serve-build &
+
+    - name: Wait for the server to be ready
+      working-directory: frontend
+      run: npx wait-on http://localhost:5000
+
+    - name: Run react-snap to pre-render static pages
+      working-directory: frontend
+      run: npm run snap
+
     - name: Copy the project to the server
       uses: appleboy/scp-action@master
       with:

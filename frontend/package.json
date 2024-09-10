@@ -46,8 +46,10 @@
     "globals": "^15.9.0",
     "jest": "^29.7.0",
     "nodemon": "^3.1.0",
+    "serve": "^14.2.3",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.4.0"
+    "typescript-eslint": "^8.4.0",
+    "wait-on": "^8.0.1"
   },
   "overrides": {
     "react-scripts": {
@@ -63,7 +65,8 @@
     "start": "react-scripts start",
     "dev": "WATCHPACK_POLLING=true react-scripts start",
     "build": "react-scripts build",
-    "postbuild": "react-snap",
+    "serve-build": "serve -s build -l 5000",
+    "snap": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
