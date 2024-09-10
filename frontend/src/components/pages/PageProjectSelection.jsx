@@ -1,26 +1,23 @@
-import {Box, Button, IconButton, Stack, Typography, Menu} from "@mui/material"
-import Authorization from "../auth/Authorization"
-import LayoutMain from "../layout/LayoutMain"
-
-import {DataGrid} from "@mui/x-data-grid";
-import {useEffect, useState} from "react";
-import {GET, DEL} from "../../code/http_requests";
-import {useNavigate} from 'react-router-dom';
-
-// import AddIcon from '@mui/icons-material/Add';
+import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
+import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsIcon from '@mui/icons-material/Settings';
-import {useSnackbar} from "../../context/SnackbarContext";
-
-import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
-import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
-import AuthUser from "../auth/AuthUser";
-
+import {Box, Button, IconButton, Stack, Typography, Menu} from "@mui/material"
+import {DataGrid} from "@mui/x-data-grid";
+import {useEffect, useState} from "react";
+import React from 'react';
 import {useTranslation} from 'react-i18next';
-import Loading from "../feedback/Loading";
-import SurveyStatus from "./project/survey_platform/SurveyStatus";
+import {useNavigate} from 'react-router-dom';
+
+import {GET, DEL} from "../../code/http_requests";
+import {useSnackbar} from "../../context/SnackbarContext";
+import Authorization from "../auth/Authorization"
+import AuthUser from "../auth/AuthUser";
 import ConnectionBadge from "../feedback/ConnectionBadge";
+import Loading from "../feedback/Loading";
+import LayoutMain from "../layout/LayoutMain"
 import {formatDateStringToLocale} from "../utils/FormatDate";
+import SurveyStatus from "./project/survey_platform/SurveyStatus";
 
 
 const CellActions = ({params, onDelete}) => {
@@ -215,11 +212,11 @@ const PageProjectSelection = () => {
                   },
                   '& .MuiDataGrid-row:focus': {
                     outline: `solid ${theme.palette.primary.main} 1px`, // Use primary color
-                    'outline-offset': '-1px',
+                    outlineOffset: '-1px',
                   },
                   '& .MuiDataGrid-row:focus-within': {
                     outline: `solid ${theme.palette.primary.main} 1px`, // Use primary color
-                    'outline-offset': '-1px',
+                    outlineOffset: '-1px',
                   },
                 })}
               />

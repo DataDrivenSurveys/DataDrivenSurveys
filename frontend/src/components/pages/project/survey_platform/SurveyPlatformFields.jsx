@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import FormFields from "../../../input/FormFields";
+import React from 'react';
 import { useLocation } from "react-router-dom";
+
+import FormFields from "../../../input/FormFields";
+
 
 const SurveyPlatformFields = ({ selectedSurveyPlatform, surveyPlatformFields:initial, hiddenFields = [], onChange }) => {
   const location = useLocation();
@@ -37,7 +40,7 @@ const SurveyPlatformFields = ({ selectedSurveyPlatform, surveyPlatformFields:ini
 
   localStorage.setItem('preAuthLocation', JSON.stringify(location));
 
-    
+
   const open_authorize_url = useCallback((authorize_url, auth_url) => {
     const url = new URL(authorize_url);    // redirect to the authorization url
     window.location.assign(url.toString());
@@ -62,13 +65,13 @@ const SurveyPlatformFields = ({ selectedSurveyPlatform, surveyPlatformFields:ini
     );
 
     return (
-        <FormFields 
+        <FormFields
             buttonActionReducer={oauth2Reducer}
             fields={surveyPlatformFields.filter(f => !shouldHideField(f.name))}
             onChange={(fields) => {
                 setSurveyPlatformFields(fields);
                 onChange(fields);
-            }} 
+            }}
         />
     );
 }

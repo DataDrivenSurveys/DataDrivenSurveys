@@ -1,11 +1,12 @@
+import './i18n/i18n'; // Assuming the i18n file is JavaScript and doesn't need renaming
+
 import TimeAgo from 'javascript-time-ago';
 import en from 'javascript-time-ago/locale/en';
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import {createRoot} from 'react-dom/client';
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import './i18n/i18n'; // Assuming the i18n file is JavaScript and doesn't need renaming
 
 // Add default locale for `javascript-time-ago`
 TimeAgo.addDefaultLocale(en);
@@ -15,13 +16,10 @@ const rootElement = document.getElementById('root');
 
 // Ensure `rootElement` exists before trying to create the root
 if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
+  // const root = ReactDOM.createRoot(rootElement);
+  const root = createRoot(rootElement,);
 
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+  root.render(<App/>);
 }
 
 // If you want to start measuring performance in your app, pass a function

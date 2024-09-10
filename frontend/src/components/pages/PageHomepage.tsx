@@ -27,6 +27,7 @@ function AvailableDataProviders({dataProviderNames}: AvailableDataProvidersProps
           key={index}
           direction="row"
           spacing={1}
+          sx={{alignItems: 'center'}}
         >
           <Logo name={name} size={18}/>
           <Typography variant="body1">
@@ -51,7 +52,7 @@ function DataProviderUsage({dataProviderNames}: AvailableDataProvidersProps): JS
           direction="row"
           spacing={1}
         >
-          <Logo name={name} size={18}/>
+          <Logo name={name} size={18}/>&nbsp;
           <Typography variant="body1">
             {name}: {t(`homepage.why_we_request_access_to_your_data.${name.toLowerCase()}`)}
           </Typography>
@@ -89,7 +90,7 @@ function HomePageContent(): JSX.Element {
       <Typography variant="h4">{t('homepage.how_we_use_your_data.title')}</Typography>
       <Typography paragraph sx={{marginBottom: "0px"}}>{t('homepage.how_we_use_your_data.content')}</Typography>
       <Typography component="div">
-        <ol style={{ paddingLeft: '20px', listStyleType: 'decimal' }}>
+        <ol style={{paddingLeft: '20px', listStyleType: 'decimal'}}>
           {Array.from({length: 3}, (_, index) => (
             <li key={index} style={{marginBottom: '8px'}}>
               {t(`homepage.how_we_use_your_data.step${index + 1}`)}
@@ -97,7 +98,6 @@ function HomePageContent(): JSX.Element {
           ))}
         </ol>
       </Typography>
-
 
       <Typography variant="h4">{t('homepage.privacy_and_security.title')}</Typography>
       <Typography paragraph>{t('homepage.privacy_and_security.content')}</Typography>
@@ -110,19 +110,33 @@ function HomePageContent(): JSX.Element {
         direction="row"
         spacing={2}
         divider={<Divider orientation="vertical" flexItem/>}
-        sx={{marginBottom: '16px', alignContent: 'center'}}
+        sx={{marginBottom: '16px', alignContent: 'center',}}
       >
-        <Typography variant="body1" sx={{alignContent: 'center', display: 'flex'}}>
-          <Logo name="github" size={18}/>&nbsp;
-          <Link href={t('homepage.more_information.source_code_link')} rel="noopener">
-            {t('homepage.more_information.source_code')}
-          </Link>
-        </Typography>
-        <Typography variant="body1">
-          <Link href={t('homepage.more_information.paper_link')} rel="noopener">
-            {t('homepage.more_information.paper')}
-          </Link>
-        </Typography>
+        <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+          <Logo name="dds" size={18}/>
+          <Typography variant="body1" sx={{alignContent: 'center', display: 'flex'}}>
+            <Link href={'/privacy-policy'} rel="noopener">
+              {t('homepage.more_information.privacy_policy')}
+            </Link>
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+          <Logo name="github" size={18}/>
+          <Typography variant="body1" sx={{alignContent: 'center', display: 'flex'}}>
+            <Link href={t('homepage.more_information.source_code_link')} rel="noopener">
+              {t('homepage.more_information.source_code')}
+            </Link>
+          </Typography>
+        </Stack>
+
+        <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+          <Typography variant="body1">
+            <Link href={t('homepage.more_information.paper_link')} rel="noopener">
+              {t('homepage.more_information.paper')}
+            </Link>
+          </Typography>
+        </Stack>
       </Stack>
 
       <Typography variant="h4">{t('homepage.contact_information.title')}</Typography>
@@ -147,9 +161,12 @@ function Homepage(): JSX.Element {
   return (
     <LayoutMain
       header={
-        <Typography variant="h3" sx={{marginLeft: 'auto', marginRight: 'auto'}}>
-          {t('homepage.title')}
-        </Typography>
+        <Stack direction="row" spacing={1} sx={{marginLeft: 'auto', marginRight: 'auto', alignItems: "center",}}>
+          <Logo name="dds" size={30}/>
+          <Typography variant="h3">
+            {t('homepage.title')}
+          </Typography>
+        </Stack>
       }
       headerRightCorner={
         <Stack direction="row" justifyContent="space-between">

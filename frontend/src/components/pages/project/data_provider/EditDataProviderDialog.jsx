@@ -1,13 +1,14 @@
-import {useSnackbar} from "../../../../context/SnackbarContext";
-import {useCallback, useEffect, useState} from "react";
-import {GET, PUT} from "../../../../code/http_requests";
-import DialogModal from "../../../layout/DialogModal";
 import {Stack, Typography} from "@mui/material";
-
+import {useCallback, useEffect, useState} from "react";
+import React from 'react';
 import {useTranslation} from 'react-i18next';
-import FormFields from "../../../input/FormFields";
+
+import {GET, PUT} from "../../../../code/http_requests";
+import {useSnackbar} from "../../../../context/SnackbarContext";
 import HelperText from "../../../HelperText";
 import CopyClipboard from "../../../input/CopyClipboard";
+import FormFields from "../../../input/FormFields";
+import DialogModal from "../../../layout/DialogModal";
 import {getFrontendBaseURL} from "../../../utils/getURL";
 
 
@@ -79,10 +80,10 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
         disableConfirm={!checkInputs()}
         content={
           <Stack spacing={2}>
-            { selected && selected.app_required && 
+            { selected && selected.app_required &&
                <AppRelatedInstructions selected={selected} />
             }
-            
+
             <FormFields fields={fields} onChange={setFields}/>
           </Stack>
         }

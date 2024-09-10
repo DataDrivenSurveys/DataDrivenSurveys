@@ -1,14 +1,14 @@
-import { useSnackbar } from "../../../../context/SnackbarContext";
-import { useCallback, useEffect, useState } from "react";
-import DialogModal from "../../../layout/DialogModal";
 import { Stack } from "@mui/material";
-
+import { useCallback, useEffect, useState } from "react";
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-
-import { GET } from "../../../../code/http_requests";
-import Loading from "../../../feedback/Loading";
-import SurveyPlatformFields from "./SurveyPlatformFields";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import SurveyPlatformFields from "./SurveyPlatformFields";
+import { GET } from "../../../../code/http_requests";
+import { useSnackbar } from "../../../../context/SnackbarContext";
+import Loading from "../../../feedback/Loading";
+import DialogModal from "../../../layout/DialogModal";
 import { getNonParamURL } from "../../../utils/getURL";
 
 const EditSurveyPlatformDialog = ({ open, surveyPlatformName, surveyPlatformFields:initialFields, onClose, onConfirm }) => {
@@ -23,7 +23,7 @@ const EditSurveyPlatformDialog = ({ open, surveyPlatformName, surveyPlatformFiel
     const [ surveyPlatforms, setSurveyPlatforms ] = useState([]);
     const [ selectedSurveyPlatform, setSelectedSurveyPlatform] = useState(undefined);
     const [ surveyPlatformFields, setSurveyPlatformFields ] = useState([]);
-    
+
     useEffect(() => {
         (async () => {
             const response = await GET('/survey-platforms');
@@ -34,7 +34,7 @@ const EditSurveyPlatformDialog = ({ open, surveyPlatformName, surveyPlatformFiel
                 const theOne = data.find(si => si.value === surveyPlatformName)
                 setSelectedSurveyPlatform(theOne);
                 setSurveyPlatformFields(theOne.fields.map(field => ({
-                    ...field, 
+                    ...field,
                     value: initialFields[field.name] || ""
                 })));
             });

@@ -1,10 +1,10 @@
-import React from 'react';
-
-import { TextField, InputAdornment, Box, FormHelperText, Stack } from "@mui/material";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
+import { TextField, InputAdornment, Box, FormHelperText, Stack } from "@mui/material";
+import React from 'react';
 
-// Woprk togeder with useInput hook in /hook folder
+
+// Work together with useInput hook in /hook folder
 const TextInput = ({ label, value, type= "text", onChange, onAfterChange, minLength, maxLength, required = false, showClear = false, helperText, error, sx, ...props }) => {
   return (
     <Stack sx={sx}>

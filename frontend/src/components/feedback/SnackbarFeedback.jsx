@@ -1,6 +1,8 @@
 import { Snackbar, Paper, Box, Stack, Typography } from '@mui/material'
-import { useSnackbar } from '../../context/SnackbarContext'
 import { useTheme } from '@mui/material'
+import React from 'react';
+
+import { useSnackbar } from '../../context/SnackbarContext'
 
 const SnackbarFeedback = () => {
   const theme = useTheme()

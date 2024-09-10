@@ -1,18 +1,17 @@
-import {useCallback, useEffect, useState} from "react";
-import {useSnackbar} from "../../../context/SnackbarContext";
-import {GET, PUT} from "../../../code/http_requests";
+import EditIcon from '@mui/icons-material/Edit';
+import SyncIcon from '@mui/icons-material/Sync';
 import {Button, ButtonGroup, Stack, Typography} from "@mui/material";
 import {DataGrid} from "@mui/x-data-grid";
-
-import SyncIcon from '@mui/icons-material/Sync';
-import EditIcon from '@mui/icons-material/Edit';
-
-import {useLocation, useParams} from "react-router-dom";
-import EditSurveyPlatformDialog from "./survey_platform/EditSurveyPlatformDialog";
-import ConnectedStatus from "../../feedback/ConnectedStatus";
-
+import {useCallback, useEffect, useState} from "react";
+import React from 'react';
 import {useTranslation} from 'react-i18next';
+import {useLocation, useParams} from "react-router-dom";
+
+import EditSurveyPlatformDialog from "./survey_platform/EditSurveyPlatformDialog";
 import SurveyStatus from "./survey_platform/SurveyStatus";
+import {GET, PUT} from "../../../code/http_requests";
+import {useSnackbar} from "../../../context/SnackbarContext";
+import ConnectedStatus from "../../feedback/ConnectedStatus";
 import ConnectionBadge from "../../feedback/ConnectionBadge";
 
 

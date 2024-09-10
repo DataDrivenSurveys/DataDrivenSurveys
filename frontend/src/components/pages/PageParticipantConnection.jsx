@@ -1,3 +1,6 @@
+import AddIcon from '@mui/icons-material/Add';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Alert,
   AlertTitle,
@@ -9,24 +12,21 @@ import {
   Typography,
   Collapse,
 } from "@mui/material"
-import LayoutMain from "../layout/LayoutMain"
 import {useCallback, useEffect, useMemo, useState} from "react";
-import {PUBLIC_GET, PUBLIC_POST} from "../../code/http_requests";
-import {useParams} from "react-router-dom";
-import {useSnackbar} from "../../context/SnackbarContext";
-
-import AddIcon from '@mui/icons-material/Add';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ConnectionBadge from "../feedback/ConnectionBadge";
-
+import React from 'react';
 import {useTranslation} from 'react-i18next';
-import Loading from "../feedback/Loading";
-import DataTable from "../layout/DataTable";
+import {useParams} from "react-router-dom";
 
-import {formatDateStringToLocale} from "../utils/FormatDate";
+import {PUBLIC_GET, PUBLIC_POST} from "../../code/http_requests";
+import {useSnackbar} from "../../context/SnackbarContext";
 import ClickTracker from "../events/ClickTracker";
 import useEventTracker from "../events/useEventTracker";
+import ConnectionBadge from "../feedback/ConnectionBadge";
+import Loading from "../feedback/Loading";
+import DataTable from "../layout/DataTable";
+import LayoutMain from "../layout/LayoutMain"
+import {formatDateStringToLocale} from "../utils/FormatDate";
+
 
 
 const isDataProviderAlreadyUsed = async (projectShortId, data_provider_name, user_id) => {

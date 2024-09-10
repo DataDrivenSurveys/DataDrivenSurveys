@@ -35,6 +35,8 @@ services:
       - ddsurveys
     networks:
       - net
+    environment:
+      - NODE_ENV=production
 
   certbot:
     image: certbot/certbot

@@ -1,5 +1,7 @@
-import { Stack } from '@mui/material'
-const LoadingAnimation = ({ content, failed }) => (
+import { Stack } from '@mui/material';
+import React from 'react';
+
+const LoadingAnimation = ({ content, failed = false }) => (
   <Stack
     alignItems="stretch"
     justifyContent="center"

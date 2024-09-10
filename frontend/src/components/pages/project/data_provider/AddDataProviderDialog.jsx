@@ -1,26 +1,23 @@
 import {Stack, Typography} from "@mui/material";
-import {useSnackbar} from "../../../../context/SnackbarContext";
-import {useCallback, useEffect, useState} from "react";
-import {GET, POST} from "../../../../code/http_requests";
-
-import DialogModal from "../../../layout/DialogModal";
-import DropDown from "../../../input/DropDown";
-import Logo from "../../../Logo";
-
-import {useTranslation} from 'react-i18next';
-import FormFields from "../../../input/FormFields";
-import HelperText from "../../../HelperText";
-import {getFrontendBaseURL} from "../../../utils/getURL";
-import CopyClipboard from "../../../input/CopyClipboard";
-import {getAppCreationURL, getNonParamURL} from "../../../utils/getURL";
-
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
-// import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import {useCallback, useEffect, useState} from "react";
+import React from 'react';
+import {useTranslation} from 'react-i18next';
 
+import {GET, POST} from "../../../../code/http_requests";
+import {useSnackbar} from "../../../../context/SnackbarContext";
+import HelperText from "../../../HelperText";
+import CopyClipboard from "../../../input/CopyClipboard";
+import DropDown from "../../../input/DropDown";
+import FormFields from "../../../input/FormFields";
+import DialogModal from "../../../layout/DialogModal";
+import Logo from "../../../Logo";
+import {getFrontendBaseURL} from "../../../utils/getURL";
+import {getAppCreationURL, getNonParamURL} from "../../../utils/getURL";
 
 const AddDataProviderDialog = ({projectId, exitingProviders, open, onClose, onAdd, projectName}) => {
 
@@ -112,7 +109,7 @@ const AddDataProviderDialog = ({projectId, exitingProviders, open, onClose, onAd
                   onChange={(e) => setSelected(dataProviders.find(dp => dp.value === e.target.value))}
                 />
 
-                { selected && selected.app_required && 
+                { selected && selected.app_required &&
                   <AppRelatedInstructions selected={selected} projectName={projectName}/>
                 }
 
@@ -151,7 +148,7 @@ const AppRelatedInstructions = ({selected, projectName}) => {
             maxURLLength={50}
           />
         </Stack>
-      
+
 
         <Stack spacing={0.5}>
           <Typography variant="body1">
@@ -209,7 +206,7 @@ const AppRelatedInstructions = ({selected, projectName}) => {
             </Table>
           </TableContainer>
         </Stack>
-        
+
         <HelperText
           text={t('ui.project.data_providers.add.documentation_instructions')}
           url={t(selected.instructions_helper_url)}

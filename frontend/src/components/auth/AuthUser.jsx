@@ -1,4 +1,6 @@
+import React from 'react';
 import { useState } from "react";
+
 import { useAuth } from "../../context/AuthContext";
 import UserAvatar from "../layout/UserAvatar";
 import UserContextMenu from "../layout/UserContextMenu";
@@ -17,7 +19,7 @@ const AuthUser = () => {
               firstname={user.firstname}
               lastname={user.lastname}
               email={user.email}
-              onCLick={handleOpenUserMenu} 
+              onCLick={handleOpenUserMenu}
             />
             <UserContextMenu
               anchorElUser={anchorElUser}

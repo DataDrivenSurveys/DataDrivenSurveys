@@ -1,6 +1,7 @@
 import React from 'react';
-import { useAuth } from '../../context/AuthContext';
+
 import SignIn from './SignIn';
+import { useAuth } from '../../context/AuthContext';
 
 
 function Authorization({ children }) {

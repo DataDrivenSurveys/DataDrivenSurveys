@@ -251,6 +251,7 @@
         "more_information": {
           "title": "More Information",
           "content": "For more information about DDS, please see our:",
+          "privacy_policy": "Privacy Policy",
           "source_code": "Source Code",
           "source_code_link": "https://github.com/DataDrivenSurveys/DataDrivenSurveys",
           "paper": "Research Paper that gives an in-depth presentation of DDS",

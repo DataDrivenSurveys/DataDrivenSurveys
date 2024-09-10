@@ -1,5 +1,6 @@
 import { FormControl, FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import { useCallback, useState } from "react";
+import React from 'react';
 
 const Selector = ({selected, options, onSelect}) => {
     const [selectedOption, setSelectedOption] = useState(selected);

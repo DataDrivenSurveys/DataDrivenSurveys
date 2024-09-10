@@ -1,9 +1,10 @@
+// import loadable from '@loadable/component';
 import {ThemeProvider, createTheme} from '@mui/material/styles';
 import './styles/normalize.css'
 import {LocalizationProvider} from '@mui/x-date-pickers';
 import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
 import React from 'react';
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+import {BrowserRouter, Route, Routes} from 'react-router-dom';
 
 import SignUp from './components/auth/SignUp';
 import PageCreateProject from './components/pages/PageCreateProject';
@@ -87,93 +88,93 @@ const theme = createTheme(themeOptions);
 
 function App() {
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Router>
-        <ThemeProvider theme={theme}>
-          <SnackbarProvider>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <AuthProvider>
+    <React.StrictMode>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <BrowserRouter>
+          <ThemeProvider theme={theme}>
+            <SnackbarProvider>
+              <Routes>
+                <Route
+                  path="/"
+                  element={
                     <Homepage/>
-                  </AuthProvider>
-                }
-              />
-              <Route
-                path="/projects"
-                element={
-                  <AuthProvider>
-                    <PageProjectSelection/>
-                  </AuthProvider>
-                }
-              />
-              <Route
-                path="/projects/create"
-                element={
-                  <AuthProvider>
-                    <PageCreateProject/>
-                  </AuthProvider>
-                }
-              />
-              <Route
-                path="/projects/:projectId"
-                element={
-                  <AuthProvider>
-                    <PageProject/>
-                  </AuthProvider>
-                }
-              />
+                  }
+                />
+                <Route
+                  path="/projects"
+                  element={
+                    <AuthProvider>
+                      <PageProjectSelection/>
+                    </AuthProvider>
+                  }
+                />
+                <Route
+                  path="/projects/create"
+                  element={
+                    <AuthProvider>
+                      <PageCreateProject/>
+                    </AuthProvider>
+                  }
+                />
+                <Route
+                  path="/projects/:projectId"
+                  element={
+                    <AuthProvider>
+                      <PageProject/>
+                    </AuthProvider>
+                  }
+                />
 
-              <Route
-                path="/signup"
-                element={
-                  <AuthProvider>
-                    <SignUp/>
-                  </AuthProvider>
-                }
-              />
-              <Route
-                path="/dist/:projectShortId"
-                element={
-                  <PageParticipantConnection/>
-                }
-              />
-              <Route
-                path="/dist/redirect/:provider"
-                element={
-                  <PageParticipantOauth2Redirect/>
-                }
-              />
+                <Route
+                  path="/signup"
+                  element={
+                    <AuthProvider>
+                      <SignUp/>
+                    </AuthProvider>
+                  }
+                />
+                <Route
+                  path="/dist/:projectShortId"
+                  element={
+                    <PageParticipantConnection/>
+                  }
+                />
+                <Route
+                  path="/dist/redirect/:provider"
+                  element={
+                    <PageParticipantOauth2Redirect/>
+                  }
+                />
 
-              <Route
-                path="/survey_platform/redirect/:surveyPlatform"
-                element={
-                  <AuthProvider>
-                    <PageSurveyPlatformOauth2Redirect/>
-                  </AuthProvider>
-                }
-              />
+                <Route
+                  path="/survey_platform/redirect/:surveyPlatform"
+                  element={
+                    <AuthProvider>
+                      <PageSurveyPlatformOauth2Redirect/>
+                    </AuthProvider>
+                  }
+                />
 
-              <Route
-                path="/privacy-policy"
-                element={
-                  <PrivacyPolicy/>
-                }
-              />
+                <Route
+                  path="/privacy-policy"
+                  element={
+                    <PrivacyPolicy/>
+                  }
+                />
 
-              <Route
-                path="/terms-of-service"
-                element={
-                  <TermsOfService/>
-                }
-              />
+                <Route
+                  path="/terms-of-service"
+                  element={
+                    <TermsOfService/>
+                  }
+                />
 
-            </Routes>
-          </SnackbarProvider>
-        </ThemeProvider>
-      </Router>
-    </LocalizationProvider>
+              </Routes>
+            </SnackbarProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </LocalizationProvider>
+    </React.StrictMode>
   );
 }
 

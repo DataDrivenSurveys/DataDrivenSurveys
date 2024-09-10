@@ -1,5 +1,6 @@
-import {Box, InputAdornment, IconButton, Input, FormControl, InputLabel, Typography} from '@mui/material'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import {Box, InputAdornment, IconButton, Input, FormControl, InputLabel, Typography} from '@mui/material'
+import React from 'react';
 
 import {useSnackbar} from "../../context/SnackbarContext";
 

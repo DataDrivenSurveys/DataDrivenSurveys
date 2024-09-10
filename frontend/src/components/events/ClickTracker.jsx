@@ -1,4 +1,6 @@
 import { Box } from "@mui/material";
+import React from 'react';
+
 import useEventTracker from "./useEventTracker";
 
 const ClickTracker = ({ children, details, storageKey = "FrontendActivity" }) => {

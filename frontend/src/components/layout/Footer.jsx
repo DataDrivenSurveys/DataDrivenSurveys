@@ -1,6 +1,6 @@
+import {Typography, Link, Stack, AppBar} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
-import {Typography, Link, Stack, AppBar} from '@mui/material';
 
 function Footer() {
   const {t} = useTranslation();

@@ -1,3 +1,5 @@
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   Checkbox,
   Paper,
@@ -12,9 +14,7 @@ import {
   Typography
 } from "@mui/material";
 import {useCallback, useMemo, useState} from "react";
-
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import React from 'react';
 
 const DataTable = ({rows, columns, selectable, selectableLabel, selectableField, onRowSelectChange}) => {
   const [sortField, setSortField] = useState(null);

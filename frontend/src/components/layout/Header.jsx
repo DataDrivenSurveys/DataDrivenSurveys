@@ -1,9 +1,9 @@
 
-import { AppBar, Button, Stack } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useNavigate } from 'react-router-dom';
-
+import { AppBar, Button, Stack } from '@mui/material'
+import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const Header = ({ children, color, backUrl, rightCorner }) => {
 
@@ -44,7 +44,7 @@ const Header = ({ children, color, backUrl, rightCorner }) => {
         <Stack flex={1} sx={{ overflow: 'hidden' }}>
           {children}
         </Stack>
-        
+
         {rightCorner}
       </Stack>
     </AppBar>

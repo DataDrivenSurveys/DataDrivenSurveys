@@ -1,16 +1,18 @@
-import {useAuth} from "../../context/AuthContext";
-import {Button, Stack} from "@mui/material";
+import LoginIcon from '@mui/icons-material/Login';
 import {LoadingButton} from '@mui/lab';
+import {Button, Stack} from "@mui/material";
+import {Typography} from '@mui/material';
+import React from 'react';
 import {useCallback, useState} from "react";
+import {useTranslation} from 'react-i18next';
 import {Link} from 'react-router-dom';
 
-import LoginIcon from '@mui/icons-material/Login';
+import {useAuth} from "../../context/AuthContext";
+import {useSnackbar} from "../../context/SnackbarContext";
 import useInput from "../../hook/useInput";
 import TextInput from "../input/TextInput";
-import {useSnackbar} from "../../context/SnackbarContext";
-import {useTranslation} from 'react-i18next';
 import LayoutMain from "../layout/LayoutMain";
-import {Typography} from '@mui/material';
+
 
 
 const SignUp = () => {

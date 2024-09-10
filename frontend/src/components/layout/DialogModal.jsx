@@ -3,9 +3,11 @@ import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
 import DialogTitle from '@mui/material/DialogTitle'
-
+import React from 'react';
 import {useTranslation} from 'react-i18next';
+
 import {LogoLabel} from "../Logo";
+
 
 const DialogModal = ({
                        open, title, titleLogo, content, disableConfirm = false,

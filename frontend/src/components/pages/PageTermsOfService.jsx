@@ -1,11 +1,9 @@
 // TermsOfService.js
+import {Container, Link, Stack, Typography} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
-import {Container, Link, Stack, Typography} from '@mui/material';
 
 import LayoutMain from "../layout/LayoutMain";
-
-
 
 function TermsOfServiceContent() {
   const { t } = useTranslation();

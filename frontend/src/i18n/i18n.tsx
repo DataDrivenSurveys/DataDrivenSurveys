@@ -1,4 +1,5 @@
 import i18n from "i18next";
+import Backend from 'i18next-http-backend'; // You may need this for loading translation files
 import React from "react";
 import { initReactI18next, Trans } from "react-i18next";
 
@@ -7,6 +8,7 @@ import resources from "./resources.json";
 
 // Initialize i18next with react-i18next
 i18n
+  .use(Backend)
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
     resources,
@@ -14,7 +16,10 @@ i18n
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false, // react already safe from xss
-    }
+    },
+    react: {
+      useSuspense: false, // Disable suspense for SSR
+    },
   });
 
 // Define the types for the I18Link component props

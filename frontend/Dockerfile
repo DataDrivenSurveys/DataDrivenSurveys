@@ -17,6 +17,10 @@ RUN npm install react-scripts@5.0.1 -g --silent
 
 #install nodemon to provide hot-reloading functionality.
 RUN npm install nodemon --save-dev
+
+# Update browserslist database
+RUN npx update-browserslist-db@latest
+
 COPY . ./
 
 #use nodemon to run the react application using npm.

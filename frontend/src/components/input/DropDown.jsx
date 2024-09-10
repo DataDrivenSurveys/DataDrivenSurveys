@@ -1,5 +1,5 @@
-import React from 'react';
 import { FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import React from 'react';
 
 const DropDown = ({ items, label, value, onChange, ...props }) => {
   return (
@@ -14,7 +14,7 @@ const DropDown = ({ items, label, value, onChange, ...props }) => {
         {items.map((item, index) => (
           <MenuItem key={index} value={item.value}>
             <Stack direction="row" alignItems="center">
-              {item.icon && 
+              {item.icon &&
                 <Stack mr={1} alignItems="center" justifyContent={"center"}>
                   {item.icon}
                 </Stack>

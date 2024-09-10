@@ -1,9 +1,11 @@
-import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { useSnackbar } from "../../context/SnackbarContext";
-import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
-import { POST } from "../../code/http_requests";
 import { Alert, Button, Stack } from "@mui/material";
+import { useEffect, useState } from "react";
+import React from 'react';
+import { useTranslation } from "react-i18next";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+
+import { POST } from "../../code/http_requests";
+import { useSnackbar } from "../../context/SnackbarContext";
 import LoadingAnimation from "../feedback/LoadingAnimation";
 
 const PageSurveyPlatformOauth2Redirect = () => {
