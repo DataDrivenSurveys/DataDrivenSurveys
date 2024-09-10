@@ -65,7 +65,7 @@
     "start": "react-scripts start",
     "dev": "WATCHPACK_POLLING=true react-scripts start",
     "build": "react-scripts build",
-    "serve-build": "serve -s build -l 3000",
+    "serve-build": "serve -s build -l 5555",
     "snap": "react-snap",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -77,6 +77,7 @@
     ]
   },
   "reactSnap": {
+    "port": 5555,
     "inlineCss": true,
     "removeBlobs": true,
     "skipThirdPartyRequests": true,
