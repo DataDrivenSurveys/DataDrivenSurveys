@@ -88,9 +88,9 @@ jobs:
         script: |
           cd /home/admin/dds/frontend
           npm run serve-build &
-          npx wait-on http://localhost:5555
+          npx wait-on http://localhost:3000
           npm run snap
-          pkill -f "serve"
+          pkill -f "serve-build"
 
     - name: Grant Execute Permissions to Entrypoints
       uses: appleboy/ssh-action@master
