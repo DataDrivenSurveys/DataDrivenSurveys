@@ -92,7 +92,7 @@ jobs:
           npx wait-on http://localhost:3000
           npm run snap
           cd /home/admin/dds
-          sudo docker-compose -f docker-compose.build.yml down
+          sudo docker compose -f docker-compose.build.yml down
 
     - name: Grant Execute Permissions to Entrypoints
       uses: appleboy/ssh-action@master
