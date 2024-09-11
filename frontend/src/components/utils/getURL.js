@@ -6,10 +6,7 @@ function getNonParamURL(url) {
 
 
 function getFrontendBaseURL() {
-  const protocol = window.location.protocol;
-  const host = window.location.host; // Includes hostname and port if applicable
-
-  return `${protocol}//${host}`;
+  return process.env.REACT_APP_FRONTEND_URL || window.location.origin;
 }
 
 

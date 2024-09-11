@@ -7,6 +7,7 @@ import {NavLink} from 'react-router-dom';
 
 import LayoutMain from "../layout/LayoutMain";
 import Logo from "../Logo";
+import {getFrontendBaseURL} from "../utils/getURL";
 
 
 interface AvailableDataProvidersProps {
@@ -66,6 +67,8 @@ function DataProviderUsage({dataProviderNames}: AvailableDataProvidersProps): JS
 function HomePageContent(): JSX.Element {
   const {t} = useTranslation();
 
+  const baseUrl = getFrontendBaseURL();
+
   const dataProviderNames: string[] = [
     "Fitbit",
     "Instagram",
@@ -115,7 +118,7 @@ function HomePageContent(): JSX.Element {
         <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
           <Logo name="dds" size={18}/>
           <Typography variant="body1" sx={{alignContent: 'center', display: 'flex'}}>
-            <Link href={'/privacy-policy'} rel="noopener">
+            <Link href={`${baseUrl}/privacy-policy`} rel="noopener">
               {t('homepage.more_information.privacy_policy')}
             </Link>
           </Typography>

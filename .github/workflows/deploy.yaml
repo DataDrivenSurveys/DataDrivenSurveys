@@ -86,13 +86,14 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
         passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
         script: |
-          cd /home/admin/dds
-          sudo docker compose -f docker-compose.build.yml up -d --build
-          cd ./frontend
-          npx wait-on http://localhost:3000
-          npm run snap
-          cd /home/admin/dds
-          sudo docker compose -f docker-compose.build.yml down
+          # cd /home/admin/dds
+          # sudo docker compose -f docker-compose.build.yml up -d --build
+          # cd ./frontend
+          # npx wait-on http://localhost:3000
+          cd /home/admin/dds/frontend
+          NODE_ENV=production bash -c 'npm run snap'
+          # cd /home/admin/dds
+          # sudo docker compose -f docker-compose.build.yml stop
 
     - name: Grant Execute Permissions to Entrypoints
       uses: appleboy/ssh-action@master
@@ -117,4 +118,6 @@ jobs:
         script: |
           cd /home/admin/dds
           sudo docker compose up --build -d
+          # sudo docker compose -f docker-compose.build.yml start
           sudo docker system prune -a -f
+          # sudo docker compose -f docker-compose.build.yml stop
