@@ -1,7 +1,15 @@
-import { FormControl, InputLabel, MenuItem, Select, Stack, Typography } from "@mui/material";
+import { FormControl, InputLabel, MenuItem, Select, Stack, Typography, SelectChangeEvent } from "@mui/material";
 import React from 'react';
 
-const DropDown = ({ items, label, value, onChange, ...props }) => {
+interface DropDownProps {
+  items: { value: string; label: string; icon?: React.ReactNode }[];
+  label: string;
+  value?: string;
+  onChange: (event: SelectChangeEvent<string>) => void;
+  props?: React.HTMLAttributes<HTMLSelectElement>;
+}
+
+const DropDown = ({ items, label, value, onChange, ...props }: DropDownProps): JSX.Element => {
   return (
     <FormControl variant="filled" sx={{ m: 1, minWidth: 120 }} {...props}>
       <InputLabel id="dropdown-filled-label">{label}</InputLabel>

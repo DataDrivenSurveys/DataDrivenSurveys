@@ -11,7 +11,6 @@ import {useNavigate} from 'react-router-dom';
 
 import {GET, DEL} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
-import Authorization from "../auth/Authorization"
 import AuthUser from "../auth/AuthUser";
 import ConnectionBadge from "../feedback/ConnectionBadge";
 import Loading from "../feedback/Loading";
@@ -93,9 +92,11 @@ const PageProjectSelection = () => {
       disableColumnMenu: true
     },
     {
-      field: 'survey_platform_fields', headerName: t('ui.project.selection.grid.column.status'), width: 150,
+      field: 'survey_platform_fields',
+      headerName: t('ui.project.selection.grid.column.status'),
+      width: 150,
       renderCell: (params) => {
-        return <SurveyStatus status={params.value["survey_status"]} />
+        return <SurveyStatus status={params.value["survey_status"]}/>
       }
     },
     {
@@ -133,8 +134,7 @@ const PageProjectSelection = () => {
     },
     {
       field: 'actions',
-      // headerName: t('ui.project.selection.grid.column.actions'),
-      headerName: <SettingsIcon/>,
+      headerName: <SettingsIcon sx={{verticalAlign: 'text-bottom'}}/>,
       align: 'center',
       minWidth: 30,
       maxWidth: 40,
@@ -167,7 +167,7 @@ const PageProjectSelection = () => {
   }, [showSnackbar, t]);
 
   return (
-    <Authorization>
+    <>
       <LayoutMain
         header={
           <Typography variant="h4">Project Selection</Typography>
@@ -226,11 +226,10 @@ const PageProjectSelection = () => {
               }</Typography>
             )}
           </Loading>
-
         </Stack>
       </LayoutMain>
-    </Authorization>
+    </>
   )
 }
 
-export default PageProjectSelection
+export default React.memo(PageProjectSelection);

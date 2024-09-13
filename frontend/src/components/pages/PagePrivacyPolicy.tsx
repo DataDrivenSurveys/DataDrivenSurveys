@@ -138,7 +138,7 @@ function PrivacyPolicyContent() {
   );
 }
 
-function PrivacyPolicy() {
+function PagePrivacyPolicy() {
   const {t} = useTranslation();
 
   return (
@@ -146,12 +146,9 @@ function PrivacyPolicy() {
       header={<Typography variant="h3">{t('privacy_policy.title')}</Typography>}
       backUrl={-1}
     >
-      {/*<Stack spacing={2} width={"80%"}>*/}
       <PrivacyPolicyContent/>
-      {/*</Stack>*/}
-
     </LayoutMain>
   )
 }
 
-export default PrivacyPolicy;
+export default React.memo(PagePrivacyPolicy);

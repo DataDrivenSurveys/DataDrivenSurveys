@@ -4,7 +4,7 @@ import {useTranslation} from 'react-i18next';
 
 import {getFrontendBaseURL} from "../utils/getURL";
 
-function Footer() {
+const Footer = (): JSX.Element => {
   const {t} = useTranslation();
   const baseUrl = getFrontendBaseURL();
 
@@ -34,4 +34,4 @@ function Footer() {
   );
 }
 
-export default Footer;
+export default React.memo(Footer);

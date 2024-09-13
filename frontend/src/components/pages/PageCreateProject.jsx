@@ -9,7 +9,6 @@ import {useNavigate} from 'react-router-dom';
 import {GET, POST} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
 import useInput from "../../hook/useInput";
-import Authorization from "../auth/Authorization"
 import AuthUser from "../auth/AuthUser";
 import ConnectionBadge from "../feedback/ConnectionBadge";
 import Loading from "../feedback/Loading";
@@ -160,8 +159,7 @@ const PageCreateProject = () => {
   }, [name, checkInputs, selectedSurveyPlatform, surveyPlatformFields, creationMode, errorName, showSnackbar, navigate, t]);
 
   return (
-
-    <Authorization>
+    <>
       <Loading loading={surveyPlatforms.length === 0}>
       <LayoutMain
         backUrl="/projects"
@@ -228,8 +226,7 @@ const PageCreateProject = () => {
 
       </LayoutMain>
       </Loading>
-    </Authorization>
-
+    </>
   )
 }
 

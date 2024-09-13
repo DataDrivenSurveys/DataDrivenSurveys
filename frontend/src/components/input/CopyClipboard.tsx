@@ -4,10 +4,21 @@ import React from 'react';
 
 import {useSnackbar} from "../../context/SnackbarContext";
 
+
+interface CopyClipboardProps {
+  label?: string;
+  leadingLabel?: boolean;
+  what: string;
+  labelProps?: object;
+}
+
+
 const CopyClipboard = ({
-                         label, what, labelProps = {},
-                         leadingLabel = false
-                       }) => {
+  label,
+  what,
+  labelProps = {},
+  leadingLabel = false
+}: CopyClipboardProps): JSX.Element => {
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
   return (
@@ -18,7 +29,7 @@ const CopyClipboard = ({
           type={"text"}
           value={what}
           style={{width: 300}}
-          InputProps={{
+          inputProps={{
             readOnly: true,
           }}
           startAdornment={(leadingLabel && label) &&
@@ -27,8 +38,8 @@ const CopyClipboard = ({
           endAdornment={
             <InputAdornment position="end">
               <IconButton
-                variant="outlined"
-                size={"small"}
+                component="label"
+                size="small"
                 onClick={async () => {
                   await navigator.clipboard.writeText(what);
                   showSnackbar("Copied to clipboard");

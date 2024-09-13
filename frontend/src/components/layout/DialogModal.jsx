@@ -10,11 +10,10 @@ import {LogoLabel} from "../Logo";
 
 
 const DialogModal = ({
-                       open, title, titleLogo, content, disableConfirm = false,
-                       maxWidth = false, onClose, onConfirm,
-                       cancelProps = null, confirmProps = null
-                     }) => {
-
+ open, title, titleLogo = null, content, disableConfirm = false,
+ maxWidth = false, onClose, onConfirm,
+ cancelProps = null, confirmProps = null
+}) => {
   const {t} = useTranslation();
 
   const handleCancel = () => {

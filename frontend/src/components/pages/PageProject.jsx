@@ -1,3 +1,4 @@
+import loadable from '@loadable/component';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RestoreIcon from '@mui/icons-material/Restore';
 import ScienceIcon from '@mui/icons-material/Science';
@@ -12,15 +13,23 @@ import {useDebouncedCallback} from "use-debounce";
 
 import {GET, POST, POST_BLOB, PUT, DEL} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
-import Authorization from "../auth/Authorization"
 import AuthUser from "../auth/AuthUser";
 import DialogFeedback from "../feedback/DialogFeedback";
+import Loading, {LoadingAnimation} from "../feedback/Loading";
 import CopyClipboard from "../input/CopyClipboard";
 import LayoutMain from "../layout/LayoutMain"
 import {formatDateStringToLocale} from "../utils/FormatDate";
-import DataProviders from "./project/data_provider/DataProviders";
-import SurveyPlatformIntegration from "./project/SurveyPlatformIntegration";
-import VariableManagement from "./project/variables/VariableManagement";
+
+
+const SurveyPlatformIntegration = loadable(() => import("./project/SurveyPlatformIntegration"), {
+  fallback: <LoadingAnimation/>
+});
+const DataProviders = loadable(() => import("./project/data_provider/DataProviders"), {
+  fallback: <LoadingAnimation/>
+});
+const VariableManagement = loadable(() => import("./project/variables/VariableManagement"), {
+  fallback: <LoadingAnimation/>
+});
 
 
 const ProjectNameField = ({project}) => {
@@ -71,32 +80,43 @@ const PageProject = () => {
 
   const navigate = useNavigate();
 
-
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
   const {projectId} = useParams();
 
-  const [ syncLoading, setSyncLoading ] = useState(false);
-  const [ downloadLoading, setDownloadLoading ] = useState(false);
-  const [ lastSynched, setLastSynched ] = useState(null);
-  const [ clearResondentDataDialogOpen, setClearResondentDataDialogOpen ] = useState(false);
+  const [loadingSurveyPlatformIntegration, setLoadingSurveyPlatformIntegration] = useState(true); // Loading state for SurveyPlatformIntegration
+  const [loadingDataProviders, setLoadingDataProviders] = useState(true); // Loading state for DataProviders
+  const [loadingVariables, setLoadingVariables] = useState(true); // Loading state for VariableManagement
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [downloadLoading, setDownloadLoading] = useState(false);
+  const [lastSynched, setLastSynched] = useState(null);
+  const [clearResondentDataDialogOpen, setClearResondentDataDialogOpen] = useState(false);
 
-  const [ project, setProject ] = useState(null);
+  const [project, setProject] = useState(null);
 
   const fetchProject = useCallback(async (projectId) => {
+    setLoadingSurveyPlatformIntegration(true); // Start loading
+    setLoadingDataProviders(true); // Start loading
+    setLoadingVariables(true); // Start loading
     const response = await GET(`/projects/${projectId}`);
 
     response.on('2xx', (status, data) => {
       if (status === 200) {
         setProject(data);
         setLastSynched(data.last_synced);
+        setLoadingSurveyPlatformIntegration(false); // Stop loading
+        setLoadingDataProviders(false); // Stop loading
+        setLoadingVariables(false); // Stop loading
       }
     });
 
     response.on('4xx', (status, data) => {
       console.log("status", status, "data", data);
       showSnackbar(t(data.message.id), 'error');
-      if(status === 404) {
+      setLoadingSurveyPlatformIntegration(false); // Stop loading
+      setLoadingDataProviders(false); // Stop loading
+      setLoadingVariables(false); // Stop loading
+      if (status === 404) {
         navigate('/projects');
       }
     });
@@ -201,11 +221,11 @@ const PageProject = () => {
 
   const domain = window.location.origin;
   return (
-    <Authorization>
-      {project &&
-        <LayoutMain
-          backUrl="/projects"
-          header={
+    <>
+      <LayoutMain
+        backUrl="/projects"
+        header={
+          project && (
             <Stack direction="row" alignItems="center" spacing={2}>
               <Stack flex={1}>
                 <ProjectNameField project={project}/>
@@ -237,7 +257,7 @@ const PageProject = () => {
                         color="primary"
                         startIcon={<ScienceIcon/>}
                         onClick={previewSurvey}
-                        >
+                      >
                         {t('ui.project.button.preview_survey')}
 
                       </Button>
@@ -247,7 +267,7 @@ const PageProject = () => {
                         loading={downloadLoading}
                         startIcon={<FileDownloadIcon/>}
                         onClick={downloadRespondentResponses}
-                        >
+                      >
                         {t('ui.project.button.download_data')}
                       </LoadingButton>
                       <Button size={"small"}
@@ -261,30 +281,37 @@ const PageProject = () => {
                 </Stack>
 
                 {project.last_synced !== null && !syncLoading && (
-                  // <Typography variant="caption" color="text.secondary">
-                  //     {t('ui.project.label.last_synced')} <ReactTimeAgo date={project.last_synced} locale="en-US" />
-                  // </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynched)}`}
                   </Typography>
                 )}
               </Stack>
             </Stack>
+          )
+        }
+        headerRightCorner={<AuthUser/>}
+        loading={!project}
+      >
+        <Stack spacing={8} width={"100%"} alignItems={"flex-start"} pb={8}>
+          <Stack spacing={2}>
+            <Typography variant="h6"> {t('ui.project.survey_platform.title')}</Typography>
+            <Loading loading={loadingSurveyPlatformIntegration}>
+              <SurveyPlatformIntegration
+                project={project}
+              />
+            </Loading>
+          </Stack>
 
-          }
-          headerRightCorner={<AuthUser/>}
-        >
-          <Stack spacing={8} width={"100%"} alignItems={"flex-start"} pb={8}>
-
-            <SurveyPlatformIntegration
-              project={project}
-            />
+          <Loading loading={loadingDataProviders}>
             <DataProviders
               project={project}
               onChangeDataProviders={async () => {
                 await fetchProject(projectId);
               }}
             />
+          </Loading>
+
+          <Loading loading={loadingVariables}>
             <VariableManagement
               project={project}
               onChangeBuiltinVariables={(newBuiltinVariables) => {
@@ -296,26 +323,23 @@ const PageProject = () => {
                 project.custom_variables = newCustomVariables;
               }}
             />
-
-          </Stack>
-          <DialogFeedback
-            open={clearResondentDataDialogOpen}
-            title={t('ui.project.dialog.delete_respondents.title')}
-            content={
-              <Stack spacing={2}>
-                <Typography variant="body1">
-                  {t('ui.project.dialog.delete_respondents.content')}
-                </Typography>
-              </Stack>
-            }
-            onClose={() => setClearResondentDataDialogOpen(false)}
-            onConfirm={clearRespondentData}
-          />
-        </LayoutMain>
-      }
-
-    </Authorization>
-
+          </Loading>
+        </Stack>
+        <DialogFeedback
+          open={clearResondentDataDialogOpen}
+          title={t('ui.project.dialog.delete_respondents.title')}
+          content={
+            <Stack spacing={2}>
+              <Typography variant="body1">
+                {t('ui.project.dialog.delete_respondents.content')}
+              </Typography>
+            </Stack>
+          }
+          onClose={() => setClearResondentDataDialogOpen(false)}
+          onConfirm={clearRespondentData}
+        />
+      </LayoutMain>
+    </>
   )
 }
 

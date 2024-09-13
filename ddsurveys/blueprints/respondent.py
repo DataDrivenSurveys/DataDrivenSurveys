@@ -7,9 +7,10 @@
 from __future__ import annotations
 
 import traceback
+from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, Response, g, jsonify, request
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
@@ -48,6 +49,69 @@ All of the endpoints in blueprint file are public
 
 def get_project(db, short_id) -> Project:
     return db.query(Project).filter_by(short_id=short_id).first()
+
+
+def get_used_data_providers(
+    project: Project,
+    respondent: Respondent
+) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None], None, tuple[None, None, Response]]:
+    oauth_data_providers = respondent.data_provider_accesses
+
+    data_provider: DataProviderAccess
+    for data_provider in oauth_data_providers:
+        data_provider_name = data_provider.data_provider_name.value
+        access_token = data_provider.access_token
+        refresh_token = data_provider.refresh_token
+
+        if not access_token:
+            logger.error(
+                "Missing access token for data provider: %s", data_provider_name
+            )
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.data_provider.missing_tokens",
+                            "text": "Missing data provider tokens",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Get the correct data provider from the project.
+        # We need its fields to create an instance of the data provider.
+        project_data_connection = next(
+            (dc for dc in project.data_connections
+             if dc.data_provider.data_provider_name.value == data_provider_name),
+            None,
+        )
+
+        if not project_data_connection:
+            logger.error("Data provider not found: %s", data_provider_name)
+            return (
+                None,
+                None,
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.not_found",
+                        "text": "Data provider not found",
+                    }
+                }),
+                404,
+            )
+
+        fields = project_data_connection.fields
+
+        fields.update(
+            {"access_token": access_token, "refresh_token": refresh_token}
+        )
+
+        user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
+            data_provider_name
+        )(**fields)
+
+        yield user_data_provider, data_provider, None
 
 
 @respondent.route("/", methods=["GET"])
@@ -386,8 +450,7 @@ def was_data_provider_used() -> ResponseReturnValue:
 
         if data_provider_access:
             return jsonify({"was_used": True}), 200
-        else:
-            return jsonify({"was_used": False}), 404
+        return jsonify({"was_used": False}), 200
 
 
 @respondent.route("/prepare-survey", methods=["POST"])
@@ -432,7 +495,7 @@ def prepare_survey() -> ResponseReturnValue:
                     400,
                 )
 
-            respondent = (
+            respondent: Respondent = (
                 db.query(Respondent)
                 .filter(
                     and_(
@@ -460,6 +523,26 @@ def prepare_survey() -> ResponseReturnValue:
             # check if the respondent already has a distribution
             if respondent.distribution:
                 logger.info("Respondent already has a distribution url.")
+
+                for user_data_provider, data_provider, response in get_used_data_providers(project, respondent):
+                    if response is not None:
+                        return response
+
+                    # revoke the access tokens
+                    try:
+                        user_data_provider.revoke_token(user_data_provider.access_token)
+                    except Exception:
+                        logger.exception(
+                            "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
+                        )
+                        logger.debug(traceback.format_exc())
+
+                    # set the data provider access tokens to Null
+                    data_provider.access_token = None
+                    data_provider.refresh_token = None
+
+                    db.commit()
+
                 # return the distribution url
                 return (
                     jsonify(
@@ -518,63 +601,69 @@ def prepare_survey() -> ResponseReturnValue:
                     404,
                 )
 
-            oauth_data_providers = respondent.data_provider_accesses
-
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            data_provider: DataProviderAccess
-            for data_provider in oauth_data_providers:
 
-                data_provider_name = data_provider.data_provider_name.value
-                access_token = data_provider.access_token
-                refresh_token = data_provider.refresh_token
+            # oauth_data_providers = respondent.data_provider_accesses
+            #
+            # data_provider: DataProviderAccess
+            # for data_provider in oauth_data_providers:
+            #
+            #     data_provider_name = data_provider.data_provider_name.value
+            #     access_token = data_provider.access_token
+            #     refresh_token = data_provider.refresh_token
+            #
+            #     if not access_token:
+            #         logger.error(
+            #             "Missing access token for data provider: %s", data_provider_name
+            #         )
+            #         return (
+            #             jsonify(
+            #                 {
+            #                     "message": {
+            #                         "id": "api.data_provider.missing_tokens",
+            #                         "text": "Missing data provider tokens",
+            #                     }
+            #                 }
+            #             ),
+            #             400,
+            #         )
+            #
+            #     # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
+            #     project_data_connection = next(
+            #         (dc for dc in project.data_connections
+            #             if dc.data_provider.data_provider_name.value == data_provider_name),
+            #         None,
+            #     )
+            #
+            #     if not project_data_connection:
+            #         logger.error("Data provider not found: %s", data_provider_name)
+            #         return (
+            #             jsonify({
+            #                 "message": {
+            #                     "id": "api.data_provider.not_found",
+            #                     "text": "Data provider not found",
+            #                 }
+            #             }),
+            #             404,
+            #         )
+            #
+            #     fields = project_data_connection.fields
+            #
+            #     fields.update(
+            #         {"access_token": access_token, "refresh_token": refresh_token}
+            #     )
+            #     logger.debug("Data provider fields: %s", fields)
+            #
+            #     user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
+            #         data_provider_name
+            #     )(**fields)
 
-                if not access_token:
-                    logger.error(
-                        "Missing access token for data provider: %s", data_provider_name
-                    )
-                    return (
-                        jsonify(
-                            {
-                                "message": {
-                                    "id": "api.data_provider.missing_tokens",
-                                    "text": "Missing data provider tokens",
-                                }
-                            }
-                        ),
-                        400,
-                    )
+            for user_data_provider, data_provider, response in get_used_data_providers(project, respondent):
+                if response is not None:
+                    return response
 
-                # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
-                project_data_connection = next(
-                    (dc for dc in project.data_connections
-                        if dc.data_provider.data_provider_name.value == data_provider_name),
-                    None,
-                )
-
-                if not project_data_connection:
-                    logger.error("Data provider not found: %s", data_provider_name)
-                    return (
-                        jsonify({
-                            "message": {
-                                "id": "api.data_provider.not_found",
-                                "text": "Data provider not found",
-                            }
-                        }),
-                        404,
-                    )
-
-                fields = project_data_connection.fields
-
-                fields.update(
-                    {"access_token": access_token, "refresh_token": refresh_token}
-                )
-                logger.debug("Data provider fields: %s", fields)
-
-                user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
-                    data_provider_name
-                )(**fields)
                 data_to_upload.update(
                     user_data_provider.calculate_variables(
                         project.variables, project.custom_variables
@@ -583,9 +672,11 @@ def prepare_survey() -> ResponseReturnValue:
 
                 # revoke the access tokens
                 try:
-                    user_data_provider.revoke_token(data_provider.access_token)
+                    user_data_provider.revoke_token(user_data_provider.access_token)
                 except Exception:
-                    logger.exception("Failed to revoke access token for data provider '%s'\n", data_provider_name)
+                    logger.exception(
+                        "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
+                    )
                     logger.debug(traceback.format_exc())
 
                 # set the data provider access tokens to Null

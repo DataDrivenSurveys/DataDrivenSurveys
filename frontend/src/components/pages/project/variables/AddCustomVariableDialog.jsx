@@ -1,13 +1,13 @@
 import { Stack } from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import { useSnackbar } from '../../../../context/SnackbarContext';
-import {  POST } from '../../../../code/http_requests';
 import { useCallback, useEffect, useState } from 'react';
-
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 import CVEditor from './custom_variables/CVEditor';
-import DialogModal from '../../../layout/DialogModal';
 import { checkCustomVariableCompleteness } from './custom_variables/utils';
+import {  POST } from '../../../../code/http_requests';
+import { useSnackbar } from '../../../../context/SnackbarContext';
+import DialogModal from '../../../layout/DialogModal';
 
 const AddCustomVariableDialog = ({ project, open, onClose, onAdd }) => {
 

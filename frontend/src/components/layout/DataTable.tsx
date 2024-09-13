@@ -16,14 +16,47 @@ import {
 import {useCallback, useMemo, useState} from "react";
 import React from 'react';
 
-const DataTable = ({rows, columns, selectable, selectableLabel, selectableField, onRowSelectChange}) => {
-  const [sortField, setSortField] = useState(null);
+interface SpanDictionaries {
+  [key: string]: number[];
+}
+
+interface Column {
+  field: string;
+  headerName: string;
+  type?: 'number' | 'string' | 'actions';
+  sortable?: boolean;
+  spannable?: boolean;
+  align?: 'left' | 'center' | 'right';
+  verticalAlign?: 'top' | 'middle' | 'bottom' | 'text-bottom';
+  width?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  flex?: number;
+  disableClickEventBubbling?: boolean;
+  renderCell?: (params: never) => React.ReactNode | JSX.Element;
+  sxTableHeaderCell?: React.CSSProperties;
+  sxTableBodyCell?: React.CSSProperties;
+}
+
+interface DataTableProps {
+  rows: object[];
+  columns: Column[];
+  selectable?: boolean;
+  selectableLabel?: string;
+  selectableField?: string;
+  onRowSelectChange?: (row: object, rows: object[]) => void;
+}
+
+const DataTable = ({
+  rows, columns, selectable, selectableLabel, selectableField, onRowSelectChange
+}: DataTableProps) => {
+  const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState(1); // 1 for 'asc' and -1 for 'desc'
 
-  const sortRows = useCallback((rows) => {
-    let sortedRows = [...rows];
+  const sortRows = useCallback((rows: object[]): { [key: string]: any }[] => {
+    const sortedRows = [...rows];
     if (sortField) {
-      sortedRows.sort((a, b) => {
+      sortedRows.sort((a: any, b: any) => {
         if (a[sortField] < b[sortField]) {
           return sortDirection === 1 ? -1 : 1;
         }
@@ -39,10 +72,10 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
   const sortedRows = useMemo(() => sortRows(rows), [sortRows, rows]);
 
   // Function to calculate rowSpan values
-  const computeRowSpan = (field) => {
+  const computeRowSpan = (field: string): number[] => {
     let currentFieldValue = null;
     let currentSpan = 0;
-    const spans = [];
+    const spans: number[] = [];
 
     for (let i = 0; i < sortedRows.length; i++) {
       if (sortedRows[i][field] !== currentFieldValue) {
@@ -67,7 +100,7 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
   };
 
   // Create a dictionary to store row spans for each spannable column
-  const spanDictionaries = {};
+  const spanDictionaries: SpanDictionaries = {};
 
   columns.forEach(column => {
     if (column.spannable) {
@@ -85,12 +118,12 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
                 <TableCell>
                   <Stack direction="row" alignItems="center">
                     <Checkbox
-                      checked={sortedRows.every(row => row[selectableField] || false)}
+                      checked={sortedRows.every(row => row[selectableField as keyof typeof row] || false)}
                       onChange={(event) => {
                         const checked = event.target.checked;
-                        onRowSelectChange && onRowSelectChange(null, rows.map(row => ({
+                        onRowSelectChange && onRowSelectChange({}, rows.map(row => ({
                           ...row,
-                          [selectableField]: checked
+                          [selectableField as string]: checked
                         })));
                       }}
                     />
@@ -105,11 +138,7 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
               {columns.map((column, index) => (
                 <TableCell
                   key={index}
-                  style={{
-                    width: column.width ? column.width : undefined,
-                    maxWidth: column.maxWidth ? column.maxWidth : undefined,
-                    wordWrap: 'break-word',
-                  }}
+                  style={{...column.sxTableHeaderCell}}
                 >
                   {
                     ((column.hasOwnProperty("sortable") && column.sortable) || !column.hasOwnProperty("sortable")) ? (
@@ -131,7 +160,6 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
                       column.headerName
                     )
                   }
-
                 </TableCell>
               ))}
             </TableRow>
@@ -142,16 +170,16 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
                 {selectable && (
                   <TableCell>
                     <Checkbox
-                      checked={row[selectableField] || false}
+                      checked={(row as any)[selectableField as string] || false}
                       onChange={(event) => {
                         const checked = event.target.checked;
                         rows = rows.map(r => {
-                          if (r.id === row.id) {
-                            r[selectableField] = checked;
+                          if ((r as any).id === (row as any).id) {
+                            (r as any)[selectableField as string] = checked;
                           }
                           return r;
                         });
-                        onRowSelectChange && onRowSelectChange(row.id, rows);
+                        onRowSelectChange && onRowSelectChange((row as any).id, rows);
                       }}
                     />
                   </TableCell>
@@ -163,14 +191,10 @@ const DataTable = ({rows, columns, selectable, selectableLabel, selectableField,
 
                   return (
                     <TableCell
-                      style={{
-                        width: column.width ? column.width : undefined,
-                        maxWidth: column.maxWidth ? column.maxWidth : undefined,
-                        wordWrap: 'break-word',
-                      }}
+                      style={{...column.sxTableBodyCell}}
                       key={columnIndex}
                       rowSpan={column.spannable && spanDictionaries[column.field][rowIndex] > 0 ? spanDictionaries[column.field][rowIndex] : undefined}>
-                      {column.renderCell ? column.renderCell(row) : row[column.field] || ''}
+                      {column.renderCell ? column.renderCell(row as never) : (row as never)[column.field] || ''}
                     </TableCell>
                   );
                 })}

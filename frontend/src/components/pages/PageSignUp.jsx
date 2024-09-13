@@ -15,7 +15,7 @@ import LayoutMain from "../layout/LayoutMain";
 
 
 
-const SignUp = () => {
+const PageSignUp = () => {
 
   const {t} = useTranslation();
 
@@ -113,8 +113,9 @@ const SignUp = () => {
               <Button component={Link} to="/" variant="text" color="primary">
                 Sign in
               </Button>
-              <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">Sign
-                Up</LoadingButton>
+              <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">
+                Sign Up
+              </LoadingButton>
             </Stack>
           </Stack>
         </form>
@@ -123,4 +124,4 @@ const SignUp = () => {
   );
 }
 
-export default SignUp;
+export default React.memo(PageSignUp);

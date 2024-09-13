@@ -1,4 +1,4 @@
-// Homepage
+// PageHomepage
 import LoginIcon from '@mui/icons-material/Login';
 import {Container, Link, Stack, Typography, Divider, Button} from '@mui/material';
 import React from 'react';
@@ -158,7 +158,7 @@ function HomePageContent(): JSX.Element {
 }
 
 // The main homepage layout
-function Homepage(): JSX.Element {
+function PageHomepage(): JSX.Element {
   const {t} = useTranslation();
 
   return (
@@ -173,7 +173,7 @@ function Homepage(): JSX.Element {
       }
       headerRightCorner={
         <Stack direction="row" justifyContent="space-between">
-          <Button component={NavLink} startIcon={<LoginIcon/>} variant="contained" to="/projects">
+          <Button component={NavLink} startIcon={<LoginIcon/>} variant="contained" to="/signin">
             {t('homepage.researcher_login.login_button')}
           </Button>
         </Stack>
@@ -186,4 +186,4 @@ function Homepage(): JSX.Element {
   );
 }
 
-export default Homepage;
+export default React.memo(PageHomepage);

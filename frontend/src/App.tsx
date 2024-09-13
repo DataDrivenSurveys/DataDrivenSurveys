@@ -1,4 +1,4 @@
-// import loadable from '@loadable/component';
+import loadable from '@loadable/component';
 import {ThemeProvider, createTheme} from '@mui/material/styles';
 import './styles/normalize.css'
 import {LocalizationProvider} from '@mui/x-date-pickers';
@@ -6,18 +6,21 @@ import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
 import React from 'react';
 import {BrowserRouter, Route, Routes} from 'react-router-dom';
 
-import SignUp from './components/auth/SignUp';
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PageCreateProject from './components/pages/PageCreateProject';
-import Homepage from "./components/pages/PageHomepage";
+import PageHomepage from "./components/pages/PageHomepage";
 import PageParticipantConnection from './components/pages/PageParticipantConnection';
 import PageParticipantOauth2Redirect from './components/pages/PageParticipantOauth2Redirect';
-import PrivacyPolicy from "./components/pages/PagePrivacyPolicy";
 import PageProject from './components/pages/PageProject';
 import PageProjectSelection from './components/pages/PageProjectSelection';
+import PageSignIn from "./components/pages/PageSignIn";
+import PageSignUp from './components/pages/PageSignUp';
 import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatformOauth2Redirect';
-import TermsOfService from "./components/pages/PageTermsOfService";
 import {AuthProvider} from './context/AuthContext';
 import {SnackbarProvider} from './context/SnackbarContext';
+
+const PagePrivacyPolicy = loadable(() => import('./components/pages/PagePrivacyPolicy'))
+const PageTermsOfService = loadable(() => import('./components/pages/PageTermsOfService'))
 
 
 export const themeOptions = {
@@ -82,7 +85,6 @@ export const themeOptions = {
   // },
 }
 
-
 const theme = createTheme(themeOptions);
 
 
@@ -93,83 +95,100 @@ function App() {
         <BrowserRouter>
           <ThemeProvider theme={theme}>
             <SnackbarProvider>
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <Homepage/>
-                  }
-                />
-                <Route
-                  path="/projects"
-                  element={
-                    <AuthProvider>
-                      <PageProjectSelection/>
-                    </AuthProvider>
-                  }
-                />
-                <Route
-                  path="/projects/create"
-                  element={
-                    <AuthProvider>
-                      <PageCreateProject/>
-                    </AuthProvider>
-                  }
-                />
-                <Route
-                  path="/projects/:projectId"
-                  element={
-                    <AuthProvider>
-                      <PageProject/>
-                    </AuthProvider>
-                  }
-                />
+              <AuthProvider>
+                {/*Static page routes*/}
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <PageHomepage/>
+                    }
+                  />
 
-                <Route
-                  path="/signup"
-                  element={
-                    <AuthProvider>
-                      <SignUp/>
-                    </AuthProvider>
-                  }
-                />
-                <Route
-                  path="/dist/:projectShortId"
-                  element={
-                    <PageParticipantConnection/>
-                  }
-                />
-                <Route
-                  path="/dist/redirect/:provider"
-                  element={
-                    <PageParticipantOauth2Redirect/>
-                  }
-                />
+                  <Route
+                    path="/privacy-policy"
+                    element={
+                      <PagePrivacyPolicy/>
+                    }
+                  />
 
-                <Route
-                  path="/survey_platform/redirect/:surveyPlatform"
-                  element={
-                    <AuthProvider>
+                  <Route
+                    path="/terms-of-service"
+                    element={
+                      <PageTermsOfService/>
+                    }
+                  />
+
+                  {/*Signin and Signup Routes*/}
+                  <Route
+                    path="/signin"
+                    element={
+                      <PageSignIn/>
+                    }
+                  >
+                  </Route>
+                  <Route
+                    path="/signup"
+                    element={
+                      <PageSignUp/>
+                    }
+                  />
+
+                  {/*Projects Routes*/}
+                  <Route
+                    path="/projects"
+                    element={
+                      <ProtectedRoute>
+                        <PageProjectSelection/>
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/projects/create"
+                    element={
+                      <ProtectedRoute>
+                        <PageCreateProject/>
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  <Route
+                    path="/projects/:projectId"
+                    element={
+                      <ProtectedRoute>
+                        <PageProject/>
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/*Distribution Routes*/}
+                  <Route
+                    path="/dist"
+                    element={<PageParticipantConnection placeholder={true}/>}
+                  />
+                  <Route
+                    path="/dist/:projectShortId"
+                    element={
+                      <PageParticipantConnection/>
+                    }
+                  />
+
+                  <Route
+                    path="/dist/redirect/:provider"
+                    element={
+                      <PageParticipantOauth2Redirect/>
+                    }
+                  />
+
+                  <Route
+                    path="/survey_platform/redirect/:surveyPlatform"
+                    element={
                       <PageSurveyPlatformOauth2Redirect/>
-                    </AuthProvider>
-                  }
-                />
-
-                <Route
-                  path="/privacy-policy"
-                  element={
-                    <PrivacyPolicy/>
-                  }
-                />
-
-                <Route
-                  path="/terms-of-service"
-                  element={
-                    <TermsOfService/>
-                  }
-                />
-
-              </Routes>
+                    }
+                  />
+                </Routes>
+              </AuthProvider>
             </SnackbarProvider>
           </ThemeProvider>
         </BrowserRouter>

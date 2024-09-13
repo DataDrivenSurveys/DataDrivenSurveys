@@ -1,4 +1,3 @@
-// TermsOfService.js
 import {Container, Link, Stack, Typography} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
@@ -87,7 +86,7 @@ function TermsOfServiceContent() {
   );
 }
 
-function TermsOfService() {
+function PageTermsOfService() {
   const {t} = useTranslation();
 
   return (
@@ -103,4 +102,4 @@ function TermsOfService() {
   )
 }
 
-export default TermsOfService;
+export default React.memo(PageTermsOfService);

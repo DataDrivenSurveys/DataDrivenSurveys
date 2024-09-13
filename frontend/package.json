@@ -8,6 +8,7 @@
     "@babel/plugin-transform-optional-chaining": "^7.24.8",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
+    "@loadable/component": "^5.16.4",
     "@mui/icons-material": "^5.15.11",
     "@mui/lab": "^5.0.0-alpha.166",
     "@mui/material": "^5.15.11",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@types/jest": "^29.5.12",
+    "@types/loadable__component": "^5.13.9",
     "@types/next": "^9.0.0",
     "@types/node": "^22.5.4",
     "depcheck": "^1.4.7",
@@ -87,7 +89,10 @@
     "include": [
       "/",
       "/privacy-policy",
-      "/terms-of-service"
+      "/terms-of-service",
+      "/signin",
+      "/signup",
+      "/dist"
     ]
   },
   "browserslist": {

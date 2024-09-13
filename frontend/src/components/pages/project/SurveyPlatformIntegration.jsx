@@ -163,10 +163,7 @@ const SurveyPlatformIntegration = ({project}) => {
   }, [handleCheckConnection, projectId]);
 
   return (
-    <Stack spacing={2}>
-      <Typography variant="h6"> {
-        t('ui.project.survey_platform.title')
-      }</Typography>
+    <>
       <Stack spacing={2} direction={"row"} alignItems={"flex-end"}>
         <DataGrid
           rows={[{
@@ -199,7 +196,7 @@ const SurveyPlatformIntegration = ({project}) => {
           setEditFormOpen(false);
         }}
       />
-    </Stack>
+    </>
   );
 }
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""This module defines the database models and utility functions for the Data-Driven Surveys platform. It includes the
-definitions of tables such as Researcher, SurveyStatus, DataProvider, DataConnection, Collaboration, Project,
-Distribution, Respondent, and DataProviderAccess, which are essential for managing the data related to surveys,
-researchers, data providers, and respondents.
+"""This module defines the database models and utility functions for the project.
+
+It includes the definitions of tables such as Researcher, SurveyStatus, DataProvider,
+DataConnection, Collaboration, Project, Distribution, Respondent, and DataProviderAccess,
+which are essential for managing the data related to surveys, researchers, data providers,
+and respondents.
 
 The module utilizes SQLAlchemy for ORM (Object-Relational Mapping) to facilitate database operations, such as creating,
 reading, updating, and deleting records. It also includes utility functions for database connection and session
@@ -89,14 +91,14 @@ class DBManager:
         environment variable.
 
         Args:
-            app (Flask, optional): The Flask application instance. This is used to
+            app: The Flask application instance. This is used to
                                 retrieve the database URL from the application's
                                 configuration. Defaults to None.
-            database_url (str, optional): The database URL to use for creating the engine.
+            database_url: The database URL to use for creating the engine.
                                         If provided, this URL will be used instead of
                                         the Flask application's configuration or the
                                         environment variable. Defaults to None.
-            force_new (bool, optional): If True, forces the creation of a new engine even if
+            force_new: If True, forces the creation of a new engine even if
                                         the global `ENGINE` variable is already initialized.
                                         Defaults to False.
 
@@ -123,16 +125,16 @@ class DBManager:
         database sessions.
 
         Args:
-            app (Flask, optional): The Flask application instance.
+            app: The Flask application instance.
                 This is used to retrieve the database URL from the application's
                 configuration.
                 Defaults to None.
-            database_url (str, optional): The database URL to use for creating the
+            database_url: The database URL to use for creating the
                 engine.
                 If provided, this URL will be used instead of the Flask application's
                 configuration or the environment variable.
                 Defaults to None.
-            force_new (bool, optional): If True, forces the creation of a new engine and
+            force_new: If True, forces the creation of a new engine and
                 session maker even if they are already initialized.
                 Defaults to False.
 
@@ -198,11 +200,14 @@ class Researcher(Base):
         collaborations (relationship): A relationship to the Collaboration table.
     """
     __tablename__ = "researcher"
+
     id = Column(Integer, primary_key=True)
+
     firstname = Column(String(255))
     lastname = Column(String(255))
     email = Column(String(255))
     password = Column(String(512))  # Scrypt hashed password
+
     collaborations = relationship("Collaboration", back_populates="researcher")
 
     def to_dict(self) -> dict[str, Column[int] | Column[str]]:
@@ -276,10 +281,12 @@ class DataProvider(Base):
     """
     __tablename__ = "data_provider"
     data_provider_name = Column(Enum(DataProviderName), primary_key=True)
+
     data_provider_type = Column(
         Enum(DataProviderType), default=DataProviderType.generic
     )
-    name = Column(String(255))
+    name: str = Column(String(255))
+
     data_connections = relationship("DataConnection", back_populates="data_provider")
     data_provider_accesses = relationship(
         "DataProviderAccess", back_populates="data_provider"
@@ -319,9 +326,10 @@ class DataConnection(Base):
         ForeignKey("data_provider.data_provider_name", ondelete="CASCADE"),
         primary_key=True,
     )
-    data_provider = relationship("DataProvider", back_populates="data_connections")
 
     fields = Column(JSON)
+
+    data_provider = relationship("DataProvider", back_populates="data_connections")
     project = relationship("Project", back_populates="data_connections")
 
     def to_dict(self) -> DataConnectionDict:
@@ -362,6 +370,7 @@ class Collaboration(Base):
     researcher_id = Column(
         Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True
     )
+
     researcher = relationship("Researcher", back_populates="collaborations")
     project = relationship("Project", back_populates="collaborations")
 
@@ -374,7 +383,9 @@ class Collaboration(Base):
 
 class Project(Base):
     __tablename__ = "project"
+
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+
     short_id = Column(BigInteger, default=lambda: sony_flake.next_id())
     name = Column(String(255))
     survey_status = Column(
@@ -387,6 +398,7 @@ class Project(Base):
     last_synced = Column(DateTime)
     variables = Column(JSON, default=[])
     custom_variables = Column(JSON, default=[])
+
     data_connections = relationship(
         "DataConnection", back_populates="project", cascade="all,delete"
     )

@@ -6,7 +6,7 @@ import {useLocation, useNavigate, useParams} from "react-router-dom";
 
 import {PUBLIC_POST} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
-import LoadingAnimation from "../feedback/LoadingAnimation"
+import LoadingAnimation from "../feedback/Loading";
 
 
 /**

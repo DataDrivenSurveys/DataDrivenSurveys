@@ -546,6 +546,9 @@
             "confirm": "Confirm"
           }
         },
+        "feedback": {
+          "loading": "Loading..."
+        },
         "footer": {
           "homepage": "Home",
           "privacy_policy": "Privacy Policy",

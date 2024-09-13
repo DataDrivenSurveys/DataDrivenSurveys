@@ -167,9 +167,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
   return (
     <Stack spacing={2} alignItems={"flex-start"}>
       <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"} width={"100%"}>
-        <Typography variant="h6">
-          {t('ui.project.data_providers.title')}
-        </Typography>
+        <Typography variant="h6">{t('ui.project.data_providers.title')} </Typography>
         <Button
           disableElevation={"true"}
           variant={"contained"}

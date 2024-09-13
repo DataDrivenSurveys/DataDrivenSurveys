@@ -1,7 +1,7 @@
-import {Children, cloneElement, useCallback, useEffect, useMemo, useState} from "react";
-import {useSnackbar} from "../../../../context/SnackbarContext";
-import {DEL, PUT} from "../../../../code/http_requests";
-import {useDebouncedCallback} from "use-debounce";
+import AddIcon from '@mui/icons-material/Add';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditIcon from '@mui/icons-material/Edit';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import {
   Button,
   ButtonGroup,
@@ -11,38 +11,42 @@ import {
   Tooltip,
   Typography
 } from "@mui/material";
-
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-
-import ConnectionBadge from "../../../feedback/ConnectionBadge";
+import React, {Children, cloneElement, useCallback, useEffect, useMemo, useState} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useDebouncedCallback} from "use-debounce";
 
-import DataTable from "../../../layout/DataTable";
 import AddCustomVariableDialog from "./AddCustomVariableDialog";
 import EditCustomVariableDialog from "./EditCustomVariableDialog";
-
-
+import {DEL, PUT} from "../../../../code/http_requests";
+import {useSnackbar} from "../../../../context/SnackbarContext";
+import ConnectionBadge from "../../../feedback/ConnectionBadge";
 import DialogFeedback from "../../../feedback/DialogFeedback";
 import ValueInput from "../../../input/ValueInput";
+import DataTable from "../../../layout/DataTable";
+import addWBR from "../../../utils/addWBR";
 
 
 function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-
-const FieldLayout = ({children}) => {
+const FieldLayout = ({children, isCustomVariable = false}) => {
   // Clones each child and adds the height style
-  const childrenWithHeight = Children.map(children, child => {
-    return cloneElement(child, {style: {height: '55px'}});
-  });
+  if (isCustomVariable) {
+    return (
+      <Stack spacing={1}>
+        {
+          Children.map(children, child => {
+            return cloneElement(child, {style: {height: '55px'}});
+          })
+        }
+      </Stack>
+    )
+  }
 
   return (
     <Stack spacing={1}>
-      {childrenWithHeight}
+      {children}
     </Stack>
   );
 };
@@ -67,15 +71,22 @@ const FieldCategory = ({row}) => {
 }
 
 const FieldActions = ({row, onEditClick, onDeleteClick, showLabels = true}) => {
-
   const {t} = useTranslation();
 
   const variable_type = row.type;
 
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
+        <Typography variant="body1">-</Typography>
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
   return (
     <FieldLayout>
-      {variable_type === 'Custom' ? (
-        <Stack alignItems={"center"} justifyContent={"center"}>
+      <Stack alignItems={"center"} justifyContent={"center"}>
         <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
           <Button
             size={"small"}
@@ -94,24 +105,28 @@ const FieldActions = ({row, onEditClick, onDeleteClick, showLabels = true}) => {
             {showLabels && t("ui.project.custom_variable.button.delete")}
           </Button>
         </ButtonGroup>
-        </Stack>
-      ) : (
-        <Typography variant="body1">-</Typography>
-      )}
+      </Stack>
     </FieldLayout>
   )
 }
 
 const FieldVariableName = ({row, onSelect}) => {
   const variable_type = row.type;
-  return (
-    <FieldLayout>{
-      variable_type === 'Builtin' ?
-        <Stack justifyContent="center">
-          <Typography variant="body1">{row.qualified_name}</Typography>
-        </Stack>
-        :
 
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
+        <Stack justifyContent="center">
+          <Typography variant="body1">{addWBR(row.qualified_name)}</Typography>
+        </Stack>
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
+  return (
+    <FieldLayout isCustomVariable={true}>
+      {
         row.cv_attributes?.map((attr, index) => (
           <Stack direction="row" alignItems="center" key={index}>
             <Checkbox
@@ -125,59 +140,73 @@ const FieldVariableName = ({row, onSelect}) => {
             <Typography variant="body1" key={index}>{`dds.${row.data_provider}.custom.${row.data_category}.${row.variable_name}.${attr.name}`}</Typography>
           </Stack>
         ))
-    }</FieldLayout>
+      }
+    </FieldLayout>
   )
 }
 
 const FieldDescription = ({row}) => {
-
   const variable_type = row.type;
 
-  return (
-    <FieldLayout>{
-      variable_type === 'Builtin' ?
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
         <Stack justifyContent="center">
           <Typography variant="body1">{row.description}</Typography>
         </Stack>
-        :
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
+  return (
+    <FieldLayout isCustomVariable={true}>
+      {
         row.cv_attributes?.map((attr, index) => (
           <Stack justifyContent="center" key={index}>
             <Typography variant="body1" key={index}>{attr.description}</Typography>
           </Stack>
         ))
-    }</FieldLayout>
+      }
+    </FieldLayout>
   )
 }
 
 const FieldDataType = ({row}) => {
-
   const variable_type = row.type;
 
-  return (
-    <FieldLayout>{
-      variable_type === 'Builtin' ?
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
         <Stack justifyContent="center">
           <Typography variant="body1">{row.data_type}</Typography>
         </Stack>
-        :
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
+  return (
+    <FieldLayout isCustomVariable={true}>
+      {
         row.cv_attributes?.map((attr, index) => (
           <Stack justifyContent="center" key={index}>
             <Typography variant="body1" key={index}>{attr.data_type}</Typography>
           </Stack>
         ))
-    }</FieldLayout>
+      }
+    </FieldLayout>
   )
 }
 
 const FieldTestValue = ({row, onChange}) => {
-
-  const { t } = useTranslation();
+  const {t} = useTranslation();
 
   const variable_type = row.type;
 
-  return (
-    <FieldLayout>{
-      variable_type === 'Builtin' ?
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
         <Stack justifyContent="center">
           <ValueInput
             label={t('ui.project.variables.grid.column.test_value')}
@@ -188,7 +217,14 @@ const FieldTestValue = ({row, onChange}) => {
             onChange={(value) => onChange(row, null, value)}
           />
         </Stack>
-        :
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
+  return (
+    <FieldLayout>
+      {
         row.cv_attributes?.map((attr, index) => (
           <Stack justifyContent="center" key={index}>
             <ValueInput
@@ -201,18 +237,18 @@ const FieldTestValue = ({row, onChange}) => {
             />
           </Stack>
         ))
-    }</FieldLayout>
+      }
+    </FieldLayout>
   )
 }
 
 
 const FieldInfo = ({row}) => {
-
   const variable_type = row.type;
 
-  return (
-    <FieldLayout>{
-      variable_type === 'Builtin' ?
+  if (variable_type === 'Builtin') {
+    return (
+      <FieldLayout>
         <Tooltip title={
           <Typography variant="body1" color="primary.contrastText">
             {row.info}
@@ -222,9 +258,16 @@ const FieldInfo = ({row}) => {
             <InfoOutlinedIcon/>
           </IconButton>
         </Tooltip>
-        :
+      </FieldLayout>
+    )
+  }
+
+  // Case where variable is a Custom Variable
+  return (
+    <FieldLayout isCustomVariable={true}>
+      {
         row.cv_attributes?.map((attr, index) => (
-          <Tooltip 
+          <Tooltip
             key={index}
             title={
               <Typography variant="body1" color="primary.contrastText">
@@ -237,13 +280,13 @@ const FieldInfo = ({row}) => {
             </IconButton>
           </Tooltip>
         ))
-    }</FieldLayout>
+      }
+    </FieldLayout>
   )
 }
 
 
 const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVariables}) => {
-
   const {t} = useTranslation();
 
   const {showBottomCenter: showSnackbar} = useSnackbar();
@@ -336,12 +379,12 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
   const debouncedSaveBuiltinVariables = useDebouncedCallback(handleSaveBuiltinVariables, 500);
   const debouncedSaveCustomVariables = useDebouncedCallback(handleSaveCustomVariables, 500);
 
+  /**
+   * row: the row object
+   * index: the index of the attribute in the attributes array (only for custom variables)
+   * newValue: the new value of the test value
+   */
   const handleTestValueChange = useCallback(async (row, index, newValue) => {
-    /*
-        row: the row object
-        index: the index of the attribute in the attributes array (only for custom variables)
-        newValue: the new value of the test value
-    */
 
     if (row.type === 'Builtin') {
       const newVariables = builtinVariables.map((v) => {
@@ -375,14 +418,18 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
     {
       field: 'data_provider',
       headerName: t('ui.project.variables.grid.column.data_provider'),
-      minWidth: 90,
-      renderCell: (row) => <ConnectionBadge size={18} name={row.data_provider}/>
+      // minWidth: 90,
+      renderCell: (row) => <ConnectionBadge size={18} name={row.data_provider}/>,
+      sxTableHeaderCell: {minWidth: 90},
+      sxTableBodyCell: {minWidth: 90},
     },
     {
       field: 'category',
       headerName: t('ui.project.variables.grid.column.category'),
       minWidth: 100,
-      renderCell: (row) => <FieldCategory row={row}/>
+      renderCell: (row) => <FieldCategory row={row}/>,
+      sxTableHeaderCell: {minWidth: 100},
+      sxTableBodyCell: {minWidth: 100},
     },
     {field: 'type', headerName: t('ui.project.variables.grid.column.variable_nature'), minWidth: 100},
     {
@@ -390,7 +437,7 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
       headerName: t('ui.project.variables.grid.column.actions'),
       type: 'actions',
       sortable: false,
-      minWidth: 90,
+      // minWidth: 90,
       disableClickEventBubbling: true,
       renderCell: (row) =>
         <FieldActions
@@ -408,13 +455,14 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
             }
           }
           showLabels={true}
-
         />,
+      sxTableHeaderCell: {minWidth: 90},
+      sxTableBodyCell: {minWidth: 90},
     },
     {
       field: 'name',
       headerName: t('ui.project.variables.grid.column.variable_name'),
-      minWidth: 150,
+      // minWidth: 150,
       renderCell: (row) =>
         <FieldVariableName
           row={row}
@@ -430,39 +478,53 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
               debouncedSaveCustomVariables(newVariables);
             }
           }}
-        />
+        />,
+      // sxTableHeaderCell: {minWidth: 150},
+      // sxTableBodyCell: {minWidth: 150},
+      sxTableHeaderCell: {flex: 2},
+      sxTableBodyCell: {flex: 2},
     },
     {
       field: 'description',
       headerName: t('ui.project.variables.grid.column.description'),
-      minWidth: 150,
-      renderCell: (row) => <FieldDescription row={row}/>
+      // minWidth: 150,
+      renderCell: (row) => <FieldDescription row={row}/>,
+      // sxTableHeaderCell: {minWidth: 150},
+      // sxTableBodyCell: {minWidth: 150, overflowWrap: 'break-word'},
+      sxTableHeaderCell: {minWidth: 150, flex: 3},
+      sxTableBodyCell: {minWidth: 150, flex: 3, overflowWrap: 'break-word'},
     },
     {
       field: 'data_type',
       headerName: t('ui.project.variables.grid.column.type'),
-      minWidth: 100,
-      renderCell: (row) => <FieldDataType row={row}/>
+      // minWidth: 100,
+      renderCell: (row) => <FieldDataType row={row}/>,
+      sxTableHeaderCell: {minWidth: 70, maxWidth: 75},
+      sxTableBodyCell: {minWidth: 70, maxWidth: 75},
     },
     {
       field: 'test_value',
       headerName: t('ui.project.variables.grid.column.test_value'),
-      minWidth: 150,
+      // minWidth: 150,
       editable: true,
       renderCell: (row) => {
         return <FieldTestValue
           row={row}
           onChange={handleTestValueChange}
         />
-      }
+      },
+      sxTableHeaderCell: {minWidth: 150},
+      sxTableBodyCell: {minWidth: 150},
     },
     {
       field: 'info',
       headerName: t('ui.project.variables.grid.column.info'),
-      minWidth: 40,
-      maxWidth: 60,
+      // minWidth: 40,
+      // maxWidth: 60,
       sortable: false,
-      renderCell: (row) => <FieldInfo row={row}/>
+      renderCell: (row) => <FieldInfo row={row}/>,
+      sxTableHeaderCell: {minWidth: 35, maxWidth: 50},
+      sxTableBodyCell: {minWidth: 35, maxWidth: 50},
     },
 
   ];
@@ -472,13 +534,10 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
     ...v
   })), [builtinVariables, customVariables]);
 
-
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"} width={"100%"}>
-        <Typography variant="h6">
-          {t('ui.project.variables.title')}
-        </Typography>
+        <Typography variant="h6">{t('ui.project.variables.title')}</Typography>
         <Button
           disableElevation={true}
           variant={"contained"}
@@ -502,7 +561,7 @@ const VariableManagement = ({project, onChangeBuiltinVariables, onChangeCustomVa
             columns={columns}
             selectable={true}
             selectableLabel={t('ui.project.variables.grid.column.enabled')}
-            selectableField={'enabled'}
+            selectableField='enabled'
             onRowSelectChange={handleRowSelectChange}
           />
       }

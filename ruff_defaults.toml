@@ -57,7 +57,7 @@ extend-include = [
 line-length = 120
 indent-width = 4
 target-version = "py311"
-unsafe-fixes = true
+#unsafe-fixes = true
 
 [format]
 docstring-code-format = true

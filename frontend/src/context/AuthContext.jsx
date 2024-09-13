@@ -1,115 +1,86 @@
-import { Stack } from '@mui/material';
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { useSnackbar } from './SnackbarContext';
 import { GET, POST } from '../code/http_requests';
-import LoadingAnimation from '../components/feedback/LoadingAnimation';
-
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
+  const { t } = useTranslation();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
-    const { t } = useTranslation();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Default to true to indicate that the token check is happening
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('tokenDDS'));
 
-    const navigate = useNavigate();
+  // Effect to check if a token exists and validate it
+  useEffect(() => {
+    const validateToken = async () => {
+      if (token) {
+        try {
+          setLoading(true); // Start the loading spinner
+          const response = await GET('/auth/me'); // Verify token
 
-    const { showBottomCenter: showSnackbar } = useSnackbar();
+          response.on('2xx', (status, data) => {
+            if (status === 200) {
+              setUser(data.logged_in_as); // Set the user
+              setIsAuthenticated(true);  // Mark user as authenticated
+            }
+          });
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [token, setToken] = useState(localStorage.getItem('token'));
-
-    useEffect(() => {
-        if(token) {
-            (async () => {
-                setLoading(true);
-                const response = await GET('/auth/me');
-                setLoading(false);
-
-                response.on('2xx', (status, data) => {
-                    if(status === 200) {
-                        setUser(data.logged_in_as);
-                        setIsAuthenticated(true);
-                    }
-                });
-
-                response.on('4xx', (status, _) => {
-                    localStorage.removeItem('token');
-                    setToken(null);
-                    setIsAuthenticated(false);
-                });
-
-            })();
+          response.on('4xx', () => {
+            // Token invalid, remove it
+            localStorage.removeItem('tokenDDS');
+            setToken(null);
+            setIsAuthenticated(false);
+          });
+        } catch (error) {
+          console.error("Error verifying token:", error);
+        } finally {
+          setLoading(false);  // End the loading spinner once request completes
         }
-    }, [token]);
-
-    const signin = async (email, password) => {
-        const response = await POST('/auth/signin', {
-            email,
-            password
-        }, false);
-
-        response.on('2xx', (status, data) => {
-            if(status === 200) {
-                setUser(data.logged_in_as);
-                setIsAuthenticated(true);
-                const token = response.data.token;
-                localStorage.setItem('token', token);
-                setToken(token);
-            }
-        });
-
-        response.on('4xx', (status, data) => {
-            if(status === 401) {
-               showSnackbar(t(data.message.id), "error");
-            }
-        }); // 4xx
+      } else {
+        setLoading(false);  // No token, stop loading
+      }
     };
 
-    const signup = async (firstname, lastname, email, password) => {
-        const response = await POST('/auth/signup', {
-            firstname,
-            lastname,
-            email,
-            password
-        }, false);
+    validateToken();
+  }, [token]);
 
-        response.on('2xx', (status, data) => {
-            if(status === 200) {
-                showSnackbar(t(data.message.id), "success");
-                navigate('/projects');
-            }
-        });
+  // Sign in method
+  const signin = async (email, password) => {
+    const response = await POST('/auth/signin', { email, password }, false);
 
-        response.on('4xx', (status, data) => {
-            showSnackbar(t(data.message.id), "error");
-        });
+    response.on('2xx', (status, data) => {
+      if (status === 200) {
+        setUser(data.logged_in_as);
+        setIsAuthenticated(true);
+        const token = data.token;
+        localStorage.setItem('tokenDDS', token); // Store token in localStorage
+        setToken(token);
+      }
+    });
 
+    response.on('4xx', (status, data) => {
+      if (status === 401) {
+        showSnackbar(t(data.message.id), "error");
+      }
+    });
+  };
 
-    };
+  const signout = () => {
+    localStorage.removeItem('tokenDDS');
+    setToken(null);
+    setIsAuthenticated(false);
+  };
 
-    const signout = () => {
-        localStorage.removeItem('token');
-        setToken(null);
-        setIsAuthenticated(false);
-    };
-
-    return (
-        <AuthContext.Provider value={{ isAuthenticated, signin, signup, signout, user }}>
-            { loading &&
-                <Stack width={"100vw"} height={"100vh"} border={"1px solid red"}>
-                    <LoadingAnimation />
-                </Stack>
-            }
-
-            {!loading && children}
-        </AuthContext.Provider>
-    );
-}
-
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, signin, signout, user, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
