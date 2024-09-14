@@ -12,7 +12,6 @@ import {
   Link,
   Typography,
   Collapse,
-  Container,
 } from "@mui/material"
 import {useCallback, useEffect, useMemo, useState} from "react";
 import React from 'react';
@@ -257,142 +256,140 @@ const PageParticipantConnection = ({placeholder = false}) => {
       {project && (
         <CheckProjectReadiness project_ready={project.project_ready}>
           {dataProviders && dataProviders.length > 0 && (
-            <Container>
-              <Stack spacing={4}>
-                <Box>
-                  <Typography variant="body1">
-                    <b>{t('ui.respondent.connection.info')}</b>
-                  </Typography>
-                  <Typography variant="body1">
-                    <Link href={"/privacy-policy"} rel="noopener">
-                      {t('ui.respondent.connection.click_here')}
-                    </Link>
-                    {t('ui.respondent.connection.click_here_to_read_privacy_policy')}
-                  </Typography>
-                </Box>
+            <Stack spacing={4}>
+              <Box>
+                <Typography variant="body1">
+                  <b>{t('ui.respondent.connection.info')}</b>
+                </Typography>
+                <Typography variant="body1">
+                  <Link href={"/privacy-policy"} rel="noopener">
+                    {t('ui.respondent.connection.click_here')}
+                  </Link>
+                  {t('ui.respondent.connection.click_here_to_read_privacy_policy')}
+                </Typography>
+              </Box>
 
-                {project?.used_variables && (
-                  <Box>
-                    <ClickTracker details={{
-                      type: 'click',
-                      id: "dds.dds.builtin.frontendactivity.open_transparency_table",
-                      time: new Date().toISOString()
-                    }}>
-                      <Stack direction="row" alignItems="center" onClick={() => setExpand(!expand)}
-                             sx={{cursor: 'pointer'}}>
-                        {expand ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
-                        <Typography variant="body1">
-                          {t('ui.respondent.connection.click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts')}
-                        </Typography>
-                      </Stack>
-                    </ClickTracker>
-                    <Collapse in={expand}>
-                      <UsedVariablesTable
-                        used_variables={project.used_variables}
-                      />
-                    </Collapse>
-                  </Box>
-                )}
-
+              {project?.used_variables && (
                 <Box>
-                  <Typography variant="body1">
-                    <b>{
-                      t('ui.respondent.connection.connect_to_data_providers')
-                    }</b>
-                  </Typography>
-                </Box>
-                <Stack spacing={1}>
-                  {
-                    dataProviders.map((data_provider, index) => {
-                      return (
-                        <Stack direction={"row"} key={index} spacing={2} alignItems={"center"}
-                               justifyContent={"space-between"}>
-                          <ConnectionBadge name={data_provider.data_provider_name}/>
-                          {data_provider.token ?
-                            <Stack direction={"row"} alignItems={"center"}>
-                              <Typography variant="body1">Connected
-                                as {data_provider.token.user_name}</Typography>
-                              <Button
-                                variant={"text"}
-                                color={"primary"}
-                                onClick={() => handleDisconnect(data_provider.data_provider_name)}
-                                disabled={preparingSurvey || surveyURL}
-                              >{
-                                t('ui.respondent.connection.button.disconnect')
-                              }</Button>
-                              <DataProviderConnectionStatus
-                                was_used={data_provider.was_used}
-                                anyProviderAlreadyUsed={anyProviderAlreadyUsed}
-                                allProvidersAlreadyUsed={allProvidersAlreadyUsed}
-                              />
-                            </Stack>
-                            :
-                            <Button
-                              variant={"contained"}
-                              color={"primary"}
-                              startIcon={<AddIcon/>}
-                              onClick={() => handleConnect(data_provider.data_provider_name)}
-                            >{
-                              t('ui.respondent.connection.button.connect')
-                            }</Button>
-                          }
-                        </Stack>
-                      )
-                    })
-                  }
-                </Stack>
-                {
-                  preparingSurvey &&
-                  <Stack direction={"row"} spacing={2} alignItems={"center"} justifyContent={"center"}>
-                    <CircularProgress
-                      size={24}
-                      value={100}
+                  <ClickTracker details={{
+                    type: 'click',
+                    id: "dds.dds.builtin.frontendactivity.open_transparency_table",
+                    time: new Date().toISOString()
+                  }}>
+                    <Stack direction="row" alignItems="center" onClick={() => setExpand(!expand)}
+                           sx={{cursor: 'pointer'}}>
+                      {expand ? <ExpandLessIcon/> : <ExpandMoreIcon/>}
+                      <Typography variant="body1">
+                        {t('ui.respondent.connection.click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts')}
+                      </Typography>
+                    </Stack>
+                  </ClickTracker>
+                  <Collapse in={expand}>
+                    <UsedVariablesTable
+                      used_variables={project.used_variables}
                     />
-                    <Alert severity="info">{
-                      t('ui.respondent.connection.alert.preparing_survey')
-                    }</Alert>
-                  </Stack>
-                }
+                  </Collapse>
+                </Box>
+              )}
+
+              <Box>
+                <Typography variant="body1">
+                  <b>{
+                    t('ui.respondent.connection.connect_to_data_providers')
+                  }</b>
+                </Typography>
+              </Box>
+              <Stack spacing={1}>
                 {
-                  surveyURL &&
-                  <Stack direction={"row"} spacing={2} alignItems={"center"} justifyContent={"center"}>
-                    <Alert severity="success">
-                      <AlertTitle>{
-                        t('ui.respondent.connection.alert.survey_ready.title')
-                      }</AlertTitle>
-
-                      <Typography variant="body1">{
-                        t('ui.respondent.connection.alert.survey_ready.message.will_be_redirected')
-                      }</Typography>
-                      <a href={surveyURL} target={"_blank"} rel="noreferrer">
-                        {t('ui.respondent.connection.click_here')}
-                      </a> {t('ui.respondent.connection.if_not_redirected_automatically')}
-
-                    </Alert>
-                  </Stack>
+                  dataProviders.map((data_provider, index) => {
+                    return (
+                      <Stack direction={"row"} key={index} spacing={2} alignItems={"center"}
+                             justifyContent={"space-between"}>
+                        <ConnectionBadge name={data_provider.data_provider_name}/>
+                        {data_provider.token ?
+                          <Stack direction={"row"} alignItems={"center"}>
+                            <Typography variant="body1">Connected
+                              as {data_provider.token.user_name}</Typography>
+                            <Button
+                              variant={"text"}
+                              color={"primary"}
+                              onClick={() => handleDisconnect(data_provider.data_provider_name)}
+                              disabled={preparingSurvey || surveyURL}
+                            >{
+                              t('ui.respondent.connection.button.disconnect')
+                            }</Button>
+                            <DataProviderConnectionStatus
+                              was_used={data_provider.was_used}
+                              anyProviderAlreadyUsed={anyProviderAlreadyUsed}
+                              allProvidersAlreadyUsed={allProvidersAlreadyUsed}
+                            />
+                          </Stack>
+                          :
+                          <Button
+                            variant={"contained"}
+                            color={"primary"}
+                            startIcon={<AddIcon/>}
+                            onClick={() => handleConnect(data_provider.data_provider_name)}
+                          >{
+                            t('ui.respondent.connection.button.connect')
+                          }</Button>
+                        }
+                      </Stack>
+                    )
+                  })
                 }
-                {
-                  !preparingSurvey && !surveyURL &&
-                  <ConnectionStatus
-                    allProvidersConnected={allProvidersConnected}
-                    anyProviderConnected={anyProviderConnected}
-                    anyProviderAlreadyUsed={anyProviderAlreadyUsed}
-                    allProvidersAlreadyUsed={allProvidersAlreadyUsed}
-                  />
-                }
-
-                <Stack spacing={2} alignItems={"center"}>
-                  <Button
-                    variant={"contained"}
-                    color={"primary"}
-                    disabled={!allProvidersConnected || preparingSurvey || surveyURL}
-                    onClick={handleProceed}
-                  >
-                    {allProvidersConnected && allProvidersAlreadyUsed ? 'Resume' : 'Proceed'}
-                  </Button>
-                </Stack>
               </Stack>
-            </Container>
+              {
+                preparingSurvey &&
+                <Stack direction={"row"} spacing={2} alignItems={"center"} justifyContent={"center"}>
+                  <CircularProgress
+                    size={24}
+                    value={100}
+                  />
+                  <Alert severity="info">{
+                    t('ui.respondent.connection.alert.preparing_survey')
+                  }</Alert>
+                </Stack>
+              }
+              {
+                surveyURL &&
+                <Stack direction={"row"} spacing={2} alignItems={"center"} justifyContent={"center"}>
+                  <Alert severity="success">
+                    <AlertTitle>{
+                      t('ui.respondent.connection.alert.survey_ready.title')
+                    }</AlertTitle>
+
+                    <Typography variant="body1">{
+                      t('ui.respondent.connection.alert.survey_ready.message.will_be_redirected')
+                    }</Typography>
+                    <a href={surveyURL} target={"_blank"} rel="noreferrer">
+                      {t('ui.respondent.connection.click_here')}
+                    </a> {t('ui.respondent.connection.if_not_redirected_automatically')}
+
+                  </Alert>
+                </Stack>
+              }
+              {
+                !preparingSurvey && !surveyURL &&
+                <ConnectionStatus
+                  allProvidersConnected={allProvidersConnected}
+                  anyProviderConnected={anyProviderConnected}
+                  anyProviderAlreadyUsed={anyProviderAlreadyUsed}
+                  allProvidersAlreadyUsed={allProvidersAlreadyUsed}
+                />
+              }
+
+              <Stack spacing={2} alignItems={"center"}>
+                <Button
+                  variant={"contained"}
+                  color={"primary"}
+                  disabled={!allProvidersConnected || preparingSurvey || surveyURL}
+                  onClick={handleProceed}
+                >
+                  {allProvidersConnected && allProvidersAlreadyUsed ? 'Resume' : 'Proceed'}
+                </Button>
+              </Stack>
+            </Stack>
           )}
         </CheckProjectReadiness>
       )}
@@ -423,7 +420,6 @@ const DataProviderConnectionStatus = ({
   anyProviderAlreadyUsed,
   allProvidersAlreadyUsed
 }) => {
-
   const {t} = useTranslation();
 
   const warning = was_used && !allProvidersAlreadyUsed;
@@ -459,7 +455,6 @@ const ConnectionStatus = ({
   anyProviderAlreadyUsed,
   allProvidersAlreadyUsed
 }) => {
-
   const {t} = useTranslation();
 
   const warning = anyProviderConnected && !allProvidersConnected && anyProviderAlreadyUsed;

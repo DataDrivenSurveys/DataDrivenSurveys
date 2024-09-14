@@ -1,35 +1,35 @@
-import {Container, Link, Stack, Typography} from '@mui/material';
+import {Link, Typography} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 
 import LayoutMain from "../layout/LayoutMain";
 
 function TermsOfServiceContent() {
-  const { t } = useTranslation();
+  const {t} = useTranslation();
 
   return (
-    <Container>
+    <>
       <Typography variant="h4">{t('terms_of_service.introduction.title')}</Typography>
       <Typography paragraph>{t('terms_of_service.introduction.content')}</Typography>
 
       <Typography variant="h4">{t('terms_of_service.definitions.title')}</Typography>
       <Typography paragraph>
-         <span style={{ fontWeight: 'bold' }}>
+         <span style={{fontWeight: 'bold'}}>
            1. {t('terms_of_service.definitions.dds.title')}
          </span>: {t('terms_of_service.definitions.dds.content')}
       </Typography>
       <Typography paragraph>
-         <span style={{ fontWeight: 'bold' }}>
+         <span style={{fontWeight: 'bold'}}>
            2. {t('terms_of_service.definitions.dp.title')}
          </span>: {t('terms_of_service.definitions.dp.content')}
       </Typography>
       <Typography paragraph>
-         <span style={{ fontWeight: 'bold' }}>
+         <span style={{fontWeight: 'bold'}}>
            3. {t('terms_of_service.definitions.users.title')}
          </span>: {t('terms_of_service.definitions.users.content')}
       </Typography>
       <Typography paragraph>
-         <span style={{ fontWeight: 'bold' }}>
+         <span style={{fontWeight: 'bold'}}>
            4. {t('terms_of_service.definitions.content.title')}
          </span>: {t('terms_of_service.definitions.content.content')}
       </Typography>
@@ -72,17 +72,15 @@ function TermsOfServiceContent() {
       <Typography paragraph>{t('terms_of_service.changes.content')}</Typography>
 
       <Typography variant="h4">{t('terms_of_service.contact_information.title')}</Typography>
-      <Typography paragraph>{t('terms_of_service.contact_information.content')}</Typography>
-
-      <Typography variant="h4">{t('terms_of_service.contact_information.title')}</Typography>
       <Typography paragraph>
         {t('terms_of_service.contact_information.content')}: {
-        <Link href={`mailto:${t('terms_of_service.contact_information.email')}`} rel="noopener noreferrer" color="primary">
-                {t('terms_of_service.contact_information.contact_email')}
+        <Link href={`mailto:${t('terms_of_service.contact_information.email')}`} rel="noopener noreferrer"
+              color="primary">
+          {t('terms_of_service.contact_information.contact_email')}
         </Link>
-        }
+      }
       </Typography>
-    </Container>
+    </>
   );
 }
 
@@ -94,10 +92,7 @@ function PageTermsOfService() {
       header={<Typography variant="h3">{t('terms_of_service.title')}</Typography>}
       backUrl={-1}
     >
-      <Stack spacing={2} width={"80%"}>
-        <TermsOfServiceContent/>
-      </Stack>
-
+      <TermsOfServiceContent/>
     </LayoutMain>
   )
 }

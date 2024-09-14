@@ -89,6 +89,7 @@ const PageProjectSelection = () => {
       field: 'name',
       headerName: t('ui.project.selection.grid.column.name'),
       flex: 1,
+      minWidth: 250,
       disableColumnMenu: true
     },
     {
@@ -174,7 +175,7 @@ const PageProjectSelection = () => {
         }
         headerRightCorner={<AuthUser/>}
       >
-        <Stack spacing={2} width={"80%"}>
+        <Stack spacing={2}>
           <Box>
             <Button
               // startIcon={<AddIcon />}

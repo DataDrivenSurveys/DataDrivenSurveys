@@ -1,6 +1,7 @@
 // PageHomepage
+import ArticleIcon from "@mui/icons-material/Article";
 import LoginIcon from '@mui/icons-material/Login';
-import {Container, Link, Stack, Typography, Divider, Button} from '@mui/material';
+import {Link, Stack, Typography, Divider, Button} from '@mui/material';
 import React from 'react';
 import {useTranslation} from 'react-i18next';
 import {NavLink} from 'react-router-dom';
@@ -18,8 +19,8 @@ interface AvailableDataProvidersProps {
 function AvailableDataProviders({dataProviderNames}: AvailableDataProvidersProps): JSX.Element | null {
   return dataProviderNames && (
     <Stack
-      direction="row"
-      spacing={2}
+      direction={{xs: 'column', sm: 'row'}}
+      spacing={{xs: 1, sm: 2, md: 4}}
       divider={<Divider orientation="vertical" flexItem/>}
       sx={{marginBottom: '24px'}}
     >
@@ -77,7 +78,7 @@ function HomePageContent(): JSX.Element {
   ];
 
   return (
-    <Container>
+    <>
       <Typography variant="h4">{t('homepage.introduction.title')}</Typography>
       <Typography paragraph>{t('homepage.introduction.content')}</Typography>
 
@@ -110,8 +111,8 @@ function HomePageContent(): JSX.Element {
         {t('homepage.more_information.content')}
       </Typography>
       <Stack
-        direction="row"
-        spacing={2}
+        direction={{xs: 'column', sm: 'row'}}
+        spacing={{xs: 1, sm: 2, md: 4}}
         divider={<Divider orientation="vertical" flexItem/>}
         sx={{marginBottom: '16px', alignContent: 'center',}}
       >
@@ -134,6 +135,7 @@ function HomePageContent(): JSX.Element {
         </Stack>
 
         <Stack direction="row" spacing={1} sx={{alignItems: "center"}}>
+          <ArticleIcon/>
           <Typography variant="body1">
             <Link href={t('homepage.more_information.paper_link')} rel="noopener">
               {t('homepage.more_information.paper')}
@@ -153,7 +155,7 @@ function HomePageContent(): JSX.Element {
           {t('homepage.contact_information.contact_email')}
         </Link>
       </Typography>
-    </Container>
+    </>
   );
 }
 
@@ -172,18 +174,41 @@ function PageHomepage(): JSX.Element {
         </Stack>
       }
       headerRightCorner={
-        <Stack direction="row" justifyContent="space-between">
-          <Button component={NavLink} startIcon={<LoginIcon/>} variant="contained" to="/signin">
+        <>
+          <Button
+            component={NavLink}
+            startIcon={<LoginIcon/>}
+            variant="contained"
+            to="/signin"
+            sx={{
+              display: 'inline-flex',
+              '@media (max-width: 550px)': {
+                display: 'none', // Hide text version below 550px
+              },
+            }}
+          >
             {t('homepage.researcher_login.login_button')}
           </Button>
-        </Stack>
+          <Button
+            component={NavLink}
+            startIcon={<LoginIcon/>}
+            variant="contained"
+            to="/signin"
+            sx={{
+              display: 'none',
+              '@media (max-width: 550px)': {
+                display: 'inline-flex', // Show icon-only version below 550px
+              },
+            }} // Show only icon on small screens
+
+          />
+        </>
       }
     >
-      <Stack spacing={2} width="80%">
-        <HomePageContent/>
-      </Stack>
+      <HomePageContent/>
     </LayoutMain>
-  );
+  )
+    ;
 }
 
 export default React.memo(PageHomepage);

@@ -1,4 +1,4 @@
-import {Box, Stack} from '@mui/material';
+import {Box, Container, ContainerProps, Stack} from '@mui/material';
 import React, {ReactNode} from 'react';
 
 import Footer from './Footer';
@@ -15,6 +15,7 @@ interface LayoutMainProps {
   padding?: number;
   spacing?: number;
   headerRightCorner?: ReactNode;
+  horizontalContainerProps?: ContainerProps;
   loading?: boolean; // Optional prop to display loading spinner while content is loading
 }
 
@@ -26,7 +27,8 @@ const LayoutMain: React.FC<LayoutMainProps> = ({
   padding = 0,
   spacing = 0,
   headerRightCorner,
-  loading = false, // Default loading to false
+  horizontalContainerProps = {},
+  loading = false,
 }) => {
   if (loading) {
     return (
@@ -41,13 +43,16 @@ const LayoutMain: React.FC<LayoutMainProps> = ({
       </Header>
       {subheader && <Box sx={{overflow: 'hidden'}}>{subheader}</Box>}
       <ScrollContainer padding={padding} spacing={spacing}>
-        <Stack p={4} alignItems="center" height="100%">
-          {children}
+        <Stack paddingTop={4} paddingBottom={4} alignItems="center" height="100%" width="100%">
+          <Container {...horizontalContainerProps}>
+            {children}
+          </Container>
         </Stack>
       </ScrollContainer>
       <Footer/>
     </Stack>
-  );
+  )
+    ;
 };
 
 export default LayoutMain;

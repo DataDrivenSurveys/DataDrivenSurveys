@@ -49,7 +49,8 @@ export const themeOptions = {
       fontWeight: 600,
     },
     body1: {
-      fontSize: '1rem'
+      fontSize: '1rem',
+      letterSpacing: 'normal',
     },
     body2: {
       fontSize: '1rem',

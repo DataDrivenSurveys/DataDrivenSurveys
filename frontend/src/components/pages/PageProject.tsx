@@ -11,6 +11,8 @@ import {useTranslation} from 'react-i18next';
 import {useNavigate, useParams} from "react-router-dom";
 import {useDebouncedCallback} from "use-debounce";
 
+import Project, {BuiltinVariable, CustomVariable} from "../../backendObjects/Project";
+import {ResponseData, ResponseError} from "../../backendObjects/ResponseReturnValue";
 import {GET, POST, POST_BLOB, PUT, DEL} from "../../code/http_requests";
 import {useSnackbar} from "../../context/SnackbarContext";
 import AuthUser from "../auth/AuthUser";
@@ -32,7 +34,11 @@ const VariableManagement = loadable(() => import("./project/variables/VariableMa
 });
 
 
-const ProjectNameField = ({project}) => {
+interface ProjectNameFieldProps {
+  project: Project;
+}
+
+const ProjectNameField = ({project}: ProjectNameFieldProps): JSX.Element => {
 
   const {t} = useTranslation();
 
@@ -50,13 +56,13 @@ const ProjectNameField = ({project}) => {
       name: projectName
     });
 
-    response.on('2xx', async (status, data) => {
+    response.on('2xx', async (status: number, data: ResponseData) => {
       if (status === 200) {
         showSnackbar(t(data.message.id), 'success');
       }
     });
 
-    response.on('4xx', (_, data) => {
+    response.on('4xx', (_: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
     });
   }, [project, showSnackbar, t]), 500);
@@ -74,7 +80,7 @@ const ProjectNameField = ({project}) => {
 }
 
 
-const PageProject = () => {
+const PageProject = (): JSX.Element => {
 
   const {t} = useTranslation();
 
@@ -82,25 +88,25 @@ const PageProject = () => {
 
   const {showBottomCenter: showSnackbar} = useSnackbar();
 
-  const {projectId} = useParams();
+  const {projectId} = useParams<{ projectId: string }>();
 
   const [loadingSurveyPlatformIntegration, setLoadingSurveyPlatformIntegration] = useState(true); // Loading state for SurveyPlatformIntegration
   const [loadingDataProviders, setLoadingDataProviders] = useState(true); // Loading state for DataProviders
   const [loadingVariables, setLoadingVariables] = useState(true); // Loading state for VariableManagement
   const [syncLoading, setSyncLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const [lastSynched, setLastSynched] = useState(null);
+  const [lastSynched, setLastSynched] = useState<string | null>(null);
   const [clearResondentDataDialogOpen, setClearResondentDataDialogOpen] = useState(false);
 
-  const [project, setProject] = useState(null);
+  const [project, setProject] = useState<Project | null>(null);
 
-  const fetchProject = useCallback(async (projectId) => {
+  const fetchProject = useCallback(async (projectId: string) => {
     setLoadingSurveyPlatformIntegration(true); // Start loading
     setLoadingDataProviders(true); // Start loading
     setLoadingVariables(true); // Start loading
     const response = await GET(`/projects/${projectId}`);
 
-    response.on('2xx', (status, data) => {
+    response.on('2xx', (status: number, data: Project) => {
       if (status === 200) {
         setProject(data);
         setLastSynched(data.last_synced);
@@ -110,8 +116,7 @@ const PageProject = () => {
       }
     });
 
-    response.on('4xx', (status, data) => {
-      console.log("status", status, "data", data);
+    response.on('4xx', (status: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
       setLoadingSurveyPlatformIntegration(false); // Stop loading
       setLoadingDataProviders(false); // Stop loading
@@ -123,33 +128,33 @@ const PageProject = () => {
   }, [showSnackbar, t, navigate]);
 
   useEffect(() => {
-    fetchProject(projectId);
+    fetchProject(projectId || "");
   }, [projectId, fetchProject]);
 
-  const syncVariables = useCallback(async () => {
+  const syncVariables = useCallback(async (project: Project) => {
     setSyncLoading(true);
     const response = await POST(`/projects/${projectId}/sync_variables`);
     setSyncLoading(false);
     const lastSynched = project.last_synced;
     setLastSynched(null);
-    response.on('2xx', (status, data) => {
+    response.on('2xx', (status: number, data: ResponseData) => {
       if (status === 200) {
         showSnackbar(t(data.message.id), 'success');
         setLastSynched((new Date()).toISOString());
       }
     });
 
-    response.on('4xx', (_, data) => {
+    response.on('4xx', (_: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error')
       setLastSynched(lastSynched);
     });
 
-    response.on('5xx', (_, data) => {
+    response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
       setLastSynched(lastSynched);
     });
 
-  }, [projectId, showSnackbar, t, project]);
+  }, [projectId, showSnackbar, t]);
 
   const downloadRespondentResponses = useCallback(async () => {
 
@@ -157,7 +162,7 @@ const PageProject = () => {
     const response = await POST_BLOB(`/projects/${projectId}/export_survey_responses`);
     setDownloadLoading(false);
 
-    response.on('2xx', async (status, blob) => {
+    response.on('2xx', async (status: number, blob: any) => {
       if (status === 200) {
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -169,11 +174,11 @@ const PageProject = () => {
       }
     });
 
-    response.on('4xx', (_, data) => {
+    response.on('4xx', (_: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-    response.on('5xx', (_, data) => {
+    response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
     });
 
@@ -182,18 +187,18 @@ const PageProject = () => {
   const previewSurvey = useCallback(async () => {
     const response = await GET(`/projects/${projectId}/preview_survey`);
 
-    response.on('2xx', (status, data) => {
+    response.on('2xx', (status: number, data: URL) => {
       if (status === 200) {
         window.open(data, '_blank');
       }
 
     });
 
-    response.on('4xx', (_, data) => {
+    response.on('4xx', (_: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-    response.on('5xx', (_, data) => {
+    response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
     });
   }, [projectId, showSnackbar, t]);
@@ -202,17 +207,17 @@ const PageProject = () => {
   const clearRespondentData = useCallback(async () => {
     const response = await DEL(`/projects/${projectId}/respondents`);
 
-    response.on('2xx', (status, data) => {
+    response.on('2xx', (status: number, data: ResponseData) => {
       if (status === 200) {
         showSnackbar(t(data.message.id), 'success');
       }
     });
 
-    response.on('4xx', (_, data) => {
+    response.on('4xx', (_: number, data: ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
     });
 
-    response.on('5xx', (_, data) => {
+    response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
     });
 
@@ -244,7 +249,9 @@ const PageProject = () => {
                     loading={syncLoading}
                     color="primary"
                     startIcon={<SyncIcon/>}
-                    onClick={syncVariables}>
+                    onClick={() => {
+                      syncVariables(project);
+                    }}>
                     {t('ui.project.button.sync_variables')}
                   </LoadingButton>
 
@@ -291,8 +298,11 @@ const PageProject = () => {
         }
         headerRightCorner={<AuthUser/>}
         loading={!project}
+        horizontalContainerProps={{
+          maxWidth: false,
+        }}
       >
-        <Stack spacing={8} width={"100%"} alignItems={"flex-start"} pb={8}>
+        <Stack spacing={8} width={"100%"} alignItems={"flex-start"} paddingBottom={8}>
           <Stack spacing={2}>
             <Typography variant="h6"> {t('ui.project.survey_platform.title')}</Typography>
             <Loading loading={loadingSurveyPlatformIntegration}>
@@ -306,7 +316,7 @@ const PageProject = () => {
             <DataProviders
               project={project}
               onChangeDataProviders={async () => {
-                await fetchProject(projectId);
+                await fetchProject(projectId || "");
               }}
             />
           </Loading>
@@ -314,31 +324,35 @@ const PageProject = () => {
           <Loading loading={loadingVariables}>
             <VariableManagement
               project={project}
-              onChangeBuiltinVariables={(newBuiltinVariables) => {
-                // only update by reference, avoid rerendering
-                project.variables = newBuiltinVariables;
+              onChangeBuiltinVariables={(newBuiltinVariables: BuiltinVariable[]) => {
+                // only update by reference, avoid re-rendering
+                if (project) {
+                  project.variables = newBuiltinVariables;
+                }
               }}
-              onChangeCustomVariables={(newCustomVariables) => {
-                // only update by reference, avoid rerendering
-                project.custom_variables = newCustomVariables;
+              onChangeCustomVariables={(newCustomVariables: CustomVariable[]) => {
+                // only update by reference, avoid re-rendering
+                if (project) {
+                  project.custom_variables = newCustomVariables;
+                }
               }}
             />
           </Loading>
         </Stack>
-        <DialogFeedback
-          open={clearResondentDataDialogOpen}
-          title={t('ui.project.dialog.delete_respondents.title')}
-          content={
-            <Stack spacing={2}>
-              <Typography variant="body1">
-                {t('ui.project.dialog.delete_respondents.content')}
-              </Typography>
-            </Stack>
-          }
-          onClose={() => setClearResondentDataDialogOpen(false)}
-          onConfirm={clearRespondentData}
-        />
       </LayoutMain>
+      <DialogFeedback
+        open={clearResondentDataDialogOpen}
+        title={t('ui.project.dialog.delete_respondents.title')}
+        content={
+          <Stack spacing={2}>
+            <Typography variant="body1">
+              {t('ui.project.dialog.delete_respondents.content')}
+            </Typography>
+          </Stack>
+        }
+        onClose={() => setClearResondentDataDialogOpen(false)}
+        onConfirm={clearRespondentData}
+      />
     </>
   )
 }

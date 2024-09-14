@@ -120,7 +120,7 @@ function PrivacyPolicyContent() {
   };
 
   return (
-    <Container sx={{width: "80%"}}>
+    <>
       <FormattedSections formattedSections={dataCollectionAndUseSections}/>
 
       <Typography variant="h4">{t('privacy_policy.contact_information.title')}</Typography>
@@ -134,7 +134,7 @@ function PrivacyPolicyContent() {
           values={{contact_email: t('privacy_policy.contact_information.contact_email')}}
         />
       </Typography>
-    </Container>
+    </>
   );
 }
 

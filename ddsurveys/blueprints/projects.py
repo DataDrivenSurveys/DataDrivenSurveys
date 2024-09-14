@@ -30,7 +30,6 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-
 projects = Blueprint("projects", __name__)
 projects.register_blueprint(
     data_providers, url_prefix="/<string:project_id>/data-providers"
@@ -147,7 +146,8 @@ def create_project() -> ResponseReturnValue:
                 jsonify(
                     {
                         "message": {
-                            "id": f"{missing_field_key}.missing",  # Append .missing to the full name key for the error id
+                            "id": f"{missing_field_key}.missing",
+                            # Append .missing to the full name key for the error id
                             "text": f"Field '{missing_field_key}' is required",
                         }
                     }
@@ -504,7 +504,6 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
 
 
 def get_survey_platform_connection(project) -> ResponseReturnValue:
-
     survey_platform_info = {
         "survey_platform_name": project.survey_platform_name,
         "connected": False,
@@ -806,7 +805,6 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
         # Assuming content is the bytes of the file to be downloaded
         if content:
-
             # Create a BytesIO object with your zip content
             zip_in_memory = BytesIO(content)
 

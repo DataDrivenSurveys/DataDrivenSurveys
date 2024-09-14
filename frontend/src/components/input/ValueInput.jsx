@@ -26,9 +26,9 @@ const ValueInput = ({ data_type, label, value, unit, minWidth=200, onChange }) =
                     type="number"
                     value={value}
                     onChange={value => onChange(value)}
-                    sx={{ minWidth: minWidth }}
+                    sxStack={{ minWidth: minWidth }}
                     variant="filled"
-                    InputProps={{
+                    inputProps={{
                         endAdornment: unit && <InputAdornment position="start"><Typography variant={"caption"}><b>{unit}</b></Typography></InputAdornment>,
                     }}
                 />
@@ -39,7 +39,7 @@ const ValueInput = ({ data_type, label, value, unit, minWidth=200, onChange }) =
                     label={label}
                     value={value}
                     onChange={value => onChange(value)}
-                    sx={{ minWidth: minWidth }}
+                    sxStack={{ minWidth: minWidth }}
                     variant="filled"
                 />
             );

@@ -12,7 +12,7 @@ const axiosInstanceWithoutToken = axios.create({
 
 axiosInstanceWithToken.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('tokenDDS');
         if (!token) {
             throw new axios.Cancel('Token missing');
         }
@@ -42,7 +42,7 @@ const handleResponse = (response) => {
     };
     return customResponse;
   };
-  
+
   const handleError = (error) => {
     if (error.response) {
       const customError = {
@@ -74,7 +74,7 @@ const handleResponse = (response) => {
       }
     }
   };
-  
+
 /*
 
 Each http functions returns an object with the following methods:
