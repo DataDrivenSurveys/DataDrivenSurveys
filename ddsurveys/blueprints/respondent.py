@@ -40,7 +40,6 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-
 respondent = Blueprint("respondent", __name__)
 """location: /projects/<project_id>/respondent
 All of the endpoints in blueprint file are public
@@ -54,11 +53,9 @@ def get_project(db, short_id) -> Project:
 def get_used_data_providers(
     project: Project,
     respondent: Respondent
-) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None], None, tuple[None, None, Response]]:
-    oauth_data_providers = respondent.data_provider_accesses
-
+) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, tuple[None, None, Response, int]]:
     data_provider: DataProviderAccess
-    for data_provider in oauth_data_providers:
+    for data_provider in respondent.data_provider_accesses:
         data_provider_name = data_provider.data_provider_name.value
         access_token = data_provider.access_token
         refresh_token = data_provider.refresh_token
@@ -68,15 +65,16 @@ def get_used_data_providers(
                 "Missing access token for data provider: %s", data_provider_name
             )
             return (
+                None,
+                None,
                 jsonify(
                     {
                         "message": {
                             "id": "api.data_provider.missing_tokens",
                             "text": "Missing data provider tokens",
                         }
-                    }
-                ),
-                400,
+                    }),
+                400
             )
 
         # Get the correct data provider from the project.
@@ -111,7 +109,7 @@ def get_used_data_providers(
             data_provider_name
         )(**fields)
 
-        yield user_data_provider, data_provider, None
+        yield user_data_provider, data_provider, None, None
 
 
 @respondent.route("/", methods=["GET"])
@@ -455,6 +453,23 @@ def was_data_provider_used() -> ResponseReturnValue:
 
 @respondent.route("/prepare-survey", methods=["POST"])
 def prepare_survey() -> ResponseReturnValue:
+    """Prepares a survey for a respondent by creating a unique distribution link and handling data provider tokens.
+
+    This function performs the following steps:
+    1. Retrieves the project and respondent information from the database.
+    2. Checks if the respondent already has a distribution link.
+    3. Verifies if the survey is active on the specified survey platform.
+    4. Collects and processes data from various data providers.
+    5. Creates a unique distribution link for the respondent.
+
+    Returns:
+        ResponseReturnValue: A JSON response containing the distribution link or an error message.
+            Possible status codes are:
+            - 200: Successfully created a unique distribution link.
+            - 400: Missing respondent ID or unsupported survey platform.
+            - 404: Project or respondent not found, or survey not active.
+            - 500: Error preparing the survey.
+    """
     try:
         with DBManager.get_db() as db:
 
@@ -524,13 +539,13 @@ def prepare_survey() -> ResponseReturnValue:
             if respondent.distribution:
                 logger.info("Respondent already has a distribution url.")
 
-                for user_data_provider, data_provider, response in get_used_data_providers(project, respondent):
-                    if response is not None:
-                        return response
+                for user_data_provider, data_provider, response, revoke_status in get_used_data_providers(project, respondent):
+                    if response is not None and revoke_status is not None:
+                        return response, revoke_status
 
                     # revoke the access tokens
                     try:
-                        user_data_provider.revoke_token(user_data_provider.access_token)
+                        user_data_provider.revoke_token(data_provider.access_token)
                     except Exception:
                         logger.exception(
                             "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
@@ -604,65 +619,9 @@ def prepare_survey() -> ResponseReturnValue:
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-
-            # oauth_data_providers = respondent.data_provider_accesses
-            #
-            # data_provider: DataProviderAccess
-            # for data_provider in oauth_data_providers:
-            #
-            #     data_provider_name = data_provider.data_provider_name.value
-            #     access_token = data_provider.access_token
-            #     refresh_token = data_provider.refresh_token
-            #
-            #     if not access_token:
-            #         logger.error(
-            #             "Missing access token for data provider: %s", data_provider_name
-            #         )
-            #         return (
-            #             jsonify(
-            #                 {
-            #                     "message": {
-            #                         "id": "api.data_provider.missing_tokens",
-            #                         "text": "Missing data provider tokens",
-            #                     }
-            #                 }
-            #             ),
-            #             400,
-            #         )
-            #
-            #     # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
-            #     project_data_connection = next(
-            #         (dc for dc in project.data_connections
-            #             if dc.data_provider.data_provider_name.value == data_provider_name),
-            #         None,
-            #     )
-            #
-            #     if not project_data_connection:
-            #         logger.error("Data provider not found: %s", data_provider_name)
-            #         return (
-            #             jsonify({
-            #                 "message": {
-            #                     "id": "api.data_provider.not_found",
-            #                     "text": "Data provider not found",
-            #                 }
-            #             }),
-            #             404,
-            #         )
-            #
-            #     fields = project_data_connection.fields
-            #
-            #     fields.update(
-            #         {"access_token": access_token, "refresh_token": refresh_token}
-            #     )
-            #     logger.debug("Data provider fields: %s", fields)
-            #
-            #     user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
-            #         data_provider_name
-            #     )(**fields)
-
-            for user_data_provider, data_provider, response in get_used_data_providers(project, respondent):
-                if response is not None:
-                    return response
+            for user_data_provider, data_provider, response, revoke_status in get_used_data_providers(project, respondent):
+                if response is not None and revoke_status is not None:
+                    return response, revoke_status
 
                 data_to_upload.update(
                     user_data_provider.calculate_variables(
@@ -672,7 +631,7 @@ def prepare_survey() -> ResponseReturnValue:
 
                 # revoke the access tokens
                 try:
-                    user_data_provider.revoke_token(user_data_provider.access_token)
+                    user_data_provider.revoke_token(data_provider.access_token)
                 except Exception:
                     logger.exception(
                         "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
@@ -715,6 +674,7 @@ def prepare_survey() -> ResponseReturnValue:
             )
 
             if success_preparing_survey:
+                logger.debug("Preparing survey successful.")
                 distribution = None
                 if unique_url:
                     # create the related distribution for the respondent

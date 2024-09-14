@@ -11,7 +11,6 @@ import {useSnackbar} from "../../context/SnackbarContext";
 import useInput from "../../hook/useInput";
 import AuthUser from "../auth/AuthUser";
 import ConnectionBadge from "../feedback/ConnectionBadge";
-import Loading from "../feedback/Loading";
 import DropDown from "../input/DropDown";
 import TextInput from "../input/TextInput";
 import LayoutMain from "../layout/LayoutMain"
@@ -28,7 +27,7 @@ const hiddenFieldsFromScratch = ['survey_id'];
 // Helper functions for local storage
 const saveToLocalStorage = (key, value) => {
   // Check if value is an object (JSON field)
-  if(value){
+  if (value) {
     if (typeof value === 'object') {
       localStorage.setItem(key, JSON.stringify(value));
     } else {
@@ -66,17 +65,17 @@ const PageCreateProject = () => {
 
   const [creationMode, setCreationMode] = useState(getFromLocalStorage('creationMode', creationTypesUI[0].value));
 
-  const [ surveyPlatforms, setSurveyPlatforms ] = useState([]);
+  const [surveyPlatforms, setSurveyPlatforms] = useState([]);
 
-  const [ selectedSurveyPlatform, setSelectedSurveyPlatform] = useState();
-  const [ surveyPlatformFields, setSurveyPlatformFields ] = useState();
+  const [selectedSurveyPlatform, setSelectedSurveyPlatform] = useState();
+  const [surveyPlatformFields, setSurveyPlatformFields] = useState();
 
 
   useEffect(() => {
     (async () => {
       const response = await GET('/survey-platforms');
       response.on('2xx', (status, data) => {
-        const platforms = data.map((si) => ({...si, label: undefined, icon: <ConnectionBadge name={si.value} />}));
+        const platforms = data.map((si) => ({...si, label: undefined, icon: <ConnectionBadge name={si.value}/>}));
 
         setSurveyPlatforms(platforms);
         // Moved the state updates for selectedSurveyPlatform and surveyPlatformFields here
@@ -108,21 +107,21 @@ const PageCreateProject = () => {
 
   const checkInputs = useCallback(() => {
 
-      if (creationMode === "from_scratch" && !name) {
-          return false;
-      }
-      for (let field of surveyPlatformFields.filter(f => f.type !== "button")) {
-          // If the field is hidden, skip validation for it
-          if (shouldHideField(field.name)) {
-              continue;
-          }
-
-          if (field.required && !field.value) {
-              return false;
-          }
+    if (creationMode === "from_scratch" && !name) {
+      return false;
+    }
+    for (let field of surveyPlatformFields.filter(f => f.type !== "button")) {
+      // If the field is hidden, skip validation for it
+      if (shouldHideField(field.name)) {
+        continue;
       }
 
-      return true;
+      if (field.required && !field.value) {
+        return false;
+      }
+    }
+
+    return true;
   }, [surveyPlatformFields, shouldHideField, creationMode, name]);
 
   const onCreateClick = useCallback(async () => {
@@ -159,74 +158,73 @@ const PageCreateProject = () => {
   }, [name, checkInputs, selectedSurveyPlatform, surveyPlatformFields, creationMode, errorName, showSnackbar, navigate, t]);
 
   return (
-    <>
-      <Loading loading={surveyPlatforms.length === 0}>
-      <LayoutMain
-        backUrl="/projects"
-        headerRightCorner={<AuthUser/>}
-        header={
-          <Typography variant="h6">
-            {t('ui.project.create.title')}
-          </Typography>
-        }
-      >
-        {
-
+    <LayoutMain
+      backUrl="/projects"
+      headerRightCorner={<AuthUser/>}
+      header={
+        <Typography variant="h6">
+          {t('ui.project.create.title')}
+        </Typography>
+      }
+      loading={surveyPlatforms.length === 0}
+      horizontalContainerProps={{
+        maxWidth: "sm"
+      }}
+    >
+      {
         selectedSurveyPlatform && (
-          <Stack spacing={4} width={"400px"}>
-          <DropDown
-            items={creationTypesUI}
-            label={t('ui.project.create.select.type.label')}
-            value={creationMode}
-            onChange={(e) => setCreationMode(e.target.value)}
-          />
+          <Stack spacing={4}>
+            <DropDown
+              items={creationTypesUI}
+              label={t('ui.project.create.select.type.label')}
+              value={creationMode}
+              onChange={(e) => setCreationMode(e.target.value)}
+            />
 
-          <TextInput
-            showClear
-            {...bindName}
-          />
+            <TextInput
+              showClear
+              {...bindName}
+            />
 
-          <DropDown
-            items={surveyPlatforms}
-            label={t('ui.project.create.select.survey_platform.label')}
-            value={selectedSurveyPlatform.value}
-            onChange={(e) => {
-              const surveyPlatform = surveyPlatforms.find((platform) => platform.value === e.target.value);
-              setSelectedSurveyPlatform(surveyPlatform)
-              setSurveyPlatformFields(surveyPlatform.fields);
-            }}
-          />
+            <DropDown
+              items={surveyPlatforms}
+              label={t('ui.project.create.select.survey_platform.label')}
+              value={selectedSurveyPlatform.value}
+              onChange={(e) => {
+                const surveyPlatform = surveyPlatforms.find((platform) => platform.value === e.target.value);
+                setSelectedSurveyPlatform(surveyPlatform)
+                setSurveyPlatformFields(surveyPlatform.fields);
+              }}
+            />
 
-          <SurveyPlatformFields
-            selectedSurveyPlatform={selectedSurveyPlatform}
-            surveyPlatformFields={surveyPlatformFields?.map(field => ({
-              ...field,
-              required: !shouldHideField(field.name),
+            <SurveyPlatformFields
+              selectedSurveyPlatform={selectedSurveyPlatform}
+              surveyPlatformFields={surveyPlatformFields?.map(field => ({
+                ...field,
+                required: !shouldHideField(field.name),
 
-            }))}
-            hiddenFields={creationMode === "from_scratch" ? hiddenFieldsFromScratch : []}
-            onChange={setSurveyPlatformFields}
-          />
+              }))}
+              hiddenFields={creationMode === "from_scratch" ? hiddenFieldsFromScratch : []}
+              onChange={setSurveyPlatformFields}
+            />
 
-          <Button
-            variant="contained"
-            color="primary"
-            size={"large"}
-            disabled={!checkInputs() || creating}
-            startIcon={
-              creationMode ? <AddLinkIcon/> : <AddIcon/>
-            }
-            onClick={onCreateClick}
-          >
-            {t('ui.project.create.button.create')}
-          </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              size={"large"}
+              disabled={!checkInputs() || creating}
+              startIcon={
+                creationMode ? <AddLinkIcon/> : <AddIcon/>
+              }
+              onClick={onCreateClick}
+            >
+              {t('ui.project.create.button.create')}
+            </Button>
 
-        </Stack>
+          </Stack>
         )}
 
-      </LayoutMain>
-      </Loading>
-    </>
+    </LayoutMain>
   )
 }
 

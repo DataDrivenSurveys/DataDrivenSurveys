@@ -59,30 +59,33 @@ const SignIn = () => {
     <LayoutMain
       backUrl={-1}
       header={<Typography variant="h3">{t('ui.auth.titles.signin')}</Typography>}
+      horizontalContainerProps={{
+        sx: {
+          marginTop: "auto",
+          marginBottom: "auto"
+        }
+      }}
     >
-      <Stack height="100vh" width="100vw">
-        <Stack alignItems="center" justifyContent="center" height="100vh" pb={12}>
-          <form onSubmit={handleSignIn}>
-            <Stack spacing={2} alignItems="center" width="400px">
-              <Stack sx={{width: '60px', height: '60px'}}>
-                <img src="/svg/unauthorized.svg" alt="Logo"/>
-              </Stack>
-
-              <TextInput showClear {...bindEmail} sxStack={{width: '100%'}}/>
-              <TextInput showClear {...bindPassword} type="password" sxStack={{width: '100%'}}/>
-
-              <Stack direction="row" justifyContent="space-between" width="100%">
-                <Button component={Link} to="/signup" variant="text" color="primary">
-                  {t('ui.auth.button.signup')}
-                </Button>
-                <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">
-                  {t('ui.auth.button.signin')}
-                </LoadingButton>
-              </Stack>
+      <Stack alignItems="center">
+        <form onSubmit={handleSignIn}>
+          <Stack spacing={2} alignItems="center" width="400px">
+            <Stack sx={{width: '60px', height: '60px'}}>
+              <img src="/svg/unauthorized.svg" alt="Logo"/>
             </Stack>
-          </form>
-        </Stack>
-        <Footer/>
+
+            <TextInput showClear {...bindEmail} sxStack={{width: '100%'}}/>
+            <TextInput showClear {...bindPassword} type="password" sxStack={{width: '100%'}}/>
+
+            <Stack direction="row" justifyContent="space-between" width="100%">
+              <Button component={Link} to="/signup" variant="text" color="primary">
+                {t('ui.auth.button.signup')}
+              </Button>
+              <LoadingButton loading={loading} startIcon={<LoginIcon/>} variant="contained" type="submit">
+                {t('ui.auth.button.signin')}
+              </LoadingButton>
+            </Stack>
+          </Stack>
+        </form>
       </Stack>
     </LayoutMain>
   );

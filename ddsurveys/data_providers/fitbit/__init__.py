@@ -525,6 +525,10 @@ class FitbitDataProvider(OAuthDataProvider):
         logger.info("Fitbit redirect_uri: %s", self.redirect_uri)
         if len(required_scopes) == 0:
             required_scopes = self.__class__._scopes
+
+        # Profile is always required for the verifications done in other methods.
+        if "profile" not in required_scopes:
+            required_scopes.append("profile")
         return self.oauth_client.authorize_token_url(
             scope=required_scopes, redirect_uri=self.redirect_uri
         )
@@ -629,9 +633,9 @@ class FitbitDataProvider(OAuthDataProvider):
         if response.status_code == 200:
             logger.info("Fitbit access_token revoked.")
             return True
-        else:
-            logger.error("Error revoking Fitbit access_token.")
-            return False
+
+        logger.error("Error revoking Fitbit access_token.")
+        return False
 
     def test_connection_before_extraction(self) -> bool:
         try:
