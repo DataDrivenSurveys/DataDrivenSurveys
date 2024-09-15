@@ -51,7 +51,10 @@ __all__ = ["get_researcher", "get_project", "get_project_data_connection"]
 logger = get_logger(__name__)
 
 
-def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None] | tuple[ResponseReturnValue, int]:
+def get_researcher(
+    db: Session,
+    user: dict[str, str]
+) -> tuple[Researcher, None] | tuple[ResponseReturnValue, int]:
     """Get the researcher from the database.
 
     Args:

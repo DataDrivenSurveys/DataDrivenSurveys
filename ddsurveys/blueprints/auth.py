@@ -27,7 +27,6 @@ auth = Blueprint("auth", __name__)
 
 @auth.route("/signup", methods=["POST"])
 def signup() -> ResponseReturnValue:
-
     try:
         with DBManager.get_db() as db:
             data = request.get_json()

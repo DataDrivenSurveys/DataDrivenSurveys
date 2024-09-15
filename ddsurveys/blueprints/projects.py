@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import datetime
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, g, jsonify, request, send_file
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -63,12 +63,13 @@ def list_projects() -> ResponseReturnValue:
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
+        researcher: ResponseReturnValue | Researcher
         researcher, status = get_researcher(db, user)
         if status is not None:
-            researcher: ResponseReturnValue
             # Case where the user could not be found
             return researcher, status
-        researcher: Researcher
+
+        researcher = cast(Researcher, researcher)
 
         # get the projects
         projects = (

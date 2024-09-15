@@ -11,12 +11,12 @@ interface TextInputProps {
   onAfterChange?: (value: string) => void;
   minLength?: number;
   maxLength?: number;
+  autoFocus?: boolean;
   required?: boolean;
   showClear?: boolean;
   helperText?: string | JSX.Element;
   error?: boolean;
   sxStack?: object;
-  // Add more props as needed...
 }
 
 // Work together with useInput hook in /hook folder
@@ -28,6 +28,7 @@ const TextInput = ({
   onAfterChange,
   minLength,
   maxLength,
+  autoFocus = false,
   required = false,
   showClear = false,
   helperText,
@@ -42,6 +43,7 @@ const TextInput = ({
         variant={"outlined"}
         value={value}
         type={type}
+        autoFocus={autoFocus}
         inputProps={{
           maxLength: maxLength,
           startAdornment: (

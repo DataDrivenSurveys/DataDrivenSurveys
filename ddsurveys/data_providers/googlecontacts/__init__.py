@@ -295,7 +295,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     def test_connection_before_extraction(self) -> bool:
         self.init_api_client()
         try:
-            results = (
+            (
                 self.api_client.people()
                 .connections()
                 .list(
@@ -305,7 +305,6 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 )
                 .execute()
             )
-            logger.debug(results)
         except Exception:
             logger.exception("An exception occurred while testing the connection.\n")
             logger.debug(traceback.format_exc())

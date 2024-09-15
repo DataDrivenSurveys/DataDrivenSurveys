@@ -11,7 +11,6 @@ const ValueInput = ({ data_type, label, value, unit, minWidth=200, onChange }) =
         case 'Date':
             return (
                 <DateTimePicker
-
                     label={label}
                     value={dayjs(value)}
                     onChange={value => onChange(value.toISOString())}

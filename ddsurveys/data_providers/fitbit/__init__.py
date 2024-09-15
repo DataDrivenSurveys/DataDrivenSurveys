@@ -531,7 +531,7 @@ class FitbitDataProvider(OAuthDataProvider):
             required_scopes.append("profile")
         return self.oauth_client.authorize_token_url(
             scope=required_scopes, redirect_uri=self.redirect_uri
-        )
+        )[0]
 
     def get_client_id(self) -> str:
         return self.client_id

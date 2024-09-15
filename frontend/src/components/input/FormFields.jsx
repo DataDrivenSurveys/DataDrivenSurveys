@@ -98,9 +98,9 @@ const FormFields = ({fields, onChange, buttonActionReducer}) => {
   }, [fields]);
 
   const handleChange = useCallback((name, value) => {
-    console.log('Handling change:', name, value)
+    // console.log('Handling change:', name, value)
     let updatedFields = fields.map(field => field.name === name ? {...field, value: value} : field);
-    console.log('Updated fields:', updatedFields)
+    // console.log('Updated fields:', updatedFields)
     updatedFields = applyInteractionEffects(name, value, updatedFields);
     onChange(updatedFields);
   }, [fields, onChange]);
@@ -117,7 +117,7 @@ const FormFields = ({fields, onChange, buttonActionReducer}) => {
 
   return fields.map((field, index) => {
     if (!checkVisibility(field)) {
-      console.log('Skipping field because of visibility conditions', field);
+      // console.log('Skipping field because of visibility conditions', field);
       return null; // Skip rendering if visibility conditions are not met
     }
 

@@ -7,20 +7,20 @@ import React from 'react';
 import {BrowserRouter, Route, Routes} from 'react-router-dom';
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import PageCreateProject from './components/pages/PageCreateProject';
-import PageHomepage from "./components/pages/PageHomepage";
-import PageParticipantConnection from './components/pages/PageParticipantConnection';
-import PageParticipantOauth2Redirect from './components/pages/PageParticipantOauth2Redirect';
-import PageProject from './components/pages/PageProject';
-import PageProjectSelection from './components/pages/PageProjectSelection';
-import PageSignIn from "./components/pages/PageSignIn";
-import PageSignUp from './components/pages/PageSignUp';
-import PageSurveyPlatformOauth2Redirect from './components/pages/PageSurveyPlatformOauth2Redirect';
 import {AuthProvider} from './context/AuthContext';
 import {SnackbarProvider} from './context/SnackbarContext';
+import PageCreateProject from './pages/PageCreateProject';
+import PageHomepage from "./pages/PageHomepage";
+import PageParticipantConnection from './pages/PageParticipantConnection';
+import PageParticipantOauth2Redirect from './pages/PageParticipantOauth2Redirect';
+import PageProject from './pages/PageProject';
+import PageProjectSelection from './pages/PageProjectSelection';
+import PageSignIn from "./pages/PageSignIn";
+import PageSignUp from './pages/PageSignUp';
+import PageSurveyPlatformOauth2Redirect from './pages/PageSurveyPlatformOauth2Redirect';
 
-const PagePrivacyPolicy = loadable(() => import('./components/pages/PagePrivacyPolicy'))
-const PageTermsOfService = loadable(() => import('./components/pages/PageTermsOfService'))
+const PagePrivacyPolicy = loadable(() => import('./pages/PagePrivacyPolicy'))
+const PageTermsOfService = loadable(() => import('./pages/PageTermsOfService'))
 
 
 export const themeOptions = {

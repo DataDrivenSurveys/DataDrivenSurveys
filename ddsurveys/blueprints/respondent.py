@@ -539,13 +539,14 @@ def prepare_survey() -> ResponseReturnValue:
             if respondent.distribution:
                 logger.info("Respondent already has a distribution url.")
 
-                for user_data_provider, data_provider, response, revoke_status in get_used_data_providers(project, respondent):
-                    if response is not None and revoke_status is not None:
-                        return response, revoke_status
+                for user_data_provider, data_provider, response, error_status in get_used_data_providers(project, respondent):
+                    if response is not None and error_status is not None:
+                        return response, error_status
 
                     # revoke the access tokens
                     try:
                         user_data_provider.revoke_token(data_provider.access_token)
+                        logger.info("Revoked access token for data provider '%s'\n", user_data_provider.name)
                     except Exception:
                         logger.exception(
                             "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
@@ -595,11 +596,11 @@ def prepare_survey() -> ResponseReturnValue:
             # Create an instance of the platform
             platform_instance = platform_class(**project.survey_platform_fields)
 
-            status, _, survey_platform_info = (
+            survey_platform_status, _, survey_platform_info = (
                 platform_instance.fetch_survey_platform_info()
             )
 
-            if status != 200 and not survey_platform_info.get("active", False):
+            if survey_platform_status != 200 and not survey_platform_info.get("active", False):
                 logger.error(
                     "Survey on %s %s does not exist or there was an error fetching its info.",
                     project.survey_platform_name, project.id
@@ -619,9 +620,9 @@ def prepare_survey() -> ResponseReturnValue:
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            for user_data_provider, data_provider, response, revoke_status in get_used_data_providers(project, respondent):
-                if response is not None and revoke_status is not None:
-                    return response, revoke_status
+            for user_data_provider, data_provider, response, error_status in get_used_data_providers(project, respondent):
+                if response is not None and error_status is not None:
+                    return response, error_status
 
                 data_to_upload.update(
                     user_data_provider.calculate_variables(
@@ -687,7 +688,7 @@ def prepare_survey() -> ResponseReturnValue:
                 flag_modified(project, "survey_platform_fields")
                 db.commit()
 
-                if status == 200:
+                if survey_platform_status == 200:
                     return (
                         jsonify(
                             {
@@ -710,7 +711,7 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    status,
+                    survey_platform_status,
                 )
 
     except Exception:
@@ -854,6 +855,9 @@ def connect_respondent() -> ResponseReturnValue:
             )
 
             if existing_data_provider_access:
+                # Update the tokens with the new ones provided
+                existing_data_provider_access.access_token = access_token
+                existing_data_provider_access.refresh_token = refresh_token
                 existing_data_provider_accesses.append(existing_data_provider_access)
             else:
                 new_data_provider_access = DataProviderAccess(
@@ -877,12 +881,27 @@ def connect_respondent() -> ResponseReturnValue:
                 ),
                 400,
             )
-        elif existing_data_provider_accesses:
-            # all data providers already exists, so we can just return the respondent
-            respondent: Respondent = (
-                db.query(Respondent).filter_by(project_id=project.id).first()
-            )  # There should only be one respondent per project
-            logger.info("Found existing respondent.")
+        if existing_data_provider_accesses:
+            # All data providers already exist; update tokens and return the respondent
+            try:
+                db.commit()
+                logger.info("Updated existing DataProviderAccess tokens.")
+            except IntegrityError:
+                db.rollback()
+                logger.exception("Error updating tokens for existing DataProviderAccess entries.")
+                return (
+                    jsonify(
+                        {
+                            "message": {
+                                "id": "api.respondent.resume_failed",
+                                "text": "Failed to resume the respondent",
+                            }
+                        }
+                    ),
+                    500,
+                )
+
+            respondent = existing_data_provider_accesses[0].respondent
             return (
                 jsonify(
                     {
@@ -895,44 +914,45 @@ def connect_respondent() -> ResponseReturnValue:
                 ),
                 200,
             )
-        else:
-            respondent = Respondent(project_id=project.id)
-            db.add(respondent)
-            db.flush()  # This will populate the respondent_id which we can use below
 
-            # Now we can use respondent.id for new_data_provider_accesses
-            for data_provider_access in new_data_provider_accesses:
-                data_provider_access.respondent_id = respondent.id
+        # Handle new data provider accesses
+        respondent = Respondent(project_id=project.id)
+        db.add(respondent)
+        db.flush()  # This will populate the respondent_id which we can use below
 
-            db.add_all(new_data_provider_accesses)
-            try:
-                db.commit()
-                logger.info("Successfully created a new respondent.")
-                return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.respondent.created",
-                                "text": "Successfully created a new respondent",
-                            },
-                            "entity": respondent.to_dict(),
+        # Now we can use respondent.id for new_data_provider_accesses
+        for data_provider_access in new_data_provider_accesses:
+            data_provider_access.respondent_id = respondent.id
+
+        db.add_all(new_data_provider_accesses)
+        try:
+            db.commit()
+            logger.info("Successfully created a new respondent.")
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.respondent.created",
+                            "text": "Successfully created a new respondent",
+                        },
+                        "entity": respondent.to_dict(),
+                    }
+                ),
+                201,
+            )
+        except IntegrityError:
+            db.rollback()
+            logger.exception(
+                "Error creating a new respondent:\n%s", traceback.format_exc()
+            )
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.data_provider.already_exists",
+                            "text": "Data provider access already exists for this user, data provider and project.",
                         }
-                    ),
-                    201,
-                )
-            except IntegrityError:
-                db.rollback()
-                logger.exception(
-                    "Error creating a new respondent:\n%s", traceback.format_exc()
-                )
-                return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.data_provider.already_exists",
-                                "text": "Data provider access already exists for this user, data provider and project.",
-                            }
-                        }
-                    ),
-                    400,
-                )
+                    }
+                ),
+                400,
+            )
