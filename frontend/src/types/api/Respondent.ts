@@ -1,6 +1,6 @@
-import {Bases} from ".";
-import {MessageData} from "./ResponseReturnValue";
-import {DataOrigin, DataProviderType} from "../Shared";
+import { Bases, ResponseData } from '.';
+import { DataOrigin, DataProviderType } from '../Shared';
+import { MessageData } from './ResponseReturnValue';
 
 export interface DataConnection {
   data_provider: {
@@ -23,8 +23,8 @@ export interface CVFilter extends Bases.CVFilter {
 }
 
 export interface CVSelectionOperator {
-  strategy: "_max_strategy" | "_min_strategy" | "_random_strategy";
-  operator: "max" | "min" | "random";
+  strategy: '_max_strategy' | '_min_strategy' | '_random_strategy';
+  operator: 'max' | 'min' | 'random';
 }
 
 export interface CVSelection {
@@ -68,11 +68,22 @@ export interface Project {
   used_variables: UsedVariable[];
 }
 
+// Responses
+
+export interface ResponseExchangeCodeSuccess extends ResponseData {
+  entity: {
+    success: true;
+    access_token: string;
+    refresh_token: string;
+    user_id: string;
+    user_name: string;
+  };
+}
 
 export interface ResponseDataSurveyDistribution {
   message: MessageData;
   entity: {
     id: string;
     url: string;
-  }
+  };
 }

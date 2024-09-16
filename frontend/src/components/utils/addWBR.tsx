@@ -1,4 +1,4 @@
-import React from "react";
+import React, { JSX } from 'react';
 
 function addWBR(str: string): (string | JSX.Element)[] {
   const parts = str.split('.');

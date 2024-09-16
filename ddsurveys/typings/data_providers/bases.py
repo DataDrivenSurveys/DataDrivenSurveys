@@ -21,6 +21,8 @@ __all__ = [
     "TOAuthDataProviderClass",
     "TDataProvider",
     "TOAuthDataProvider",
+
+    "DataProviderDataCategoryDict"
 ]
 
 

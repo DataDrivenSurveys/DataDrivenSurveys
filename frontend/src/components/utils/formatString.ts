@@ -1,4 +1,6 @@
-function formatString(string, values) {
+type Values = Record<string, string>
+
+function formatString(string: string, values: Values): string {
   let result = string;
 
   for (const key in values) {
@@ -9,7 +11,7 @@ function formatString(string, values) {
   return result;
 }
 
-function formatURL(string, values) {
+function formatURL(string: string, values: Values): string {
   let result = string;
 
   for (const key in values) {
@@ -21,6 +23,6 @@ function formatURL(string, values) {
 }
 
 
-export {formatString, formatURL};
+export { formatString, formatURL };
 
 export default formatString;

@@ -1,8 +1,8 @@
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import {Box, InputAdornment, IconButton, Input, FormControl, InputLabel, Typography} from '@mui/material'
-import React from 'react';
+import { Box, FormControl, IconButton, Input, InputAdornment, InputLabel, Typography } from '@mui/material';
+import React, { JSX } from 'react';
 
-import {useSnackbar} from "../../context/SnackbarContext";
+import { useSnackbar } from '../../context/SnackbarContext';
 
 
 interface CopyClipboardProps {
@@ -17,18 +17,18 @@ const CopyClipboard = ({
   label,
   what,
   labelProps = {},
-  leadingLabel = false
+  leadingLabel = false,
 }: CopyClipboardProps): JSX.Element => {
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
   return (
     <Box>
       <FormControl variant="standard">
         {(!leadingLabel && label) && <InputLabel {...labelProps} >{label}</InputLabel>}
         <Input
-          type={"text"}
+          type={'text'}
           value={what}
-          style={{width: 300}}
+          style={{ width: 300 }}
           inputProps={{
             readOnly: true,
           }}
@@ -42,17 +42,17 @@ const CopyClipboard = ({
                 size="small"
                 onClick={async () => {
                   await navigator.clipboard.writeText(what);
-                  showSnackbar("Copied to clipboard");
+                  showSnackbar('Copied to clipboard');
                 }}>
-                <ContentCopyIcon/>
+                <ContentCopyIcon />
               </IconButton>
             </InputAdornment>
           }
         />
       </FormControl>
     </Box>
-  )
-}
+  );
+};
 
 
-export default CopyClipboard
+export default CopyClipboard;

@@ -1,16 +1,16 @@
 interface DateFormatParams {
-  dateStyle?: "short" | "long" | "full" | "medium" | undefined;
-  timeStyle?: "short" | "long" | "full" | "medium" | undefined;
-  year?: "numeric" | "2-digit" | undefined;
-  month?: "numeric" | "2-digit" | "short" | "long" | "narrow" | undefined;
-  day?: "numeric" | "2-digit" | undefined;
-  hour?: "numeric" | "2-digit" | undefined;
-  minute?: "numeric" | "2-digit" | undefined;
-  second?: "numeric" | "2-digit" | undefined;
+  dateStyle?: 'short' | 'long' | 'full' | 'medium' | undefined;
+  timeStyle?: 'short' | 'long' | 'full' | 'medium' | undefined;
+  year?: 'numeric' | '2-digit' | undefined;
+  month?: 'numeric' | '2-digit' | 'short' | 'long' | 'narrow' | undefined;
+  day?: 'numeric' | '2-digit' | undefined;
+  hour?: 'numeric' | '2-digit' | undefined;
+  minute?: 'numeric' | '2-digit' | undefined;
+  second?: 'numeric' | '2-digit' | undefined;
 }
 
 function formatDateToLocale(date: Date, formatParams: DateFormatParams = {}): string {
-  const defaultParams: DateFormatParams = {dateStyle: 'short', timeStyle: 'long'};
+  const defaultParams: DateFormatParams = { dateStyle: 'short', timeStyle: 'long' };
 
   if (Object.keys(formatParams).length === 0) {
     formatParams = defaultParams;
@@ -37,4 +37,4 @@ function formatDateStringToLocale(dateString: string, formatParams: DateFormatPa
 }
 
 
-export {formatDateToLocale, formatDateStringToLocale};
+export { formatDateToLocale, formatDateStringToLocale };

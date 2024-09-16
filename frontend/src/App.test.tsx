@@ -1,3 +1,5 @@
+import { test } from 'node:test';
+
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 

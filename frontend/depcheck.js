@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const depcheck = require('depcheck');
 
 // Define the options to ignore certain dependencies

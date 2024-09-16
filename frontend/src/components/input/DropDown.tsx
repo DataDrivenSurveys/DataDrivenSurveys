@@ -1,11 +1,20 @@
-import { FormControl, InputLabel, MenuItem, Select, Stack, Typography, SelectChangeEvent } from "@mui/material";
-import React from 'react';
+import { FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Stack, Typography } from '@mui/material';
+import React, { JSX } from 'react';
+
+
+interface DropDownItem {
+  value: string;
+  label?: string;
+  icon?: React.ReactNode;
+
+  [key: string]: any | undefined; // Allow additional properties
+}
 
 interface DropDownProps {
-  items: { value: string; label: string; icon?: React.ReactNode }[];
+  items: DropDownItem[];
   label: string;
   value?: string;
-  onChange: (event: SelectChangeEvent<string>) => void;
+  onChange: (event: SelectChangeEvent) => void;
   props?: React.HTMLAttributes<HTMLSelectElement>;
 }
 
@@ -16,14 +25,14 @@ const DropDown = ({ items, label, value, onChange, ...props }: DropDownProps): J
       <Select
         labelId="dropdown-filled-label"
         id="dropdown-filled"
-        value={value || ""}
+        value={value || ''}
         onChange={onChange}
       >
         {items.map((item, index) => (
           <MenuItem key={index} value={item.value}>
             <Stack direction="row" alignItems="center">
               {item.icon &&
-                <Stack mr={1} alignItems="center" justifyContent={"center"}>
+                <Stack mr={1} alignItems="center" justifyContent={'center'}>
                   {item.icon}
                 </Stack>
               }
@@ -34,6 +43,6 @@ const DropDown = ({ items, label, value, onChange, ...props }: DropDownProps): J
       </Select>
     </FormControl>
   );
-}
+};
 
 export default DropDown;

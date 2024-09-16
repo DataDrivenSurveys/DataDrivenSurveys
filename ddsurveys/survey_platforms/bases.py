@@ -25,8 +25,6 @@ __all__ = [
     "FormButton"
 ]
 
-TSurveyPlatformClass = type["SurveyPlatform"]
-
 
 class SurveyPlatform(UIRegistry):
     """Interface class defining methods and attributes that survey platforms should support."""

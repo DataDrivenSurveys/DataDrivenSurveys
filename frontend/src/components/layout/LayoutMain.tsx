@@ -1,15 +1,16 @@
-import {Box, Container, ContainerProps, Stack} from '@mui/material';
-import React, {ReactNode} from 'react';
+import { Box, Container, ContainerProps, Stack } from '@mui/material';
+import React, { JSX, ReactNode } from 'react';
+import { To } from 'react-router-dom';
 
 import Footer from './Footer';
 import Header from './Header';
 import ScrollContainer from './ScrollContainer';
-import {LoadingPageContent} from "../feedback/Loading";
+import { LoadingPageContent } from '../feedback/Loading';
 
 // Define the props interface for LayoutMain
 interface LayoutMainProps {
   children: ReactNode;
-  backUrl?: string | number; // Can be a URL or a number for browser history navigation
+  backUrl?: To | number; // Can be a URL or a number for browser history navigation
   header?: ReactNode;
   subheader?: ReactNode;
   padding?: number;
@@ -19,7 +20,7 @@ interface LayoutMainProps {
   loading?: boolean; // Optional prop to display loading spinner while content is loading
 }
 
-const LayoutMain: React.FC<LayoutMainProps> = ({
+const LayoutMain = ({
   children,
   backUrl,
   header,
@@ -29,11 +30,11 @@ const LayoutMain: React.FC<LayoutMainProps> = ({
   headerRightCorner,
   horizontalContainerProps = {},
   loading = false,
-}) => {
+}: LayoutMainProps): JSX.Element => {
   if (loading) {
     return (
-      <LoadingPageContent/>
-    )
+      <LoadingPageContent />
+    );
   }
 
   return (
@@ -41,7 +42,7 @@ const LayoutMain: React.FC<LayoutMainProps> = ({
       <Header color="transparent" backUrl={backUrl} rightCorner={headerRightCorner}>
         {header}
       </Header>
-      {subheader && <Box sx={{overflow: 'hidden'}}>{subheader}</Box>}
+      {subheader && <Box sx={{ overflow: 'hidden' }}>{subheader}</Box>}
       <ScrollContainer padding={padding} spacing={spacing}>
         <Stack paddingTop={4} paddingBottom={4} alignItems="center" height="100%" width="100%">
           <Container {...horizontalContainerProps}>
@@ -49,10 +50,9 @@ const LayoutMain: React.FC<LayoutMainProps> = ({
           </Container>
         </Stack>
       </ScrollContainer>
-      <Footer/>
+      <Footer />
     </Stack>
-  )
-    ;
+  );
 };
 
 export default LayoutMain;

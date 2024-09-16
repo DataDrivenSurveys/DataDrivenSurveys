@@ -1,12 +1,19 @@
-
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { AppBar, Button, Stack } from '@mui/material'
-import React from 'react';
+import { AppBar, Button, PropTypes, Stack } from '@mui/material';
+import React, { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { To, useNavigate } from 'react-router-dom';
 
-const Header = ({ children, color, backUrl, rightCorner }) => {
+interface HeaderProps {
+  children: React.ReactNode;
+  color: PropTypes.Color | 'transparent' | 'error' | 'info' | 'success' | 'warning';
+  backUrl?: To | number;
+  rightCorner?: React.ReactNode;
+}
 
+const Header = ({
+  children, color, backUrl, rightCorner,
+}: HeaderProps): JSX.Element => {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -35,20 +42,19 @@ const Header = ({ children, color, backUrl, rightCorner }) => {
           <Button
             variant="text"
             color="primary"
-            size={"small"}
+            size={'small'}
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(backUrl)}>
+            onClick={() => navigate(backUrl as To)}>
             {t('ui.layout.button.back')}
           </Button>
         )}
         <Stack flex={1} sx={{ overflow: 'hidden' }}>
           {children}
         </Stack>
-
         {rightCorner}
       </Stack>
     </AppBar>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

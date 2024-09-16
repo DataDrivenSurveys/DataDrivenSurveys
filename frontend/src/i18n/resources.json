@@ -540,12 +540,6 @@
           "confirm": "Confirm",
           "delete": "Delete"
         },
-        "dialog_modal": {
-          "button": {
-            "cancel": "Cancel",
-            "confirm": "Confirm"
-          }
-        },
         "feedback": {
           "loading": "Loading..."
         },
@@ -554,6 +548,11 @@
           "privacy_policy": "Privacy Policy",
           "terms_of_service": "Terms of Service",
           "copyright": "© 2024 DataDriven Surveys (DDS)"
+        },
+        "input": {
+          "required_field": "This field is required",
+          "min_length": "Must be at least {{minLength}} characters long",
+          "max_length": "Must be less than {{maxLength}} characters long"
         },
         "layout": {
           "button": {

@@ -2,29 +2,28 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import FileOpenOutlinedIcon from '@mui/icons-material/FileOpenOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import SettingsIcon from '@mui/icons-material/Settings';
-import {Box, Button, IconButton, Stack, Typography, Menu} from "@mui/material"
+import { Box, Button, IconButton, Menu, Stack, Typography } from '@mui/material';
 import {
   DataGrid,
-  GridRenderCellParams,
   GridColDef,
+  GridRenderCellParams,
   GridRowParams,
+  GridValueGetterParams,
   MuiEvent,
-  GridValueGetterParams
 } from '@mui/x-data-grid';
-import {useEffect, useState} from "react";
-import React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useNavigate} from 'react-router-dom';
+import React, { JSX, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
-import {GET, DEL} from "../code/http_requests";
-import AuthUser from "../components/auth/AuthUser";
-import ConnectionBadge from "../components/feedback/ConnectionBadge";
-import Loading from "../components/feedback/Loading";
-import LayoutMain from "../components/layout/LayoutMain"
-import SurveyStatus from "../components/project/survey_platform/SurveyStatus";
-import {formatDateToLocale} from "../components/utils/FormatDate";
-import {useSnackbar} from "../context/SnackbarContext";
-import {API} from "../types";
+import { DEL, GET } from '../code/http_requests';
+import AuthUser from '../components/auth/AuthUser';
+import ConnectionBadge from '../components/feedback/ConnectionBadge';
+import { Loading } from '../components/feedback/Loading';
+import LayoutMain from '../components/layout/LayoutMain';
+import SurveyStatus from '../components/project/survey_platform/SurveyStatus';
+import { formatDateToLocale } from '../components/utils/FormatDate';
+import { useSnackbar } from '../context/SnackbarContext';
+import { API } from '../types';
 
 interface CellActionsProps {
   params: GridRenderCellParams<any, API.Projects.Project>;
@@ -32,40 +31,39 @@ interface CellActionsProps {
 }
 
 
-const CellActions = ({params, onDelete}: CellActionsProps): JSX.Element => {
-  const {t} = useTranslation();
+const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const handleOpenContext = (event: React.MouseEvent<HTMLButtonElement>) => setAnchorEl(event.currentTarget);
-  const handleCloseContext = () => setAnchorEl(null)
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const handleOpenContext = (event: React.MouseEvent<HTMLButtonElement>): void => setAnchorEl(event.currentTarget);
+  const handleCloseContext = (): void => setAnchorEl(null);
 
   return (
     <>
       <IconButton onClick={handleOpenContext}>
-        <MoreHorizIcon/>
+        <MoreHorizIcon />
       </IconButton>
       <Menu
-        sx={{mt: '40px'}}
+        sx={{ mt: '40px' }}
         id="menu-appbar"
         anchorEl={anchorEl}
-        anchorOrigin={{vertical: 'top', horizontal: 'right'}}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         keepMounted
-        transformOrigin={{vertical: 'top', horizontal: 'right'}}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={Boolean(anchorEl)}
         onClose={handleCloseContext}
       >
         <Stack padding={1} spacing={2} alignItems={'flex-start'}>
-          <Button startIcon={<FileOpenOutlinedIcon/>} onClick={() => navigate(`/projects/${params.row.id}`)}>
+          <Button startIcon={<FileOpenOutlinedIcon />} onClick={() => navigate(`/projects/${params.row.id}`)}>
             {t('ui.project.selection.grid.context.open')}
           </Button>
-          <Button color={"error"} startIcon={<DeleteForeverOutlinedIcon/>} onClick={
+          <Button color={'error'} startIcon={<DeleteForeverOutlinedIcon />} onClick={
             async () => {
-              const response = await DEL(`/projects/${params.row.id}`)
-
+              const response = await DEL(`/projects/${params.row.id}`);
               response.on('2xx', (status: number, data: API.ResponseData) => {
                 if (status === 200) {
                   showSnackbar(t(data.message.id), 'success');
@@ -80,20 +78,20 @@ const CellActions = ({params, onDelete}: CellActionsProps): JSX.Element => {
         </Stack>
       </Menu>
     </>
-  )
-}
+  );
+};
 
 const PageProjectSelection = (): JSX.Element => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
   const [projects, setProjects] = useState<API.Projects.Project[] | undefined>(undefined);
 
-  const deleteRow = (id: string) => setProjects(prevProjects => prevProjects?.filter(project => project.id !== id));
+  const deleteRow = (id: string): void => setProjects(prevProjects => prevProjects?.filter(project => project.id !== id));
 
   const columns: GridColDef<API.Projects.Project>[] = [
     {
@@ -101,24 +99,24 @@ const PageProjectSelection = (): JSX.Element => {
       headerName: t('ui.project.selection.grid.column.name'),
       flex: 1,
       minWidth: 250,
-      disableColumnMenu: true
+      disableColumnMenu: true,
     },
     {
       field: 'survey_platform_fields',
       headerName: t('ui.project.selection.grid.column.status'),
       width: 150,
       renderCell: (params: GridRenderCellParams<any, API.Projects.Project>) => {
-        return <SurveyStatus status={params.value?.["survey_status"]}/>
-      }
+        return <SurveyStatus status={params.value?.['survey_status']} />;
+      },
     },
     {
       field: 'survey_platform_name',
       headerName: t('ui.project.selection.grid.column.survey_platform_name'),
       minWidth: 150,
       maxWidth: 180,
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project["survey_platform_name"]>) => {
-        return <ConnectionBadge size={18} name={params.value ?? ''}/>;
-      }
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['survey_platform_name']>) => {
+        return <ConnectionBadge size={18} name={params.value ?? ''} />;
+      },
     },
     {
       field: 'last_modified',
@@ -127,10 +125,10 @@ const PageProjectSelection = (): JSX.Element => {
       maxWidth: 170,
       type: 'date',
       valueGetter: (params) => new Date(params.value),
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project["last_modified"]>) => {
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['last_modified']>) => {
         const dateValue = params.value ? new Date(params.value) : null;
-        return dateValue ? formatDateToLocale(dateValue, {dateStyle: 'short'}) : '';
-      }
+        return dateValue ? formatDateToLocale(dateValue, { dateStyle: 'short' }) : '';
+      },
     },
     {
       field: 'creation_date',
@@ -138,26 +136,26 @@ const PageProjectSelection = (): JSX.Element => {
       minWidth: 130,
       maxWidth: 170,
       type: 'date',
-      valueGetter: (params: GridValueGetterParams<any, API.Projects.Project["creation_date"]>) => {
+      valueGetter: (params: GridValueGetterParams<any, API.Projects.Project['creation_date']>) => {
         return params.value ? new Date(params.value) : null;
       },
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project["creation_date"]>) => {
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['creation_date']>) => {
         const dateValue = params.value ? new Date(params.value) : null;
-        return dateValue ? formatDateToLocale(dateValue, {dateStyle: "short"}) : '';
-      }
+        return dateValue ? formatDateToLocale(dateValue, { dateStyle: 'short' }) : '';
+      },
     },
     {
       field: 'respondents',
       headerName: t('ui.project.selection.grid.column.num_responses'),
       minWidth: 75,
       maxWidth: 100,
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project["respondents"]>) => params.value?.length ?? 0,
-      type: 'number'
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['respondents']>) => params.value?.length ?? 0,
+      type: 'number',
     },
     {
       field: 'actions',
       headerName: 'actions',
-      renderHeader: () => <SettingsIcon sx={{verticalAlign: 'text-bottom'}}/>,
+      renderHeader: () => <SettingsIcon sx={{ verticalAlign: 'text-bottom' }} />,
       align: 'center',
       minWidth: 30,
       maxWidth: 40,
@@ -166,9 +164,9 @@ const PageProjectSelection = (): JSX.Element => {
       sortable: false,
       renderCell: (params: GridRenderCellParams<any, API.Projects.Project>) => (
         <div className="action-cell">
-          <CellActions params={params} onDelete={deleteRow}/>
+          <CellActions params={params} onDelete={deleteRow} />
         </div>
-      )
+      ),
     },
   ];
 
@@ -195,7 +193,7 @@ const PageProjectSelection = (): JSX.Element => {
         header={
           <Typography variant="h4">Project Selection</Typography>
         }
-        headerRightCorner={<AuthUser/>}
+        headerRightCorner={<AuthUser />}
       >
         <Stack spacing={2}>
           <Box>
@@ -223,7 +221,7 @@ const PageProjectSelection = (): JSX.Element => {
                 disableRowSelectionOnClick
                 onRowClick={(
                   params: GridRowParams<API.Projects.Project>,
-                  event: MuiEvent<React.MouseEvent<HTMLElement>>
+                  event: MuiEvent<React.MouseEvent<HTMLElement>>,
                 ) => {
                   // Check if the click was on a cell in the Action column or an element with the 'action-cell' class
                   // or its child
@@ -263,7 +261,7 @@ const PageProjectSelection = (): JSX.Element => {
         </Stack>
       </LayoutMain>
     </>
-  )
-}
+  );
+};
 
 export default React.memo(PageProjectSelection);

@@ -2,20 +2,19 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import SyncIcon from '@mui/icons-material/Sync';
-import {Button, ButtonGroup, Stack, Typography} from "@mui/material";
-import {DataGrid} from "@mui/x-data-grid";
-import {useCallback, useEffect, useState} from "react";
-import React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useParams} from "react-router-dom";
+import { Button, ButtonGroup, Stack, Typography } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 
-import AddDataProviderDialog from "./AddDataProviderDialog";
-import EditDataProviderDialog from "./EditDataProviderDialog";
-import {DEL, GET} from "../../../code/http_requests";
-import {useSnackbar} from "../../../context/SnackbarContext";
-import ConnectedStatus from "../../feedback/ConnectedStatus";
-import ConnectionBadge from "../../feedback/ConnectionBadge";
-import DialogFeedback from "../../feedback/DialogFeedback";
+import AddDataProviderDialog from './AddDataProviderDialog';
+import EditDataProviderDialog from './EditDataProviderDialog';
+import { DEL, GET } from '../../../code/http_requests';
+import { useSnackbar } from '../../../context/SnackbarContext';
+import ConfirmationDialog from '../../feedback/ConfirmationDialog';
+import ConnectedStatus from '../../feedback/ConnectedStatus';
+import ConnectionBadge from '../../feedback/ConnectionBadge';
 
 
 const handleCheckConnection = async (projectId, data_provider_name, api_key) => {
@@ -24,17 +23,17 @@ const handleCheckConnection = async (projectId, data_provider_name, api_key) => 
   });
 
   return response.status === 200;
-}
+};
 
-const DataProviders = ({project, onChangeDataProviders}) => {
+const DataProviders = ({ project, onChangeDataProviders }) => {
 
   // console.log("DataProviders: project", project)
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const {projectId} = useParams();
+  const { projectId } = useParams();
 
   const [dataProviders, setDataProviders] = useState([]);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -68,7 +67,7 @@ const DataProviders = ({project, onChangeDataProviders}) => {
   }, [project.data_connections, projectId]);
 
   const handleDelete = useCallback(() => {
-    if(!selected) return;
+    if (!selected) return;
     (async () => {
       const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_name}`);
 
@@ -92,14 +91,14 @@ const DataProviders = ({project, onChangeDataProviders}) => {
       headerName: t('ui.project.data_providers.grid.column.connected'),
       width: 90,
       renderCell: (params) => {
-        return <ConnectedStatus connected={params.value}/>
-      }
+        return <ConnectedStatus connected={params.value} />;
+      },
     },
     {
       field: 'name',
       headerName: t('ui.project.data_providers.grid.column.name'),
       width: 200,
-      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_name}/>
+      renderCell: (params) => <ConnectionBadge size={18} name={params.row.data_provider_name} />,
     },
     {
       field: 'actions',
@@ -111,42 +110,48 @@ const DataProviders = ({project, onChangeDataProviders}) => {
         return (
           <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
             {
-              params.row.data_provider_type === "oauth" && (
+              params.row.data_provider_type === 'oauth' && (
                 <>
-                <Button
-                  size={"small"}
-                  startIcon={<EditIcon/>}
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    setSelected(params.row);
-                    setOpenEditDataProviderDialog(true);
-                  }}
-                >
-                  {t('ui.project.data_providers.grid.button.edit')}
-                </Button>
-                <Button
-                  size={"small"}
-                  startIcon={<SyncIcon/>}
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    // set the connected status to undefined to show the loading icon
-                    setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: undefined} : dp));
-                    (async () => {
-                    const connected = await handleCheckConnection(projectId, params.row.data_provider_name, params.row.api_key);
-                    setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {...dp, connected: connected} : dp));
-                    })();
-                  }}
-                >
-                  {t('ui.project.data_providers.grid.button.check_connection')}
-                </Button>
+                  <Button
+                    size={'small'}
+                    startIcon={<EditIcon />}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      setSelected(params.row);
+                      setOpenEditDataProviderDialog(true);
+                    }}
+                  >
+                    {t('ui.project.data_providers.grid.button.edit')}
+                  </Button>
+                  <Button
+                    size={'small'}
+                    startIcon={<SyncIcon />}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      // set the connected status to undefined to show the loading icon
+                      setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {
+                        ...dp,
+                        connected: undefined,
+                      } : dp));
+                      (async () => {
+                        const connected = await handleCheckConnection(projectId, params.row.data_provider_name, params.row.api_key);
+                        setDataProviders(dataProviders.map(dp => dp.id === params.row.id ? {
+                          ...dp,
+                          connected: connected,
+                        } : dp));
+                      })();
+                    }}
+                  >
+                    {t('ui.project.data_providers.grid.button.check_connection')}
+                  </Button>
                 </>
               )
             }
 
             <Button
-              size={"small"}
+              size={'small'}
               color="error"
-              startIcon={<DeleteForeverIcon/>}
+              startIcon={<DeleteForeverIcon />}
               onClick={(ev) => {
                 ev.stopPropagation();
                 setSelected(params.row);
@@ -157,23 +162,23 @@ const DataProviders = ({project, onChangeDataProviders}) => {
             </Button>
 
           </ButtonGroup>
-        )
-      }
+        );
+      },
     },
   ];
 
   // console.log("DataProviders: dataProviders", dataProviders);
 
   return (
-    <Stack spacing={2} alignItems={"flex-start"}>
-      <Stack direction="row" alignItems="center" spacing={2} justifyContent={"space-between"} width={"100%"}>
+    <Stack spacing={2} alignItems={'flex-start'}>
+      <Stack direction="row" alignItems="center" spacing={2} justifyContent={'space-between'} width={'100%'}>
         <Typography variant="h6">{t('ui.project.data_providers.title')} </Typography>
         <Button
-          disableElevation={"true"}
-          variant={"contained"}
-          size={"small"}
+          disableElevation={'true'}
+          variant={'contained'}
+          size={'small'}
           color="primary"
-          startIcon={<AddIcon/>}
+          startIcon={<AddIcon />}
           onClick={() => setAddDialogOpen(true)}>
           {t('ui.project.data_providers.button.add')}
         </Button>
@@ -218,10 +223,9 @@ const DataProviders = ({project, onChangeDataProviders}) => {
           setSelected(null);
           onChangeDataProviders();
         }}
-
       />
 
-      <DialogFeedback
+      <ConfirmationDialog
         open={openDeleteDataProviderDialog}
         title={t('ui.project.data_providers.delete.title')}
         content={
@@ -233,11 +237,11 @@ const DataProviders = ({project, onChangeDataProviders}) => {
         }
         onClose={() => setOpenDeleteDataProviderDialog(false)}
         onConfirm={handleDelete}
-        confirmProps={{color: 'error'}}
+        confirmProps={{ color: 'error' }}
         confirmText={t('ui.dialog.delete')}
       />
     </Stack>
-  )
-}
+  );
+};
 
 export default DataProviders;

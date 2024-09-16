@@ -1,5 +1,6 @@
-import {Stack, Typography} from '@mui/material';
-import {useState, useEffect} from 'react';
+import { Stack, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const defaultOptions = {
   value: '',
@@ -11,8 +12,9 @@ const defaultOptions = {
 };
 
 const useInput = (options) => {
+  options = { ...defaultOptions, ...options };
 
-  options = {...defaultOptions, ...options};
+  const { t } = useTranslation();
 
   const [value, setValue] = useState(options.value || '');
   const [touched, setTouched] = useState(false);
@@ -27,14 +29,14 @@ const useInput = (options) => {
   const validate = (value) => {
     if (options.required && value.trim() === '') {
       if (touched) {
-        setError(`Field is required`);
+        setError(t('ui.input.required_field'));
       }
       return false;
     } else if (options.required && options.minLength && value.length < options.minLength) {
-      setError(`Must be at least ${options.minLength} characters`);
+      setError(t('ui.input.min_length', { minLength: options.minLength }));
       return false;
     } else if (options.required && options.maxLength && value.length > options.maxLength) {
-      setError(`Must be less than ${options.maxLength} characters`);
+      setError(t('ui.input.max_length', { maxLength: options.maxLength }));
       return false;
     } else {
       setError(null);
@@ -43,9 +45,9 @@ const useInput = (options) => {
   };
 
   useEffect(() => {
-      validate(value);
-    }, // eslint-disable-next-line react-hooks/exhaustive-deps
-    []);
+    validate(value);
+  }, // eslint-disable-next-line react-hooks/exhaustive-deps
+  []);
 
   return {
     bind: {
@@ -57,11 +59,11 @@ const useInput = (options) => {
       label: options.label,
       error: touched && error !== null,
       helperText: (
-        <Stack sx={{pl: 1}}>
-          {touched && error !== null && <Typography variant={"caption"}>{error}</Typography>}
+        <Stack sx={{ pl: 1 }}>
+          {touched && error !== null && <Typography variant={'caption'}>{error}</Typography>}
           {options.helperText}
         </Stack>
-      )
+      ),
     },
     error: error !== null,
     value,

@@ -1,7 +1,7 @@
-import {Box, Link, Typography, TypographyProps} from "@mui/material";
+import { Box, Link, Typography, TypographyProps } from '@mui/material';
 import React from 'react';
 
-import updateObject from "./utils/updateObject";
+import updateObject from './utils/updateObject';
 
 
 interface HelperTextProps {
@@ -25,32 +25,32 @@ const HelperText: React.FC<HelperTextProps> = ({
   textPostfix = true,
 }) => {
   const defaultTypographyProps: TypographyProps = {
-    variant: "caption",
-    color: "textSecondary",
+    variant: 'caption',
+    color: 'textSecondary',
   };
-  let spacer = " ";
+  let spacer = ' ';
 
   typographyProps = updateObject(defaultTypographyProps, typographyProps);
 
-  if (urlText === "") {
+  if (urlText === '') {
     urlText = url;
   }
 
   if (textPostfix) {
-    if (urlText !== "") {
-      if (!text.endsWith(":")) {
-        spacer = ": ";
+    if (urlText !== '') {
+      if (!text.endsWith(':')) {
+        spacer = ': ';
       }
     } else {
-      if (!text.endsWith(".")) {
-        spacer = ".";
+      if (!text.endsWith('.')) {
+        spacer = '.';
       }
     }
   }
 
   if (urlText === url && maxURLLength !== -1) {
     if (urlText.length > maxURLLength + 3) {
-      urlText = url.slice(0, maxURLLength + 3) + "...";
+      urlText = url.slice(0, maxURLLength + 3) + '...';
     } else {
       urlText = url.slice(0, maxURLLength);
     }
@@ -81,7 +81,7 @@ const HelperText: React.FC<HelperTextProps> = ({
           {url && (
             <>
               {spacer}
-              <br/>
+              <br />
               <Link href={url} target="_blank" rel="noopener noreferrer" color="primary">
                 {urlText}
               </Link>

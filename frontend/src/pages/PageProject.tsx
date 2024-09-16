@@ -3,34 +3,33 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import RestoreIcon from '@mui/icons-material/Restore';
 import ScienceIcon from '@mui/icons-material/Science';
 import SyncIcon from '@mui/icons-material/Sync';
-import {LoadingButton} from "@mui/lab";
-import {Button, ButtonGroup, Stack, TextField, Typography} from "@mui/material"
-import {useCallback, useEffect, useState} from "react";
-import React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useNavigate, useParams} from "react-router-dom";
-import {useDebouncedCallback} from "use-debounce";
+import { LoadingButton } from '@mui/lab';
+import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
+import React, { JSX, useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDebouncedCallback } from 'use-debounce';
 
-import {GET, POST, POST_BLOB, PUT, DEL} from "../code/http_requests";
-import AuthUser from "../components/auth/AuthUser";
-import DialogFeedback from "../components/feedback/DialogFeedback";
-import Loading, {LoadingAnimation} from "../components/feedback/Loading";
-import CopyClipboard from "../components/input/CopyClipboard";
-import LayoutMain from "../components/layout/LayoutMain"
-import {formatDateStringToLocale} from "../components/utils/FormatDate";
-import {useSnackbar} from "../context/SnackbarContext";
-import {API} from "../types";
-import {ResponseData, ResponseError} from "../types/api";
+import { DEL, GET, POST, POST_BLOB, PUT } from '../code/http_requests';
+import AuthUser from '../components/auth/AuthUser';
+import ConfirmationDialog from '../components/feedback/ConfirmationDialog';
+import { Loading, LoadingAnimation } from '../components/feedback/Loading';
+import CopyClipboard from '../components/input/CopyClipboard';
+import LayoutMain from '../components/layout/LayoutMain';
+import { formatDateStringToLocale } from '../components/utils/FormatDate';
+import { useSnackbar } from '../context/SnackbarContext';
+import { API } from '../types';
+import { ResponseData, ResponseError } from '../types/api';
 
 
-const SurveyPlatformIntegration = loadable(() => import("../components/project/survey_platform/SurveyPlatformIntegration"), {
-  fallback: <LoadingAnimation/>
+const SurveyPlatformIntegration = loadable(() => import('../components/project/survey_platform/SurveyPlatformIntegration'), {
+  fallback: <LoadingAnimation />,
 });
-const DataProviders = loadable(() => import("../components/project/data_provider/DataProviders"), {
-  fallback: <LoadingAnimation/>
+const DataProviders = loadable(() => import('../components/project/data_provider/DataProviders'), {
+  fallback: <LoadingAnimation />,
 });
-const VariableManagement = loadable(() => import("../components/project/VariableManagement"), {
-  fallback: <LoadingAnimation/>
+const VariableManagement = loadable(() => import('../components/project/VariableManagement'), {
+  fallback: <LoadingAnimation />,
 });
 
 
@@ -38,22 +37,22 @@ interface ProjectNameFieldProps {
   project: API.Projects.Project;
 }
 
-const ProjectNameField = ({project}: ProjectNameFieldProps): JSX.Element => {
+const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
   const [name, setName] = useState(project.name);
 
   useEffect(() => {
-    setName(project.name)
+    setName(project.name);
   }, [project]);
 
 
   const handleSave = useDebouncedCallback(useCallback(async (projectName: string) => {
     const response = await PUT(`/projects/${project.id}`, {
-      name: projectName
+      name: projectName,
     });
 
     response.on('2xx', async (status: number, data: ResponseData) => {
@@ -70,25 +69,25 @@ const ProjectNameField = ({project}: ProjectNameFieldProps): JSX.Element => {
   return <TextField
     label={t('ui.project.field.name.label')}
     value={name}
-    variant={"standard"}
+    variant={'standard'}
     required
     onChange={(ev) => {
       setName(ev.target.value);
       handleSave(ev.target.value);
     }}
-  />
-}
+  />;
+};
 
 
 const PageProject = (): JSX.Element => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const {projectId} = useParams<{ projectId: string }>();
+  const { projectId } = useParams<{ projectId: string }>();
 
   const [loadingSurveyPlatformIntegration, setLoadingSurveyPlatformIntegration] = useState(true); // Loading state for SurveyPlatformIntegration
   const [loadingDataProviders, setLoadingDataProviders] = useState(true); // Loading state for DataProviders
@@ -128,7 +127,7 @@ const PageProject = (): JSX.Element => {
   }, [showSnackbar, t, navigate]);
 
   useEffect(() => {
-    fetchProject(projectId || "");
+    fetchProject(projectId || '');
   }, [projectId, fetchProject]);
 
   const syncVariables = useCallback(async (project: API.Projects.Project) => {
@@ -145,7 +144,7 @@ const PageProject = (): JSX.Element => {
     });
 
     response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error')
+      showSnackbar(t(data.message.id), 'error');
       setLastSynched(lastSynched);
     });
 
@@ -233,22 +232,22 @@ const PageProject = (): JSX.Element => {
           project && (
             <Stack direction="row" alignItems="center" spacing={2}>
               <Stack flex={1}>
-                <ProjectNameField project={project}/>
+                <ProjectNameField project={project} />
               </Stack>
               <CopyClipboard
                 label={t('ui.project.clipboard.copy.label')}
                 what={`${domain}/dist/${project.short_id}`}
               />
 
-              <Stack direction={"column"} alignItems={"flex-start"} spacing={.5}>
-                <Stack direction={"row"} alignItems={"flex-start"} spacing={.5}>
+              <Stack direction={'column'} alignItems={'flex-start'} spacing={.5}>
+                <Stack direction={'row'} alignItems={'flex-start'} spacing={.5}>
 
                   <LoadingButton
                     variant="contained"
-                    size={"small"}
+                    size={'small'}
                     loading={syncLoading}
                     color="primary"
-                    startIcon={<SyncIcon/>}
+                    startIcon={<SyncIcon />}
                     onClick={() => {
                       syncVariables(project);
                     }}>
@@ -260,27 +259,27 @@ const PageProject = (): JSX.Element => {
                     <Stack direction="row" alignItems="flex-start" spacing={1}>
 
                       <Button
-                        size={"small"}
+                        size={'small'}
                         color="primary"
-                        startIcon={<ScienceIcon/>}
+                        startIcon={<ScienceIcon />}
                         onClick={previewSurvey}
                       >
                         {t('ui.project.button.preview_survey')}
 
                       </Button>
                       <LoadingButton
-                        size={"small"}
+                        size={'small'}
                         color="primary"
                         loading={downloadLoading}
-                        startIcon={<FileDownloadIcon/>}
+                        startIcon={<FileDownloadIcon />}
                         onClick={downloadRespondentResponses}
                       >
                         {t('ui.project.button.download_data')}
                       </LoadingButton>
-                      <Button size={"small"}
-                              color="error"
-                              startIcon={<RestoreIcon/>}
-                              onClick={() => setClearResondentDataDialogOpen(true)}>
+                      <Button size={'small'}
+                        color="error"
+                        startIcon={<RestoreIcon />}
+                        onClick={() => setClearResondentDataDialogOpen(true)}>
                         {t('ui.project.button.delete_all_respondents')}
                       </Button>
                     </Stack>
@@ -296,13 +295,13 @@ const PageProject = (): JSX.Element => {
             </Stack>
           )
         }
-        headerRightCorner={<AuthUser/>}
+        headerRightCorner={<AuthUser />}
         loading={!project}
         horizontalContainerProps={{
           maxWidth: false,
         }}
       >
-        <Stack spacing={8} width={"100%"} alignItems={"flex-start"} paddingBottom={8}>
+        <Stack spacing={8} width={'100%'} alignItems={'flex-start'} paddingBottom={8}>
           <Stack spacing={2}>
             <Typography variant="h6"> {t('ui.project.survey_platform.title')}</Typography>
             <Loading loading={loadingSurveyPlatformIntegration}>
@@ -316,7 +315,7 @@ const PageProject = (): JSX.Element => {
             <DataProviders
               project={project}
               onChangeDataProviders={async () => {
-                await fetchProject(projectId || "");
+                await fetchProject(projectId || '');
               }}
             />
           </Loading>
@@ -340,7 +339,7 @@ const PageProject = (): JSX.Element => {
           </Loading>
         </Stack>
       </LayoutMain>
-      <DialogFeedback
+      <ConfirmationDialog
         open={clearResondentDataDialogOpen}
         title={t('ui.project.dialog.delete_respondents.title')}
         content={
@@ -354,8 +353,8 @@ const PageProject = (): JSX.Element => {
         onConfirm={clearRespondentData}
       />
     </>
-  )
-}
+  );
+};
 
 
-export default PageProject
+export default PageProject;

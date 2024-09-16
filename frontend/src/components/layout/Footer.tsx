@@ -1,11 +1,11 @@
-import {Typography, Link, Stack, BottomNavigation} from '@mui/material';
-import React from 'react';
-import {useTranslation} from 'react-i18next';
+import { BottomNavigation, Link, Stack, Typography } from '@mui/material';
+import React, { JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import {getFrontendBaseURL} from "../utils/getURL";
+import { getFrontendBaseURL } from '../utils/getURL';
 
-const Footer = (): JSX.Element => {
-  const {t} = useTranslation();
+const FooterComponent = (): JSX.Element => {
+  const { t } = useTranslation();
   const baseUrl = getFrontendBaseURL();
 
   return (
@@ -32,6 +32,8 @@ const Footer = (): JSX.Element => {
       </Stack>
     </BottomNavigation>
   );
-}
+};
 
-export default React.memo(Footer);
+export const Footer = React.memo(FooterComponent);
+
+export default Footer;

@@ -1,38 +1,36 @@
-import React from "react";
-import {useTranslation} from "react-i18next";
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
-interface LogoProps {
+export interface LogoProps {
   name: string;
   size?: number;
 }
 
-const Logo: React.FC<LogoProps> = ({name, size = 24}) => {
-  const {t} = useTranslation();
+export const Logo = ({ name, size = 24 }: LogoProps): JSX.Element => {
+  const { t } = useTranslation();
   return (
-    <img src={`/svg/logo/${name.toLowerCase()}-logo.svg`} alt={t(`ui.badges.${name}.alt`)} style={{
-      width: size,
-      height: size
-    }}/>
-  )
-}
+    <img
+      src={`/svg/logo/${name.toLowerCase()}-logo.svg`}
+      alt={t(`ui.badges.${name}.alt`)}
+      style={{
+        width: size,
+        height: size,
+      }} />
+  );
+};
 
-
-interface LogoLabelProps {
+export interface LogoLabelProps {
   logoName: string;
   logoSize?: number;
   label: string;
 }
 
-
-const LogoLabel: React.FC<LogoLabelProps> = ({logoName, logoSize = 24, label}) => {
-
+export const LogoLabel = ({ logoName, logoSize = 24, label }: LogoLabelProps): JSX.Element => {
   return (
     <>
-      <Logo name={logoName} size={logoSize}/>{" "}{label}
+      <Logo name={logoName} size={logoSize} />{' '}{label}
     </>
-  )
-}
-
-export {LogoLabel};
+  );
+};
 
 export default Logo;

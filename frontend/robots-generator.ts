@@ -36,4 +36,5 @@ Disallow: /survey_platform`;
 // Write the robots.txt file to the public directory
 writeFileSync(resolve(__dirname, 'public', 'robots.txt'), robotsContent);
 
+// eslint-disable-next-line no-console
 console.log('robots.txt generated!');

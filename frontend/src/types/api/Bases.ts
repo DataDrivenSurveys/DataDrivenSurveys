@@ -1,4 +1,4 @@
-import {DataOrigin} from "../Shared";
+import { DataOrigin } from '../Shared';
 
 export interface BuiltinVariable {
   category: string;

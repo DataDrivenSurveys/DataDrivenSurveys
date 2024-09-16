@@ -17,6 +17,12 @@ from ddsurveys.survey_platforms import SurveyPlatform
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
 
+    from ddsurveys.typings.survey_platforms.bases import (
+        TOAuthSurveyPlatform,
+        TOAuthSurveyPlatformClass,
+        TSurveyPlatformClass,
+    )
+
 logger = get_logger(__name__)
 
 survey_platforms = Blueprint("survey-platforms", __name__)
@@ -74,7 +80,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
 
     try:
         # Create an instance of the data provider
-        survey_platform_class = SurveyPlatform.get_class_by_value(survey_platform_type)
+        survey_platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(survey_platform_type)
 
         if not survey_platform_class:
             logger.error(
@@ -92,9 +98,10 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                 400,
             )
 
+        survey_platform_class: TOAuthSurveyPlatformClass
         app_credentials: dict[str, str] = survey_platform_class.get_app_credentials()
 
-        provider_instance = survey_platform_class(
+        provider_instance: TOAuthSurveyPlatform = survey_platform_class(
             **app_credentials,
             redirect_uri=survey_platform_class.get_redirect_uri(),
         )

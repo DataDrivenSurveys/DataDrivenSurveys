@@ -1,14 +1,17 @@
-import {Stack, Typography} from '@mui/material';
-import React from 'react';
-import {useTranslation} from 'react-i18next';
+import { Stack, Typography } from '@mui/material';
+import React, { JSX } from 'react';
+import { useTranslation } from 'react-i18next';
 
 
-interface LoadingAnimationProps {
+export interface LoadingAnimationProps {
   content?: React.ReactNode;
   failed?: boolean; // If true, display a failed icon instead of a loading one. Default is false.
 }
 
-export const LoadingAnimation = React.memo(({content = null, failed = false}: LoadingAnimationProps): JSX.Element => (
+const LoadingAnimationComponent = ({
+  content = null,
+  failed = false,
+}: LoadingAnimationProps): JSX.Element => (
   <Stack
     alignItems="stretch"
     justifyContent="center"
@@ -26,43 +29,47 @@ export const LoadingAnimation = React.memo(({content = null, failed = false}: Lo
       <Stack alignItems="center">{content}</Stack>
     </Stack>
   </Stack>
-));
+);
+
+export const LoadingAnimation = React.memo(LoadingAnimationComponent);
 
 
-interface LoadingProps {
+export interface LoadingProps {
   children?: React.ReactNode;
-  errors?: Array<Error>;
+  errors?: Error[];
   loading?: boolean;
   content?: React.ReactNode; // Content to be displayed when loading is true. Default is empty.
 }
 
-const Loading = React.memo(({
+const LoadingComponent = ({
   children = <></>,
   errors = [],
   loading = true,
-  content = <></>
+  content = <></>,
 }: LoadingProps): JSX.Element => {
   // find first error that is not undefined or null
-  const error = errors.find((error) => error !== undefined && error !== null)
+  const error = errors.find((error) => error !== undefined && error !== null);
   if (error) {
-    return <LoadingAnimation content={error.message} failed={true}/>
+    return <LoadingAnimation content={error.message} failed={true} />;
   }
   if (loading) {
     return (
-      <LoadingAnimation content={content} failed={false}/>
-    )
+      <LoadingAnimation content={content} failed={false} />
+    );
   }
   return <>{children}</>;
-});
+};
 
-export const LoadingPageContent = React.memo((): JSX.Element => {
-  const {t} = useTranslation();
+export const Loading = React.memo(LoadingComponent);
+
+const LoadingPageContentComponent = (): JSX.Element => {
+  const { t } = useTranslation();
 
   return (
-    <Stack width={"100vw"} height={"100vh"} justifyContent={"center"} alignItems={"center"}>
-      <LoadingAnimation content={<Typography variant="body2">{t('ui.feedback.loading')}</Typography>}/>
+    <Stack width={'100vw'} height={'100vh'} justifyContent={'center'} alignItems={'center'}>
+      <LoadingAnimation content={<Typography variant="body2">{t('ui.feedback.loading')}</Typography>} />
     </Stack>
   );
-});
+};
 
-export default Loading;
+export const LoadingPageContent = React.memo(LoadingPageContentComponent);

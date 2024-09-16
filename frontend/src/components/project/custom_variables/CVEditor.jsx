@@ -1,20 +1,20 @@
-import {Stack, TextField} from "@mui/material";
-import {useCallback, useEffect, useState} from "react";
-import {useTranslation} from "react-i18next";
+import { Stack, TextField } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import CVFilters from "./CVFilters";
-import CVSelection from "./CVSelection";
-import {GET} from "../../../code/http_requests";
-import {useSnackbar} from "../../../context/SnackbarContext";
-import Loading from "../../feedback/Loading";
-import DropDown from "../../input/DropDown";
-import Logo from "../../Logo";
+import CVFilters from './CVFilters';
+import CVSelection from './CVSelection';
+import { GET } from '../../../code/http_requests';
+import { useSnackbar } from '../../../context/SnackbarContext';
+import { Loading } from '../../feedback/Loading';
+import DropDown from '../../input/DropDown';
+import Logo from '../../Logo';
 
-const CVEditor = ({project, data: initial, onChange}) => {
+const CVEditor = ({ project, data: initial, onChange }) => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
   /* Fetched Data states */
   const [dataProviders, setDataProviders] = useState(null);
@@ -22,7 +22,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
   const [filterOperators, setFilterOperators] = useState(null);
 
   const fetchDataCategories = useCallback(async () => {
-    const response = await GET(`/data-providers/data-categories`);
+    const response = await GET('/data-providers/data-categories');
 
     response.on('2xx', (status, data) => {
       if (status === 200) {
@@ -44,7 +44,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
   }, [showSnackbar, t]);
 
   const fetchFilterOperators = useCallback(async () => {
-    const response = await GET(`/custom-variables/filter-operators`);
+    const response = await GET('/custom-variables/filter-operators');
 
     response.on('2xx', (status, data) => {
       if (status === 200) {
@@ -64,7 +64,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
     setDataProviders(project?.data_connections.map(dc => ({
       label: dc.data_provider.name,
       value: dc.data_provider_name,
-      icon: <Logo name={dc.data_provider_name} size={18}/>
+      icon: <Logo name={dc.data_provider_name} size={18} />,
     })));
   }, [fetchFilterOperators, fetchDataCategories, project]);
 
@@ -86,8 +86,8 @@ const CVEditor = ({project, data: initial, onChange}) => {
       data_category: selectedDataCategory?.value,
       cv_attributes: selectedDataCategory?.cv_attributes,
       filters: filters,
-      selection: selection
-    }
+      selection: selection,
+    };
   }, [variableName, selectedDataProvider, selectedDataCategory, filters, selection]);
 
   useEffect(() => {
@@ -103,18 +103,18 @@ const CVEditor = ({project, data: initial, onChange}) => {
 
   return (
     <Loading loading={!dataProviders || !filterOperators} content={t('ui.project.custom_variable.loading')}>
-      <Stack spacing={2} width={"100%"} alignItems={"flex-start"}>
+      <Stack spacing={2} width={'100%'} alignItems={'flex-start'}>
         <TextField
           autoFocus
           showClear
-          label={t(`ui.project.custom_variable.name.label`) + "*"}
-          helperText={t(`ui.project.custom_variable.name.helper_text`)}
+          label={t('ui.project.custom_variable.name.label') + '*'}
+          helperText={t('ui.project.custom_variable.name.helper_text')}
           value={variableName}
           onChange={(e) => {
             setVariableName(e.target.value);
             onChange({
               ...getData(),
-              variable_name: e.target.value
+              variable_name: e.target.value,
             });
           }}
         />
@@ -130,7 +130,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
               data_provider: e.target.value,
               data_category: null,
               filters: [],
-              selection: null
+              selection: null,
             });
           }}
         />
@@ -150,7 +150,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
                   data_category: e.target.value,
                   attributes: dc.attributes,
                   filters: [],
-                  selection: null
+                  selection: null,
                 });
               }}
             />
@@ -165,10 +165,10 @@ const CVEditor = ({project, data: initial, onChange}) => {
               dataCategory={selectedDataCategory}
               operators={filterOperators}
               onChange={(filters) => {
-                setFilters(filters)
+                setFilters(filters);
                 onChange({
                   ...getData(),
-                  filters: filters
+                  filters: filters,
 
                 });
               }}
@@ -177,10 +177,10 @@ const CVEditor = ({project, data: initial, onChange}) => {
               selection={selection}
               dataCategory={selectedDataCategory}
               onChange={(selection) => {
-                setSelection(selection)
+                setSelection(selection);
                 onChange({
                   ...getData(),
-                  selection: selection
+                  selection: selection,
                 });
               }}
             />
@@ -191,7 +191,7 @@ const CVEditor = ({project, data: initial, onChange}) => {
 
     </Loading>
 
-  )
-}
+  );
+};
 
 export default CVEditor;

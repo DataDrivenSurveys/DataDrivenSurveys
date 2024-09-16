@@ -1,11 +1,10 @@
-import { Snackbar, Paper, Box, Stack, Typography } from '@mui/material'
-import { useTheme } from '@mui/material'
-import React from 'react';
+import { Box, Paper, Snackbar, Stack, Typography, useTheme } from '@mui/material';
+import React, { JSX } from 'react';
 
-import { useSnackbar } from '../../context/SnackbarContext'
+import { useSnackbar } from '../../context/SnackbarContext';
 
-const SnackbarFeedback = () => {
-  const theme = useTheme()
+const SnackbarFeedback = (): JSX.Element => {
+  const theme = useTheme();
   const {
     snackbar: {
       position: { vertical, horizontal },
@@ -14,7 +13,7 @@ const SnackbarFeedback = () => {
       severity = 'success',
     },
     hide,
-  } = useSnackbar()
+  } = useSnackbar();
   return (
     <Snackbar
       sx={{ mt: 5 }}
@@ -38,7 +37,7 @@ const SnackbarFeedback = () => {
         </Stack>
       </Paper>
     </Snackbar>
-  )
-}
+  );
+};
 
-export default SnackbarFeedback
+export default SnackbarFeedback;

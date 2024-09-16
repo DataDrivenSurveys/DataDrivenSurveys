@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-const useEventTracker = (storageKey = "FrontendActivity") => {
+const useEventTracker = (storageKey = 'FrontendActivity') => {
   const logEvent = useCallback((eventDetails) => {
     let events = JSON.parse(localStorage.getItem(storageKey)) || {};
 

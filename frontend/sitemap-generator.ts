@@ -51,9 +51,11 @@ const generateSitemap = async (): Promise<void> => {
   sitemap.end();
   await streamToPromise(sitemap);
 
+  // eslint-disable-next-line no-console
   console.log('Sitemap generated!');
 };
 
 generateSitemap().catch(err => {
+  // eslint-disable-next-line no-console
   console.error('Error generating sitemap:', err);
 });

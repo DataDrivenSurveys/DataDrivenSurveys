@@ -1,34 +1,33 @@
-import React from 'react';
-import { useState } from "react";
+import React, { JSX, useState } from 'react';
 
-import { useAuth } from "../../context/AuthContext";
-import UserAvatar from "../layout/UserAvatar";
-import UserContextMenu from "../layout/UserContextMenu";
+import { useAuth } from '../../context/AuthContext';
+import UserAvatar from '../layout/UserAvatar';
+import UserContextMenu from '../layout/UserContextMenu';
 
-const AuthUser = () => {
-    const { user } = useAuth();
+const AuthUser = (): JSX.Element | null => {
+  const { user } = useAuth();
 
-    const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
-    const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => setAnchorElUser(event.currentTarget as HTMLElement)
-    const handleCloseUserMenu = () => setAnchorElUser(null)
+  const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>): void => setAnchorElUser(event.currentTarget as HTMLElement);
+  const handleCloseUserMenu = (): void => setAnchorElUser(null);
 
-    return (
-        user && (
-            <>
-            <UserAvatar
-              firstname={user.firstname}
-              lastname={user.lastname}
-              email={user.email}
-              collapsed={false}
-              onCLick={handleOpenUserMenu}
-            />
-            <UserContextMenu
-              anchorElUser={anchorElUser}
-              handleCloseUserMenu={handleCloseUserMenu}
-            />
-            </>
-          )
+  return (
+    user && (
+      <>
+        <UserAvatar
+          firstname={user.firstname}
+          lastname={user.lastname}
+          email={user.email}
+          collapsed={false}
+          onCLick={handleOpenUserMenu}
+        />
+        <UserContextMenu
+          anchorElUser={anchorElUser}
+          handleCloseUserMenu={handleCloseUserMenu}
+        />
+      </>
     )
-}
+  );
+};
 
 export default AuthUser;

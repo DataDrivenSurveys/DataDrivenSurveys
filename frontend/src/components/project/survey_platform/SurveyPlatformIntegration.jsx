@@ -1,23 +1,22 @@
 import EditIcon from '@mui/icons-material/Edit';
 import SyncIcon from '@mui/icons-material/Sync';
-import {Button, ButtonGroup, Stack} from "@mui/material";
-import {DataGrid} from "@mui/x-data-grid";
-import {useCallback, useEffect, useState} from "react";
-import React from 'react';
-import {useTranslation} from 'react-i18next';
-import {useLocation, useParams} from "react-router-dom";
+import { Button, ButtonGroup, Stack } from '@mui/material';
+import { DataGrid } from '@mui/x-data-grid';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useParams } from 'react-router-dom';
 
-import EditSurveyPlatformDialog from "./EditSurveyPlatformDialog";
-import SurveyStatus from "./SurveyStatus";
-import {GET, PUT} from "../../../code/http_requests";
-import {useSnackbar} from "../../../context/SnackbarContext";
-import ConnectedStatus from "../../feedback/ConnectedStatus";
-import ConnectionBadge from "../../feedback/ConnectionBadge";
+import EditSurveyPlatformDialog from './EditSurveyPlatformDialog';
+import SurveyStatus from './SurveyStatus';
+import { GET, PUT } from '../../../code/http_requests';
+import { useSnackbar } from '../../../context/SnackbarContext';
+import ConnectedStatus from '../../feedback/ConnectedStatus';
+import ConnectionBadge from '../../feedback/ConnectionBadge';
 
 
-const SurveyPlatformIntegration = ({project}) => {
+const SurveyPlatformIntegration = ({ project }) => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const location = useLocation();
 
@@ -25,13 +24,13 @@ const SurveyPlatformIntegration = ({project}) => {
   const searchParams = new URLSearchParams(location.search);
   const survey_platform = searchParams.get('survey_platform'); // When redirected after code exchange, open the survey platform integration dialog
 
-  const {projectId} = useParams();
+  const { projectId } = useParams();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
 
   const [connected, setConnected] = useState(false);
   const [surveyPlatformInfo, setSurveyPlatformInfo] = useState({
-    "survey_name": t('ui.project.survey_platform.not_connected'),
+    'survey_name': t('ui.project.survey_platform.not_connected'),
   });
   const [surveyPlatformName, setSurveyPlatformName] = useState(project.survey_platform_name);
 
@@ -39,7 +38,7 @@ const SurveyPlatformIntegration = ({project}) => {
 
   const handleSave = useCallback(async (fields) => {
     const response = await PUT(`/projects/${projectId}`, {
-      survey_platform_fields: fields
+      survey_platform_fields: fields,
     });
 
     response.on('2xx', async (status, data) => {
@@ -58,8 +57,8 @@ const SurveyPlatformIntegration = ({project}) => {
   const handleCheckConnection = useCallback(async () => {
     setConnected(undefined);
     setSurveyPlatformInfo({
-      "survey_name": t('ui.project.survey_platform.loading'),
-      "survey_status": "loading",
+      'survey_name': t('ui.project.survey_platform.loading'),
+      'survey_status': 'loading',
     });
 
     const response = await GET(`/projects/${projectId}/survey_platform/check_connection`);
@@ -74,8 +73,8 @@ const SurveyPlatformIntegration = ({project}) => {
     response.on('4xx', () => {
       setConnected(false);
       setSurveyPlatformInfo({
-        "survey_name": t('ui.project.survey_platform.not_connected'),
-        "survey_status": "unknown",
+        'survey_name': t('ui.project.survey_platform.not_connected'),
+        'survey_status': 'unknown',
       });
 
     });
@@ -89,15 +88,15 @@ const SurveyPlatformIntegration = ({project}) => {
       headerName: t('ui.project.survey_platform.grid.column.connected'),
       width: 90,
       renderCell: (params) => {
-        return <ConnectedStatus connected={params.value}/>
-      }
+        return <ConnectedStatus connected={params.value} />;
+      },
     },
     {
       field: 'survey_platform_name',
       headerName: t('ui.project.survey_platform.grid.column.survey_platform_name'),
       width: 120,
       disableClickEventBubbling: true,
-      renderCell: (params) => <ConnectionBadge size={18} name={params.value}/>
+      renderCell: (params) => <ConnectionBadge size={18} name={params.value} />,
     },
     {
       field: 'survey_name',
@@ -109,8 +108,8 @@ const SurveyPlatformIntegration = ({project}) => {
       headerName: t('ui.project.survey_platform.grid.column.survey_status'),
       width: 100,
       renderCell: (params) => {
-        return <SurveyStatus status={params.value}/>
-      }
+        return <SurveyStatus status={params.value} />;
+      },
     },
     // {
     //     field: 'survey_id',
@@ -130,8 +129,8 @@ const SurveyPlatformIntegration = ({project}) => {
         return (
           <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Survey Platform Actions">
             <Button
-              size={"small"}
-              startIcon={<EditIcon/>}
+              size={'small'}
+              startIcon={<EditIcon />}
               onClick={() => {
                 setEditFormOpen(true);
               }}
@@ -141,7 +140,7 @@ const SurveyPlatformIntegration = ({project}) => {
             <Button
               variant="outlined"
               size="small"
-              startIcon={<SyncIcon/>}
+              startIcon={<SyncIcon />}
               onClick={() => {
                 handleCheckConnection();
               }
@@ -149,9 +148,9 @@ const SurveyPlatformIntegration = ({project}) => {
               {t('ui.project.survey_platform.grid.button.check_connection')}
             </Button>
           </ButtonGroup>
-        )
-      }
-    }
+        );
+      },
+    },
   ];
 
   useEffect(() => {
@@ -164,7 +163,7 @@ const SurveyPlatformIntegration = ({project}) => {
 
   return (
     <>
-      <Stack spacing={2} direction={"row"} alignItems={"flex-end"}>
+      <Stack spacing={2} direction={'row'} alignItems={'flex-end'}>
         <DataGrid
           rows={[{
             ...surveyPlatformInfo,
@@ -198,6 +197,6 @@ const SurveyPlatformIntegration = ({project}) => {
       />
     </>
   );
-}
+};
 
 export default SurveyPlatformIntegration;

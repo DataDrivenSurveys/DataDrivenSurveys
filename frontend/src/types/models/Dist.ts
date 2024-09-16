@@ -1,4 +1,4 @@
-import {DataProviderType} from "../Shared";
+import { DataProviderType } from '../Shared';
 
 export interface RespondentTempTokens {
   data_provider_name: string;

@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { JSX, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
-import LoadingPageContent from "../feedback/Loading"; // Full page loader
+import { LoadingPageContent } from '../feedback/Loading'; // Full page loader
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

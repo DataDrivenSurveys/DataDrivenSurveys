@@ -1,22 +1,21 @@
-import {Stack, Typography} from "@mui/material";
-import {useCallback, useEffect, useState} from "react";
-import React from 'react';
-import {useTranslation} from 'react-i18next';
+import { Stack, Typography } from '@mui/material';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import {GET, PUT} from "../../../code/http_requests";
-import {useSnackbar} from "../../../context/SnackbarContext";
-import HelperText from "../../HelperText";
-import CopyClipboard from "../../input/CopyClipboard";
-import FormFields from "../../input/FormFields";
-import DialogModal from "../../layout/DialogModal";
-import {getFrontendBaseURL} from "../../utils/getURL";
+import { GET, PUT } from '../../../code/http_requests';
+import { useSnackbar } from '../../../context/SnackbarContext';
+import ConfirmationDialog from '../../feedback/ConfirmationDialog';
+import HelperText from '../../HelperText';
+import CopyClipboard from '../../input/CopyClipboard';
+import FormFields from '../../input/FormFields';
+import { getFrontendBaseURL } from '../../utils/getURL';
 
 
-const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
+const EditDataProviderDialog = ({ projectId, data, open, onClose, onEdit }) => {
 
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
   const [dataProviders, setDataProviders] = useState(undefined);
   const [selected, setSelected] = useState(undefined);
   const [fields, setFields] = useState([]);
@@ -49,7 +48,7 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
     (async () => {
       const response = await PUT(`/projects/${projectId}/data-providers/${data.data_provider_name}`, {
         selected_data_provider: selected,
-        fields
+        fields,
       });
 
       response.on('2xx', (status, data) => {
@@ -73,18 +72,18 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
 
   return (
     dataProviders && (
-      <DialogModal
+      <ConfirmationDialog
         open={open}
         title={t('ui.project.data_providers.edit.title')}
-        titleLogo={{logoName: selected.value, logoSize: 18, label: selected.label}}
+        titleLogo={{ logoName: selected.value, logoSize: 18, label: selected.label }}
         disableConfirm={!checkInputs()}
         content={
           <Stack spacing={2}>
-            { selected && selected.app_required &&
-               <AppRelatedInstructions selected={selected} />
+            {selected && selected.app_required &&
+              <AppRelatedInstructions selected={selected} />
             }
 
-            <FormFields fields={fields} onChange={setFields}/>
+            <FormFields fields={fields} onChange={setFields} />
           </Stack>
         }
         onClose={onClose}
@@ -92,27 +91,27 @@ const EditDataProviderDialog = ({projectId, data, open, onClose, onEdit}) => {
       />
     )
   );
-}
+};
 
-const AppRelatedInstructions = ({selected}) => {
-  const {t} = useTranslation();
+const AppRelatedInstructions = ({ selected }) => {
+  const { t } = useTranslation();
   return (
     <>
-    <Typography variant="body1">
-      {t('ui.project.data_providers.create_app.common_fields.callback_url.instructions')}
-      <br/>
-      <CopyClipboard
-        what={`${getFrontendBaseURL()}/${selected.callback_url}`}
+      <Typography variant="body1">
+        {t('ui.project.data_providers.create_app.common_fields.callback_url.instructions')}
+        <br />
+        <CopyClipboard
+          what={`${getFrontendBaseURL()}/${selected.callback_url}`}
+        />
+      </Typography>
+      <HelperText
+        text={t('ui.project.data_providers.add.documentation_instructions')}
+        url={t(selected.instructions_helper_url)}
+        typographyProps={{ variant: 'body1', color: 'textPrimary' }}
+        urlInline={false}
       />
-    </Typography>
-    <HelperText
-      text={t('ui.project.data_providers.add.documentation_instructions')}
-      url={t(selected.instructions_helper_url)}
-      typographyProps={{variant: "body1", color: "textPrimary"}}
-      urlInline={false}
-    />
     </>
-  )
-}
+  );
+};
 
 export default EditDataProviderDialog;

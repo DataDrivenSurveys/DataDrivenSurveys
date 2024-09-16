@@ -1,12 +1,12 @@
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
-import {TextField, InputAdornment, Box, FormHelperText, Stack} from "@mui/material";
-import React from 'react';
+import { Box, FormHelperText, InputAdornment, Stack, TextField } from '@mui/material';
+import React, { JSX } from 'react';
 
 interface TextInputProps {
   label: string;
   value: string;
-  type?: "text" | "password" | "number";
+  type?: 'text' | 'password' | 'number';
   onChange: (value: string) => void;
   onAfterChange?: (value: string) => void;
   minLength?: number;
@@ -23,7 +23,7 @@ interface TextInputProps {
 const TextInput = ({
   label,
   value,
-  type = "text",
+  type = 'text',
   onChange,
   onAfterChange,
   minLength,
@@ -40,7 +40,7 @@ const TextInput = ({
     <Stack sx={sxStack}>
       <TextField
         label={label}
-        variant={"outlined"}
+        variant={'outlined'}
         value={value}
         type={type}
         autoFocus={autoFocus}
@@ -48,24 +48,24 @@ const TextInput = ({
           maxLength: maxLength,
           startAdornment: (
             <InputAdornment position="start">
-              {minLength && value?.length >= minLength ? <CheckCircleIcon color={"success"}/> : null}
+              {minLength && value?.length >= minLength ? <CheckCircleIcon color={'success'} /> : null}
             </InputAdornment>
           ),
           endAdornment: (
             showClear && value?.length > 0 ? (
-              <Box sx={{cursor: 'pointer'}}>
+              <Box sx={{ cursor: 'pointer' }}>
                 <InputAdornment position="end">
-                  <ClearIcon onClick={() => onChange('')}/>
+                  <ClearIcon onClick={() => onChange('')} />
                 </InputAdornment>
               </Box>
             ) : null
-          )
+          ),
         }}
         required={required}
         onChange={(e) => {
           onChange(e.target.value);
           if (onAfterChange) {
-            onAfterChange(e.target.value)
+            onAfterChange(e.target.value);
           }
         }}
         {...props}
@@ -75,6 +75,6 @@ const TextInput = ({
       )}
     </Stack>
   );
-}
+};
 
 export default TextInput;

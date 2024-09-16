@@ -1,5 +1,5 @@
-import {Bases} from ".";
-import {DataProviderType, SurveyStatus} from "../Shared";
+import { Bases, ResponseData } from '.';
+import { DataProviderType, SurveyStatus } from '../Shared';
 
 export interface Researcher {
   id: number;
@@ -19,7 +19,7 @@ interface CVAttribute extends Bases.CVAttribute {
 
 interface CVSelection {
   attr?: string;
-  operator: "max" | "min" | "random";
+  operator: 'max' | 'min' | 'random';
 }
 
 export interface CustomVariable {
@@ -96,4 +96,9 @@ export interface Project {
   survey_platform_name: string;
   survey_status: string;
   variables: BuiltinVariable[];
+}
+
+
+export interface ResponseCreateProjectSuccess extends ResponseData {
+  entity: Project;
 }

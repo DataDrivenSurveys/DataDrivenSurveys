@@ -1,26 +1,26 @@
 import loadable from '@loadable/component';
-import {ThemeProvider, createTheme} from '@mui/material/styles';
-import './styles/normalize.css'
-import {LocalizationProvider} from '@mui/x-date-pickers';
-import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
-import React from 'react';
-import {BrowserRouter, Route, Routes} from 'react-router-dom';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import './styles/normalize.css';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import React, { JSX } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import {AuthProvider} from './context/AuthContext';
-import {SnackbarProvider} from './context/SnackbarContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
+import { SnackbarProvider } from './context/SnackbarContext';
 import PageCreateProject from './pages/PageCreateProject';
-import PageHomepage from "./pages/PageHomepage";
+import PageHomepage from './pages/PageHomepage';
 import PageParticipantConnection from './pages/PageParticipantConnection';
 import PageParticipantOauth2Redirect from './pages/PageParticipantOauth2Redirect';
 import PageProject from './pages/PageProject';
 import PageProjectSelection from './pages/PageProjectSelection';
-import PageSignIn from "./pages/PageSignIn";
+import PageSignIn from './pages/PageSignIn';
 import PageSignUp from './pages/PageSignUp';
 import PageSurveyPlatformOauth2Redirect from './pages/PageSurveyPlatformOauth2Redirect';
 
-const PagePrivacyPolicy = loadable(() => import('./pages/PagePrivacyPolicy'))
-const PageTermsOfService = loadable(() => import('./pages/PageTermsOfService'))
+const PagePrivacyPolicy = loadable(() => import('./pages/PagePrivacyPolicy'));
+const PageTermsOfService = loadable(() => import('./pages/PageTermsOfService'));
 
 
 export const themeOptions = {
@@ -84,12 +84,12 @@ export const themeOptions = {
   //     main: '#0025cc',
   //   },
   // },
-}
+};
 
 const theme = createTheme(themeOptions);
 
 
-function App() {
+function App(): JSX.Element {
   return (
     <React.StrictMode>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -102,21 +102,21 @@ function App() {
                   <Route
                     path="/"
                     element={
-                      <PageHomepage/>
+                      <PageHomepage />
                     }
                   />
 
                   <Route
                     path="/privacy-policy"
                     element={
-                      <PagePrivacyPolicy/>
+                      <PagePrivacyPolicy />
                     }
                   />
 
                   <Route
                     path="/terms-of-service"
                     element={
-                      <PageTermsOfService/>
+                      <PageTermsOfService />
                     }
                   />
 
@@ -124,14 +124,14 @@ function App() {
                   <Route
                     path="/signin"
                     element={
-                      <PageSignIn/>
+                      <PageSignIn />
                     }
                   >
                   </Route>
                   <Route
                     path="/signup"
                     element={
-                      <PageSignUp/>
+                      <PageSignUp />
                     }
                   />
 
@@ -140,7 +140,7 @@ function App() {
                     path="/projects"
                     element={
                       <ProtectedRoute>
-                        <PageProjectSelection/>
+                        <PageProjectSelection />
                       </ProtectedRoute>
                     }
                   />
@@ -149,7 +149,7 @@ function App() {
                     path="/projects/create"
                     element={
                       <ProtectedRoute>
-                        <PageCreateProject/>
+                        <PageCreateProject />
                       </ProtectedRoute>
                     }
                   />
@@ -158,7 +158,7 @@ function App() {
                     path="/projects/:projectId"
                     element={
                       <ProtectedRoute>
-                        <PageProject/>
+                        <PageProject />
                       </ProtectedRoute>
                     }
                   />
@@ -166,26 +166,26 @@ function App() {
                   {/*Distribution Routes*/}
                   <Route
                     path="/dist"
-                    element={<PageParticipantConnection placeholder={true}/>}
+                    element={<PageParticipantConnection placeholder={true} />}
                   />
                   <Route
                     path="/dist/:projectShortId"
                     element={
-                      <PageParticipantConnection/>
+                      <PageParticipantConnection />
                     }
                   />
 
                   <Route
                     path="/dist/redirect/:provider"
                     element={
-                      <PageParticipantOauth2Redirect/>
+                      <PageParticipantOauth2Redirect />
                     }
                   />
 
                   <Route
                     path="/survey_platform/redirect/:surveyPlatform"
                     element={
-                      <PageSurveyPlatformOauth2Redirect/>
+                      <PageSurveyPlatformOauth2Redirect />
                     }
                   />
                 </Routes>

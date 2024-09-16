@@ -1,10 +1,10 @@
-import React, {createContext, useState, useEffect, useContext} from 'react';
-import {useTranslation} from 'react-i18next';
-import {useNavigate} from "react-router-dom";
+import React, { createContext, JSX, useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
-import {API} from "../types";
-import {useSnackbar} from './SnackbarContext';
-import {GET, POST} from '../code/http_requests';
+import { GET, POST } from '../code/http_requests';
+import { API } from '../types';
+import { useSnackbar } from './SnackbarContext';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,7 +14,7 @@ interface AuthContextType {
     firstname: string,
     lastname: string,
     email: string,
-    password: string
+    password: string,
   ) => Promise<void>;
   user: API.Auth.User | null;
   loading: boolean;
@@ -35,9 +35,9 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-export const AuthProvider = ({children}: AuthProviderProps): JSX.Element => {
-  const {t} = useTranslation();
-  const {showBottomCenter: showSnackbar} = useSnackbar();
+export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
+  const { t } = useTranslation();
+  const { showBottomCenter: showSnackbar } = useSnackbar();
   const navigate = useNavigate();
 
   const [user, setUser] = useState<API.Auth.User | null>(null);
@@ -67,7 +67,7 @@ export const AuthProvider = ({children}: AuthProviderProps): JSX.Element => {
             setIsAuthenticated(false);
           });
         } catch (error) {
-          console.error("Error verifying token:", error);
+          console.error('Error verifying token:', error);
         } finally {
           setLoading(false);  // End the loading spinner once request completes
         }
@@ -80,7 +80,7 @@ export const AuthProvider = ({children}: AuthProviderProps): JSX.Element => {
 
   // Sign in method
   const signin = async (email: string, password: string): Promise<void> => {
-    const response = await POST('/auth/signin', {email, password}, false);
+    const response = await POST('/auth/signin', { email, password }, false);
 
     response.on('2xx', (status: number, data: API.Auth.ResponseSignIn) => {
       if (status === 200) {
@@ -94,7 +94,7 @@ export const AuthProvider = ({children}: AuthProviderProps): JSX.Element => {
 
     response.on('4xx', (status: number, data: API.ResponseData) => {
       if (status === 401) {
-        showSnackbar(t(data.message.id), "error");
+        showSnackbar(t(data.message.id), 'error');
       }
     });
   };
@@ -109,29 +109,29 @@ export const AuthProvider = ({children}: AuthProviderProps): JSX.Element => {
     firstname: string,
     lastname: string,
     email: string,
-    password: string
+    password: string,
   ): Promise<void> => {
     const response = await POST('/auth/signup', {
       firstname,
       lastname,
       email,
-      password
+      password,
     }, false);
 
     response.on('2xx', (status: number, data: API.ResponseData) => {
       if (status === 200) {
-        showSnackbar(t(data.message.id), "success");
+        showSnackbar(t(data.message.id), 'success');
         navigate('/projects');
       }
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), "error");
+      showSnackbar(t(data.message.id), 'error');
     });
   };
 
   return (
-    <AuthContext.Provider value={{isAuthenticated, signin, signout, signup, user, loading}}>
+    <AuthContext.Provider value={{ isAuthenticated, signin, signout, signup, user, loading }}>
       {children}
     </AuthContext.Provider>
   );
