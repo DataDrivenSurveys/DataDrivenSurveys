@@ -1,10 +1,10 @@
 import pluginJs from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
+import eslintPluginPrettier from 'eslint-plugin-prettier';
 import pluginReact from 'eslint-plugin-react';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
-
 
 export default tseslint.config(
   ...tseslint.configs.recommended,
@@ -29,35 +29,32 @@ export default tseslint.config(
     },
     files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'],
     plugins: {
-      import: importPlugin,  // Add this line to register the plugin
+      import: importPlugin,
+      prettier: eslintPluginPrettier,
     },
     rules: {
+      'prettier/prettier': 'warn',
       indent: ['error', 2],
       'linebreak-style': ['error', 'unix'],
       quotes: ['error', 'single'],
       'no-console': 'warn',
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { vars: 'all', args: 'after-used', ignoreRestSiblings: false },
-      ],
+      '@typescript-eslint/no-unused-vars': ['error', { vars: 'all', args: 'after-used', ignoreRestSiblings: false }],
       '@typescript-eslint/explicit-function-return-type': 'warn', // Consider using explicit annotations for object literals and function return types even when they can be inferred.
       'no-empty': 'warn',
       'import/order': [
         'error',
         {
-          'groups': ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
+          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
           'newlines-between': 'always',
-          'alphabetize': { 'order': 'asc', 'caseInsensitive': true },
+          alphabetize: { order: 'asc', caseInsensitive: true },
         },
       ],
     },
-    // settings: {
-    //   'import/resolver': {
-    //     node: {
-    //       extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs'],
-    //     },
-    //   },
-    // },
-  },
+    settings: {
+      react: {
+        version: 'detect', // Automatically detect the react version
+      },
+    },
+  }
 );

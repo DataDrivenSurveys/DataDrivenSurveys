@@ -1,14 +1,14 @@
 // import loadable from '@loadable/component';
-import {createTheme, ThemeProvider} from '@mui/material/styles';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './styles/normalize.css';
-import {LocalizationProvider} from '@mui/x-date-pickers';
-import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs';
-import React, {JSX} from 'react';
-import {BrowserRouter, Route, Routes} from 'react-router-dom';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import React, { JSX } from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import {AuthProvider} from './context/AuthContext';
-import {SnackbarProvider} from './context/SnackbarContext';
+import { AuthProvider } from './context/AuthContext';
+import { SnackbarProvider } from './context/SnackbarContext';
 import PageCreateProject from './pages/PageCreateProject';
 import PageHomepage from './pages/PageHomepage';
 import PageParticipantConnection from './pages/PageParticipantConnection';
@@ -23,7 +23,6 @@ import PageTermsOfService from './pages/PageTermsOfService';
 
 // const PagePrivacyPolicy = loadable(() => import('./pages/PagePrivacyPolicy'));
 // const PageTermsOfService = loadable(() => import('./pages/PageTermsOfService'));
-
 
 export const themeOptions = {
   typography: {
@@ -90,7 +89,6 @@ export const themeOptions = {
 
 const theme = createTheme(themeOptions);
 
-
 function App(): JSX.Element {
   return (
     <React.StrictMode>
@@ -101,48 +99,22 @@ function App(): JSX.Element {
               <AuthProvider>
                 {/*Static page routes*/}
                 <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <PageHomepage/>
-                    }
-                  />
+                  <Route path="/" element={<PageHomepage />} />
 
-                  <Route
-                    path="/privacy-policy"
-                    element={
-                      <PagePrivacyPolicy/>
-                    }
-                  />
+                  <Route path="/privacy-policy" element={<PagePrivacyPolicy />} />
 
-                  <Route
-                    path="/terms-of-service"
-                    element={
-                      <PageTermsOfService/>
-                    }
-                  />
+                  <Route path="/terms-of-service" element={<PageTermsOfService />} />
 
                   {/*Signin and Signup Routes*/}
-                  <Route
-                    path="/signin"
-                    element={
-                      <PageSignIn/>
-                    }
-                  >
-                  </Route>
-                  <Route
-                    path="/signup"
-                    element={
-                      <PageSignUp/>
-                    }
-                  />
+                  <Route path="/signin" element={<PageSignIn />} />
+                  <Route path="/signup" element={<PageSignUp />} />
 
                   {/*Projects Routes*/}
                   <Route
                     path="/projects"
                     element={
                       <ProtectedRoute>
-                        <PageProjectSelection/>
+                        <PageProjectSelection />
                       </ProtectedRoute>
                     }
                   />
@@ -151,7 +123,7 @@ function App(): JSX.Element {
                     path="/projects/create"
                     element={
                       <ProtectedRoute>
-                        <PageCreateProject/>
+                        <PageCreateProject />
                       </ProtectedRoute>
                     }
                   />
@@ -160,35 +132,20 @@ function App(): JSX.Element {
                     path="/projects/:projectId"
                     element={
                       <ProtectedRoute>
-                        <PageProject/>
+                        <PageProject />
                       </ProtectedRoute>
                     }
                   />
 
                   {/*Distribution Routes*/}
-                  <Route
-                    path="/dist"
-                    element={<PageParticipantConnection placeholder={true}/>}
-                  />
-                  <Route
-                    path="/dist/:projectShortId"
-                    element={
-                      <PageParticipantConnection/>
-                    }
-                  />
+                  <Route path="/dist" element={<PageParticipantConnection placeholder={true} />} />
+                  <Route path="/dist/:projectShortId" element={<PageParticipantConnection />} />
 
-                  <Route
-                    path="/dist/redirect/:provider"
-                    element={
-                      <PageParticipantOauth2Redirect/>
-                    }
-                  />
+                  <Route path="/dist/redirect/:provider" element={<PageParticipantOauth2Redirect />} />
 
                   <Route
                     path="/survey_platform/redirect/:surveyPlatform"
-                    element={
-                      <PageSurveyPlatformOauth2Redirect/>
-                    }
+                    element={<PageSurveyPlatformOauth2Redirect />}
                   />
                 </Routes>
               </AuthProvider>
@@ -199,6 +156,5 @@ function App(): JSX.Element {
     </React.StrictMode>
   );
 }
-
 
 export default App;
