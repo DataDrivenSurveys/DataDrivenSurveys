@@ -223,7 +223,7 @@ class DBManager:
         for attempt in range(retries):
             try:
                 if orm_query:
-                    return session.query(query).one_or_none()
+                    return query
                 return session.execute(query)
             except OperationalError:
                 if attempt < retries - 1:

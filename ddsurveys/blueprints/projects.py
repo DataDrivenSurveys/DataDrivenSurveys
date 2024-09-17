@@ -244,7 +244,7 @@ def get_project(id_: str) -> ResponseReturnValue:
         user = get_jwt_identity()
 
         # get the researcher
-        researcher: Researcher = DBManager.retry_query(db.query(Researcher).filter_by(email=user["email"])).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             return (
                 jsonify(
