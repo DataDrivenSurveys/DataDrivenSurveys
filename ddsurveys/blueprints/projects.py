@@ -114,11 +114,8 @@ def create_project() -> ResponseReturnValue:
             field.get("name"): field.get("value", None) for field in data.get("fields")
         }
 
-        if use_existing_survey:
-            # survey_id becomes required if use_existing_survey is True
-            override_required = ["survey_id"]
-        else:
-            override_required = []
+        # survey_id becomes required if use_existing_survey is True
+        override_required = ["survey_id"] if use_existing_survey else []
 
         platform_class = SurveyPlatform.get_class_by_value(survey_platform_name)
 
@@ -247,7 +244,7 @@ def get_project(id_: str) -> ResponseReturnValue:
         user = get_jwt_identity()
 
         # get the researcher
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = DBManager.retry_query(db.query(Researcher).filter_by(email=user["email"])).first()
         if not researcher:
             return (
                 jsonify(

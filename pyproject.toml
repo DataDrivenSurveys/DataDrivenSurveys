@@ -124,7 +124,7 @@ dependencies = [
 ]
 
 [tool.hatch.envs.style.scripts]
-lint = "ruff --config ruff_defaults.toml check"
+lint = "ruff --config ruff.toml check"
 type-check = "mypy ddsurveys"
 
 [tool.hatch.envs.test]
@@ -142,10 +142,10 @@ run-coverage = "pytest --cov-config=pyproject.toml --cov=pkg --cov=tests"
 run = "run-coverage --no-cov"
 
 [tool.ruff]
-extend = "ruff_defaults.toml"
+extend = "ruff.toml"
 
 [tool.hatch.envs.hatch-static-analysis]
-config-path = "ruff_defaults.toml"
+config-path = "ruff.toml"
 
 [tool.coverage.run]
 branch = true

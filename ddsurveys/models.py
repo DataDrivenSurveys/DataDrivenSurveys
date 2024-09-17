@@ -25,9 +25,11 @@ Created on 2023-05-23 15:41
 from __future__ import annotations
 
 import os
+import time
+import traceback
 import uuid
 from enum import Enum as PyEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -39,18 +41,21 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
+    Result,
     String,
     Text,
     create_engine,
     func,
 )
-from sqlalchemy.orm import Session, declarative_base, relationship, sessionmaker
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Query, Session, declarative_base, relationship, sessionmaker
 
 try:
+    from ddsurveys.get_logger import get_logger
     from ddsurveys.utils import handle_env_file
 except ImportError:
+    from get_logger import get_logger
     from utils import handle_env_file
-
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -67,6 +72,7 @@ if TYPE_CHECKING:
         RespondentDict,
     )
 
+logger = get_logger(__name__)
 
 # Global variables
 sony_flake: SonyFlake = SonyFlake()
@@ -80,6 +86,13 @@ class DBManager:
     SESSION_MAKER: sessionmaker = None
     DB: Session = None
 
+    engine_args: ClassVar[dict] = {
+        "pool_pre_ping": True,  # Check if connection is alive before using it
+        "pool_recycle": 1800,  # Recycle connection after 30 minutes to avoid timeouts
+        "pool_size": 10,  # Number of connections to maintain in the pool
+        "max_overflow": 20,  # Maximum number of additional connections beyond pool_size
+    }
+
     @classmethod
     def get_engine(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> Engine:
         """Retrieves or initializes the SQLAlchemy engine for database connections.
@@ -91,30 +104,28 @@ class DBManager:
         environment variable.
 
         Args:
-            app: The Flask application instance. This is used to
-                                retrieve the database URL from the application's
-                                configuration. Defaults to None.
+            app: The Flask application instance. This is used to retrieve the database
+                URL from the application's configuration. Defaults to None.
             database_url: The database URL to use for creating the engine.
-                                        If provided, this URL will be used instead of
-                                        the Flask application's configuration or the
-                                        environment variable. Defaults to None.
-            force_new: If True, forces the creation of a new engine even if
-                                        the global `ENGINE` variable is already initialized.
-                                        Defaults to False.
+                If provided, this URL will be used instead of the Flask application's
+                configuration or the environment variable. Defaults to None.
+            force_new: If True, forces the creation of a new engine even if he global
+                `ENGINE` variable is already initialized.
+                Defaults to False.
 
         Returns:
             Engine: The SQLAlchemy engine instance for database connections.
         """
         if cls.ENGINE is None or force_new:
             if database_url != "":
-                cls.ENGINE = create_engine(url=database_url)
+                cls.ENGINE = create_engine(url=database_url, **cls.engine_args)
             elif app is not None:
                 try:
-                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"])
+                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"], **cls.engine_args)
                 except (AttributeError, KeyError):
-                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"))
+                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.engine_args)
             else:
-                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"))
+                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.engine_args)
         return cls.ENGINE
 
     @classmethod
@@ -145,7 +156,7 @@ class DBManager:
             autocommit=False,
             autoflush=False,
             bind=cls.get_engine(app, database_url,
-            force_new=force_new)
+                                force_new=force_new)
         )
 
     @classmethod
@@ -183,6 +194,47 @@ class DBManager:
                 msg = "Database session maker is not initialized. Call init_session() first."
                 raise RuntimeError(msg)
         return cls.DB
+
+    @staticmethod
+    def retry_query(query: Query, session: Session = None, retries: int = 3, *, orm_query: bool = True) -> Result | None:
+        """Executes a database query with retry logic in case of an OperationalError.
+
+        This function attempts to execute the provided query using the given session.
+        If an OperationalError occurs, it will retry the query up to the specified
+        number of retries.
+
+        If all retries fail, the exception is raised.
+
+        Args:
+            query: The SQLAlchemy query to be executed.
+            session: The SQLAlchemy session to use for executing the query.
+            retries: The number of times to retry the query in case of an error.
+                Defaults to 3.
+            orm_query: A flag indicating if the query is an ORM query (True)
+                or a raw SQL query (False).
+
+        Returns:
+            Result | None: The result of the query execution if successful,
+                or None if all retries fail.
+
+        Raises:
+            OperationalError: If the query fails after all retries.
+        """
+        for attempt in range(retries):
+            try:
+                if orm_query:
+                    return session.query(query).one_or_none()
+                return session.execute(query)
+            except OperationalError:
+                if attempt < retries - 1:
+                    logger.exception("Retrying query due to error.")
+                    logger.debug(traceback.format_exc())
+                    time.sleep(1)  # Wait a bit before retrying
+                else:
+                    logger.exception("Failed to execute query after all retries.")
+                    logger.debug(traceback.format_exc())
+                    raise
+        return None
 
 
 Base = declarative_base()

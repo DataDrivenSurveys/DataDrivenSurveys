@@ -522,7 +522,8 @@ class FitbitDataProvider(OAuthDataProvider):
         self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
     ) -> str:
         required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
-        logger.info("Fitbit redirect_uri: %s", self.redirect_uri)
+        logger.debug("Fitbit redirect_uri: %s", self.redirect_uri)
+
         if len(required_scopes) == 0:
             required_scopes = self.__class__._scopes
 
