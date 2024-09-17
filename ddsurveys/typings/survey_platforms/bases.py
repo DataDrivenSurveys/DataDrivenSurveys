@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Type annotations for the Survey Platforms.
 
 Created on 2024-09-16 15:37
@@ -22,13 +21,13 @@ if TYPE_CHECKING:
     TSurveyPlatformFormButtonClass = type["FormButton"]
     TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound=FormButton)
 
-__all__ = [
-    "TSurveyPlatformClass",
-    "TSurveyPlatform",
-    "TOAuthSurveyPlatformClass",
-    "TOAuthSurveyPlatform",
-    "TSurveyPlatformFormFieldClass",
-    "TSurveyPlatformFormField",
-    "TSurveyPlatformFormButtonClass",
-    "TSurveyPlatformFormButton",
-]
+    __all__ = [
+        "TSurveyPlatformClass",
+        "TSurveyPlatform",
+        "TOAuthSurveyPlatformClass",
+        "TOAuthSurveyPlatform",
+        "TSurveyPlatformFormFieldClass",
+        "TSurveyPlatformFormField",
+        "TSurveyPlatformFormButtonClass",
+        "TSurveyPlatformFormButton",
+    ]

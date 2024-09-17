@@ -16,7 +16,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
-from ddsurveys.blueprints._common import get_researcher
+from ddsurveys.blueprints._common import abbreviate_variable_name, get_researcher, insert_exists_variables
 from ddsurveys.blueprints.custom_variables import custom_variables
 from ddsurveys.blueprints.data_providers import data_providers
 from ddsurveys.blueprints.respondent import respondent
@@ -27,6 +27,7 @@ from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
+    from typings.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
 
 logger = get_logger(__name__)
 
@@ -686,7 +687,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
             logger.info("Upload custom variables: %s", enabled_custom_variables)
             enabled_variables.extend(enabled_custom_variables)
 
-        platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+        platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
@@ -702,7 +703,16 @@ def sync_variables(id_: str) -> ResponseReturnValue:
                 400,
             )
 
-        survey_platform = platform_class(**project.survey_platform_fields)
+        survey_platform: TSurveyPlatform = platform_class(**project.survey_platform_fields)
+
+        enabled_variables = insert_exists_variables(enabled_variables)
+        for variable in enabled_variables:
+            variable["qualified_name"] = abbreviate_variable_name(
+                variable_name=variable["qualified_name"],
+                first_apply="dp",
+                strategy="full",
+                max_length=45
+            )
 
         status, message_id, text_message = survey_platform.handle_variable_sync(
             enabled_variables

@@ -225,13 +225,12 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     "api.ddsurveys.survey_platforms.variables_sync.success",
                     "Variables synced successfully!",
                 )
-            else:
-                return (
-                    400,
-                    "api.ddsurveys.survey_platforms.variables_sync.failed",
-                    "Failed to sync variables!",
-                )
 
+            return (
+                400,
+                "api.ddsurveys.survey_platforms.variables_sync.failed",
+                "Failed to sync variables!",
+            )
         except (FailedQualtricsRequest, PermissionError):
             return (
                 401,

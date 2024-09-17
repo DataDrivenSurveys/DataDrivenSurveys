@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """This module provides blueprints for respondent backend requests.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -16,6 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
+from ddsurveys.blueprints._common import abbreviate_variable_name
 from ddsurveys.data_providers import DataProvider, OAuthDataProvider
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import (
@@ -662,9 +662,11 @@ def prepare_survey() -> ResponseReturnValue:
                         data=frontend_variables,
                     )
                 )
-            # logger.debug("Project variables: %s", project.variables)
-            # logger.debug("Project custom variables: %s", project.custom_variables)
-            # logger.debug("Data to upload: %s", data_to_upload)
+
+            data_to_upload = {
+                abbreviate_variable_name(variable_name, "dp", "full"): value
+                for variable_name, value in data_to_upload.items()
+            }
 
             success_preparing_survey, unique_url = (
                 platform_instance.handle_prepare_survey(

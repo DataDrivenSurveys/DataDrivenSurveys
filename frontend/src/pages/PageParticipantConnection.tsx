@@ -368,9 +368,9 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                     <Typography variant="body1">{
                       t('ui.respondent.connection.alert.survey_ready.message.will_be_redirected')
                     }</Typography>
-                    <a href={surveyURL} target={'_blank'} rel="noreferrer">
+                    <Link href={surveyURL} target={'_blank'} rel="noreferrer" variant="body1" color="primary">
                       {t('ui.respondent.connection.click_here')}
-                    </a> {t('ui.respondent.connection.if_not_redirected_automatically')}
+                    </Link> {t('ui.respondent.connection.if_not_redirected_automatically')}
 
                   </Alert>
                 </Stack>

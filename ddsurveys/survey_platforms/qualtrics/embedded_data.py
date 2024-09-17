@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-05-02 16:33.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -10,6 +9,10 @@ from collections import OrderedDict
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, MutableMapping, ValuesView
 from copy import deepcopy
 from typing import ClassVar, TypeVar, overload
+
+from ddsurveys.get_logger import get_logger
+
+logger = get_logger(__name__)
 
 # Taken from typing module:
 T = TypeVar("T")  # Any type.
@@ -221,24 +224,24 @@ class EmbeddedData:
     def __getitem__(self, item):
         if item in self.__slots__:
             return self.__getattribute__(item)
-        elif item in self.qualtrics_to_attributes_map:
+
+        if item in self.qualtrics_to_attributes_map:
             return self.__getattribute__(self.qualtrics_to_attributes_map[item])
-        else:
-            msg = (
-                f"Passed item '{item}' does not correspond to an {self.__class__.__name__} attribute or "
-                f"Qualtrics defined EmbeddedData attribute."
-            )
-            raise ValueError(
-                msg
-            )
+
+        msg = (
+            f"Passed item '{item}' does not correspond to an {self.__class__.__name__} attribute or "
+            f"Qualtrics defined EmbeddedData attribute."
+        )
+        raise ValueError(msg)
 
     def __eq__(self, other: dict | EmbeddedData) -> bool:
         if isinstance(other, EmbeddedData):
             return repr(self) == repr(other)
-        elif isinstance(other, dict):
+
+        if isinstance(other, dict):
             return self.to_dict() == other
-        else:
-            return False
+
+        return False
 
     @classmethod
     def from_dict(cls, dict_: dict) -> EmbeddedData:
@@ -259,17 +262,15 @@ class EmbeddedData:
                 out_dict["Value"]
             )  # Convert value to string to avoid API errors.
             return out_dict
-        elif dict_type == "variable":
+        if dict_type == "variable":
             out_dict = {k: self[k] for k in self.qualtrics_to_attributes_map}
             return self.embedded_data_to_custom_variable(out_dict)
-        else:
-            msg = (
-                f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: "
-                f"'Qualtrics' and 'variable'."
-            )
-            raise ValueError(
-                msg
-            )
+
+        msg = (
+            f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: "
+            f"'Qualtrics' and 'variable'."
+        )
+        raise ValueError(msg)
 
     @classmethod
     def get_dict_type(cls, dict_: dict) -> str:
@@ -357,18 +358,22 @@ class EmbeddedDataBlock(MutableMapping):
     def data(self):
         return deepcopy(self._data)
 
-    def to_dict(self, default_exists_value: bool = True) -> dict:
-        """Returns the dictionary format of the block. This object can be inserted into a flow for uploading to
-        Qualtrics.
+    def to_dict(self, *, default_exists_value: bool = True) -> dict:
+        """Returns the dictionary format of the block.
+
+        This object can be inserted into a flow for uploading to Qualtrics.
+
+        Args:
+            default_exists_value: A boolean indicating the value to use for the
+                ".exists" variables.
 
         Returns:
-        -------
-
+            A dictionary representing the EmbeddedData block.
         """
         exists_variables = {
-            f"{k}.exists": self.create_exists_variable(v, default_exists_value)
+            f"{k}.exists": self.create_exists_variable(v, value=default_exists_value)
             for k, v in self._data.items()
-            if not k.endswith(".exists") and f"{k}.exists" not in self._data
+            if not (k.endswith((".exists", ".e")) or f"{k}.exists" in self._data or f"{k}.e" in self._data)
         }
 
         self._data.update(exists_variables)
@@ -412,8 +417,7 @@ class EmbeddedDataBlock(MutableMapping):
     def __eq__(self, other):
         if isinstance(other, EmbeddedDataBlock):
             return self._data == other.data
-        else:
-            return self._data == EmbeddedDataBlock(other).data
+        return self._data == EmbeddedDataBlock(other).data
 
     def __ne__(self, other):
         return not self == other
@@ -462,7 +466,7 @@ class EmbeddedDataBlock(MutableMapping):
 
     @staticmethod
     def create_exists_variable(
-        ref_variable: TEmbeddedDataLike, value: bool
+        ref_variable: TEmbeddedDataLike, *, value: bool
     ) -> EmbeddedData:
         ref_variable = deepcopy(ref_variable)
 
@@ -471,7 +475,8 @@ class EmbeddedDataBlock(MutableMapping):
             ref_variable.variable_type = "String"
             ref_variable.value = str(value)
             return ref_variable
-        elif isinstance(ref_variable, dict):
+
+        if isinstance(ref_variable, dict):
             ref_variable.update(
                 {
                     ref_variable["name"]: f"{ref_variable['name']}.exists",
@@ -479,20 +484,18 @@ class EmbeddedDataBlock(MutableMapping):
                     "Value": str(value),
                 }
             )
+
         return EmbeddedData.from_dict(ref_variable)
 
     def overwrite_custom_variables(self, new_variables: TEmbeddedDataBlockLike) -> None:
         """Overwrites the custom variables in the EmbeddedDataBlock with the new variables.
+
         Variables that are not namespaced with 'dds.' will not be overwritten.
 
         Args:
-            new_variables: A dictionary or EmbeddedDataBlock containing the new variables that should be added to the
-            EmbeddedDataBlock after removing the already existing variables.
-            default_exists_value (bool): Default value for the implicit '.exists' variables if they have not been
-            declared already.
-
-        Returns:
-
+            new_variables: A dictionary or EmbeddedDataBlock containing the new
+                variables that should be added to the EmbeddedDataBlock after
+                removing the already existing variables.
         """
         current_variables: dict[str, EmbeddedData] = {
             k: v for k, v in self._data.items() if not k.startswith("dds.")
@@ -509,9 +512,7 @@ class EmbeddedDataBlock(MutableMapping):
             current_variables.update(new_variables._data)
         else:
             msg = "Passed item 'new_variables' does not correspond to a dict or EmbeddedDataBlock."
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
         self._data = current_variables
 
 
