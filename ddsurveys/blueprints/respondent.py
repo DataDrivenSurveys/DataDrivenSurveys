@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import traceback
-from collections.abc import Generator
 from typing import TYPE_CHECKING, Any
 
 from flask import Blueprint, Response, g, jsonify, request
@@ -34,6 +33,8 @@ from ddsurveys.survey_platforms import SurveyPlatform
 # from ._common import get_project_data_connection
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from flask.typing import ResponseReturnValue
 
     from ddsurveys.typings.data_providers.bases import TOAuthDataProviderClass
@@ -371,7 +372,8 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                                 "id": "api.data_provider.exchange_code_success",
                                 "text": "Successfully exchanged code for tokens",
                             },
-                            "entity": response,
+                            "tokens": response,
+                            "data_provider_name": provider_instance.name,
                         }
                     ),
                     200,
@@ -384,7 +386,10 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                     {
                         "message": {
                             "id": response["message_id"],
-                            "text": response.get("text", "Full scope not granted"),
+                            "text": response.get("text", "An unknown error occurred"),
+                            "required_scopes": response.get("required_scopes", []),
+                            "accepted_scopes": response.get("accepted_scopes", []),
+                            "data_provider_name": provider_instance.name,
                         },
                     }
                 ),
@@ -397,8 +402,9 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                 jsonify(
                     {
                         "message": {
-                            "id": "api.data_provider.exchange_code_error",
+                            "id": "api.data_provider.exchange_code_error.generic",
                             "text": "Error exchanging code for tokens",
+                            "data_provider_name": provider_instance.name,
                         },
                     }
                 ),
@@ -704,13 +710,16 @@ def prepare_survey() -> ResponseReturnValue:
                         200,
                     )
             else:
+                logger.error("Failed to prepare survey.")
+                if survey_platform_status == 200:
+                    survey_platform_status = 500
                 return (
                     jsonify(
                         {
                             "message": {
                                 "id": "api.respondent.survey.failed_distribution_link",
                                 "text": "Failed to create a unique distribution link",
-                            }
+                            },
                         }
                     ),
                     survey_platform_status,
@@ -808,7 +817,7 @@ def connect_respondent() -> ResponseReturnValue:
             )  # Converting the string to Enum.
 
             # Get the data provider
-            data_provider = db.query(DataProviderModel).get(data_provider_name)
+            data_provider: DataProviderModel = db.query(DataProviderModel).get(data_provider_name)
             if not data_provider:
                 logger.warning("Data provider not found: %s", data_provider_name)
                 return (
@@ -846,7 +855,7 @@ def connect_respondent() -> ResponseReturnValue:
                 )
 
             # Check if DataProviderAccess exists
-            existing_data_provider_access = (
+            existing_data_provider_access: DataProviderAccess = (
                 db.query(DataProviderAccess)
                 .filter_by(
                     user_id=user_id,

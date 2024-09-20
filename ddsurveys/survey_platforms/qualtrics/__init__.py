@@ -232,6 +232,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                 "Failed to sync variables!",
             )
         except (FailedQualtricsRequest, PermissionError):
+            logger.debug("Failed to sync variables for survey %s", self.survey_id)
             return (
                 401,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
@@ -295,6 +296,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                 return False, None
 
         except FailedQualtricsRequest:
+            logger.debug("Failed to prepare survey for data collection")
             return False, None
 
     def handle_export_survey_responses(self) -> tuple[int, str, str, bytes | str | None]:

@@ -511,6 +511,7 @@ class OAuthDataProvider(DataProvider):
     provider_type: str = "oauth"
 
     _scopes: ClassVar[list[str]] = []
+    _scopes_names: ClassVar[dict[str, str]] = {}
     _categories_scopes: ClassVar[dict[str, str]] = {}
 
     def __init__(
@@ -565,8 +566,12 @@ class OAuthDataProvider(DataProvider):
 
     # Instance properties
     @property
-    def scopes(self):
+    def scopes(self) -> list[str]:
         return self.__class__._scopes
+
+    @property
+    def scopes_names(self) -> dict[str, str]:
+        return self.__class__._scopes_names
 
     @property
     def required_scopes(self) -> list[str]:
@@ -628,7 +633,7 @@ class OAuthDataProvider(DataProvider):
         ...
 
     @abstractmethod
-    def revoke_token(self, token: str) -> bool:
+    def revoke_token(self, token: str | None = None) -> bool:
         ...
 
 

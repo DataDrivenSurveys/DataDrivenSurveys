@@ -21,10 +21,12 @@ import { useSnackbar } from '../context/SnackbarContext';
 import { API } from '../types';
 import { ResponseData, ResponseError } from '../types/api';
 
-
-const SurveyPlatformIntegration = loadable(() => import('../components/project/survey_platform/SurveyPlatformIntegration'), {
-  fallback: <LoadingAnimation />,
-});
+const SurveyPlatformIntegration = loadable(
+  () => import('../components/project/survey_platform/SurveyPlatformIntegration'),
+  {
+    fallback: <LoadingAnimation />,
+  }
+);
 const DataProviders = loadable(() => import('../components/project/data_provider/DataProviders'), {
   fallback: <LoadingAnimation />,
 });
@@ -32,13 +34,11 @@ const VariableManagement = loadable(() => import('../components/project/Variable
   fallback: <LoadingAnimation />,
 });
 
-
 interface ProjectNameFieldProps {
   project: API.Projects.Project;
 }
 
 const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
-
   const { t } = useTranslation();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
@@ -49,38 +49,43 @@ const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
     setName(project.name);
   }, [project]);
 
+  const handleSave = useDebouncedCallback(
+    useCallback(
+      async (projectName: string) => {
+        const response = await PUT(`/projects/${project.id}`, {
+          name: projectName,
+        });
 
-  const handleSave = useDebouncedCallback(useCallback(async (projectName: string) => {
-    const response = await PUT(`/projects/${project.id}`, {
-      name: projectName,
-    });
+        response.on('2xx', async (status: number, data: ResponseData) => {
+          if (status === 200) {
+            showSnackbar(t(data.message.id), 'success');
+          }
+        });
 
-    response.on('2xx', async (status: number, data: ResponseData) => {
-      if (status === 200) {
-        showSnackbar(t(data.message.id), 'success');
-      }
-    });
+        response.on('4xx', (_: number, data: ResponseData) => {
+          showSnackbar(t(data.message.id), 'error');
+        });
+      },
+      [project, showSnackbar, t]
+    ),
+    500
+  );
 
-    response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
-    });
-  }, [project, showSnackbar, t]), 500);
-
-  return <TextField
-    label={t('ui.project.field.name.label')}
-    value={name}
-    variant={'standard'}
-    required
-    onChange={(ev) => {
-      setName(ev.target.value);
-      handleSave(ev.target.value);
-    }}
-  />;
+  return (
+    <TextField
+      label={t('ui.project.field.name.label')}
+      value={name}
+      variant={'standard'}
+      required
+      onChange={ev => {
+        setName(ev.target.value);
+        handleSave(ev.target.value);
+      }}
+    />
+  );
 };
 
-
 const PageProject = (): JSX.Element => {
-
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -99,64 +104,68 @@ const PageProject = (): JSX.Element => {
 
   const [project, setProject] = useState<API.Projects.Project | null>(null);
 
-  const fetchProject = useCallback(async (projectId: string) => {
-    setLoadingSurveyPlatformIntegration(true); // Start loading
-    setLoadingDataProviders(true); // Start loading
-    setLoadingVariables(true); // Start loading
-    const response = await GET(`/projects/${projectId}`);
+  const fetchProject = useCallback(
+    async (projectId: string) => {
+      setLoadingSurveyPlatformIntegration(true); // Start loading
+      setLoadingDataProviders(true); // Start loading
+      setLoadingVariables(true); // Start loading
+      const response = await GET(`/projects/${projectId}`);
 
-    response.on('2xx', (status: number, data: API.Projects.Project) => {
-      if (status === 200) {
-        setProject(data);
-        setLastSynched(data.last_synced);
+      response.on('2xx', (status: number, data: API.Projects.Project) => {
+        if (status === 200) {
+          setProject(data);
+          setLastSynched(data.last_synced);
+          setLoadingSurveyPlatformIntegration(false); // Stop loading
+          setLoadingDataProviders(false); // Stop loading
+          setLoadingVariables(false); // Stop loading
+        }
+      });
+
+      response.on('4xx', (status: number, data: ResponseData) => {
+        showSnackbar(t(data.message.id), 'error');
         setLoadingSurveyPlatformIntegration(false); // Stop loading
         setLoadingDataProviders(false); // Stop loading
         setLoadingVariables(false); // Stop loading
-      }
-    });
-
-    response.on('4xx', (status: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
-      setLoadingSurveyPlatformIntegration(false); // Stop loading
-      setLoadingDataProviders(false); // Stop loading
-      setLoadingVariables(false); // Stop loading
-      if (status === 404) {
-        navigate('/projects');
-      }
-    });
-  }, [showSnackbar, t, navigate]);
+        if (status === 404) {
+          navigate('/projects');
+        }
+      });
+    },
+    [showSnackbar, t, navigate]
+  );
 
   useEffect(() => {
     fetchProject(projectId || '');
   }, [projectId, fetchProject]);
 
-  const syncVariables = useCallback(async (project: API.Projects.Project) => {
-    setSyncLoading(true);
-    const response = await POST(`/projects/${projectId}/sync_variables`);
-    setSyncLoading(false);
-    const lastSynched = project.last_synced;
-    setLastSynched(null);
-    response.on('2xx', (status: number, data: ResponseData) => {
-      if (status === 200) {
-        showSnackbar(t(data.message.id), 'success');
-        setLastSynched((new Date()).toISOString());
-      }
-    });
+  const syncVariables = useCallback(
+    async (project: API.Projects.Project) => {
+      setSyncLoading(true);
+      const response = await POST(`/projects/${projectId}/sync_variables`);
+      setSyncLoading(false);
+      const lastSynched = project.last_synced;
+      setLastSynched(null);
+      response.on('2xx', (status: number, data: ResponseData) => {
+        if (status === 200) {
+          showSnackbar(t(data.message.id), 'success');
+          setLastSynched(new Date().toISOString());
+        }
+      });
 
-    response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
-      setLastSynched(lastSynched);
-    });
+      response.on('4xx', (_: number, data: ResponseData) => {
+        showSnackbar(t(data.message.id), 'error');
+        setLastSynched(lastSynched);
+      });
 
-    response.on('5xx', (_: number, data: ResponseError) => {
-      showSnackbar(data.error, 'error');
-      setLastSynched(lastSynched);
-    });
-
-  }, [projectId, showSnackbar, t]);
+      response.on('5xx', (_: number, data: ResponseError) => {
+        showSnackbar(data.error, 'error');
+        setLastSynched(lastSynched);
+      });
+    },
+    [projectId, showSnackbar, t]
+  );
 
   const downloadRespondentResponses = useCallback(async () => {
-
     setDownloadLoading(true);
     const response = await POST_BLOB(`/projects/${projectId}/export_survey_responses`);
     setDownloadLoading(false);
@@ -180,7 +189,6 @@ const PageProject = (): JSX.Element => {
     response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
     });
-
   }, [projectId, showSnackbar, t]);
 
   const previewSurvey = useCallback(async () => {
@@ -190,7 +198,6 @@ const PageProject = (): JSX.Element => {
       if (status === 200) {
         window.open(data, '_blank');
       }
-
     });
 
     response.on('4xx', (_: number, data: ResponseData) => {
@@ -201,7 +208,6 @@ const PageProject = (): JSX.Element => {
       showSnackbar(data.error, 'error');
     });
   }, [projectId, showSnackbar, t]);
-
 
   const clearRespondentData = useCallback(async () => {
     const response = await DEL(`/projects/${projectId}/respondents`);
@@ -219,9 +225,7 @@ const PageProject = (): JSX.Element => {
     response.on('5xx', (_: number, data: ResponseError) => {
       showSnackbar(data.error, 'error');
     });
-
   }, [projectId, showSnackbar, t]);
-
 
   const domain = window.location.origin;
   return (
@@ -234,14 +238,10 @@ const PageProject = (): JSX.Element => {
               <Stack flex={1}>
                 <ProjectNameField project={project} />
               </Stack>
-              <CopyClipboard
-                label={t('ui.project.clipboard.copy.label')}
-                what={`${domain}/dist/${project.short_id}`}
-              />
+              <CopyClipboard label={t('ui.project.clipboard.copy.label')} what={`${domain}/dist/${project.short_id}`} />
 
-              <Stack direction={'column'} alignItems={'flex-start'} spacing={.5}>
-                <Stack direction={'row'} alignItems={'flex-start'} spacing={.5}>
-
+              <Stack direction={'column'} alignItems={'flex-start'} spacing={0.5}>
+                <Stack direction={'row'} alignItems={'flex-start'} spacing={0.5}>
                   <LoadingButton
                     variant="contained"
                     size={'small'}
@@ -250,22 +250,15 @@ const PageProject = (): JSX.Element => {
                     startIcon={<SyncIcon />}
                     onClick={() => {
                       syncVariables(project);
-                    }}>
+                    }}
+                  >
                     {t('ui.project.button.sync_variables')}
                   </LoadingButton>
 
-
                   <ButtonGroup disableElevation size="small" variant="outlined" aria-label="Project Actions">
                     <Stack direction="row" alignItems="flex-start" spacing={1}>
-
-                      <Button
-                        size={'small'}
-                        color="primary"
-                        startIcon={<ScienceIcon />}
-                        onClick={previewSurvey}
-                      >
+                      <Button size={'small'} color="primary" startIcon={<ScienceIcon />} onClick={previewSurvey}>
                         {t('ui.project.button.preview_survey')}
-
                       </Button>
                       <LoadingButton
                         size={'small'}
@@ -276,10 +269,12 @@ const PageProject = (): JSX.Element => {
                       >
                         {t('ui.project.button.download_data')}
                       </LoadingButton>
-                      <Button size={'small'}
+                      <Button
+                        size={'small'}
                         color="error"
                         startIcon={<RestoreIcon />}
-                        onClick={() => setClearResondentDataDialogOpen(true)}>
+                        onClick={() => setClearResondentDataDialogOpen(true)}
+                      >
                         {t('ui.project.button.delete_all_respondents')}
                       </Button>
                     </Stack>
@@ -288,7 +283,7 @@ const PageProject = (): JSX.Element => {
 
                 {project.last_synced !== null && !syncLoading && (
                   <Typography variant="caption" color="text.secondary">
-                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale((lastSynched as string))}`}
+                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynched as string)}`}
                   </Typography>
                 )}
               </Stack>
@@ -305,9 +300,7 @@ const PageProject = (): JSX.Element => {
           <Stack spacing={2}>
             <Typography variant="h6"> {t('ui.project.survey_platform.title')}</Typography>
             <Loading loading={loadingSurveyPlatformIntegration}>
-              <SurveyPlatformIntegration
-                project={project}
-              />
+              <SurveyPlatformIntegration project={project} />
             </Loading>
           </Stack>
 
@@ -344,9 +337,7 @@ const PageProject = (): JSX.Element => {
         title={t('ui.project.dialog.delete_respondents.title')}
         content={
           <Stack spacing={2}>
-            <Typography variant="body1">
-              {t('ui.project.dialog.delete_respondents.content')}
-            </Typography>
+            <Typography variant="body1">{t('ui.project.dialog.delete_respondents.content')}</Typography>
           </Stack>
         }
         onClose={() => setClearResondentDataDialogOpen(false)}
@@ -355,6 +346,5 @@ const PageProject = (): JSX.Element => {
     </>
   );
 };
-
 
 export default PageProject;

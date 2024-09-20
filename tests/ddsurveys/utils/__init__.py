@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-11-06 10:33.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)

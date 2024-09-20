@@ -139,6 +139,7 @@ function App(): JSX.Element {
 
                   {/*Distribution Routes*/}
                   <Route path="/dist" element={<PageParticipantConnection placeholder={true} />} />
+
                   <Route path="/dist/:projectShortId" element={<PageParticipantConnection />} />
 
                   <Route path="/dist/redirect/:provider" element={<PageParticipantOauth2Redirect />} />

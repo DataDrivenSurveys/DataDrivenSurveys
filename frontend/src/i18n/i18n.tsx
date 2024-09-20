@@ -5,7 +5,6 @@ import { initReactI18next, Trans } from 'react-i18next';
 
 import resources from './resources.json';
 
-
 // Initialize i18next with react-i18next
 i18n
   .use(Backend)
@@ -47,5 +46,23 @@ export const I18Link = ({ i18nKey, url, link_text = null }: I18LinkProps): JSX.E
     />
   );
 };
+
+interface InterpolateContentProps {
+  i18nKey: string;
+  values?: Record<string, string>;
+}
+
+export function InterpolateContent({ i18nKey, values }: InterpolateContentProps): JSX.Element {
+  return (
+    <Trans
+      i18nKey={i18nKey}
+      components={{
+        strong: <strong />,
+        br: <br />,
+      }}
+      values={values}
+    />
+  );
+}
 
 export default i18n;

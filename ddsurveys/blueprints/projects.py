@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module provides blueprints for managing projects.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)

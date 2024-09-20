@@ -20,14 +20,12 @@ if (existsSync(envLocalFilePath)) {
 
 // Get the base URL for your site from the environment variables
 const baseUrl: string = process.env.REACT_APP_FRONTEND_URL || 'https://www.datadrivensurvey.com';
-const domain: string = baseUrl.replace(/^https?:\/\//, '');
 
 // Create the content for the robots.txt file
 const robotsContent = `# https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Sitemap: ${baseUrl}/sitemap.xml
 Allow: /projects
-Disallow: http://${domain}
 Disallow: /projects/create
 Disallow: /projects/
 Disallow: /dist

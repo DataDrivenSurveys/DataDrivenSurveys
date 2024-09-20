@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
-"""This module is a template file that can be used as a starting point for creating your own data providers.
-You will need to replace the elipses (...) with the correct classes and code.
+"""This module provides the GoogleContactsDataProvider.
+
+The GoogleContactsDataProvider class is responsible for fetching and processing data from Google Contacts.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -9,15 +9,15 @@ from __future__ import annotations
 
 import operator
 import traceback
-from collections import namedtuple
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
 
 import requests
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import Resource, build
+from googleapiclient.discovery import build
+from oauthlib.oauth2 import InvalidGrantError
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.googlecontacts.people import People
@@ -31,11 +31,18 @@ __all__ = ["GoogleContactsDataProvider"]
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from googleapiclient.discovery import Resource
+
     from ddsurveys.data_providers.googlecontacts.api_response_dicts import ContactDict
     from ddsurveys.typings.data_providers.data_categories import DataCategory
     from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
+
+
+class _MockCredentials(NamedTuple):
+    token: str
+    granted_scopes: list[str]
 
 
 # This is an example of a data category.
@@ -65,6 +72,11 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/contacts.readonly"
     ]
+
+    _scopes_names: ClassVar[dict[str, str]] = {
+        "https://www.googleapis.com/auth/userinfo.profile": "Profile Information",
+        "https://www.googleapis.com/auth/contacts.readonly": "Contacts"
+    }
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
     _categories_scopes: ClassVar = {
@@ -176,8 +188,29 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.api_client = build("people", "v1", credentials=self.credentials)
 
     def init_oauth_client(
-        self, client_id: str | None = None, client_secret: str | None = None, project_id: str | None = None
+        self,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        project_id: str | None = None,
     ) -> None:
+        """Initializes the OAuth client for Google API authentication.
+
+        This function sets up the OAuth client using the provided client ID,
+        client secret, project ID, and scopes.
+        If any of these parameters are not provided, it uses the corresponding
+        class attributes.
+
+        Args:
+            client_id: The client ID for the OAuth application.
+                Defaults to None.
+            client_secret: The client secret for the OAuth application.
+                Defaults to None.
+            project_id: The project ID for the OAuth application.
+                Defaults to None.
+
+        Returns:
+            None
+        """
         client_config = {
             "web": {
                 "client_id": client_id or self.client_id,
@@ -201,15 +234,15 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
     ) -> str:
         url, state = self.oauth_client.authorization_url(
-            # Recommended, enable offline access so that you can refresh an access token without
-            # re-prompting the user for permission. Recommended for web server apps.
+            # Recommended: enable offline access so that you can refresh an access token
+            # without re-prompting the user for permission.
             access_type="offline",
 
-            # Optional, enable incremental authorization. Recommended as a best practice.
+            # Optional, enable incremental authorization. Recommended as a best practice
             include_granted_scopes='true',
 
             # Optional, set prompt to 'consent' will prompt the user for consent
-            prompt='consent',
+            prompt='select_account consent',
         )
         self.state = state
         return url
@@ -224,40 +257,58 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return self.required_scopes
 
     def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
-        url_params = data["url_params"]
+        url_params = data.get("url_params", {})
         code: str | None = url_params.get("code", None)
 
         if code is None:
             return {
                 "success": False,
-                "message_id": "api.data_provider.exchange_code_error",
+                "message_id": "api.data_provider.exchange_code_error.no_code",
                 "text": "Failed to get the access to the data provider.",
             }
 
         logger.info("Requesting token")
         exchange_failed = False
+        credentials: Credentials | _MockCredentials
         try:
-            self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
+            self.oauth_client.fetch_token(
+                authorization_response=f"{self.redirect_uri}?code={code}"
+            )
             credentials = self.oauth_client.credentials
-        except Warning as e:
-            logger.warning("Warning when exchanging tokens: %s", e)
+        except InvalidGrantError:
+            logger.exception("Failed to exchange the code for token.")
+
             # Create mock credentials object to fail the granted scopes check
-            credentials = namedtuple("Credentials", ["granted_scopes"])(granted_scopes=[""])
+            credentials = _MockCredentials(granted_scopes=self._extract_scopes(url_params.get("scope", "")), token=code)
             exchange_failed = True
+        except Exception as e:
+            logger.exception("An unknown error occurred while exchanging the code for token.")
+            logger.error("Exchange failed: %s", traceback.format_exc())  # noqa: TRY400
+            text = "".join((
+                "Please send the following message to the researchers running the survey:\n",
+                "An error occurred while exchanging the code for token: ",
+                str(e),
+                "\nTraceback:\n",
+                traceback.format_exc(),
+            ))
+            return {
+                "success": False,
+                "message_id": "api.data_provider.exchange_code_error.unexpected_error",
+                "text": text,
+            }
 
         if exchange_failed or not set(self.required_scopes).issubset(set(credentials.granted_scopes)):
-            logger.error("The required scopes were not granted.")
-            self.revoke_token(credentials.token)
+            logger.error(
+                "The required scopes were not granted. The app cannot revoke access without full scope access."
+            )
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.incomplete_scopes",
-                "required_scopes": self.scopes,
-                "accepted_scopes": credentials.granted_scopes,
+                "required_scopes": [self.scopes_names[scope] for scope in self.scopes],
+                "accepted_scopes": [self.scopes_names[scope] for scope in credentials.granted_scopes],
             }
 
-        self.init_api_client(credentials.token, credentials.refresh_token, credentials.client_id,
-                             credentials.client_secret)
-
+        # Get profile information
         people_service = build("people", "v1", credentials=credentials)
         profile = people_service.people().get(resourceName='people/me', personFields='names').execute()
 
@@ -272,15 +323,17 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             "user_name": profile["names"][0]["displayName"],
         }
 
-    def revoke_token(self, token: str) -> bool:
-
-        if self.credentials is None:
-            self.credentials = self.oauth_client.credentials
+    def revoke_token(self, token: str | None = None) -> bool:
+        if token is None:
+            if self.credentials is None:
+                self.credentials = self.oauth_client.credentials
+            token = self.credentials.token
 
         r = requests.post(
             "https://oauth2.googleapis.com/revoke",
-            params={"token": self.credentials.token},
+            params={"token": token},
             headers={"content-type": "application/x-www-form-urlencoded"},
+            timeout=5,
         )
 
         if r.status_code == 200:
@@ -288,7 +341,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             return True
 
         logger.error("Failed to revoke google token: %s", r.status_code)
-        logger.error("Response: %s", r.content)
+        logger.error("Response: %s", r.json())
         return False
 
     # DataProvider methods
@@ -365,6 +418,11 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             logger.debug(traceback.format_exc())
             return False
 
+    @staticmethod
+    def _extract_scopes(scope_string: str) -> list[str]:
+        return [s for s in scope_string.split(" ") if s.startswith("http")]
+
+    # Data extraction methods
     @property
     def person_fields(self) -> str:
         return self.__class__._person_fields

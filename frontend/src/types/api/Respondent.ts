@@ -56,7 +56,7 @@ export interface DataProvider {
   authorize_url: string;
 }
 
-export type UsedVariable = BuiltinVariable | CustomVariable
+export type UsedVariable = BuiltinVariable | CustomVariable;
 
 export interface Project {
   id: string;
@@ -71,13 +71,25 @@ export interface Project {
 // Responses
 
 export interface ResponseExchangeCodeSuccess extends ResponseData {
-  entity: {
+  tokens: {
     success: true;
     access_token: string;
     refresh_token: string;
     user_id: string;
     user_name: string;
   };
+  data_provider_name: string;
+}
+
+export interface MessageExchangeCodeFailure extends MessageData {
+  text: string;
+  required_scopes: string[];
+  accepted_scopes: string[];
+  data_provider_name: string;
+}
+
+export interface ResponseExchangeCodeFailure extends ResponseData {
+  message: MessageExchangeCodeFailure;
 }
 
 export interface ResponseDataSurveyDistribution {

@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-"""This module provides various utility functions that can be used in various parts of the system.
+"""This module provides various utility functions.
 
 Created on 2024-04-30 13:44
 

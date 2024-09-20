@@ -90,7 +90,6 @@ class DBManager:
         "pool_pre_ping": True,  # Check if connection is alive before using it
         "pool_recycle": 1800,  # Recycle connection after 30 minutes to avoid timeouts
         "pool_size": 10,  # Number of connections to maintain in the pool
-        "max_overflow": 20,  # Maximum number of additional connections beyond pool_size
     }
 
     @classmethod

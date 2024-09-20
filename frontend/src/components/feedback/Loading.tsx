@@ -2,23 +2,13 @@ import { Stack, Typography } from '@mui/material';
 import React, { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-
 export interface LoadingAnimationProps {
   content?: React.ReactNode;
   failed?: boolean; // If true, display a failed icon instead of a loading one. Default is false.
 }
 
-const LoadingAnimationComponent = ({
-  content = null,
-  failed = false,
-}: LoadingAnimationProps): JSX.Element => (
-  <Stack
-    alignItems="stretch"
-    justifyContent="center"
-    spacing={2}
-    flex={1}
-    p={2}
-  >
+const LoadingAnimationComponent = ({ content = null, failed = false }: LoadingAnimationProps): JSX.Element => (
+  <Stack alignItems="stretch" justifyContent="center" spacing={2} flex={1} p={2}>
     <Stack alignItems="center" justifyContent="center" spacing={2}>
       <img
         alt="Loading..."
@@ -32,7 +22,6 @@ const LoadingAnimationComponent = ({
 );
 
 export const LoadingAnimation = React.memo(LoadingAnimationComponent);
-
 
 export interface LoadingProps {
   children?: React.ReactNode;
@@ -48,14 +37,12 @@ const LoadingComponent = ({
   content = <></>,
 }: LoadingProps): JSX.Element => {
   // find first error that is not undefined or null
-  const error = errors.find((error) => error !== undefined && error !== null);
+  const error = errors.find(error => error !== undefined && error !== null);
   if (error) {
     return <LoadingAnimation content={error.message} failed={true} />;
   }
   if (loading) {
-    return (
-      <LoadingAnimation content={content} failed={false} />
-    );
+    return <LoadingAnimation content={content} failed={false} />;
   }
   return <>{children}</>;
 };

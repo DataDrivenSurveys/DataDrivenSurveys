@@ -82,11 +82,20 @@
           "connection_deleted": "Data connection deleted successfully",
           "connection_not_found": "Data connection not found",
           "connection_status": "Data connection status",
-          "exchange_code_error": "Failed to get the access to the data provider.",
-          "exchange_code_error.access_denied": "You denied granting access to your data.",
-          "exchange_code_error.general_error": "An unexpected error occurred while processing your request.",
-          "exchange_code_error.incomplete_scopes": "You need to grant all the permissions to continue",
-          "exchange_code_success": "Successfully exchanged the code for access token",
+          "exchange_code_error": {
+            "generic": "Something went wrong with granting access to {{data_provider_name}}.",
+            "no_code": "Did not receive a code for {{data_provider_name}}. This likely happened because you decided not to allow $t(ui.app.name.full) to access your data.<br/>If this was a mistake, you can click '<strong>$t(ui.project.survey_platform.code_exchange.connection.button.go_back)</strong>' and then connect to {{data_provider_name}} again to grant the necessary scopes.",
+            "access_denied": "You denied granting access to your data.",
+            "unexpected_error": "An unexpected error occurred while granting access.",
+            "general_error": "An unexpected error occurred while processing your request.",
+            "incomplete_scopes": "You did not grant access to all the required scopes for this survey. Click '<strong>$t(ui.project.survey_platform.code_exchange.connection.button.go_back)</strong>' and then connect to {{data_provider_name}} again to grant the necessary scopes.",
+            "required_scopes_details": {
+              "required_scopes_header": "Required permissions:",
+              "accepted_scopes_header": "Permissions granted:",
+              "missing_scopes_header": "Missing permissions:"
+            }
+          },
+          "exchange_code_success": "Successfully granted access to {{data_provider_name}}",
           "invalid_tokens": "Invalid access token or refresh token",
           "is_required": "Data provider is required",
           "missing_tokens": "Access token or refresh token not provided",
@@ -216,7 +225,7 @@
         "unauthorized": "Unauthorized"
       },
       "homepage": {
-        "title": "Data-Driven Surveys (DDS)",
+        "title": "$t(ui.app.name.full)",
         "introduction": {
           "title": "What is Data-Driven Surveys (DDS)?",
           "content": "Data-Driven Surveys (DDS) is a platform that enables survey designers to create data-driven surveys. A data-driven survey is a survey that uses respondents' data from various online platforms (e.g., Fitbit, Instagram, Github, Google Contacts, etc.) for survey customization, personalization, pre-answering, and background information collection."
@@ -455,6 +464,13 @@
         }
       },
       "ui": {
+        "app": {
+          "name": {
+            "short": "DDS",
+            "full": "Data-Driven Surveys (DDS)",
+            "long": "Data-Driven Surveys"
+          }
+        },
         "auth": {
           "titles": {
             "signup": "Survey Designer Sign Up",

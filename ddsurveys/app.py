@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-"""Created on 2023-05-23 15:41.
+"""This module provides the Flask application.
+
+Created on 2023-05-23 15:41.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -26,6 +27,8 @@ from ddsurveys.models import DBManager
 from ddsurveys.survey_platforms.bases import SurveyPlatform
 from ddsurveys.utils import handle_env_file
 from ddsurveys.variable_types import Data, VariableDataType
+
+__all__ = ["app"]
 
 logger = get_logger(__name__)
 
@@ -109,68 +112,68 @@ def jwt_callback_wrapper(func):
     return wrapper
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
+# def create_app() -> Flask:
+app: Flask = Flask(__name__)
 
-    app.config.from_mapping(APP_CONFIG)
+app.config.from_mapping(APP_CONFIG)
 
-    DBManager.init_session(app=app)  # Initialize the database session
+DBManager.init_session(app=app)  # Initialize the database session
 
-    jwt = JWTManager(app)  # initializing the JWTManager
+jwt = JWTManager(app)  # initializing the JWTManager
 
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000"]}})
 
-    # Wrap JWT functions that need to be wrapped
-    for func_name in JWT_FUNCTIONS_TO_WRAP:
-        fname = func_name.replace("default", "")
-        func = getattr(jwt, fname)
-        func = jwt_callback_wrapper(func)
-        setattr(jwt, fname, func)
+# Wrap JWT functions that need to be wrapped
+for func_name in JWT_FUNCTIONS_TO_WRAP:
+    fname = func_name.replace("default", "")
+    func = getattr(jwt, fname)
+    func = jwt_callback_wrapper(func)
+    setattr(jwt, fname, func)
 
-    # App configuration
-    @app.before_request
-    def create_db_session() -> None:
-        flask.g.db = DBManager.get_db()  # Store the database session in the Flask global context
+# App configuration
+@app.before_request
+def create_db_session() -> None:
+    flask.g.db = DBManager.get_db()  # Store the database session in the Flask global context
 
-    @app.teardown_appcontext
-    def shutdown_session(response_or_exc) -> None:
-        db = flask.g.pop('db', None)
-        if db is not None:
-            db.close()  # This should now work without errors
+@app.teardown_appcontext
+def shutdown_session(response_or_exc) -> None:
+    db = flask.g.pop('db', None)
+    if db is not None:
+        db.close()  # This should now work without errors
 
-    app.register_blueprint(auth, url_prefix='/auth')
-    app.register_blueprint(projects, url_prefix='/projects')
-    app.register_blueprint(survey_platforms, url_prefix='/survey-platforms')
+app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(projects, url_prefix='/projects')
+app.register_blueprint(survey_platforms, url_prefix='/survey-platforms')
 
-    declare_app_routes(app)
+# declare_app_routes(app)
 
-    return app
+# return app
 
 
-def declare_app_routes(app) -> None:
+# def declare_app_routes(app) -> None:
 
     # TODO : Discuss eventual migration of these routes into respective blueprints
 
-    @app.route('/survey-platforms', methods=['GET'])
-    @jwt_required()
-    def list_survey_platforms():
-        return SurveyPlatform.get_all_form_fields(), 200
+@app.route('/survey-platforms', methods=['GET'])
+@jwt_required()
+def list_survey_platforms():
+    return SurveyPlatform.get_all_form_fields(), 200
 
-    @app.route('/data-providers', methods=['GET'])
-    @jwt_required()
-    def list_data_providers():
-        return DataProvider.get_all_form_fields(), 200
+@app.route('/data-providers', methods=['GET'])
+@jwt_required()
+def list_data_providers():
+    return DataProvider.get_all_form_fields(), 200
 
-    @app.route('/data-providers/data-categories', methods=['GET'])
-    def list_data_categories():
-        return DataProvider.get_all_data_categories(), 200
+@app.route('/data-providers/data-categories', methods=['GET'])
+def list_data_categories():
+    return DataProvider.get_all_data_categories(), 200
 
-    @app.route('/custom-variables/filter-operators/<data_type>', methods=['GET'])
-    def list_filter_operators(data_type):
-        data_type = VariableDataType(data_type)
-        data_class = Data.get_class_by_type(data_type)
-        return data_class.get_filter_operators(), 200
+@app.route('/custom-variables/filter-operators/<data_type>', methods=['GET'])
+def list_filter_operators(data_type):
+    data_type = VariableDataType(data_type)
+    data_class = Data.get_class_by_type(data_type)
+    return data_class.get_filter_operators(), 200
 
-    @app.route('/custom-variables/filter-operators', methods=['GET'])
-    def list_all_filter_operators():
-        return Data.get_all_filter_operators(), 200
+@app.route('/custom-variables/filter-operators', methods=['GET'])
+def list_all_filter_operators():
+    return Data.get_all_filter_operators(), 200

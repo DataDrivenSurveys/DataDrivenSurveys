@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-04-27 13:47.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -15,6 +14,7 @@ __package__ = "ddsurveys"
 # Set up custom loggers
 import coloredlogs
 
+import ddsurveys.utils
 from ddsurveys.data_providers import DataProvider
 from ddsurveys.get_logger import get_logger
 from ddsurveys.survey_platforms import SurveyPlatform
