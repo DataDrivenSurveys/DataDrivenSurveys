@@ -40,7 +40,6 @@
     "@types/eslint__js": "^8.42.3",
     "@types/jest": "^29.5.12",
     "@types/loadable__component": "^5.13.9",
-    "@types/next": "^9.0.0",
     "@types/node": "^22.5.4",
     "depcheck": "^1.4.7",
     "eslint": "^8.57.0",

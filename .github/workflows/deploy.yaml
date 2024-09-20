@@ -32,10 +32,9 @@ jobs:
         path: |
           ~/.npm
           frontend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
-          ${{ runner.os }}-
+          ${{ runner.os }}-node-modules-
 
     - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
       name: List the state of node modules
