@@ -44,7 +44,9 @@ jobs:
 
     - name: Install frontend dependencies
       working-directory: frontend
-      run: npm install --include=dev
+      run: |
+        npm ci
+        npm install
 
     - name: Build the Frontend
       working-directory: frontend
