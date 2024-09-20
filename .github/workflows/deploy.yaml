@@ -45,8 +45,8 @@ jobs:
     - name: Install frontend dependencies
       working-directory: frontend
       run: |
-        npm ci
         npm install
+        npm install @types/loadable__component
 
     - name: Build the Frontend
       working-directory: frontend
