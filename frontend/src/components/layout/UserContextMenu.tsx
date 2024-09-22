@@ -1,14 +1,19 @@
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Menu, Button, Stack } from '@mui/material';
-import React from 'react';
+import { Button, Menu, PopoverVirtualElement, Stack } from '@mui/material';
+import React, { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '../../context/AuthContext';
 
-const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
+interface UserContextMenuProps {
+  anchorElUser: Element | (() => Element) | PopoverVirtualElement | (() => PopoverVirtualElement) | null | undefined;
+  handleCloseUserMenu: () => void;
+}
+
+const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }: UserContextMenuProps): JSX.Element => {
   const { t } = useTranslation();
 
-  const {  signout } = useAuth();
+  const { signout } = useAuth();
 
   return (
     <Menu
@@ -27,7 +32,7 @@ const UserContextMenu = ({ anchorElUser, handleCloseUserMenu }) => {
         </Button>
       </Stack>
     </Menu>
-  )
-}
+  );
+};
 
-export default UserContextMenu
+export default UserContextMenu;

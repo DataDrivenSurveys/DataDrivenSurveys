@@ -8,7 +8,8 @@ const AuthUser = (): JSX.Element | null => {
   const { user } = useAuth();
 
   const [anchorElUser, setAnchorElUser] = useState<HTMLElement | null>(null);
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>): void => setAnchorElUser(event.currentTarget as HTMLElement);
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>): void =>
+    setAnchorElUser(event.currentTarget as HTMLElement);
   const handleCloseUserMenu = (): void => setAnchorElUser(null);
 
   return (
@@ -21,10 +22,7 @@ const AuthUser = (): JSX.Element | null => {
           collapsed={false}
           onCLick={handleOpenUserMenu}
         />
-        <UserContextMenu
-          anchorElUser={anchorElUser}
-          handleCloseUserMenu={handleCloseUserMenu}
-        />
+        <UserContextMenu anchorElUser={anchorElUser} handleCloseUserMenu={handleCloseUserMenu} />
       </>
     )
   );

@@ -6,7 +6,7 @@ import { getFrontendBaseURL } from '../utils/getURL';
 
 const FooterComponent = (): JSX.Element => {
   const { t } = useTranslation();
-  const baseUrl = getFrontendBaseURL();
+  const baseUrl: string = getFrontendBaseURL();
 
   return (
     <BottomNavigation>
@@ -20,11 +20,17 @@ const FooterComponent = (): JSX.Element => {
         height="100%"
         padding={2}
       >
-        <Link href={`${baseUrl}/`} variant="body1" color="primary">{t('ui.footer.homepage')}</Link>
+        <Link href={`${baseUrl}/`} variant="body1" color="primary">
+          {t('ui.footer.homepage')}
+        </Link>
 
-        <Link href={`${baseUrl}/privacy-policy`} variant="body1" color="primary">{t('ui.footer.privacy_policy')}</Link>
+        <Link href={`${baseUrl}/privacy-policy`} variant="body1" color="primary">
+          {t('ui.footer.privacy_policy')}
+        </Link>
 
-        <Link href={`${baseUrl}/terms-of-service`} variant="body1" color="primary">{t('ui.footer.terms_of_service')}</Link>
+        <Link href={`${baseUrl}/terms-of-service`} variant="body1" color="primary">
+          {t('ui.footer.terms_of_service')}
+        </Link>
 
         <Typography variant="body1" align="center">
           {t('ui.footer.copyright')}

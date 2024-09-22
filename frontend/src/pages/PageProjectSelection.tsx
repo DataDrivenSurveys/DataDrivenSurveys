@@ -30,7 +30,6 @@ interface CellActionsProps {
   onDelete: (id: string) => void;
 }
 
-
 const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
   const { t } = useTranslation();
 
@@ -61,8 +60,10 @@ const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
           <Button startIcon={<FileOpenOutlinedIcon />} onClick={() => navigate(`/projects/${params.row.id}`)}>
             {t('ui.project.selection.grid.context.open')}
           </Button>
-          <Button color={'error'} startIcon={<DeleteForeverOutlinedIcon />} onClick={
-            async () => {
+          <Button
+            color={'error'}
+            startIcon={<DeleteForeverOutlinedIcon />}
+            onClick={async () => {
               const response = await DEL(`/projects/${params.row.id}`);
               response.on('2xx', (status: number, data: API.ResponseData) => {
                 if (status === 200) {
@@ -71,8 +72,8 @@ const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
                   navigate('/projects');
                 }
               });
-            }
-          }>
+            }}
+          >
             {t('ui.project.selection.grid.context.delete')}
           </Button>
         </Stack>
@@ -82,7 +83,6 @@ const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
 };
 
 const PageProjectSelection = (): JSX.Element => {
-
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -91,7 +91,8 @@ const PageProjectSelection = (): JSX.Element => {
 
   const [projects, setProjects] = useState<API.Projects.Project[] | undefined>(undefined);
 
-  const deleteRow = (id: string): void => setProjects(prevProjects => prevProjects?.filter(project => project.id !== id));
+  const deleteRow = (id: string): void =>
+    setProjects(prevProjects => prevProjects?.filter(project => project.id !== id));
 
   const columns: GridColDef<API.Projects.Project>[] = [
     {
@@ -124,7 +125,7 @@ const PageProjectSelection = (): JSX.Element => {
       minWidth: 130,
       maxWidth: 170,
       type: 'date',
-      valueGetter: (params) => new Date(params.value),
+      valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams<any, API.Projects.Project['last_modified']>) => {
         const dateValue = params.value ? new Date(params.value) : null;
         return dateValue ? formatDateToLocale(dateValue, { dateStyle: 'short' }) : '';
@@ -183,25 +184,15 @@ const PageProjectSelection = (): JSX.Element => {
           showSnackbar(t(data.message.id), 'error');
         }
       });
-
     })();
   }, [showSnackbar, t]);
 
   return (
     <>
-      <LayoutMain
-        header={
-          <Typography variant="h4">Project Selection</Typography>
-        }
-        headerRightCorner={<AuthUser />}
-      >
+      <LayoutMain header={<Typography variant="h4">Project Selection</Typography>} headerRightCorner={<AuthUser />}>
         <Stack spacing={2}>
           <Box>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => navigate('/projects/create')}
-            >
+            <Button variant="contained" color="primary" onClick={() => navigate('/projects/create')}>
               {t('ui.project.selection.button.create')}
             </Button>
           </Box>
@@ -221,18 +212,16 @@ const PageProjectSelection = (): JSX.Element => {
                 disableRowSelectionOnClick
                 onRowClick={(
                   params: GridRowParams<API.Projects.Project>,
-                  event: MuiEvent<React.MouseEvent<HTMLElement>>,
+                  event: MuiEvent<React.MouseEvent<HTMLElement>>
                 ) => {
                   // Check if the click was on a cell in the Action column or an element with the 'action-cell' class
                   // or its child
                   const target = event.target as HTMLElement;
-                  if (
-                    !(target.dataset.field === 'actions' || target.closest('button, .action-cell'))
-                  ) {
+                  if (!(target.dataset.field === 'actions' || target.closest('button, .action-cell'))) {
                     navigate(`/projects/${params.row.id}`);
                   }
                 }}
-                sx={(theme) => ({
+                sx={theme => ({
                   '& .MuiDataGrid-cell:focus': {
                     outline: 'none',
                   },
@@ -253,9 +242,7 @@ const PageProjectSelection = (): JSX.Element => {
                 })}
               />
             ) : (
-              <Typography variant="body1">{
-                t('ui.project.selection.no_projects')
-              }</Typography>
+              <Typography variant="body1">{t('ui.project.selection.no_projects')}</Typography>
             )}
           </Loading>
         </Stack>

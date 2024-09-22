@@ -31,8 +31,8 @@ const routes: string[] = [
   '/terms-of-service',
   '/signup',
   '/signin',
-  '/projects',
-  '/projects/create',
+  // '/projects',
+  // '/projects/create',
 ];
 
 const generateSitemap = async (): Promise<void> => {

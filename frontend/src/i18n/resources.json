@@ -218,7 +218,7 @@
           "not_active": "Survey is not active",
           "not_found": "Survey not found",
           "platform_not_supported": "Survey platform not supported",
-          "unknown_error_occurred": "Unknown error occurrd, please check your API key and survey ID",
+          "unknown_error_occurred": "Unknown error occurred, please check your API key and survey ID",
           "export_failed": "Failed to export survey data",
           "missing_base_url_or_survey_id": "Missing base URL or survey ID"
         },

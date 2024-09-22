@@ -1,17 +1,15 @@
 import { formatURL } from './formatString';
 
-function getNonParamURL(url) {
+function getNonParamURL(url: string): string {
   return url.split('?')[0];
 }
 
-
-function getFrontendBaseURL() {
+function getFrontendBaseURL(): string {
   return process.env.REACT_APP_FRONTEND_URL || window.location.origin;
 }
 
-
-function getAppCreationURL(appCreationURL, dataProvider, props = {}) {
-  let defaultProps = {
+function getAppCreationURL(appCreationURL: string, dataProvider: string, props = {}): string {
+  const defaultProps = {
     project_name: '',
     application_description: '',
     organization_name: '',
@@ -26,6 +24,5 @@ function getAppCreationURL(appCreationURL, dataProvider, props = {}) {
 
   return formatURL(appCreationURL, props);
 }
-
 
 export { getNonParamURL, getAppCreationURL, getFrontendBaseURL };

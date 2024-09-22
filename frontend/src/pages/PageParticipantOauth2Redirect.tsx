@@ -73,14 +73,14 @@ const ScopesComponent = ({ required, accepted }: Scopes): JSX.Element => {
 
 /**
  * Landing page to receive the oauth2 code grant from the data provider
- * This page will be redirected to by the data provider after the participant has logged in and authorized the application
+ * This page will be redirected to by the data provider after the participant has logged in and authorized the application.
  * This page will then send the code grant to the backend to be exchanged for an access token
  * The access tokens are stored in local storage as an array of objects
  */
 const PageParticipantOauth2Redirect = (): JSX.Element => {
   const { t } = useTranslation();
 
-  const { provider: data_provider_name } = useParams<string>();
+  const { provider: data_provider_name } = useParams<{ provider: string }>();
 
   const [status, setStatus] = useState<Status>({
     failed: false,
@@ -116,7 +116,7 @@ const PageParticipantOauth2Redirect = (): JSX.Element => {
       if (status === 200) {
         // Check if the data provider was already used
         showSnackbar(t(data.message.id, { data_provider_name: data.data_provider_name }), 'success');
-        // Save the access token in local storage as array
+        // Save the access token in local storage as an array
         let tokens: Models.Dist.RespondentTempTokens[] = JSON.parse(
           localStorage.getItem('RespondentTempTokens') || '[]'
         );

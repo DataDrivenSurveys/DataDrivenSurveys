@@ -10,56 +10,46 @@ import LayoutMain from '../components/layout/LayoutMain';
 import Logo from '../components/Logo';
 import { getFrontendBaseURL } from '../components/utils/getURL';
 
-
 interface AvailableDataProvidersProps {
   dataProviderNames: string[];
 }
 
 function AvailableDataProviders({ dataProviderNames }: AvailableDataProvidersProps): JSX.Element | null {
-  return dataProviderNames && (
-    <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      spacing={{ xs: 1, sm: 2, md: 4 }}
-      divider={<Divider orientation="vertical" flexItem />}
-      sx={{ marginBottom: '24px' }}
-    >
-      {dataProviderNames.map((name, index) => (
-        <Stack
-          key={index}
-          direction="row"
-          spacing={1}
-          sx={{ alignItems: 'center' }}
-        >
-          <Logo name={name} size={18} />
-          <Typography variant="body1">
-            {name}
-          </Typography>
-        </Stack>
-      ))}
-    </Stack>
+  return (
+    dataProviderNames && (
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={{ xs: 1, sm: 2, md: 4 }}
+        divider={<Divider orientation="vertical" flexItem />}
+        sx={{ marginBottom: '24px' }}
+      >
+        {dataProviderNames.map((name, index) => (
+          <Stack key={index} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <Logo name={name} size={18} />
+            <Typography variant="body1">{name}</Typography>
+          </Stack>
+        ))}
+      </Stack>
+    )
   );
 }
 
 function DataProviderUsage({ dataProviderNames }: AvailableDataProvidersProps): JSX.Element | null {
   const { t } = useTranslation();
-  return dataProviderNames && (
-    <Stack
-      spacing={2}
-      sx={{ marginBottom: '24px' }}
-    >
-      {dataProviderNames.map((name, index) => (
-        <Stack
-          key={index}
-          direction="row"
-          spacing={1}
-        >
-          <Logo name={name} size={18} />&nbsp;
-          <Typography variant="body1">
-            {name}: {t(`homepage.why_we_request_access_to_your_data.${name.toLowerCase()}`)}
-          </Typography>
-        </Stack>
-      ))}
-    </Stack>
+  return (
+    dataProviderNames && (
+      <Stack spacing={2} sx={{ marginBottom: '24px' }}>
+        {dataProviderNames.map((name, index) => (
+          <Stack key={index} direction="row" spacing={1}>
+            <Logo name={name} size={18} />
+            &nbsp;
+            <Typography variant="body1">
+              {name}: {t(`homepage.why_we_request_access_to_your_data.${name.toLowerCase()}`)}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
+    )
   );
 }
 
@@ -69,12 +59,7 @@ function HomePageContent(): JSX.Element {
 
   const baseUrl = getFrontendBaseURL();
 
-  const dataProviderNames: string[] = [
-    'Fitbit',
-    'Instagram',
-    'Github',
-    'GoogleContacts',
-  ];
+  const dataProviderNames: string[] = ['Fitbit', 'Instagram', 'Github', 'GoogleContacts'];
 
   return (
     <>
@@ -91,7 +76,9 @@ function HomePageContent(): JSX.Element {
       <Typography paragraph>{t('homepage.why_we_request_access_to_your_data.content2')}</Typography>
 
       <Typography variant="h4">{t('homepage.how_we_use_your_data.title')}</Typography>
-      <Typography paragraph sx={{ marginBottom: '0px' }}>{t('homepage.how_we_use_your_data.content')}</Typography>
+      <Typography paragraph sx={{ marginBottom: '0px' }}>
+        {t('homepage.how_we_use_your_data.content')}
+      </Typography>
       <Typography component="div">
         <ol style={{ paddingLeft: '20px', listStyleType: 'decimal' }}>
           {Array.from({ length: 3 }, (_, index) => (
@@ -146,11 +133,7 @@ function HomePageContent(): JSX.Element {
       <Typography variant="h4">{t('homepage.contact_information.title')}</Typography>
       <Typography paragraph>
         {t('homepage.contact_information.content')}:&nbsp;
-        <Link
-          href={`mailto:${t('homepage.contact_information.email')}`}
-          rel="noopener noreferrer"
-          color="primary"
-        >
+        <Link href={`mailto:${t('homepage.contact_information.email')}`} rel="noopener noreferrer" color="primary">
           {t('homepage.contact_information.contact_email')}
         </Link>
       </Typography>
@@ -167,9 +150,7 @@ function PageHomepage(): JSX.Element {
       header={
         <Stack direction="row" spacing={1} sx={{ marginLeft: 'auto', marginRight: 'auto', alignItems: 'center' }}>
           <Logo name="dds" size={30} />
-          <Typography variant="h3">
-            {t('homepage.title')}
-          </Typography>
+          <Typography variant="h3">{t('homepage.title')}</Typography>
         </Stack>
       }
       headerRightCorner={
@@ -182,7 +163,7 @@ function PageHomepage(): JSX.Element {
             sx={{
               display: 'inline-flex',
               '@media (max-width: 550px)': {
-                display: 'none', // Hide text version below 550px
+                display: 'none', // Hide text version below 550 px
               },
             }}
           >
@@ -196,10 +177,9 @@ function PageHomepage(): JSX.Element {
             sx={{
               display: 'none',
               '@media (max-width: 550px)': {
-                display: 'inline-flex', // Show icon-only version below 550px
+                display: 'inline-flex', // Show icon-only version below 550 px
               },
             }} // Show only icon on small screens
-
           />
         </>
       }

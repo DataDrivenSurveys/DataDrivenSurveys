@@ -71,13 +71,13 @@ class FormElement(ABC):
     shared_prefix_text: str = "ddsurveys"
 
     def __init__(
-        self,
-        name: str,
-        label: str | None = None,
-        helper_text: str | None = None,
-        data: dict[str, Any] | None = None,
-        visibility_conditions: dict[str, Any] | None = None,
-        interaction_effects: dict[str, Any] | None = None,
+            self,
+            name: str,
+            label: str | None = None,
+            helper_text: str | None = None,
+            data: dict[str, Any] | None = None,
+            visibility_conditions: dict[str, Any] | None = None,
+            interaction_effects: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a new instance of FormElement.
 
@@ -119,7 +119,8 @@ class FormElement(ABC):
             elif not set(class_.__module__.split(".")).isdisjoint(class_.package.split(".")):
                 package_parts = class_.package.split(".")
                 module_parts = class_.__module__.split(".")
-                overlap_index = next((i for i, part in enumerate(module_parts) if part in package_parts), len(module_parts))
+                overlap_index = next((i for i, part in enumerate(module_parts) if part in package_parts),
+                                     len(module_parts))
                 overlap_parts = '.'.join(package_parts + module_parts[overlap_index + 1:])
                 label = f"{cls.shared_prefix_text}.{overlap_parts}.{text}"
             else:
@@ -276,13 +277,13 @@ class FormField(FormElement):
     """
 
     def __init__(
-        self,
-        type: str = "text",
-        value: str = "",
-        *,
-        required: bool = True,
-        disabled: bool = False,
-        **kwargs,
+            self,
+            type: str = "text",
+            value: str = "",
+            *,
+            required: bool = True,
+            disabled: bool = False,
+            **kwargs,
     ) -> None:
         """Initializes a new instance of FormField.
 
@@ -354,11 +355,11 @@ class FormField(FormElement):
 
     @classmethod
     def check_input_fields(
-        cls,
-        fields: list[dict],
-        form_fields: list[FormField | FormButton],
-        override_required_fields: list[str] | None = None,
-        class_: type | None = None,
+            cls,
+            fields: list[dict],
+            form_fields: list[FormField | FormButton],
+            override_required_fields: list[str] | None = None,
+            class_: type | None = None,
     ) -> tuple[bool, str | None]:
         """Checks if all required fields are present and not empty in the input fields.
 
@@ -411,37 +412,40 @@ class FormField(FormElement):
 
 
 class FormTextBlock(FormElement):
-    """This class is used to declare text blocks that provide information, instructions, or any kind of descriptive text
+    """This class is used to declare text blocks in the frontend.
+
+    Text blocks provide information, instructions, or any kind of descriptive text
     in the UI.
 
     Attributes:
-        content (str):
-            The content of the text block. This is the actual text that will be displayed in the UI.
-        position (int):
-            The position where the text block should be displayed relative to other elements in the UI. This could be
-            interpreted by the frontend to place the text block in the correct order among other form elements.
+        content (str): The content of the text block.
+            This is the actual text that will be displayed in the UI.
     """
 
     def __init__(self, content: str, **kwargs) -> None:
         """Initializes a new instance of the FormTextBlock class.
 
-        This constructor sets up a text block element with the specified content. It is designed to provide descriptive
-        text within the UI, such as instructions or information. The `type` attribute is set to "textblock" to
-        distinguish
-        it from other form elements.
+        This constructor sets up a text block element with the specified content.
+        It is designed to provide descriptive text within the UI, such as instructions
+        or information.
+        The `type` attribute is set to "text_block" to distinguish it from other form
+        elements.
 
         Args:
-            content (str): The text content of the text block. This is the actual text that will be displayed.
-            **kwargs: Arbitrary keyword arguments that are passed to the base class initializer. This allows for the
-                    inclusion of additional parameters that are common to all form elements, such as name, visibility
-                    conditions, and interaction effects.
+            content (str): The text content of the text block.
+                This is the actual text that will be displayed.
+            **kwargs: Arbitrary keyword arguments that are passed to the base class
+                initializer.
+                This allows for the inclusion of additional parameters that are common
+                to all form elements, such as name, visibility conditions,
+                and interaction effects.
 
         Returns:
             None
         """
         super().__init__(**kwargs)
         self.content: str = content
-        self.type = "textblock"  # This type is used to render the element appropriately in the frontend.
+        self.type = "text_block"  # This type is used to render the element appropriately in the frontend.
 
     @override
     def register_field(self, cls: type) -> type:
@@ -497,15 +501,19 @@ reg_dicts: list[tuple[str, dict, int]] = []
 
 
 class RegistryBase(type):
-    """A metaclass for creating registries. This class is responsible for managing the creation and registration of
-    classes
-    that inherit from it, facilitating a dynamic registry system where subclasses can be automatically registered and
-    retrieved. It supports inheritance, attribute binding from parent classes, and attribute unwrangling for private or
-    protected attributes.
+    """A metaclass for creating registries.
+
+    This class is responsible for managing the creation and registration of
+    classes that inherit from it, facilitating a dynamic registry system where
+    subclasses can be automatically registered and retrieved.
+    It supports inheritance, attribute binding from parent classes, and
+    attribute unwrangling for private or protected attributes.
 
     Attributes:
-        registries (dict[str, Registry]): A class-level dictionary that keeps track of all registries created.
-        __calls_counter (dict): A dictionary to keep track of the number of times each class is instantiated.
+        registries (dict[str, Registry]): A class-level dictionary that keeps track of
+            all registries created.
+        __calls_counter (dict): A dictionary to keep track of the number of times each
+            class is instantiated.
     """
 
     registries: ClassVar[dict[str, Registry]] = {}
@@ -514,21 +522,24 @@ class RegistryBase(type):
 
     @classmethod
     def getattr_from_all_parents(
-        cls, class_: Registry, attribute: str, values: list | None = None
+            cls, class_: Registry, attribute: str, values: list | None = None
     ) -> list:
-        """Recursively collects values of a specified attribute from a class and all its parent classes in the
-        hierarchy.
+        """This function collects all the values of a given attribute from the class hierarchy.
 
         Args:
-            mcs (RegistryBase): The metaclass instance calling this method, typically a subclass of `RegistryBase`.
-            class_ (Registry): The class from which to start collecting attribute values, moving up its parent classes.
-            attribute (str): The name of the attribute for which values are being collected.
-            values (list, optional): A list to which the collected values will be appended. If None, a new list is
-            created.
-                                     Defaults to None.
+            mcs: The metaclass instance calling this method, typically a
+                subclass of `RegistryBase`.
+            class_: The class from which to start collecting attribute values,
+                moving up its parent classes.
+            attribute: The name of the attribute for which values are being
+                collected.
+            values: A list to which the collected values will be appended.
+                If None, a new list is created.
+                Defaults to None.
 
         Returns:
-            list: A list of values collected for the specified attribute from the given class and its parents.
+            list: A list of values collected for the specified attribute from the given
+                class and its parents.
         """
         if values is None:
             values = []
@@ -540,7 +551,7 @@ class RegistryBase(type):
 
     @classmethod
     def get_first_defined_from_parents(
-        cls, class_: Registry, attribute: str, default=None
+            cls, class_: Registry, attribute: str, default=None
     ) -> Any:
         """Recursively searches for the first defined value of a given attribute in the class hierarchy,
         starting from the specified class and moving up its parent classes.
@@ -573,7 +584,7 @@ class RegistryBase(type):
 
     @staticmethod
     def bind_to_base(
-        base_class: Registry, child_class: Registry, attributes: list[str]
+            base_class: Registry, child_class: Registry, attributes: list[str]
     ) -> None:
         """Binds specified attributes from a base class to a child class.
 
@@ -730,8 +741,8 @@ class RegistryBase(type):
         cls.bind_to_base(registration_base, new_class, attrs_to_bind_to_base)
 
         if (registration_base is not None
-            and name not in registration_base.registry_exclude
-            and name not in registration_base.cls_form_fields
+                and name not in registration_base.registry_exclude
+                and name not in registration_base.cls_form_fields
         ):
             new_class.register()
 
@@ -1142,12 +1153,12 @@ class OAuthBase:
     _categories_scopes: dict[str, str] = {}
 
     def __init__(
-        self,
-        client_id: str | None = None,
-        client_secret: str | None = None,
-        access_token: str | None = None,
-        refresh_token: str | None = None,
-        **kwargs,
+            self,
+            client_id: str | None = None,
+            client_secret: str | None = None,
+            access_token: str | None = None,
+            refresh_token: str | None = None,
+            **kwargs,
     ) -> None:
         """Initializes an OAuthBase instance with the necessary credentials and tokens for OAuth authentication flow.
 
@@ -1232,7 +1243,7 @@ class OAuthBase:
 
     @abstractmethod
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+            self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
     ) -> str:
         """Generates the authorization URL that clients will use to initiate the OAuth authorization flow.
 

@@ -99,7 +99,7 @@ const PageProject = (): JSX.Element => {
   const [loadingVariables, setLoadingVariables] = useState(true); // Loading state for VariableManagement
   const [syncLoading, setSyncLoading] = useState(false);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const [lastSynched, setLastSynched] = useState<string | null>(null);
+  const [lastSynced, setlastSynced] = useState<string | null>(null);
   const [clearResondentDataDialogOpen, setClearResondentDataDialogOpen] = useState(false);
 
   const [project, setProject] = useState<API.Projects.Project | null>(null);
@@ -114,7 +114,7 @@ const PageProject = (): JSX.Element => {
       response.on('2xx', (status: number, data: API.Projects.Project) => {
         if (status === 200) {
           setProject(data);
-          setLastSynched(data.last_synced);
+          setlastSynced(data.last_synced);
           setLoadingSurveyPlatformIntegration(false); // Stop loading
           setLoadingDataProviders(false); // Stop loading
           setLoadingVariables(false); // Stop loading
@@ -143,23 +143,23 @@ const PageProject = (): JSX.Element => {
       setSyncLoading(true);
       const response = await POST(`/projects/${projectId}/sync_variables`);
       setSyncLoading(false);
-      const lastSynched = project.last_synced;
-      setLastSynched(null);
+      const lastSynced = project.last_synced;
+      setlastSynced(null);
       response.on('2xx', (status: number, data: ResponseData) => {
         if (status === 200) {
           showSnackbar(t(data.message.id), 'success');
-          setLastSynched(new Date().toISOString());
+          setlastSynced(new Date().toISOString());
         }
       });
 
       response.on('4xx', (_: number, data: ResponseData) => {
         showSnackbar(t(data.message.id), 'error');
-        setLastSynched(lastSynched);
+        setlastSynced(lastSynced);
       });
 
       response.on('5xx', (_: number, data: ResponseError) => {
         showSnackbar(data.error, 'error');
-        setLastSynched(lastSynched);
+        setlastSynced(lastSynced);
       });
     },
     [projectId, showSnackbar, t]
@@ -283,7 +283,7 @@ const PageProject = (): JSX.Element => {
 
                 {project.last_synced !== null && !syncLoading && (
                   <Typography variant="caption" color="text.secondary">
-                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynched as string)}`}
+                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynced as string)}`}
                   </Typography>
                 )}
               </Stack>

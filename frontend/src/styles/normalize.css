@@ -8,6 +8,7 @@ Document
   --color-black: #000;
   --text-primary: var(--color-black);
 }
+
 #app {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -28,7 +29,6 @@ Use a more readable tab size (opinionated).
 */
 
 html {
-  -moz-tab-size: 4;
   tab-size: 4;
 }
 
@@ -40,7 +40,7 @@ html {
 html {
   font-size: 12px;
   line-height: 1.15; /* 1 */
-  -webkit-text-size-adjust: 100%; /* 2 */
+  text-size-adjust: 100%; /* 2 */
 }
 
 /*
@@ -68,17 +68,18 @@ Grouping content
 ================
 */
 a {
-  text-decoration: none;
   color: var(--text-primary);
+  text-decoration: none;
 }
+
 /**
 1. Add the correct height in Firefox.
 2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)
 */
 
 hr {
-  height: 0; /* 1 */
   color: inherit; /* 2 */
+  height: 0; /* 1 */
 }
 
 /*
@@ -112,8 +113,7 @@ code,
 kbd,
 samp,
 pre {
-  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo,
-    monospace; /* 1 */
+  font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace; /* 1 */
   font-size: 1em; /* 2 */
 }
 
@@ -156,8 +156,8 @@ Tabular data
 */
 
 table {
-  text-indent: 0; /* 1 */
   border-color: inherit; /* 2 */
+  text-indent: 0; /* 1 */
 }
 
 /*
@@ -175,12 +175,12 @@ input,
 optgroup,
 select,
 textarea {
+  appearance: none;
+  border: 0;
   font-family: inherit; /* 1 */
   font-size: 0.75rem; /* 1 */
   line-height: 1.15; /* 1 */
   margin: 0; /* 2 */
-  border: 0px;
-  -webkit-appearance: none;
   outline: none;
 }
 
@@ -203,7 +203,7 @@ button,
 [type='button'],
 [type='reset'],
 [type='submit'] {
-  -webkit-appearance: button;
+  appearance: button;
 }
 
 /**
@@ -263,7 +263,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 */
 
 [type='search'] {
-  -webkit-appearance: textfield; /* 1 */
+  appearance: textfield; /* 1 */
   outline-offset: -2px; /* 2 */
 }
 
@@ -272,7 +272,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-search-decoration {
-  -webkit-appearance: none;
+  appearance: none;
 }
 
 /**
@@ -281,7 +281,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-file-upload-button {
-  -webkit-appearance: button; /* 1 */
+  appearance: button; /* 1 */
   font: inherit; /* 2 */
 }
 
@@ -301,9 +301,9 @@ summary {
 ul,
 menu,
 ol {
-  padding: 0;
-  margin: 0;
   list-style-type: none;
+  margin: 0;
+  padding: 0;
 }
 
 h1,

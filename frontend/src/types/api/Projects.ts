@@ -15,6 +15,7 @@ export interface Collaborations {
 
 interface CVAttribute extends Bases.CVAttribute {
   category: string;
+  enabled: boolean;
 }
 
 interface CVSelection {
@@ -26,6 +27,7 @@ export interface CustomVariable {
   cv_attributes: CVAttribute[];
   data_category: string;
   data_provider: string;
+  enabled: boolean;
   filters: Bases.CVFilter[];
   id: number;
   selection: CVSelection;
@@ -33,10 +35,20 @@ export interface CustomVariable {
   variable_name: string;
 }
 
-export interface DataProvider {
+export interface DataProviderField extends Bases.Field {
+  content?: string;
+}
+
+export interface DataProvider extends Bases.Provider {
+  callback_url: string;
+  app_creation_url: string;
+  dds_app_creation_instructions: string;
+  app_required: boolean;
+  fields: DataProviderField[];
   data_provider_name: string;
-  data_provider_type: DataProviderType;
-  name: string;
+  data_provider_type?: DataProviderType;
+  name?: string;
+  oauth2?: { redirect_uri: string };
 }
 
 export interface DataConnection {
@@ -81,6 +93,11 @@ export interface BuiltinVariable extends Bases.BuiltinVariable {
   type: 'Builtin';
 }
 
+// @ts-expect-error Intentionally extending interfaces in an incompatible way
+export interface UsedVariable extends BuiltinVariable, CustomVariable {
+  type: 'Builtin' | 'Custom';
+}
+
 export interface Project {
   collaborations: Collaborations[];
   creation_date: string;
@@ -97,7 +114,6 @@ export interface Project {
   survey_status: string;
   variables: BuiltinVariable[];
 }
-
 
 export interface ResponseCreateProjectSuccess extends ResponseData {
   entity: Project;

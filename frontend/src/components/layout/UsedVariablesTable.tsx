@@ -2,14 +2,16 @@ import { Link, Typography } from '@mui/material';
 import React, { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import DataTable from './DataTable';
+import DataTable, { Row } from './DataTable';
 import { API } from '../../types';
 import ConnectionBadge from '../feedback/ConnectionBadge';
 import addWBR from '../utils/addWBR';
 import { formatDateStringToLocale } from '../utils/FormatDate';
 
-
-function formatCustomVariableDescription(custom_variable: API.Respondent.CustomVariableData, t: any): string {
+function formatCustomVariableDescription(
+  custom_variable: API.Respondent.CustomVariableData,
+  t: CallableFunction
+): string {
   const data_category = custom_variable.data_category;
   const selection = custom_variable.selection;
 
@@ -21,28 +23,30 @@ function formatCustomVariableDescription(custom_variable: API.Respondent.CustomV
     attributeName = t(selection.attribute.label);
   }
 
-  let description = `${
-    t(`api.custom_variables.used_variables.selection.${selection.operator.operator}.${type}`,
-      { data_category: t(data_category.label), attribute_name: attributeName })
-  }`;
+  let description = `${t(`api.custom_variables.used_variables.selection.${selection.operator.operator}.${type}`, {
+    data_category: t(data_category.label),
+    attribute_name: attributeName,
+  })}`;
 
   if (custom_variable.filters.length > 0) {
-    const filtersPhrase = custom_variable.filters.map((filter) => {
-      let value = '';
-      switch (filter.attribute.data_type) {
-      case 'Date':
-        value = formatDateStringToLocale((filter.value as string));
-        break;
-      case 'Number':
-        value = Intl.NumberFormat().format((filter.value as number));
-        break;
-      default:
-        value = `'${filter.value}'`;
-        break;
-      }
+    const filtersPhrase = custom_variable.filters
+      .map(filter => {
+        let value: string;
+        switch (filter.attribute.data_type) {
+          case 'Date':
+            value = formatDateStringToLocale(filter.value as string);
+            break;
+          case 'Number':
+            value = Intl.NumberFormat().format(filter.value as number);
+            break;
+          default:
+            value = `'${filter.value}'`;
+            break;
+        }
 
-      return `${filter.attribute.label} ${t(filter.operator)} ${value} ${filter.attribute.unit || ''}`.trim();
-    }).join('; ');
+        return `${filter.attribute.label} ${t(filter.operator)} ${value} ${filter.attribute.unit || ''}`.trim();
+      })
+      .join('; ');
 
     description = `${description} ${t('api.custom_variables.used_variables.filters')} ${filtersPhrase}`;
   }
@@ -54,15 +58,18 @@ function formatCustomVariableDescription(custom_variable: API.Respondent.CustomV
 }
 
 interface UsedVariablesTableProps {
-  used_variables: API.Respondent.UsedVariable[];
+  used_variables: Row[];
 }
 
 const UsedVariablesTable = ({ used_variables: initial_variables }: UsedVariablesTableProps): JSX.Element => {
   const { t } = useTranslation();
 
-  const used_variables = initial_variables?.map((variable) => ({
+  const used_variables = initial_variables?.map(variable => ({
     ...variable,
-    description: variable.type === 'Custom' ? formatCustomVariableDescription(variable.data, t) : variable.description,
+    description:
+      (variable as unknown as API.Respondent.CustomVariable).type === 'Custom'
+        ? formatCustomVariableDescription((variable as unknown as API.Respondent.CustomVariable).data, t)
+        : variable.description,
   }));
 
   return (
@@ -73,9 +80,7 @@ const UsedVariablesTable = ({ used_variables: initial_variables }: UsedVariables
           headerName: t('ui.respondent.connection.table.data_provider_name'),
           minWidth: 90,
           renderCell: (params: API.Respondent.UsedVariable): JSX.Element => {
-            return (
-              <ConnectionBadge name={params.data_provider} />
-            );
+            return <ConnectionBadge name={params.data_provider} />;
           },
         },
         {
@@ -83,9 +88,7 @@ const UsedVariablesTable = ({ used_variables: initial_variables }: UsedVariables
           headerName: t('ui.respondent.connection.table.type'),
           minWidth: 100,
           renderCell: (params: API.Respondent.UsedVariable): JSX.Element => {
-            return (
-              <Typography variant="body2">{t(params.type)}</Typography>
-            );
+            return <Typography variant="body2">{t(params.type)}</Typography>;
           },
         },
         {
@@ -93,9 +96,7 @@ const UsedVariablesTable = ({ used_variables: initial_variables }: UsedVariables
           headerName: t('ui.respondent.connection.table.variable_name'),
           minWidth: 150,
           renderCell: (params: API.Respondent.UsedVariable): JSX.Element => {
-            return (
-              <Typography variant="body2">{addWBR(t(params.variable_name))}</Typography>
-            );
+            return <Typography variant="body2">{addWBR(t(params.variable_name))}</Typography>;
           },
         },
         {
@@ -110,8 +111,9 @@ const UsedVariablesTable = ({ used_variables: initial_variables }: UsedVariables
           renderCell: (data: API.Respondent.UsedVariable): React.JSX.Element[] | undefined => {
             return data.data_origin?.map(({ documentation }, index): JSX.Element => {
               return (
-                <Link key={`origin_${index}`} href={documentation} target={'_blank'}
-                  rel="noreferrer">{documentation}</Link>
+                <Link key={`origin_${index}`} href={documentation} target={'_blank'} rel="noreferrer">
+                  {documentation}
+                </Link>
               );
             });
           },

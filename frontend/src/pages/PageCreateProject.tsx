@@ -31,7 +31,8 @@ const creationTypes: CreationType[] = [
 
 const hiddenFieldsFromScratch = ['survey_id'];
 
-type LocalStorageData = string
+type LocalStorageData =
+  | string
   | CreationMode
   | Models.Projects.Create.SurveyPlatform
   | API.SurveyPlatforms.SurveyPlatformField[];
@@ -49,9 +50,7 @@ const saveToLocalStorage = (key: string, value: LocalStorageData): void => {
   }
 };
 
-const getFromLocalStorage = (
-  key: string, defaultValue: LocalStorageData,
-): LocalStorageData => {
+const getFromLocalStorage = (key: string, defaultValue: LocalStorageData): LocalStorageData => {
   const storedValue = localStorage.getItem(key);
   if (storedValue !== null) {
     try {
@@ -66,41 +65,57 @@ const getFromLocalStorage = (
 };
 
 const PageCreateProject = (): JSX.Element => {
-
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const creationTypesUI = creationTypes.map((creationType) => ({ ...creationType, label: t(creationType.label) }));
+  const creationTypesUI = creationTypes.map(creationType => ({ ...creationType, label: t(creationType.label) }));
 
   const [creating, setCreating] = useState<boolean>(false);
 
-  const [creationMode, setCreationMode] = useState<CreationMode>(getFromLocalStorage('creationMode', creationTypesUI[0].value) as CreationMode);
+  const [creationMode, setCreationMode] = useState<CreationMode>(
+    getFromLocalStorage('creationMode', creationTypesUI[0].value) as CreationMode
+  );
 
   const [surveyPlatforms, setSurveyPlatforms] = useState<Models.Projects.Create.SurveyPlatform[]>([]);
 
-  const [selectedSurveyPlatform, setSelectedSurveyPlatform] = useState<Models.Projects.Create.SurveyPlatform>({} as Models.Projects.Create.SurveyPlatform);
-  const [surveyPlatformFields, setSurveyPlatformFields] = useState<API.SurveyPlatforms.SurveyPlatformField[]>([] as API.SurveyPlatforms.SurveyPlatformField[]);
+  const [selectedSurveyPlatform, setSelectedSurveyPlatform] = useState<Models.Projects.Create.SurveyPlatform>(
+    {} as Models.Projects.Create.SurveyPlatform
+  );
+  const [surveyPlatformFields, setSurveyPlatformFields] = useState<API.SurveyPlatforms.SurveyPlatformField[]>(
+    [] as API.SurveyPlatforms.SurveyPlatformField[]
+  );
 
   useEffect(() => {
     (async (): Promise<void> => {
       const response = await GET('/survey-platforms');
       response.on('2xx', (status: number, data: API.SurveyPlatforms.SurveyPlatform[]) => {
-        const platforms = data.map((si) => ({ ...si, label: undefined, icon: <ConnectionBadge name={si.value} /> }));
+        const platforms = data.map(si => ({ ...si, label: undefined, icon: <ConnectionBadge name={si.value} /> }));
 
         setSurveyPlatforms(platforms);
         // Moved the state updates for selectedSurveyPlatform and surveyPlatformFields here
         // to avoid the dependency on surveyPlatforms in another useEffect
         const defaultPlatform = platforms[0] || {};
 
-        setSelectedSurveyPlatform(getFromLocalStorage('selectedSurveyPlatform', defaultPlatform) as Models.Projects.Create.SurveyPlatform);
-        setSurveyPlatformFields(getFromLocalStorage('surveyPlatformFields', defaultPlatform.fields || []) as API.SurveyPlatforms.SurveyPlatformField[]);
+        setSelectedSurveyPlatform(
+          getFromLocalStorage('selectedSurveyPlatform', defaultPlatform) as Models.Projects.Create.SurveyPlatform
+        );
+        setSurveyPlatformFields(
+          getFromLocalStorage(
+            'surveyPlatformFields',
+            defaultPlatform.fields || []
+          ) as API.SurveyPlatforms.SurveyPlatformField[]
+        );
       });
     })();
   }, []);
 
-  const { bind: bindName, value: name, error: errorName } = useInput({
+  const {
+    bind: bindName,
+    value: name,
+    error: errorName,
+  } = useInput({
     label: t('ui.project.create.field.project_name.label'),
     value: getFromLocalStorage('projectName', ''),
     minLength: 3,
@@ -115,9 +130,12 @@ const PageCreateProject = (): JSX.Element => {
   useEffect(() => saveToLocalStorage('selectedSurveyPlatform', selectedSurveyPlatform), [selectedSurveyPlatform]);
 
   // Hide fields that are not required when creating from scratch
-  const shouldHideField = useCallback((fieldName: string): boolean => {
-    return creationMode === 'from_scratch' && hiddenFieldsFromScratch.includes(fieldName);
-  }, [creationMode]);
+  const shouldHideField = useCallback(
+    (fieldName: string): boolean => {
+      return creationMode === 'from_scratch' && hiddenFieldsFromScratch.includes(fieldName);
+    },
+    [creationMode]
+  );
 
   const checkInputs = useCallback((): boolean => {
     if (creationMode === 'from_scratch' && !name) {
@@ -138,7 +156,7 @@ const PageCreateProject = (): JSX.Element => {
   }, [surveyPlatformFields, shouldHideField, creationMode, name]);
 
   const onCreateClick = useCallback(async (): Promise<void> => {
-    if ([errorName].some((error) => error === true) || !checkInputs()) {
+    if ([errorName].some(error => error === true) || !checkInputs()) {
       showSnackbar(t('ui.project.create.error.missing_fields'), 'error');
       return;
     }
@@ -147,7 +165,7 @@ const PageCreateProject = (): JSX.Element => {
     const response = await POST('/projects/', {
       name: name,
       survey_platform_name: selectedSurveyPlatform.value,
-      fields: surveyPlatformFields.map((field) => ({ name: field.name, value: field.value })),
+      fields: surveyPlatformFields.map(field => ({ name: field.name, value: field.value })),
       use_existing_survey: creationMode === 'from_existing',
     });
     setCreating(false);
@@ -167,78 +185,74 @@ const PageCreateProject = (): JSX.Element => {
     response.on('4xx', (_: number, data: API.ResponseData) => {
       showSnackbar(t(data.message.id), 'error');
     });
-  }, [name, checkInputs, selectedSurveyPlatform, surveyPlatformFields, creationMode, errorName, showSnackbar, navigate, t]);
+  }, [
+    name,
+    checkInputs,
+    selectedSurveyPlatform,
+    surveyPlatformFields,
+    creationMode,
+    errorName,
+    showSnackbar,
+    navigate,
+    t,
+  ]);
 
   return (
     <LayoutMain
       backUrl="/projects"
       headerRightCorner={<AuthUser />}
-      header={
-        <Typography variant="h6">
-          {t('ui.project.create.title')}
-        </Typography>
-      }
+      header={<Typography variant="h6">{t('ui.project.create.title')}</Typography>}
       loading={surveyPlatforms.length === 0}
       horizontalContainerProps={{
         maxWidth: 'sm',
       }}
     >
-      {
-        selectedSurveyPlatform && (
-          <Stack spacing={4}>
-            <DropDown
-              items={creationTypesUI}
-              label={t('ui.project.create.select.type.label')}
-              value={creationMode}
-              onChange={(e: SelectChangeEvent) => setCreationMode(e.target.value as CreationMode)}
-            />
+      {selectedSurveyPlatform && (
+        <Stack spacing={4}>
+          <DropDown
+            items={creationTypesUI}
+            label={t('ui.project.create.select.type.label')}
+            value={creationMode}
+            onChange={(e: SelectChangeEvent) => setCreationMode(e.target.value as CreationMode)}
+          />
 
-            <TextInput
-              showClear
-              {...bindName}
-            />
+          <TextInput showClear {...bindName} />
 
-            <DropDown
-              items={surveyPlatforms}
-              label={t('ui.project.create.select.survey_platform.label')}
-              value={selectedSurveyPlatform.value}
-              onChange={(e) => {
-
-                const surveyPlatform = surveyPlatforms.find((platform) => platform.value === e.target.value);
-                if (surveyPlatform) {
-                  setSelectedSurveyPlatform(surveyPlatform);
-                  setSurveyPlatformFields(surveyPlatform.fields);
-                }
-              }}
-            />
-
-            <SurveyPlatformFields
-              selectedSurveyPlatform={selectedSurveyPlatform}
-              surveyPlatformFields={surveyPlatformFields?.map(field => ({
-                ...field,
-                required: !shouldHideField(field.name),
-
-              }))}
-              hiddenFields={creationMode === 'from_scratch' ? hiddenFieldsFromScratch : []}
-              onChange={setSurveyPlatformFields}
-            />
-
-            <Button
-              variant="contained"
-              color="primary"
-              size={'large'}
-              disabled={!checkInputs() || creating}
-              startIcon={
-                creationMode ? <AddLinkIcon /> : <AddIcon />
+          <DropDown
+            items={surveyPlatforms}
+            label={t('ui.project.create.select.survey_platform.label')}
+            value={selectedSurveyPlatform.value}
+            onChange={e => {
+              const surveyPlatform = surveyPlatforms.find(platform => platform.value === e.target.value);
+              if (surveyPlatform) {
+                setSelectedSurveyPlatform(surveyPlatform);
+                setSurveyPlatformFields(surveyPlatform.fields);
               }
-              onClick={onCreateClick}
-            >
-              {t('ui.project.create.button.create')}
-            </Button>
+            }}
+          />
 
-          </Stack>
-        )}
+          <SurveyPlatformFields
+            selectedSurveyPlatform={selectedSurveyPlatform}
+            surveyPlatformFields={surveyPlatformFields?.map(field => ({
+              ...field,
+              required: !shouldHideField(field.name),
+            }))}
+            hiddenFields={creationMode === 'from_scratch' ? hiddenFieldsFromScratch : []}
+            onChange={setSurveyPlatformFields}
+          />
 
+          <Button
+            variant="contained"
+            color="primary"
+            size={'large'}
+            disabled={!checkInputs() || creating}
+            startIcon={creationMode ? <AddLinkIcon /> : <AddIcon />}
+            onClick={onCreateClick}
+          >
+            {t('ui.project.create.button.create')}
+          </Button>
+        </Stack>
+      )}
     </LayoutMain>
   );
 };

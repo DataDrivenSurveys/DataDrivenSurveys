@@ -1,10 +1,8 @@
 /* eslint-disable react/prop-types */
 
-import {Stack} from '@mui/material';
-import React from 'react';
-import {forwardRef, ReactNode} from 'react';
+import { Stack } from '@mui/material';
+import React, { forwardRef, ReactNode } from 'react';
 
-// Define the props interface for ScrollContainer
 interface ScrollContainerProps {
   children: ReactNode;
   spacing?: number;
@@ -21,7 +19,7 @@ interface ScrollContainerProps {
  */
 const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
   // Use forwardRef with proper typing for ref
-  ({children, spacing = 0, padding = 0, dashed = false}, ref) => {
+  ({ children, spacing = 0, padding = 0, dashed = false }, ref) => {
     return (
       <Stack
         ref={ref}

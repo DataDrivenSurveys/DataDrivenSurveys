@@ -17,7 +17,6 @@ const EditSurveyPlatformDialog = ({
   onClose,
   onConfirm,
 }) => {
-
   const { t } = useTranslation();
 
   const location = useLocation();
@@ -38,10 +37,12 @@ const EditSurveyPlatformDialog = ({
 
         const theOne = data.find(si => si.value === surveyPlatformName);
         setSelectedSurveyPlatform(theOne);
-        setSurveyPlatformFields(theOne.fields.map(field => ({
-          ...field,
-          value: initialFields[field.name] || '',
-        })));
+        setSurveyPlatformFields(
+          theOne.fields.map(field => ({
+            ...field,
+            value: initialFields[field.name] || '',
+          }))
+        );
       });
     })();
   }, [surveyPlatformName, initialFields]);
@@ -60,10 +61,9 @@ const EditSurveyPlatformDialog = ({
     }, {});
     localStorage.removeItem('surveyPlatformFields');
     onConfirm(fields);
-    // redirect the the same url without the survey_platform and access_token query params
+    // redirect to the same url without the survey_platform and access_token query params
     const url = getNonParamURL(location.pathname, ['survey_platform', 'access_token']);
     navigate(url);
-
   }, [selectedSurveyPlatform, surveyPlatformFields, showSnackbar, t, onConfirm, location, navigate]);
 
   return (

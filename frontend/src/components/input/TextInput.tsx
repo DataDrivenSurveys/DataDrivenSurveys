@@ -5,7 +5,7 @@ import React, { JSX } from 'react';
 
 interface TextInputProps {
   label: string;
-  value: string;
+  value: Date | string | number;
   type?: 'text' | 'password' | 'number';
   onChange: (value: string) => void;
   onAfterChange?: (value: string) => void;
@@ -17,6 +17,7 @@ interface TextInputProps {
   helperText?: string | JSX.Element;
   error?: boolean;
   sxStack?: object;
+  [key: string]: any;
 }
 
 // Work together with useInput hook in /hook folder
@@ -36,6 +37,7 @@ const TextInput = ({
   sxStack,
   ...props
 }: TextInputProps): JSX.Element => {
+  value = String(value);
   return (
     <Stack sx={sxStack}>
       <TextField
@@ -51,18 +53,17 @@ const TextInput = ({
               {minLength && value?.length >= minLength ? <CheckCircleIcon color={'success'} /> : null}
             </InputAdornment>
           ),
-          endAdornment: (
+          endAdornment:
             showClear && value?.length > 0 ? (
               <Box sx={{ cursor: 'pointer' }}>
                 <InputAdornment position="end">
                   <ClearIcon onClick={() => onChange('')} />
                 </InputAdornment>
               </Box>
-            ) : null
-          ),
+            ) : null,
         }}
         required={required}
-        onChange={(e) => {
+        onChange={e => {
           onChange(e.target.value);
           if (onAfterChange) {
             onAfterChange(e.target.value);
@@ -70,9 +71,7 @@ const TextInput = ({
         }}
         {...props}
       />
-      {helperText && (
-        <FormHelperText error={error}>{helperText}</FormHelperText>
-      )}
+      {helperText && <FormHelperText error={error}>{helperText}</FormHelperText>}
     </Stack>
   );
 };

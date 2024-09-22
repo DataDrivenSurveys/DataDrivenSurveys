@@ -1,36 +1,20 @@
+import { Bases } from '.';
 import { ResponseData } from './ResponseReturnValue';
 
 export interface SurveyPlatformFieldData {
   helper_url: string;
 }
 
-export type SurveyPlatformFieldVisibilityConditionOperator = 'is_empty' | 'is_not_empty';
-
-export interface SurveyPlatformFieldVisibilityConditionValue {
-  field: 'access_token',
-  'operator': SurveyPlatformFieldVisibilityConditionOperator
-}
-
-export interface SurveyPlatformFieldVisibilityCondition {
-  hide?: SurveyPlatformFieldVisibilityConditionValue[];
-  show?: SurveyPlatformFieldVisibilityConditionValue[];
-}
-
-export interface SurveyPlatformField {
+export interface SurveyPlatformField extends Bases.Field {
   data: SurveyPlatformFieldData | null;
-  disabled?: boolean;
   helper_text: string;
-  interaction_effects?: null;
-  label: string;
-  name: string;
+  interaction_effect?: null;
   onClick?: {
     action: string;
-    args: Record<string, string>
+    args: {
+      auth_url: string;
+    };
   };
-  required?: boolean;
-  type: string;
-  value?: string;
-  visibility_conditions: SurveyPlatformFieldVisibilityCondition | null;
 }
 
 export interface SurveyPlatform {

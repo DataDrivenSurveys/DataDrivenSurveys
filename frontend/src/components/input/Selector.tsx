@@ -1,13 +1,22 @@
 import { FormControl, FormControlLabel, Radio, RadioGroup } from '@mui/material';
-import React, { useCallback, useState } from 'react';
+import React, { JSX, useCallback, useState } from 'react';
 
-const Selector = ({ selected, options, onSelect }) => {
+interface SelectorProps {
+  selected: string;
+  options: string[];
+  onSelect: (value: React.SetStateAction<string>) => void;
+}
+
+const Selector = ({ selected, options, onSelect }: SelectorProps): JSX.Element => {
   const [selectedOption, setSelectedOption] = useState(selected);
 
-  const handleChange = useCallback((event) => {
-    setSelectedOption(event.target.value);
-    onSelect(event.target.value);
-  }, [onSelect]);
+  const handleChange = useCallback(
+    (event: { target: { value: React.SetStateAction<string> } }) => {
+      setSelectedOption(event.target.value);
+      onSelect(event.target.value);
+    },
+    [onSelect]
+  );
 
   return (
     <FormControl component="fieldset">

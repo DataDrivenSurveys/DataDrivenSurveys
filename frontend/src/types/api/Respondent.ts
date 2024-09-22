@@ -1,5 +1,6 @@
 import { Bases, ResponseData } from '.';
 import { DataOrigin, DataProviderType } from '../Shared';
+import * as Projects from './Projects';
 import { MessageData } from './ResponseReturnValue';
 
 export interface DataConnection {
@@ -56,7 +57,10 @@ export interface DataProvider {
   authorize_url: string;
 }
 
-export type UsedVariable = BuiltinVariable | CustomVariable;
+// @ts-expect-error Ignore extending incompatible types
+export interface UsedVariable extends BuiltinVariable, CustomVariable, Projects.UsedVariables {
+  type: 'Builtin' | 'Custom';
+}
 
 export interface Project {
   id: string;

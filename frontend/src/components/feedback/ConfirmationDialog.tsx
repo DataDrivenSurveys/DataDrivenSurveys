@@ -16,8 +16,8 @@ export interface ConfirmationDialogProps {
   content: JSX.Element;
   disableConfirm?: boolean;
   maxWidth?: false | Breakpoint;
-  onClose?: () => void;
-  onConfirm?: () => void;
+  onClose?: CallableFunction;
+  onConfirm?: CallableFunction;
   cancelProps?: ButtonProps;
   confirmProps?: ButtonProps;
   cancelText?: string;
@@ -79,22 +79,15 @@ export const ConfirmationDialog = ({
     >
       <DialogTitle id="alert-dialog-title">
         {title}
-        {titleLogo && (<LogoLabel {...titleLogo} />)}
+        {titleLogo && <LogoLabel {...titleLogo} />}
       </DialogTitle>
       <DialogContent>{content}</DialogContent>
       <DialogActions>
-        <Button
-          {...mergedCancelProps}
-          onClick={handleCancel}>
+        <Button {...mergedCancelProps} onClick={handleCancel}>
           {finalCancelText}
         </Button>
         {onConfirm && (
-          <Button
-            {...mergedConfirmProps}
-            onClick={handleConfirm}
-            disabled={disableConfirm}
-            autoFocus
-          >
+          <Button {...mergedConfirmProps} onClick={handleConfirm} disabled={disableConfirm} autoFocus>
             {finalConfirmText}
           </Button>
         )}

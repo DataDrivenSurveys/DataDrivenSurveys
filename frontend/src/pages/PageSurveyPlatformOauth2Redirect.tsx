@@ -8,7 +8,6 @@ import { LoadingAnimation } from '../components/feedback/Loading';
 import { useSnackbar } from '../context/SnackbarContext';
 import { API } from '../types';
 
-
 const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
   const { t } = useTranslation();
 
@@ -20,7 +19,7 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
     message: t('ui.project.survey_platform.code_exchange.redirecting'),
   });
 
-  const { surveyPlatform } = useParams();
+  const { surveyPlatform } = useParams<{ surveyPlatform: string }>();
 
   // Use the useSnackbar hook to show a snackbar notification. This is useful to
   // display a message after a successful login or logout.
@@ -32,9 +31,10 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
   useEffect(() => {
     // Define an async function that will call the OAuth callback endpoint
     (async (): Promise<void> => {
-
-      // get the fileds from the local storage
-      const fields: API.SurveyPlatforms.SurveyPlatformField[] = JSON.parse(localStorage.getItem('surveyPlatformFields') || '[]');
+      // get the fields from the local storage
+      const fields: API.SurveyPlatforms.SurveyPlatformField[] = JSON.parse(
+        localStorage.getItem('surveyPlatformFields') || '[]'
+      );
 
       const fieldValues = fields.reduce((acc: Record<string, string | undefined>, field) => {
         acc[field.name] = field.value;
@@ -53,7 +53,9 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
           showBottomCenter(t(response.message.id), 'success');
           const preAuthLocation = JSON.parse(localStorage.getItem('preAuthLocation') || '{}');
           localStorage.removeItem('preAuthLocation');
-          navigate(`${preAuthLocation?.pathname}?survey_platform=${surveyPlatform}&access_token=${response.entity?.data?.access_token}`);
+          navigate(
+            `${preAuthLocation?.pathname}?survey_platform=${surveyPlatform}&access_token=${response.entity?.data?.access_token}`
+          );
         }
       });
 
@@ -70,9 +72,7 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
           message: t(data.message.id),
         });
       });
-
     })();
-
   }, [code, navigate, showBottomCenter, surveyPlatform, t]);
 
   return (
@@ -83,8 +83,11 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
             <Alert severity={status.failed ? 'error' : 'info'} sx={{ width: '100%' }}>
               {status.message}
             </Alert>
-            {status.failed && <Button
-              onClick={() => navigate('/projects/create')}>{t('ui.project.survey_platform.code_exchange.connection.button.go_back')}</Button>}
+            {status.failed && (
+              <Button onClick={() => navigate('/projects/create')}>
+                {t('ui.project.survey_platform.code_exchange.connection.button.go_back')}
+              </Button>
+            )}
           </Stack>
         }
         failed={status.failed}

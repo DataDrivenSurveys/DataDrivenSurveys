@@ -22,30 +22,30 @@ i18n
   });
 
 // Define the types for the I18Link component props
-interface I18LinkProps {
-  i18nKey: string;
-  url: string;
-  link_text?: string | null;
-}
+// interface I18LinkProps {
+//   i18nKey: string;
+//   url: string;
+//   link_text?: string | null;
+// }
 
-export const I18Link = ({ i18nKey, url, link_text = null }: I18LinkProps): JSX.Element => {
-  // If no link_text is provided, use the URL as the link text
-  if (!link_text) {
-    link_text = url;
-  }
-
-  return (
-    <Trans
-      i18nKey={i18nKey}
-      values={{ url, link_text }}
-      components={[
-        <a href={url} target="_blank" rel="noreferrer">
-          {link_text}
-        </a>,
-      ]}
-    />
-  );
-};
+// export const I18Link = ({ i18nKey, url, link_text = null }: I18LinkProps): JSX.Element => {
+//   // If no link_text is provided, use the URL as the link text
+//   if (!link_text) {
+//     link_text = url;
+//   }
+//
+//   return (
+//     <Trans
+//       i18nKey={i18nKey}
+//       values={{ url, link_text }}
+//       components={[
+//         <a href={url} target="_blank" rel="noreferrer">
+//           {link_text}
+//         </a>,
+//       ]}
+//     />
+//   );
+// };
 
 interface InterpolateContentProps {
   i18nKey: string;

@@ -1,4 +1,4 @@
-function updateObject(oldObject, updatedProperties) {
+function updateObject(oldObject: object, updatedProperties: object): object {
   return Object.assign({}, oldObject, updatedProperties);
 }
 

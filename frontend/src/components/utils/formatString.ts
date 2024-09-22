@@ -1,4 +1,4 @@
-type Values = Record<string, string>
+type Values = Record<string, string>;
 
 function formatString(string: string, values: Values): string {
   let result = string;
@@ -21,7 +21,6 @@ function formatURL(string: string, values: Values): string {
 
   return result;
 }
-
 
 export { formatString, formatURL };
 

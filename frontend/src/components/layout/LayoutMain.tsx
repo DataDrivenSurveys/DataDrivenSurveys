@@ -7,17 +7,16 @@ import Header from './Header';
 import ScrollContainer from './ScrollContainer';
 import { LoadingPageContent } from '../feedback/Loading';
 
-// Define the props interface for LayoutMain
 interface LayoutMainProps {
   children: ReactNode;
-  backUrl?: To | number; // Can be a URL or a number for browser history navigation
+  backUrl?: To | number;
   header?: ReactNode;
   subheader?: ReactNode;
   padding?: number;
   spacing?: number;
   headerRightCorner?: ReactNode;
   horizontalContainerProps?: ContainerProps;
-  loading?: boolean; // Optional prop to display loading spinner while content is loading
+  loading?: boolean;
 }
 
 const LayoutMain = ({
@@ -32,9 +31,7 @@ const LayoutMain = ({
   loading = false,
 }: LayoutMainProps): JSX.Element => {
   if (loading) {
-    return (
-      <LoadingPageContent />
-    );
+    return <LoadingPageContent />;
   }
 
   return (
@@ -45,9 +42,7 @@ const LayoutMain = ({
       {subheader && <Box sx={{ overflow: 'hidden' }}>{subheader}</Box>}
       <ScrollContainer padding={padding} spacing={spacing}>
         <Stack paddingTop={4} paddingBottom={4} alignItems="center" height="100%" width="100%">
-          <Container {...horizontalContainerProps}>
-            {children}
-          </Container>
+          <Container {...horizontalContainerProps}>{children}</Container>
         </Stack>
       </ScrollContainer>
       <Footer />
