@@ -238,7 +238,10 @@ def get_public_project() -> ResponseReturnValue:
 
 @respondent.route("/data-providers", methods=["GET"])
 def get_public_data_providers() -> ResponseReturnValue:
-    """Provides the details necessary to connect a respondent to data providers linked to a project using OAuth2 Code Flow.
+    """Provides the data providers information linked to a project.
+
+    The data provider information enables a respondent to data providers linked to a
+    project using the OAuth2 Code Flow.
 
     This is a public endpoint, so no authentication is required.
     This endpoint should not provide any sensitive information.
@@ -321,7 +324,8 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                 404,
             )
 
-        # Get the correct data provider from the project (we need its fields to create an instance of the data provider)
+        # Get the correct data provider from the project
+        # (we need its fields to create an instance of the data provider)
         project_data_connection = next(
             (
                 dc
@@ -385,7 +389,7 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                 jsonify(
                     {
                         "message": {
-                            "id": response["message_id"],
+                            "id": response.get("message_id", "api.data_provider.exchange_code_error.unexpected_error"),
                             "text": response.get("text", "An unknown error occurred"),
                             "required_scopes": response.get("required_scopes", []),
                             "accepted_scopes": response.get("accepted_scopes", []),
@@ -545,7 +549,8 @@ def prepare_survey() -> ResponseReturnValue:
             if respondent.distribution:
                 logger.info("Respondent already has a distribution url.")
 
-                for user_data_provider, data_provider, response, error_status in get_used_data_providers(project, respondent):
+                for user_data_provider, data_provider, response, error_status in get_used_data_providers(project,
+                                                                                                         respondent):
                     if response is not None and error_status is not None:
                         return response, error_status
 
@@ -626,7 +631,8 @@ def prepare_survey() -> ResponseReturnValue:
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            for user_data_provider, data_provider, response, error_status in get_used_data_providers(project, respondent):
+            for user_data_provider, data_provider, response, error_status in get_used_data_providers(project,
+                                                                                                     respondent):
                 if response is not None and error_status is not None:
                     return response, error_status
 

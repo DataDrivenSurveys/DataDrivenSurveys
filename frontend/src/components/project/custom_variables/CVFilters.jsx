@@ -7,18 +7,20 @@ import DropDown from '../../input/DropDown';
 import ValueInput from '../../input/ValueInput';
 
 const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
-
   const { t } = useTranslation();
 
   const addFilter = () => {
-    onChange([...filters, {
-      attr: '',
-      operator: '',
-      value: '',
-    }]);
+    onChange([
+      ...filters,
+      {
+        attribute: '',
+        operator: '',
+        value: '',
+      },
+    ]);
   };
 
-  const removeFilter = (index) => {
+  const removeFilter = index => {
     const newFilters = [...filters];
     newFilters.splice(index, 1);
     onChange(newFilters);
@@ -33,9 +35,7 @@ const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
 
   return (
     <Stack spacing={2}>
-      <Typography variant="body1">
-        {t('ui.project.custom_variable.filters.title')}
-      </Typography>
+      <Typography variant="body1">{t('ui.project.custom_variable.filters.title')}</Typography>
       {filters.map((filter, index) => (
         <Stack direction="row" spacing={2} alignItems="center" key={index}>
           <CVFilter
@@ -49,34 +49,38 @@ const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
         </Stack>
       ))}
 
-      <Button onClick={addFilter}>
-        Add Filter
-      </Button>
+      <Button onClick={addFilter}>Add Filter</Button>
     </Stack>
   );
 };
 
-
 const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }) => {
-
   const { t } = useTranslation();
 
-  const getDataTypeForAttribute = useCallback((attribute) => {
-    return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.data_type;
-  }, [dataCategory]);
+  const getDataTypeForAttribute = useCallback(
+    attribute => {
+      return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.data_type;
+    },
+    [dataCategory]
+  );
 
-  const getUnitForAttribute = useCallback((attribute) => {
-    return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.unit;
-  }, [dataCategory]);
+  const getUnitForAttribute = useCallback(
+    attribute => {
+      return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.unit;
+    },
+    [dataCategory]
+  );
 
-  const getOperatorsForAttribute = useCallback((attribute) => {
-    const ops = operators[getDataTypeForAttribute(attribute)] || [];
-    return ops.map(op => ({
-      ...op,
-      label: t(op.label), // translate label
-    }));
-  }, [operators, getDataTypeForAttribute, t]);
-
+  const getOperatorsForAttribute = useCallback(
+    attribute => {
+      const ops = operators[getDataTypeForAttribute(attribute)] || [];
+      return ops.map(op => ({
+        ...op,
+        label: t(op.label), // translate label
+      }));
+    },
+    [operators, getDataTypeForAttribute, t]
+  );
 
   return (
     <Stack direction="row" spacing={1} alignItems="center">
@@ -107,15 +111,13 @@ const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }
           data_type={getDataTypeForAttribute(filter.attr)}
           value={filter.value}
           unit={getUnitForAttribute(filter.attr)}
-          onChange={(value) => onChange(index, 'value', value)}
+          onChange={value => onChange(index, 'value', value)}
         />
       )}
-
 
       <IconButton onClick={() => onRemove(index)}>
         <DeleteIcon />
       </IconButton>
-
     </Stack>
   );
 };

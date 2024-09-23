@@ -1,7 +1,7 @@
 import AddIcon from '@mui/icons-material/Add';
 import AddLinkIcon from '@mui/icons-material/AddLink';
 import { Button, SelectChangeEvent, Stack, Typography } from '@mui/material';
-import React, { JSX, useCallback, useEffect, useState } from 'react';
+import React, { Dispatch, JSX, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ import { GET, POST } from '../code/http_requests';
 import AuthUser from '../components/auth/AuthUser';
 import ConnectionBadge from '../components/feedback/ConnectionBadge';
 import DropDown from '../components/input/DropDown';
+import { Field } from '../components/input/FormFields';
 import TextInput from '../components/input/TextInput';
 import LayoutMain from '../components/layout/LayoutMain';
 import SurveyPlatformFields from '../components/project/survey_platform/SurveyPlatformFields';
@@ -233,12 +234,14 @@ const PageCreateProject = (): JSX.Element => {
 
           <SurveyPlatformFields
             selectedSurveyPlatform={selectedSurveyPlatform}
-            surveyPlatformFields={surveyPlatformFields?.map(field => ({
-              ...field,
-              required: !shouldHideField(field.name),
-            }))}
+            surveyPlatformFields={
+              surveyPlatformFields?.map(field => ({
+                ...field,
+                required: !shouldHideField(field.name),
+              })) as unknown as Field[]
+            }
             hiddenFields={creationMode === 'from_scratch' ? hiddenFieldsFromScratch : []}
-            onChange={setSurveyPlatformFields}
+            onChange={setSurveyPlatformFields as unknown as Dispatch<SetStateAction<Field[]>>}
           />
 
           <Button

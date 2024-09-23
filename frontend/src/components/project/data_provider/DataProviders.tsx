@@ -30,7 +30,6 @@ const handleCheckConnection = async (
   return (response as unknown as Response).status === 200;
 };
 
-type DataProviderTableGridColDef = GridColDef<Models.Projects.DataProvider>;
 type DataProviderTableGridRenderCellParams = GridRenderCellParams<Models.Projects.DataProvider>;
 
 interface DataProvidersProps {
@@ -90,7 +89,7 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
 
   const handleDelete = useCallback(() => {
     if (!selected) return;
-    (async () => {
+    (async (): Promise<void> => {
       const response = await DEL(`/projects/${projectId}/data-providers/${selected.data_provider_name}`);
 
       response.on('2xx', (status: number, data: API.ResponseData) => {
@@ -107,7 +106,7 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
     })();
   }, [selected, projectId, showSnackbar, t, onChangeDataProviders]);
 
-  const columns: DataProviderTableGridColDef[] = [
+  const columns: GridColDef<Models.Projects.DataProvider>[] = [
     {
       field: 'connected',
       headerName: t('ui.project.data_providers.grid.column.connected'),

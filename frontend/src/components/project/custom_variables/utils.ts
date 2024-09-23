@@ -1,16 +1,24 @@
-const isValidVariableName = (variableName) => {
+import { API } from '../../../types';
+
+interface CVCheckResult {
+  success: boolean;
+  messageId: string;
+  message: string;
+}
+
+const isValidVariableName = (variableName: string): CVCheckResult => {
   if (!variableName) {
     return { success: false, messageId: 'ui.variables.name_required', message: 'Variable name is required.' };
   }
 
-  if (!(/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variableName))) {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variableName)) {
     return { success: false, messageId: 'ui.variables.invalid_name', message: 'Invalid variable name.' };
   }
 
   return { success: true, messageId: '', message: '' };
 };
 
-export const checkCustomVariableCompleteness = (customVariable) => {
+export const checkCustomVariableCompleteness = (customVariable: API.Projects.CustomVariable): CVCheckResult => {
   const variableNameCheck = isValidVariableName(customVariable?.variable_name);
   if (!variableNameCheck.success) {
     return variableNameCheck;
@@ -65,11 +73,10 @@ export const checkCustomVariableCompleteness = (customVariable) => {
         message: 'Selection attribute is required.',
       };
     }
-
   }
 
   if (customVariable.filters) {
-    for (let filter of customVariable.filters) {
+    for (const filter of customVariable.filters) {
       const { attr, operator, value } = filter;
       if (!attr) {
         return {
@@ -96,5 +103,4 @@ export const checkCustomVariableCompleteness = (customVariable) => {
   }
 
   return { success: true, messageId: '', message: '' };
-
 };

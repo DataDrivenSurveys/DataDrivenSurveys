@@ -571,8 +571,12 @@ const VariableManagement = ({
         customVariableId={selectedCustomVariableId}
         open={openEditCustomVariableDialog}
         onClose={() => setOpenEditCustomVariableDialog(false)}
-        onEdit={(newVariables: React.SetStateAction<API.Projects.CustomVariable[]>) => {
-          setCustomVariables(newVariables);
+        onEdit={(customVariable: API.Projects.CustomVariable) => {
+          customVariables.forEach(
+            (v: API.Projects.CustomVariable) => v.id === selectedCustomVariableId,
+            customVariable
+          );
+          setCustomVariables(customVariables);
           setOpenEditCustomVariableDialog(false);
         }}
       />

@@ -1,5 +1,5 @@
-import { Bases, ResponseData } from '.';
 import { DataProviderType, SurveyStatus } from '../Shared';
+import { Bases, ResponseData } from './index';
 
 export interface Researcher {
   id: number;
@@ -111,10 +111,20 @@ export interface Project {
   short_id: string;
   survey_platform_fields: SurveyPlatformFields;
   survey_platform_name: string;
-  survey_status: string;
+  survey_status: SurveyStatus;
   variables: BuiltinVariable[];
 }
 
 export interface ResponseCreateProjectSuccess extends ResponseData {
   entity: Project;
+}
+
+// /projects/{project_id}/survey_platform/check_connection
+export interface SurveyPlatformCheckConnectionSuccess {
+  connected: boolean;
+  active: boolean;
+  exists: boolean;
+  survey_name: string;
+  survey_status: SurveyStatus;
+  id: number | null;
 }

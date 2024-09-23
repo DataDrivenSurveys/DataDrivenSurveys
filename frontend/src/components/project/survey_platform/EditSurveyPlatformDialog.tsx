@@ -1,22 +1,32 @@
 import { Stack } from '@mui/material';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Dispatch, JSX, SetStateAction, useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import SurveyPlatformFields from './SurveyPlatformFields';
 import { GET } from '../../../code/http_requests';
 import { useSnackbar } from '../../../context/SnackbarContext';
+import { API } from '../../../types';
 import ConfirmationDialog from '../../feedback/ConfirmationDialog';
 import { Loading } from '../../feedback/Loading';
+import { Field } from '../../input/FormFields';
 import { getNonParamURL } from '../../utils/getURL';
+
+interface EditSurveyPlatformDialogProps {
+  open: boolean;
+  surveyPlatformName: string;
+  initialFields: API.Projects.SurveyPlatformFields;
+  onClose: () => void;
+  onConfirm: (fields: API.Projects.SurveyPlatformFields) => Promise<void>;
+}
 
 const EditSurveyPlatformDialog = ({
   open,
   surveyPlatformName,
-  surveyPlatformFields: initialFields,
+  initialFields,
   onClose,
   onConfirm,
-}) => {
+}: EditSurveyPlatformDialogProps): JSX.Element => {
   const { t } = useTranslation();
 
   const location = useLocation();
@@ -24,23 +34,26 @@ const EditSurveyPlatformDialog = ({
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const [surveyPlatforms, setSurveyPlatforms] = useState([]);
-  const [selectedSurveyPlatform, setSelectedSurveyPlatform] = useState(undefined);
-  const [surveyPlatformFields, setSurveyPlatformFields] = useState([]);
+  const [surveyPlatforms, setSurveyPlatforms] = useState<API.SurveyPlatforms.SurveyPlatform[]>([]);
+  const [selectedSurveyPlatform, setSelectedSurveyPlatform] = useState<API.SurveyPlatforms.SurveyPlatform>(
+    {} as API.SurveyPlatforms.SurveyPlatform
+  );
+  const [surveyPlatformFields, setSurveyPlatformFields] = useState<API.SurveyPlatforms.SurveyPlatformField[]>([]);
 
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       const response = await GET('/survey-platforms');
 
-      response.on('2xx', (status, data) => {
+      response.on('2xx', (_: number, data: API.SurveyPlatforms.SurveyPlatform[]) => {
         setSurveyPlatforms(data);
 
-        const theOne = data.find(si => si.value === surveyPlatformName);
+        const theOne: API.SurveyPlatforms.SurveyPlatform =
+          data.find(sp => sp.value === surveyPlatformName) || ({} as API.SurveyPlatforms.SurveyPlatform);
         setSelectedSurveyPlatform(theOne);
         setSurveyPlatformFields(
           theOne.fields.map(field => ({
             ...field,
-            value: initialFields[field.name] || '',
+            value: initialFields[field.name as keyof API.Projects.SurveyPlatformFields] || '',
           }))
         );
       });
@@ -56,13 +69,13 @@ const EditSurveyPlatformDialog = ({
       return;
     }
 
-    const fields = surveyPlatformFields.reduce((acc, field) => {
+    const fields: API.Projects.SurveyPlatformFields = surveyPlatformFields.reduce((acc, field) => {
       return { ...acc, [field.name]: field.value };
-    }, {});
+    }, {} as API.Projects.SurveyPlatformFields);
     localStorage.removeItem('surveyPlatformFields');
     onConfirm(fields);
     // redirect to the same url without the survey_platform and access_token query params
-    const url = getNonParamURL(location.pathname, ['survey_platform', 'access_token']);
+    const url = getNonParamURL(location.pathname);
     navigate(url);
   }, [selectedSurveyPlatform, surveyPlatformFields, showSnackbar, t, onConfirm, location, navigate]);
 
@@ -76,9 +89,9 @@ const EditSurveyPlatformDialog = ({
           <Stack spacing={2} pt={1} width={'450px'}>
             <SurveyPlatformFields
               selectedSurveyPlatform={selectedSurveyPlatform}
-              surveyPlatformFields={surveyPlatformFields}
-              initialData={surveyPlatformFields}
-              onChange={setSurveyPlatformFields}
+              surveyPlatformFields={surveyPlatformFields as unknown as Field[]}
+              // initialData={surveyPlatformFields}
+              onChange={setSurveyPlatformFields as unknown as Dispatch<SetStateAction<Field[]>>}
             />
           </Stack>
         }

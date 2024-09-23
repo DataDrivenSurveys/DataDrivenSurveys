@@ -617,6 +617,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
         db.commit()
 
         survey_platform_info["id"] = message_id
+        logger.debug("Survey platform info: %s", survey_platform_info)
         return jsonify(survey_platform_info), status
 
 

@@ -275,7 +275,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 authorization_response=f"{self.redirect_uri}?code={code}"
             )
             credentials = self.oauth_client.credentials
-        except InvalidGrantError:
+        except (Warning, InvalidGrantError):
             logger.exception("Failed to exchange the code for token.")
 
             # Create mock credentials object to fail the granted scopes check
@@ -289,7 +289,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 "An error occurred while exchanging the code for token: ",
                 str(e),
                 "\nTraceback:\n",
-                traceback.format_exc(),
+                repr(traceback.format_exc()),
             ))
             return {
                 "success": False,

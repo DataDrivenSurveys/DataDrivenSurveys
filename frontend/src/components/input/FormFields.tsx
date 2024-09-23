@@ -87,7 +87,7 @@ const applyInteractionEffects = (name: string, value: string, fields: Field[]): 
 interface FormFieldsProps {
   fields: Field[];
   onChange: (fields: Field[]) => void;
-  buttonActionReducer?: (state: never, action: Record<string, string>) => void;
+  buttonActionReducer?: (action: string, args: Record<string, string>) => void;
 }
 
 const FormFields = ({ fields, onChange, buttonActionReducer }: FormFieldsProps): (null | JSX.Element)[] => {

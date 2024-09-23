@@ -23,6 +23,7 @@ export interface CVAttribute extends Variable {
 }
 
 export interface CVFilter {
+  attr?: string;
   operator: string;
   value: string | number;
 }

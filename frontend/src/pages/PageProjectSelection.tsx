@@ -23,7 +23,7 @@ import LayoutMain from '../components/layout/LayoutMain';
 import SurveyStatus from '../components/project/survey_platform/SurveyStatus';
 import { formatDateToLocale } from '../components/utils/FormatDate';
 import { useSnackbar } from '../context/SnackbarContext';
-import { API } from '../types';
+import { API, Models } from '../types';
 
 interface CellActionsProps {
   params: GridRenderCellParams<any, API.Projects.Project>;
@@ -89,12 +89,12 @@ const PageProjectSelection = (): JSX.Element => {
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
 
-  const [projects, setProjects] = useState<API.Projects.Project[] | undefined>(undefined);
+  const [projects, setProjects] = useState<Models.Projects.Project[] | undefined>(undefined);
 
   const deleteRow = (id: string): void =>
     setProjects(prevProjects => prevProjects?.filter(project => project.id !== id));
 
-  const columns: GridColDef<API.Projects.Project>[] = [
+  const columns: GridColDef<Models.Projects.Project>[] = [
     {
       field: 'name',
       headerName: t('ui.project.selection.grid.column.name'),
@@ -106,8 +106,8 @@ const PageProjectSelection = (): JSX.Element => {
       field: 'survey_platform_fields',
       headerName: t('ui.project.selection.grid.column.status'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project>) => {
-        return <SurveyStatus status={params.value?.['survey_status']} />;
+      renderCell: (params: GridRenderCellParams<any, Models.Projects.Project>): JSX.Element => {
+        return <SurveyStatus status={params.value?.survey_status} />;
       },
     },
     {
@@ -115,7 +115,7 @@ const PageProjectSelection = (): JSX.Element => {
       headerName: t('ui.project.selection.grid.column.survey_platform_name'),
       minWidth: 150,
       maxWidth: 180,
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['survey_platform_name']>) => {
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['survey_platform_name']>): JSX.Element => {
         return <ConnectionBadge size={18} name={params.value ?? ''} />;
       },
     },
@@ -126,7 +126,7 @@ const PageProjectSelection = (): JSX.Element => {
       maxWidth: 170,
       type: 'date',
       valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['last_modified']>) => {
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['last_modified']>): string => {
         const dateValue = params.value ? new Date(params.value) : null;
         return dateValue ? formatDateToLocale(dateValue, { dateStyle: 'short' }) : '';
       },
@@ -137,10 +137,10 @@ const PageProjectSelection = (): JSX.Element => {
       minWidth: 130,
       maxWidth: 170,
       type: 'date',
-      valueGetter: (params: GridValueGetterParams<any, API.Projects.Project['creation_date']>) => {
+      valueGetter: (params: GridValueGetterParams<any, API.Projects.Project['creation_date']>): Date | null => {
         return params.value ? new Date(params.value) : null;
       },
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['creation_date']>) => {
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project['creation_date']>): string => {
         const dateValue = params.value ? new Date(params.value) : null;
         return dateValue ? formatDateToLocale(dateValue, { dateStyle: 'short' }) : '';
       },
@@ -163,7 +163,7 @@ const PageProjectSelection = (): JSX.Element => {
       disableColumnMenu: true,
       hideSortIcons: true,
       sortable: false,
-      renderCell: (params: GridRenderCellParams<any, API.Projects.Project>) => (
+      renderCell: (params: GridRenderCellParams<any, API.Projects.Project>): JSX.Element => (
         <div className="action-cell">
           <CellActions params={params} onDelete={deleteRow} />
         </div>
@@ -172,10 +172,10 @@ const PageProjectSelection = (): JSX.Element => {
   ];
 
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       const response = await GET('/projects/');
 
-      response.on('2xx', (_: number, data: API.Projects.Project[]) => {
+      response.on('2xx', (_: number, data: Models.Projects.Project[]) => {
         setProjects(data);
       });
 
