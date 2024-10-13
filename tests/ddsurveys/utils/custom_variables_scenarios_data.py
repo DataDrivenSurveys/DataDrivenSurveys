@@ -4,10 +4,10 @@ custom_variables_processing_scenarios = [
     (
         "Scenario 1: Filter by calories > 230, select the earliest activity",
         [
-            {"attr": "calories", "operator": "__gt__", "value": "230"}
+            {"attribute": "calories", "operator": "__gt__", "value": "230"}
         ],
         {
-            "attr": "originalStartTime", "operator": "min"
+            "attribute": "originalStartTime", "operator": "min"
         },
         {
             'dds.fitbit.custom.activities.act1.exists': True,
@@ -28,7 +28,7 @@ custom_variables_processing_scenarios = [
 
 example_values = {
     "Date": {
-        "attr": "originalStartTime",
+        "attribute": "originalStartTime",
         "value": "2023-01-10T12:00:00.000+02:00",
         "expected": {
             "__eq__": {
@@ -64,7 +64,7 @@ example_values = {
         }
     },
     "Number": {
-        "attr": "calories",
+        "attribute": "calories",
         "value": "234",
         "expected": {
             "__eq__": {
@@ -100,7 +100,7 @@ example_values = {
         }
     },
     "Text": {
-        "attr": "activityName",
+        "attribute": "activityName",
         "value": "Sport",
         "expected": {
             "__eq__": {
@@ -234,7 +234,7 @@ def get_scenarios():
     scenarios = []
     # For each DataType
     for data_type, ops in operator_mappings.items():
-        example_attr = example_values[data_type].get("attr")
+        example_attr = example_values[data_type].get("attribute")
         example_value = example_values[data_type].get("value")
 
         # For each operator for the DataType
@@ -249,10 +249,10 @@ def get_scenarios():
                 scenarios.append(
                     (
                         label,
-                        [{"attr": example_attr, "operator": op_value, "value": example_value}],
-                        {"attr": "originalStartTime", "operator": sel},
+                        [{"attribute": example_attr, "operator": op_value, "value": example_value}],
+                        {"attribute": "originalStartTime", "operator": sel},
                         {
-                            "attr": example_attr,
+                            "attribute": example_attr,
                             "value": expected,
                         }  # The expected_data_to_upload will need to be manually added or computed
                     )

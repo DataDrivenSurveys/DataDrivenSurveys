@@ -15,13 +15,7 @@ const SnackbarFeedback = (): JSX.Element => {
     hide,
   } = useSnackbar();
   return (
-    <Snackbar
-      sx={{ mt: 5 }}
-      anchorOrigin={{ vertical, horizontal }}
-      open={open}
-      autoHideDuration={3000}
-      onClose={hide}
-    >
+    <Snackbar sx={{ mt: 5 }} anchorOrigin={{ vertical, horizontal }} open={open} autoHideDuration={3000} onClose={hide}>
       <Paper elevation={4}>
         <Stack direction="row" sx={{ p: 0 }}>
           <Box

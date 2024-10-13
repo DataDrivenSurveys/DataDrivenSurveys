@@ -1,15 +1,32 @@
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { Button, IconButton, Stack, Typography } from '@mui/material';
-import { useCallback } from 'react';
+import type { JSX } from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { API } from '../../../types';
 import DropDown from '../../input/DropDown';
 import ValueInput from '../../input/ValueInput';
 
-const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
+// @ts-expect-error Intentionally extending in an incompatible way
+interface Filter extends API.Projects.CVFilter {
+  operator: API.Projects.CVOperator | '';
+}
+
+type FilterValues = API.Projects.CVOperator | number;
+
+interface CVFiltersProps {
+  filters: Filter[];
+  index: number;
+  operators: API.Projects.CVOperator[];
+  dataCategory: API.Projects.DataCategory;
+  onChange: (filters: Filter[]) => void;
+}
+
+const CVFilters = ({ filters, dataCategory, operators, onChange }: CVFiltersProps): JSX.Element => {
   const { t } = useTranslation();
 
-  const addFilter = () => {
+  const addFilter = (): void => {
     onChange([
       ...filters,
       {
@@ -20,15 +37,19 @@ const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
     ]);
   };
 
-  const removeFilter = index => {
+  const removeFilter = (index: number): void => {
     const newFilters = [...filters];
     newFilters.splice(index, 1);
     onChange(newFilters);
   };
 
-  const updateFilter = (index, key, value) => {
+  const updateFilter = (index: number, key: keyof Filter, value: FilterValues): void => {
     const newFilters = [...filters];
-    newFilters[index][key] = value;
+    if (key === 'operator') {
+      newFilters[index][key] = value as API.Projects.CVOperator;
+    } else {
+      newFilters[index][key] = value as string;
+    }
     onChange(newFilters);
     // console.log("newFilters", newFilters)
   };
@@ -54,25 +75,34 @@ const CVFilters = ({ filters, dataCategory, operators, onChange }) => {
   );
 };
 
-const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }) => {
+interface CVFilterProps {
+  filter: Filter;
+  index: number;
+  operators: API.Projects.CVOperator[];
+  dataCategory: API.Projects.DataCategory;
+  onChange: (index: number, key: keyof Filter, value: FilterValues) => void;
+  onRemove: (index: number) => void;
+}
+
+const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }: CVFilterProps): JSX.Element => {
   const { t } = useTranslation();
 
   const getDataTypeForAttribute = useCallback(
-    attribute => {
+    (attribute: string) => {
       return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.data_type;
     },
     [dataCategory]
   );
 
   const getUnitForAttribute = useCallback(
-    attribute => {
+    (attribute: string) => {
       return dataCategory.cv_attributes.find(prop => prop.attribute === attribute)?.unit;
     },
     [dataCategory]
   );
 
   const getOperatorsForAttribute = useCallback(
-    attribute => {
+    (attribute: string) => {
       const ops = operators[getDataTypeForAttribute(attribute)] || [];
       return ops.map(op => ({
         ...op,
@@ -90,17 +120,17 @@ const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }
           value: prop.attribute,
           label: prop.label,
         }))}
-        value={filter.attr}
-        onChange={e => onChange(index, 'attr', e.target.value)}
+        value={filter.attribute}
+        onChange={event => onChange(index, 'attribute', event.target.value)}
         sx={{ minWidth: 200 }}
       />
 
-      {filter.attr && (
+      {filter.attribute && (
         <DropDown
           label="Operator"
-          items={getOperatorsForAttribute(filter.attr)}
+          items={getOperatorsForAttribute(filter.attribute)}
           value={filter.operator}
-          onChange={e => onChange(index, 'operator', e.target.value)}
+          onChange={event => onChange(index, 'operator', event.target.value)}
           sx={{ minWidth: 200 }}
         />
       )}
@@ -108,9 +138,9 @@ const CVFilter = ({ filter, index, operators, dataCategory, onChange, onRemove }
       {filter.operator && (
         <ValueInput
           label="Value"
-          data_type={getDataTypeForAttribute(filter.attr)}
+          data_type={getDataTypeForAttribute(filter.attribute)}
           value={filter.value}
-          unit={getUnitForAttribute(filter.attr)}
+          unit={getUnitForAttribute(filter.attribute)}
           onChange={value => onChange(index, 'value', value)}
         />
       )}

@@ -216,11 +216,12 @@ class ActivityLog:
         if isinstance(item, str):
             if item in self.__class__.activity_types:
                 return self.type_activities[item]
-            elif item in self.name_activities:
+
+            if item in self.name_activities:
                 return self.name_activities[item]
-            else:
-                msg = f"Activity with name or type '{item}' not found."
-                raise KeyError(msg)
+
+            msg = f"Activity with name or type '{item}' not found."
+            raise KeyError(msg)
 
         msg = f"Unsupported index type: {type(item)}"
         raise TypeError(msg)

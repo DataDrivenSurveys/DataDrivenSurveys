@@ -5,7 +5,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import SyncIcon from '@mui/icons-material/Sync';
 import { LoadingButton } from '@mui/lab';
 import { Button, ButtonGroup, Stack, TextField, Typography } from '@mui/material';
-import React, { JSX, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDebouncedCallback } from 'use-debounce';
@@ -18,8 +18,8 @@ import CopyClipboard from '../components/input/CopyClipboard';
 import LayoutMain from '../components/layout/LayoutMain';
 import { formatDateStringToLocale } from '../components/utils/FormatDate';
 import { useSnackbar } from '../context/SnackbarContext';
-import { API } from '../types';
-import { ResponseData, ResponseError } from '../types/api';
+import type { API } from '../types';
+import type { ResponseData, ResponseError } from '../types/api';
 
 const SurveyPlatformIntegration = loadable(
   () => import('../components/project/survey_platform/SurveyPlatformIntegration'),
@@ -38,7 +38,7 @@ interface ProjectNameFieldProps {
   project: API.Projects.Project;
 }
 
-const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
+const ProjectNameField = ({ project }: ProjectNameFieldProps): React.JSX.Element => {
   const { t } = useTranslation();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
@@ -85,7 +85,7 @@ const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
   );
 };
 
-const PageProject = (): JSX.Element => {
+const PageProject = (): React.JSX.Element => {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -283,7 +283,7 @@ const PageProject = (): JSX.Element => {
 
                 {project.last_synced !== null && !syncLoading && (
                   <Typography variant="caption" color="text.secondary">
-                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynced as string)}`}
+                    {`${t('ui.project.label.last_synced')} ${formatDateStringToLocale(lastSynced!)}`}
                   </Typography>
                 )}
               </Stack>

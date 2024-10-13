@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import traceback
 from typing import Any, ClassVar
 from urllib.parse import quote_plus
 
@@ -44,13 +45,13 @@ class QualtricsSurveyPlatform(SurveyPlatform):
     form_fields: ClassVar = [
         FormField(
             name="survey_id",
-            type="text",
+            data_type="text",
             required=False,
             data={"helper_url": "https://host.qualtrics.com/survey-builder/{ID}/edit"},
         ),
         FormField(
             name="survey_platform_api_key",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 "helper_url": "https://api.qualtrics.com/ZG9jOjg3NjYzMg-api-key-authentication"
@@ -122,7 +123,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             return 200, message_id, survey_platform_info
 
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
         # survey_platform_fields to update project.survey_platform_fields
         logger.debug("Creating project with name: %s", project_name)
@@ -176,7 +177,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     survey_info = self.surveys_api.get_survey(
                         response["result"]["SurveyID"]
                     ).json()
-                    survey_name = survey_info["result"]["SurveyName"]
+                    # survey_name = survey_info["result"]["SurveyName"]
                     survey_id = response["result"]["SurveyID"]
                     base_url = survey_info["result"]["BrandBaseURL"]
 
@@ -185,6 +186,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     survey_platform_fields["survey_name"] = project_name
                     survey_platform_fields["base_url"] = base_url
                 else:
+                    logger.error("Failed to create survey")
                     return (
                         400,
                         "api.survey.unknown_error_occurred",
@@ -194,6 +196,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     )
 
             except FailedQualtricsRequest:
+                logger.exception("Failed to create survey: %s")
+                logger.debug(traceback.format_exc())
                 return (
                     400,
                     "api.survey.create_failed",
@@ -219,24 +223,25 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             # Update the variables on Qualtrics
             resp = self.surveys_api.update_flow(self.survey_id, flow.to_dict())
-            if resp.status_code == 200:
+            if resp.status_code != 200:
                 return (
-                    200,
-                    "api.ddsurveys.survey_platforms.variables_sync.success",
-                    "Variables synced successfully!",
+                    400,
+                    "api.ddsurveys.survey_platforms.variables_sync.failed",
+                    "Failed to sync variables!",
                 )
-
-            return (
-                400,
-                "api.ddsurveys.survey_platforms.variables_sync.failed",
-                "Failed to sync variables!",
-            )
         except (FailedQualtricsRequest, PermissionError):
+            logger.exception("Failed to sync Qualtrics variables: %s")
             logger.debug("Failed to sync variables for survey %s", self.survey_id)
             return (
                 401,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
                 "Failed to process sync request. Please check your API key and survey ID.",
+            )
+        else:
+            return (
+                200,
+                "api.ddsurveys.survey_platforms.variables_sync.success",
+                "Variables synced successfully!",
             )
 
     def handle_prepare_survey(

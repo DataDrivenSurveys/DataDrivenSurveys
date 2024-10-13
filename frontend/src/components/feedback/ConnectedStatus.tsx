@@ -11,17 +11,13 @@ interface ConnectedStatusProps {
 const ConnectedStatus = ({ connected }: ConnectedStatusProps): JSX.Element => {
   return (
     <LoadingButton loading={connected === undefined}>
-      {
-        connected ?
-          <Tooltip title={'Connected'}>
-            <CheckCircleIcon color={'success'} />
-          </Tooltip>
-          :
-          <Tooltip title={'Not Connected'}>
-            {connected === undefined ? <></> : <ErrorIcon color={'error'} />}
-          </Tooltip>
-      }
-
+      {connected ? (
+        <Tooltip title={'Connected'}>
+          <CheckCircleIcon color={'success'} />
+        </Tooltip>
+      ) : (
+        <Tooltip title={'Not Connected'}>{connected === undefined ? <></> : <ErrorIcon color={'error'} />}</Tooltip>
+      )}
     </LoadingButton>
   );
 };

@@ -32,7 +32,7 @@ class DataProviderDict(TypedDict):
 
 
 class FiltersDict(TypedDict):
-    attr: str
+    attribute: str
     operator: str
     value: str
 

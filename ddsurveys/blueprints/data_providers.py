@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """This module provides blueprints for handling data providers.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -19,6 +18,8 @@ from ddsurveys.models import DataProvider as DataProviderModel
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
+
+    from ddsurveys.data_providers.bases import TDataProvider, TDataProviderClass
 
 logger = get_logger(__name__)
 
@@ -63,30 +64,30 @@ def add_data_provider_to_project() -> ResponseReturnValue:
             logger.error("No data provider selected")
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.is_required",
-                            "text": "Data provider is required",
+                        {
+                            "message": {
+                                "id": "api.data_provider.is_required",
+                                "text": "Data provider is required",
+                            }
                         }
-                    }
                 ),
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_name(
-            selected_data_provider["label"]
+        provider_class: TDataProviderClass = DataProvider.get_class_by_name(
+                selected_data_provider["label"]
         )
 
         if not provider_class:
             logger.error("Data provider %s not found", selected_data_provider['value'])
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
+                        {
+                            "message": {
+                                "id": "api.data_provider.not_supported",
+                                "text": "Data provider is not supported",
+                            }
                         }
-                    }
                 ),
                 404,
             )
@@ -94,9 +95,9 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         fields_data = data.get("fields", [])
         fields_dict = {field["name"]: field["value"] for field in fields_data}
 
-        provider_instance = provider_class(**fields_dict)
+        provider_instance: TDataProvider = provider_class(**fields_dict)
 
-        status = provider_instance.test_connection()
+        provider_instance.test_connection()
 
         # check if the data provider already exists
         logger.debug("%s", selected_data_provider)
@@ -104,17 +105,17 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(
-                name=selected_data_provider["label"],
-                data_provider_name=provider_class.name,
+                    name=selected_data_provider["label"],
+                    data_provider_name=provider_class.name,
             )
             .first()
         )
 
         if not data_provider:
             data_provider = DataProviderModel(
-                name=selected_data_provider["label"],
-                data_provider_type=provider_class.provider_type,
-                data_provider_name=provider_class.name,
+                    name=selected_data_provider["label"],
+                    data_provider_type=provider_class.provider_type,
+                    data_provider_name=provider_class.name,
             )
             db.add(data_provider)
             db.commit()
@@ -123,42 +124,42 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         data_connection = (
             db.query(DataConnection)
             .filter_by(
-                project_id=project.id,
-                data_provider_name=data_provider.data_provider_name,
+                    project_id=project.id,
+                    data_provider_name=data_provider.data_provider_name,
             )
             .first()
         )
 
         if data_connection:
             logger.info(
-                "Data connection with %s already exists for project %s", data_provider.name, project_id
+                    "Data connection with %s already exists for project %s", data_provider.name, project_id
             )
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.connection_already_exists",
-                            "text": "Data connection already exists",
+                        {
+                            "message": {
+                                "id": "api.data_provider.connection_already_exists",
+                                "text": "Data connection already exists",
+                            }
                         }
-                    }
                 ),
                 400,
             )
 
         provider_class = DataProvider.get_class_by_name(
-            data_provider.name
+                data_provider.name
         )
 
         if not provider_class:
             logger.error("Data provider %s not found", data_provider.name)
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
+                        {
+                            "message": {
+                                "id": "api.data_provider.not_supported",
+                                "text": "Data provider is not supported",
+                            }
                         }
-                    }
                 ),
                 404,
             )
@@ -174,9 +175,9 @@ def add_data_provider_to_project() -> ResponseReturnValue:
 
         # create the data connection
         data_connection = DataConnection(
-            project_id=project.id,
-            data_provider_name=data_provider.data_provider_name,
-            fields=fields_dict,
+                project_id=project.id,
+                data_provider_name=data_provider.data_provider_name,
+                fields=fields_dict,
         )
 
         db.add(data_connection)
@@ -211,7 +212,7 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+                db, user, data_provider_name
         )
         if status is not None:
             data_connection: ResponseReturnValue
@@ -229,30 +230,30 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
             logger.error("No data provider selected")
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.is_required",
-                            "text": "Data provider is required",
+                        {
+                            "message": {
+                                "id": "api.data_provider.is_required",
+                                "text": "Data provider is required",
+                            }
                         }
-                    }
                 ),
                 400,
             )
 
         provider_class = DataProvider.get_class_by_name(
-            selected_data_provider["label"]
+                selected_data_provider["label"]
         )
 
         if not provider_class:
             logger.error("Data provider %s not found", selected_data_provider['label'])
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
+                        {
+                            "message": {
+                                "id": "api.data_provider.not_supported",
+                                "text": "Data provider is not supported",
+                            }
                         }
-                    }
                 ),
                 404,
             )
@@ -273,24 +274,24 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(
-                name=selected_data_provider["label"],
-                data_provider_name=DataProviderName(selected_data_provider["value"]),
+                    name=selected_data_provider["label"],
+                    data_provider_name=DataProviderName(selected_data_provider["value"]),
             )
             .first()
         )
 
         if not data_provider:
             logger.error(
-                "Data provider '%s' does not exist", selected_data_provider['value']
+                    "Data provider '%s' does not exist", selected_data_provider['value']
             )
             return (
                 jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_found",
-                            "text": "Data provider not found",
+                        {
+                            "message": {
+                                "id": "api.data_provider.not_found",
+                                "text": "Data provider not found",
+                            }
                         }
-                    }
                 ),
                 404,
             )
@@ -302,12 +303,12 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
 
         return (
             jsonify(
-                {
-                    "message": {
-                        "id": "api.data_provider.updated",
-                        "text": "Data provider updated",
+                    {
+                        "message": {
+                            "id": "api.data_provider.updated",
+                            "text": "Data provider updated",
+                        }
                     }
-                }
             ),
             200,
         )
@@ -339,7 +340,7 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+                db, user, data_provider_name
         )
         if status is not None:
             data_connection: ResponseReturnValue
@@ -349,7 +350,7 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
 
         # delete the variables related to the data connection
         if project.variables is not None and isinstance(
-            project.variables, list | tuple
+                project.variables, list | tuple
         ):
             project.variables = [
                 variable
@@ -360,7 +361,7 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
 
         # delete the custom variables related to the data connection
         if project.custom_variables is not None and isinstance(
-            project.custom_variables, list | tuple
+                project.custom_variables, list | tuple
         ):
             project.custom_variables = [
                 variable
@@ -375,12 +376,12 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
 
         return (
             jsonify(
-                {
-                    "message": {
-                        "id": "api.data_provider.connection_deleted",
-                        "text": "Data connection deleted successfully",
+                    {
+                        "message": {
+                            "id": "api.data_provider.connection_deleted",
+                            "text": "Data connection deleted successfully",
+                        }
                     }
-                }
             ),
             200,
         )
@@ -413,7 +414,7 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
         user = get_jwt_identity()
 
         project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+                db, user, data_provider_name
         )
         if status is not None:
             data_connection: ResponseReturnValue
@@ -425,17 +426,17 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
         data_provider = db.query(DataProviderModel).get(data_provider_name)
 
         provider_class = DataProvider.get_class_by_name(
-            data_provider.name
+                data_provider.name
         )
         provider_instance: DataProvider = provider_class(**data_connection.fields)
         success = provider_instance.test_connection()
 
         db.commit()
         return jsonify(
-            {
-                "message": {
-                    "id": "api.data_provider.connection_status",
-                    "text": "Data connection status",
+                {
+                    "message": {
+                        "id": "api.data_provider.connection_status",
+                        "text": "Data connection status",
+                    }
                 }
-            }
         ), (200 if success else 400)

@@ -1,14 +1,14 @@
-import { DataOrigin } from '../Shared';
+import type { DataOrigin } from '../Shared';
 
 export interface Variable {
   category: string;
   data_origin: DataOrigin[];
   data_type: 'Date' | 'Number' | 'Text';
   description: string;
-  name: string;
   info: string;
   label: string;
-  test_value: string | number;
+  name: string;
+  test_value: number | string;
   test_value_placeholder: string;
   unit: string | null;
 }
@@ -22,10 +22,12 @@ export interface CVAttribute extends Variable {
   attribute: string;
 }
 
+export type CVOperator = 'max' | 'min' | 'random';
+
 export interface CVFilter {
-  attr?: string;
-  operator: string;
-  value: string | number;
+  attribute?: string;
+  operator: CVOperator;
+  value: number | string;
 }
 
 export interface DataCategoryCVAttribute extends CVAttribute {
@@ -33,18 +35,18 @@ export interface DataCategoryCVAttribute extends CVAttribute {
 }
 
 export interface DataCategory {
-  label: string;
-  value: string;
-  custom_variables_enabled: boolean;
   builtin_variables: BuiltinVariable[];
+  custom_variables_enabled: boolean;
   cv_attributes: DataCategoryCVAttribute[];
   data_origin: DataOrigin[];
+  label: string;
+  value: string;
 }
 
 export interface InteractionEffect {
   action: string;
-  field: string;
   args: { value: string };
+  field: string;
 }
 
 export type FieldVisibilityConditionOperator = 'is_empty' | 'is_not_empty';
@@ -60,20 +62,20 @@ export interface FieldVisibilityCondition {
 }
 
 export interface Field {
-  name: string;
-  label: string;
-  value: string;
-  helper_text?: string;
-  type: 'text_block' | 'text_area' | 'text' | 'button' | 'dropdown' | 'multiselect' | 'boolean' | 'number';
   disabled?: boolean;
-  required?: boolean;
-  visibility_conditions: FieldVisibilityCondition | null;
+  helper_text?: string;
   interaction_effects: { on_change: InteractionEffect[] };
+  label: string;
+  name: string;
+  required?: boolean;
+  type: 'boolean' | 'button' | 'dropdown' | 'multiselect' | 'number' | 'text' | 'text_area' | 'text_block';
+  value: string;
+  visibility_conditions: FieldVisibilityCondition | null;
 }
 
 export interface Provider {
-  label: string;
-  value: string;
   instructions: string;
   instructions_helper_url: string;
+  label: string;
+  value: string;
 }

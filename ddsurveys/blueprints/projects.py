@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import datetime
+import traceback
 from io import BytesIO
 from typing import TYPE_CHECKING, cast
 
@@ -45,19 +46,31 @@ projects.register_blueprint(
 @projects.url_value_preprocessor
 def get_project_id(endpoint, values):
     if values is not None and "project_id" in values:
-        g.project_id = values.pop("project_id")
+        g.project_id = values.get("project_id")
 
 
 @projects.url_value_preprocessor
 def get_project_short_id(endpoint, values):
     if values is not None and "project_short_id" in values:
-        g.project_short_id = values.pop("project_short_id")
+        g.project_short_id = values.get("project_short_id")
 
 
 # List
 @projects.route("/", methods=["GET"])
 @jwt_required()
 def list_projects() -> ResponseReturnValue:
+    """Lists all projects associated with the authenticated researcher.
+
+    This function retrieves and returns a list of projects that the authenticated
+    researcher is collaborating on. The projects are fetched from the database
+    and returned as a JSON response.
+
+    Returns:
+        ResponseReturnValue: A JSON response containing a list of projects.
+        - 200: If the projects are successfully retrieved.
+        - 401: If the user is unauthorized.
+        - 404: If the researcher is not found.
+    """
     logger.debug("Listing projects")
 
     with DBManager.get_db() as db:
@@ -72,7 +85,7 @@ def list_projects() -> ResponseReturnValue:
         researcher = cast(Researcher, researcher)
 
         # get the projects
-        projects = (
+        projects: list[Project] = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id)
@@ -183,8 +196,8 @@ def create_project() -> ResponseReturnValue:
             survey_platform_fields=survey_platform_fields,
         )
 
-        new_collaboration = Collaboration(
-            researcher_id=researcher.id, project=new_project
+        new_collaboration: Collaboration = Collaboration(
+            researcher_id=researcher.id, project_id=new_project.id
         )
 
         db.add(new_collaboration)
@@ -223,13 +236,13 @@ def create_project() -> ResponseReturnValue:
 
 
 # Read
-@projects.route("/<string:id_>", methods=["GET"])
+@projects.route("/<string:project_id>", methods=["GET"])
 @jwt_required()
-def get_project(id_: str) -> ResponseReturnValue:
+def get_project(project_id: str) -> ResponseReturnValue:
     """Retrieves the details of a specific project based on its unique identifier.
 
     Args:
-        id_: The unique identifier of the project to be retrieved.
+        project_id: The unique identifier of the project to be retrieved.
 
     Returns:
         Response: A JSON response containing the project details if found.
@@ -237,7 +250,7 @@ def get_project(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Getting project with id: %s", id_)
+    logger.debug("Getting project with id: %s", project_id)
 
     with DBManager.get_db() as db:
 
@@ -254,7 +267,7 @@ def get_project(id_: str) -> ResponseReturnValue:
             )
 
         # get the project by id if it is in the collaborations
-        project = (
+        project: Project = (
             db.query(Project)
             .options(
                 joinedload(Project.data_connections).joinedload(
@@ -262,7 +275,7 @@ def get_project(id_: str) -> ResponseReturnValue:
                 ),
             )
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -283,13 +296,13 @@ def get_project(id_: str) -> ResponseReturnValue:
 
 
 # Update
-@projects.route("/<string:id_>", methods=["PUT"])
+@projects.route("/<string:project_id>", methods=["PUT"])
 @jwt_required()
-def update_project(id_: str) -> ResponseReturnValue:
+def update_project(project_id: str) -> ResponseReturnValue:
     """Updates the details of an existing project.
 
     Args:
-        id_: The unique identifier of the project to be updated.
+        project_id: The unique identifier of the project to be updated.
 
     Returns:
         Response: A JSON response indicating the result of the update operation.
@@ -297,7 +310,7 @@ def update_project(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Updating project with id: %s", id_)
+    logger.debug("Updating project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         data = request.get_json()
@@ -315,7 +328,7 @@ def update_project(id_: str) -> ResponseReturnValue:
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -360,13 +373,13 @@ def update_project(id_: str) -> ResponseReturnValue:
 
 
 # Delete
-@projects.route("/<string:id_>", methods=["DELETE"])
+@projects.route("/<string:project_id>", methods=["DELETE"])
 @jwt_required()
-def delete_project(id_: str) -> ResponseReturnValue:
+def delete_project(project_id: str) -> ResponseReturnValue:
     """Deletes a project and its associated collaboration.
 
     Args:
-        id_: The unique identifier of the project to be deleted.
+        project_id: The unique identifier of the project to be deleted.
 
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
@@ -374,7 +387,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project or collaboration is not found.
     """
-    logger.debug("Deleting project with id: %s", id_)
+    logger.debug("Deleting project with id: %s", project_id)
 
     with DBManager.get_db() as db:
 
@@ -390,10 +403,10 @@ def delete_project(id_: str) -> ResponseReturnValue:
             )
 
         # Get the project and collaboration
-        project = db.query(Project).get(id_)
+        project = db.query(Project).get(project_id)
         collaboration = (
             db.query(Collaboration)
-            .filter_by(project_id=id_, researcher_id=researcher.id)
+            .filter_by(project_id=project_id, researcher_id=researcher.id)
             .first()
         )
 
@@ -427,13 +440,13 @@ def delete_project(id_: str) -> ResponseReturnValue:
 
 
 # DELETE all respondents for a project
-@projects.route("/<string:id_>/respondents", methods=["DELETE"])
+@projects.route("/<string:project_id>/respondents", methods=["DELETE"])
 @jwt_required()
-def delete_respondents(id_: str) -> ResponseReturnValue:
+def delete_respondents(project_id: str) -> ResponseReturnValue:
     """Deletes all respondents associated with a specific project.
 
     Args:
-        id_: The unique identifier of the project.
+        project_id: The unique identifier of the project.
 
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
@@ -441,7 +454,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Deleting project with id: %s", id_)
+    logger.info("Deleting respondents from project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -458,7 +471,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -478,7 +491,83 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         respondents = (
             db.query(Respondent)
             .filter(
-                Respondent.project_id == id_,
+                Respondent.project_id == project_id,
+            )
+            .all()
+        )
+
+        for respondent in respondents:
+            db.delete(respondent)
+
+        db.commit()
+
+        return (
+            jsonify(
+                {
+                    "message": {
+                        "id": "api.projects.respondents.deleted_successfully",
+                        "text": "All project respondents deleted",
+                    }
+                }
+            ),
+            200,
+        )
+
+
+@projects.route("/<string:project_id>/respondents/<string:respondent_id>", methods=["DELETE"])
+@jwt_required()
+def delete_respondent(project_id: str, respondent_id: str) -> ResponseReturnValue:
+    """Deletes a specific respondent associated with a specific project.
+
+    Args:
+        project_id: The unique identifier of the project.
+        respondent_id: The unique identifier of the respondent.
+
+    Returns:
+        Response: A JSON response indicating the result of the deletion operation.
+        - 200: If all respondents are successfully deleted.
+        - 401: If the user is unauthorized.
+        - 404: If the project is not found.
+    """
+    logger.info("Deleting respondents from project with id: %s", project_id)
+
+    with DBManager.get_db() as db:
+        user = get_jwt_identity()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+
+        if not researcher:
+            return (
+                jsonify(
+                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
+                ),
+                401,
+            )
+
+        project: Project = (
+            db.query(Project)
+            .join(Collaboration)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
+            .first()
+        )
+
+        if not project:
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.projects.not_found",
+                            "text": "Project not found",
+                        }
+                    }
+                ),
+                404,
+            )
+
+        respondents: list[Respondent] = (
+            db.query(Respondent)
+            .filter(
+                Respondent.project_id == project_id,
+                Respondent.id == respondent_id,
             )
             .all()
         )
@@ -514,22 +603,24 @@ def get_survey_platform_connection(project) -> ResponseReturnValue:
 
     if not platform_class:
         survey_platform_info["id"] = "api.survey.platform_not_supported"
-        return (400, "api.survey.platform_not_supported", survey_platform_info)
+        return 400, "api.survey.platform_not_supported", survey_platform_info
 
     try:
         platform = platform_class(**project.survey_platform_fields)
         return platform.fetch_survey_platform_info()
     except Exception:
-        return (400, "api.survey.failed_to_check_connection", survey_platform_info)
+        logger.exception("Failed to check connection to survey platform")
+        logger.debug(traceback.format_exc())
+        return 400, "api.survey.failed_to_check_connection", survey_platform_info
 
 
-@projects.route("/<string:id_>/survey_platform/check_connection", methods=["GET"])
+@projects.route("/<string:project_id>/survey_platform/check_connection", methods=["GET"])
 @jwt_required()
-def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
+def check_survey_platform_connection(project_id: str) -> ResponseReturnValue:
     """Checks the connection status of the survey platform for a given project.
 
     Args:
-        id_: The unique identifier of the project.
+        project_id: The unique identifier of the project.
 
     Returns:
         Response: A JSON response indicating the result of the connection check.
@@ -539,7 +630,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Checking survey platform connection for project with id: %s", id_)
+    logger.debug("Checking survey platform connection for project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -555,7 +646,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -621,13 +712,13 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
         return jsonify(survey_platform_info), status
 
 
-@projects.route("/<string:id_>/sync_variables", methods=["POST"])
+@projects.route("/<string:project_id>/sync_variables", methods=["POST"])
 @jwt_required()
-def sync_variables(id_: str) -> ResponseReturnValue:
+def sync_variables(project_id: str) -> ResponseReturnValue:
     """Synchronizes the variables for a specific project with the survey platform.
 
     Args:
-        id_ : The unique identifier of the project.
+        project_id : The unique identifier of the project.
 
     Returns:
         Response: A JSON response indicating the result of the synchronization
@@ -637,7 +728,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Syncing variables for project with id: %s", id_)
+    logger.debug("Syncing variables for project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -653,7 +744,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -732,13 +823,13 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         return jsonify({"message": {"id": message_id, "text": text_message}}), status
 
 
-@projects.route("/<string:id_>/export_survey_responses", methods=["POST"])
+@projects.route("/<string:project_id>/export_survey_responses", methods=["POST"])
 @jwt_required()
-def export_survey_responses(id_: str) -> ResponseReturnValue:
+def export_survey_responses(project_id: str) -> ResponseReturnValue:
     """Exports survey responses for a specific project.
 
     Args:
-        id_ (str): The unique identifier of the project.
+        project_id (str): The unique identifier of the project.
 
     Returns:
         Response: A JSON response indicating the result of the export operation.
@@ -748,7 +839,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
         - 404: If the project is not found.
         - 500: If there is an error during the export process.
     """
-    logger.debug("Exporting survey responses for project with id: %s", id_)
+    logger.debug("Exporting survey responses for project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -761,10 +852,10 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                 401,
             )
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 
@@ -781,7 +872,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                 404,
             )
 
-        platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+        platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
@@ -797,7 +888,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                 400,
             )
 
-        survey_platform = platform_class(**project.survey_platform_fields)
+        survey_platform: TSurveyPlatform = platform_class(**project.survey_platform_fields)
 
         status, message_id, text_message, content = (
             survey_platform.handle_export_survey_responses()
@@ -841,13 +932,13 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
         )
 
 
-@projects.route("/<string:id_>/preview_survey", methods=["GET"])
+@projects.route("/<string:project_id>/preview_survey", methods=["GET"])
 @jwt_required()
-def preview_survey(id_: str) -> ResponseReturnValue:
+def preview_survey(project_id: str) -> ResponseReturnValue:
     """Generates a preview link for a survey associated with a specific project.
 
     Args:
-        id_: The unique identifier of the project.
+        project_id: The unique identifier of the project.
 
     Returns:
         Response: A JSON response containing the preview link if successful.
@@ -856,7 +947,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
-    logger.debug("Previewing survey for project with id: %s", id_)
+    logger.debug("Previewing survey for project with id: %s", project_id)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -872,7 +963,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
         project = (
             db.query(Project)
             .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
+            .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
             .first()
         )
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 import re
 import string
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import validators
 
@@ -121,7 +121,7 @@ def generate_custom_variables(data_provider: str = "fitbit"):
         if date_attribute_for_filter is not None:
             custom_var["filters"] = [
                 {
-                    "attr": date_attribute_for_filter["attribute"],
+                    "attribute": date_attribute_for_filter["attribute"],
                     "operator": "__gt__",
                     "value": date_attribute_for_filter["test_value_placeholder"],
                 }
@@ -134,7 +134,7 @@ def generate_custom_variables(data_provider: str = "fitbit"):
 
         custom_var["variable_name"] = f"custom-variable-{index}"
 
-        custom_var["selection"] = {"attr": attribute_for_selection["attribute"], "operator": "min"}
+        custom_var["selection"] = {"attribute": attribute_for_selection["attribute"], "operator": "min"}
 
         del custom_var["value"]
         del custom_var["data_provider_name"]

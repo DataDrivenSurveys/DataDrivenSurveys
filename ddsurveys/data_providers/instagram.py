@@ -81,7 +81,7 @@ class InstagramDataProvider(OAuthDataProvider):
     form_fields = [
         FormField(
             name="client_id",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started"
@@ -89,7 +89,7 @@ class InstagramDataProvider(OAuthDataProvider):
         ),
         FormField(
             name="client_secret",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://developers.facebook.com/docs/instagram-basic-display-api/getting-started"

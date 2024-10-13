@@ -1,14 +1,14 @@
 module.exports = {
   extends: [
-    'stylelint-config-recommended',       // Base config with common rules
-    'stylelint-config-standard',          // Standard styling guidelines
-    'stylelint-config-css-modules',       // Support for CSS Modules
-    'stylelint-config-prettier',          // Prettier integration to avoid conflicts
+    'stylelint-config-recommended', // Base config with common rules
+    'stylelint-config-standard', // Standard styling guidelines
+    'stylelint-config-css-modules', // Support for CSS Modules
+    'stylelint-config-prettier', // Prettier integration to avoid conflicts
     'stylelint-config-styled-components', // Support for styled-components (CSS-in-JS)
   ],
   plugins: [
-    'stylelint-order',                    // Plugin for property order
-    'stylelint-prettier',                 // Prettier plugin for consistent formatting
+    'stylelint-order', // Plugin for property order
+    'stylelint-prettier', // Prettier plugin for consistent formatting
   ],
   rules: {
     // Prettier formatting rules
@@ -21,9 +21,12 @@ module.exports = {
     'property-no-vendor-prefix': true,
 
     // Disallow unknown CSS properties (helps catch typos)
-    'property-no-unknown': [true, {
-      ignoreProperties: ['/^composes$/'], // Allow 'composes' from CSS Modules
-    }],
+    'property-no-unknown': [
+      true,
+      {
+        ignoreProperties: ['/^composes$/'], // Allow 'composes' from CSS Modules
+      },
+    ],
 
     // Enforce the use of hyphens in class names
     'selector-class-pattern': '^[a-z][a-z0-9\\-]*[a-z0-9]$',
@@ -52,7 +55,10 @@ module.exports = {
     // Additional rules you may want to add for React-specific practices
   },
   ignoreFiles: [
-    'node_modules/**/*.css',             // Ignore external libraries
-    '**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx', // Ignore JavaScript/TypeScript files
+    'node_modules/**/*.css', // Ignore external libraries
+    '**/*.js',
+    '**/*.jsx',
+    '**/*.ts',
+    '**/*.tsx', // Ignore JavaScript/TypeScript files
   ],
 };

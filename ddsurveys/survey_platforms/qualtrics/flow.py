@@ -115,7 +115,7 @@ class Flow:
                 cls._get_flow_ids(flow_blocks["Flow"], flow_ids)
         else:
             msg = f"Expected flow_blocks to be of type list or dict. Received type: {type(flow_blocks)}"
-            raise ValueError(
+            raise TypeError(
                 msg
             )
 

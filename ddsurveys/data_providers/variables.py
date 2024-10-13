@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module defines classes and methods for handling custom variables in a data-driven survey system.
 
 Classes:
@@ -60,7 +59,7 @@ if TYPE_CHECKING:
     from ddsurveys.typings.variable_types import TDataClass, TVariableValue
     from ddsurveys.variable_types import OperatorDict
 
-__all__ = ["Attribute", "CVFilter", "CustomVariableRow", "CustomVariable"]
+__all__ = ["Attribute", "BuiltInVariable", "CVFilter", "CustomVariableRow", "CustomVariable"]
 
 logger = get_logger(__name__)
 
@@ -308,11 +307,11 @@ class CVSelection:
                 test_value_placeholder="",
             )
         else:
-            selected_attribute: str = selection.get("attr", "")
+            selected_attribute: str = selection.get("attribute", "")
             if selected_attribute != "":
-                for attr in attributes:
-                    if attr.attribute == selected_attribute:
-                        self.attribute = attr
+                for attribute in attributes:
+                    if attribute.attribute == selected_attribute:
+                        self.attribute = attribute
                         break
 
     def to_dict(self) -> CVSelectionDict:
@@ -371,8 +370,7 @@ class CVFilter:
             msg = "Attribute, operator, and value must be provided."
             raise ValueError(msg)
 
-        data_type_class: TDataClass | None = None
-        data_type_class = Data.determine_type(value)
+        data_type_class: TDataClass = Data.determine_type(value)
 
         if not issubclass(data_type_class, Data):
             msg = f"Unsupported data type: {data_type_class}"
@@ -435,7 +433,7 @@ class CustomVariableRow:
 
 
 class CustomVariable:
-    def __init__(self, *, data_provider: DataProvider | None, custom_variable: CustomVariableDict) -> None:
+    def __init__(self, *, data_provider: DataProvider | None, custom_variable: DBCustomVariableDict) -> None:
         self.data_list: list[dict[str, Any]] = []
 
         self.data_provider = data_provider
@@ -453,24 +451,24 @@ class CustomVariable:
 
         self.attributes = [
             CVAttribute(
-                name=attr["name"],
-                label=attr["label"],
-                data_type=VariableDataType(attr["data_type"]),
-                description=attr["description"],
-                info=attr["info"],
-                test_value_placeholder=attr["test_value_placeholder"],
-                unit=attr["unit"],
-                attribute=attr["attribute"],
-                enabled=attr["enabled"],
+                name=attribute["name"],
+                label=attribute["label"],
+                data_type=VariableDataType(attribute["data_type"]),
+                description=attribute["description"],
+                info=attribute["info"],
+                test_value_placeholder=attribute["test_value_placeholder"],
+                unit=attribute["unit"],
+                attribute=attribute["attribute"],
+                enabled=attribute["enabled"],
             )
-            for attr in custom_variable["cv_attributes"]
+            for attribute in custom_variable["cv_attributes"]
         ]
 
         attr_attribute: dict[str, CVAttribute] = {attr.attribute: attr for attr in self.attributes}
 
         self.filters: list[CVFilter] = [
             CVFilter(
-                attribute=attr_attribute[filter_["attr"]],
+                attribute=attr_attribute[filter_["attribute"]],
                 operator=filter_["operator"],
                 value=filter_["value"],
             )
@@ -499,9 +497,9 @@ class CustomVariable:
 
     # def get_qualified_attributes(self) -> list[dict[str, Any]]:
     #     return [
-    #         f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}.{attr.name}"
-    #         for attr in self.attributes
-    #         if attr.enabled
+    #         f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}.{attribute.name}"
+    #         for attribute in self.attributes
+    #         if attribute.enabled
     #     ]
 
     @staticmethod

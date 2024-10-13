@@ -18,7 +18,6 @@ from ..utils.functions import (
     custom_variable_to_qualname,
     generate_builtin_variables,
     generate_custom_variables,
-    validate_url,
 )
 from ..utils.mock_data import fitbit_mock_functions, fitbit_mock_properties, instagram_mock_properties
 
@@ -91,7 +90,7 @@ def test_get_all_form_fields():
 
     # Define the required keys for the main structure, fields, and inside each field
     main_keys = ['app_required', 'fields', 'instructions', 'label', 'value']
-    field_keys = ['helper_text', 'label', 'name', 'required', 'type']
+    field_keys = ['helper_text', 'label', 'name', 'required', 'data_type']
 
     for provider_form in data_provider_data:
         # Check main structure
@@ -100,7 +99,8 @@ def test_get_all_form_fields():
         for key in main_keys:
             assert key in provider_form, f"Key {key} missing in provider {provider_form.get('label', 'Unknown')}."
             if not isinstance(provider_form[key], bool):
-                assert provider_form[key] is not None and provider_form[key] != '', f"Key {key} in provider {provider_form.get('label', 'Unknown')} has empty or None value."
+                assert provider_form[key] is not None, f"Key '{key}' in provider {provider_form.get('label', 'Unknown')} is None."
+                assert provider_form[key] != '', f"Key '{key}' in provider {provider_form.get('label', 'Unknown')} has an empty value."
 
         # Check if 'instructions' follow the expected pattern
         expected_instruction_pattern = f"api.ddsurveys.data_providers.{provider_name}.instructions.text"
@@ -114,8 +114,8 @@ def test_get_all_form_fields():
                     assert f_key in field, f"Key {f_key} missing in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
                     assert field[f_key], f"Key {f_key} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')} has empty or None value."
 
-                # Check if type is one of the known types, e.g., "text". Add more if needed.
-                assert field['type'] in ['text'], f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
+                # Check if data_type is one of the known types, e.g., "text". Add more if needed.
+                assert field['data_type'] in ['text'], f"Unknown field data_type {field['data_type']} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
 
                 # Check if 'label' and 'helper_text' follow the expected pattern
                 expected_label_pattern = f"api.ddsurveys.data_providers.{provider_name}.{field['name']}.label"
@@ -157,7 +157,7 @@ def test_data_provider_required_fields(provider_name):
 
     provided_field_names = [field['name'] for field in provider_data['fields']]
 
-    field_structure_keys = ['helper_text', 'label', 'name', 'required', 'type']
+    field_structure_keys = ['helper_text', 'label', 'name', 'required', 'data_type']
 
     for required_field in REQUIRED_FIELDS.get(provider_name, []):
         assert required_field in provided_field_names, f"Missing required field {required_field} for {provider_name}."
@@ -185,7 +185,7 @@ def test_builtin_variables(provider_name):
     required_fields = [
         'label', 'name', 'description', 'data_type', 'category',
         'qualified_name', 'data_provider', 'test_value_placeholder',
-        'info', 'type'
+        'info', 'data_type'
     ]
 
     for variable in builtin_variables:
@@ -194,7 +194,7 @@ def test_builtin_variables(provider_name):
             assert field in variable, f"Provider: {provider_name}, Variable: {var_name}, missing key: {field}."
             assert variable[field], f"Provider: {provider_name}, Variable: {var_name}, key: {field} has empty or None value."
 
-        assert variable["type"] == "Builtin", "The type of the builtin variables should be builtin."
+        assert variable["data_type"] == "Builtin", "The data_type of the builtin variables should be builtin."
         assert variable["qualified_name"] == builtin_variable_to_qualname(variable), "The qualified name should be the data provider name concatenated with the variable name."
         assert variable["data_provider"] == provider_name.lower(), f"The data provider of the builtin variables should be {provider_name.lower()}."
 
@@ -270,8 +270,7 @@ def test_data_extraction_builtin_variables(
     mock_functions,
     expected_upload_data
 ):
-    """
-    Test the data extraction of the builtin variables for multiple data providers.
+    """Test the data extraction of the builtin variables for multiple data providers.
     """
     ctx = app.app_context()
     ctx.push()
@@ -361,7 +360,7 @@ def test_get_used_variables(provider_name):
 
         variable = None
 
-        if used_variable.get("type") == "Builtin":
+        if used_variable.get("type", "") == "Builtin":
 
             variable = next((v for v in project_buitin_variables if v.get("qualified_name") == used_variable.get("variable_name")), None)
             assert variable, f"Could not find the builtin variable {used_variable['variable_name']}."

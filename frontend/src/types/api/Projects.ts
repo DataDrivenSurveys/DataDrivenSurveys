@@ -1,10 +1,10 @@
-import { DataProviderType, SurveyStatus } from '../Shared';
-import { Bases, ResponseData } from './index';
+import type { DataProviderType, SurveyStatus } from '../Shared';
+import type { Bases, ResponseData } from './index';
 
 export interface Researcher {
-  id: number;
   email: string;
   firstname: string;
+  id: number;
   lastname: string;
 }
 
@@ -13,40 +13,46 @@ export interface Collaborations {
   researcher: Researcher;
 }
 
-interface CVAttribute extends Bases.CVAttribute {
+export interface CVAttribute extends Bases.CVAttribute {
   category: string;
   enabled: boolean;
 }
 
-interface CVSelection {
-  attr?: string;
-  operator: 'max' | 'min' | 'random';
+export type CVOperator = Bases.CVOperator;
+
+export interface CVSelection {
+  attribute?: string;
+  operator: CVOperator;
 }
+
+export type CVFilter = Bases.CVFilter;
 
 export interface CustomVariable {
   cv_attributes: CVAttribute[];
   data_category: string;
   data_provider: string;
   enabled: boolean;
-  filters: Bases.CVFilter[];
+  filters: CVFilter[];
   id: number;
   selection: CVSelection;
   type: 'Custom';
   variable_name: string;
 }
 
+export type DataCategory = Bases.DataCategory;
+
 export interface DataProviderField extends Bases.Field {
   content?: string;
 }
 
 export interface DataProvider extends Bases.Provider {
-  callback_url: string;
   app_creation_url: string;
-  dds_app_creation_instructions: string;
   app_required: boolean;
-  fields: DataProviderField[];
+  callback_url: string;
   data_provider_name: string;
   data_provider_type?: DataProviderType;
+  dds_app_creation_instructions: string;
+  fields: DataProviderField[];
   name?: string;
   oauth2?: { redirect_uri: string };
 }
@@ -57,8 +63,8 @@ export interface DataConnection {
   fields: {
     client_id?: string;
     client_secret?: string;
-    project_id?: string;
     information?: string;
+    project_id?: string;
   };
   project_id: string;
 }
@@ -121,10 +127,10 @@ export interface ResponseCreateProjectSuccess extends ResponseData {
 
 // /projects/{project_id}/survey_platform/check_connection
 export interface SurveyPlatformCheckConnectionSuccess {
-  connected: boolean;
   active: boolean;
+  connected: boolean;
   exists: boolean;
+  id: number | null;
   survey_name: string;
   survey_status: SurveyStatus;
-  id: number | null;
 }

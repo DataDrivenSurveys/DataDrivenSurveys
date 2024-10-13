@@ -183,7 +183,7 @@ class Data:
 
     @staticmethod
     def determine_type(value: Any) -> type[list | dict] | TDataClass:
-        """Determines the data type class for the given value based on its type or content.
+        """Determines the data type class for the given value using its type or content.
 
         Parameters:
             value: The value whose data type class is to be determined.

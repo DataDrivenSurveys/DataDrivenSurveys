@@ -6,7 +6,7 @@ import Logo from '../Logo';
 
 export interface ConnectionBadgeProps {
   name: string;
-  size?: number; // in pixels
+  size?: number;
 }
 
 const ConnectionBadge = ({ name, size = 24 }: ConnectionBadgeProps): JSX.Element => {
@@ -15,10 +15,11 @@ const ConnectionBadge = ({ name, size = 24 }: ConnectionBadgeProps): JSX.Element
   return (
     <Stack direction="row" spacing={1} alignItems={'center'} justifyContent={'flex-start'}>
       <Logo name={name} size={size} />
-      <Typography variant={'body1'}><b>{t(`ui.badges.${name.toLowerCase()}.label`)}</b></Typography>
+      <Typography variant={'body1'}>
+        <b>{t(`ui.badges.${name.toLowerCase()}.label`)}</b>
+      </Typography>
     </Stack>
   );
 };
-
 
 export default ConnectionBadge;

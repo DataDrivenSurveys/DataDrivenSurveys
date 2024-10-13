@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from typing import Literal
+
 import pytest
 from flask import Flask
 
@@ -74,8 +75,8 @@ def test_custom_variables_processing_single_filter(mocker, fitbit_data_provider,
     def find_name_by_attr(data_category, expected_attribute_value):
         # Iterate over each cv_attribute in activity's cv_attributes list
         for cv_attribute in data_category.get("cv_attributes", []):
-            # Check if the attribute key of cv_attribute matches the attr of expected_attribute_value
-            if cv_attribute.get("attribute") == expected_attribute_value.get("attr"):
+            # Check if the attribute key of cv_attribute matches the attribute of expected_attribute_value
+            if cv_attribute.get("attribute") == expected_attribute_value.get("attribute"):
                 return cv_attribute.get("name")
         return None
 

@@ -22,7 +22,7 @@ def test_get_all_form_fields():
 
     # Define the required keys for the main structure, fields, and inside each field
     main_keys = ['fields', 'instructions', 'label', 'value']
-    text_keys = ['helper_text', 'label', 'name', 'required', 'type']
+    text_keys = ['helper_text', 'label', 'name', 'required', 'data_type']
     button_keys = ['onClick', 'name']
     field_key_mappings  = {
         'text': text_keys,
@@ -49,13 +49,13 @@ def test_get_all_form_fields():
 
         # Check fields
         for field in survey_platform_form_fields['fields']:
-            required_keys = field_key_mappings.get(field["type"], [])
+            required_keys = field_key_mappings.get(field["data_type"], [])
             for f_key in required_keys:
                 assert f_key in field, f"Key {f_key} missing in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
                 assert field[f_key] is not None, f"Key {f_key} in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')} has empty or None value."
 
-            # Check if type is one of the known types, e.g., "text".
-            assert field['type'] in field_types, f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
+            # Check if data_type is one of the known types, e.g., "text".
+            assert field['data_type'] in field_types, f"Unknown field data_type {field['data_type']} in field {field.get('name', 'Unknown')} of survey platform {survey_platform_form_fields.get('label', 'Unknown')}."
 
             # Check if 'label' and 'helper_text' follow the expected pattern
             expected_label_pattern = f"{base_pattern}.{platform_name}.{field['name']}.label"
@@ -96,7 +96,7 @@ def test_survey_platform_required_fields(survey_platform_name):
 
     provided_field_names = [field['name'] for field in survey_platform_data['fields']]
 
-    field_structure_keys = ['helper_text', 'label', 'name', 'required', 'type']
+    field_structure_keys = ['helper_text', 'label', 'name', 'required', 'data_type']
 
     for required_field in REQUIRED_FIELDS.get(survey_platform_name, []):
         assert required_field in provided_field_names, f"Missing required field {required_field} for {survey_platform_name}."

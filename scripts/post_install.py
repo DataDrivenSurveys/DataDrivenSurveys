@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-"""Created on 2024-07-19 11:57.
+"""Post install script for ddsurveys package.
+
+Created on 2024-07-19 11:57.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
@@ -10,8 +11,10 @@ from spacy.cli.download import download
 
 def install_spacy_models() -> None:
     """Function to install Spacy models.
+
     Models are only installed if they are not already installed.
-    The check for model availability is done by trying to import the model, which is much faster than loading the model.
+    The check for model availability is done by trying to import the model,
+    which is much faster than loading the model.
 
     Returns:
         None

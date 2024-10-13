@@ -458,7 +458,7 @@ class FitbitDataProvider(OAuthDataProvider):
     form_fields: ClassVar[list[FormField]] = [
         FormField(
             name="client_id",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://dev.fitbit.com/build/reference/web-api/developer-guide/getting-started/"
@@ -466,7 +466,7 @@ class FitbitDataProvider(OAuthDataProvider):
         ),
         FormField(
             name="client_secret",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://dev.fitbit.com/build/reference/web-api/developer-guide/getting-started/"

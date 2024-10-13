@@ -85,9 +85,9 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
     form_fields: ClassVar[list[FormField]] = [
-        FormField(name="client_id", type="text", required=True, data={}),
-        FormField(name="client_secret", type="text", required=True, data={}),
-        FormField(name="project_id", type="text", required=True, data={}),
+        FormField(name="client_id", data_type="text", required=True, data={}),
+        FormField(name="client_secret", data_type="text", required=True, data={}),
+        FormField(name="project_id", data_type="text", required=True, data={}),
     ]
 
     # List all the data categories that this data provider supports.

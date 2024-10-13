@@ -11,9 +11,7 @@ interface HeaderProps {
   rightCorner?: React.ReactNode;
 }
 
-const Header = ({
-  children, color, backUrl, rightCorner,
-}: HeaderProps): JSX.Element => {
+const Header = ({ children, color, backUrl, rightCorner }: HeaderProps): JSX.Element => {
   const { t } = useTranslation();
 
   const navigate = useNavigate();
@@ -30,21 +28,15 @@ const Header = ({
         zIndex: 1000,
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        pl={1}
-        pr={1}
-        spacing={1}
-        height="100%"
-      >
+      <Stack direction="row" alignItems="center" pl={1} pr={1} spacing={1} height="100%">
         {backUrl && (
           <Button
             variant="text"
             color="primary"
             size={'small'}
             startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(backUrl as To)}>
+            onClick={() => navigate(backUrl as To)}
+          >
             {t('ui.layout.button.back')}
           </Button>
         )}

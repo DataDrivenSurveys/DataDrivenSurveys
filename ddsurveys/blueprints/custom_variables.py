@@ -138,7 +138,7 @@ def check_custom_variable_data(data):
                 "Selection operator is required.",
             )
 
-        if selection.get("operator") != "random" and not selection.get("attr"):
+        if selection.get("operator") != "random" and not selection.get("attribute"):
             return (
                 False,
                 "api.custom_variables.error.selection_attr_required",
@@ -148,20 +148,20 @@ def check_custom_variable_data(data):
     # Check if the filters are set
     if data.get("filters"):
         filters = data.get("filters")
-        for filter in filters:
-            if not filter.get("attr"):
+        for filter_ in filters:
+            if not filter_.get("attribute"):
                 return (
                     False,
                     "api.custom_variables.error.filter_attr_required",
                     "Filter attribute is required.",
                 )
-            if not filter.get("operator"):
+            if not filter_.get("operator"):
                 return (
                     False,
                     "api.custom_variables.error.filter_operator_required",
                     "Filter operator is required.",
                 )
-            if not filter.get("value"):
+            if not filter_.get("value"):
                 return (
                     False,
                     "api.custom_variables.error.filter_value_required",
@@ -210,8 +210,8 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
             data["id"] = max_id + 1
 
         # Enabling all the custom variables attributes by default
-        for attr in data["cv_attributes"]:
-            attr["enabled"] = True
+        for attribute in data["cv_attributes"]:
+            attribute["enabled"] = True
 
         variable_name = data.get("variable_name")
 
@@ -347,11 +347,11 @@ def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
             # Recover the attributes enabled state and test_value from the previous
             old_attributes = variable["cv_attributes"]
             new_attributes = new_variable_data["cv_attributes"]
-            for idx, attr in enumerate(new_attributes):
+            for idx, attribute in enumerate(new_attributes):
                 old_attr = old_attributes[idx]
                 if old_attr:
-                    attr["enabled"] = old_attr.get("enabled", False)
-                    attr["test_value"] = old_attr.get("test_value", None)
+                    attribute["enabled"] = old_attr.get("enabled", False)
+                    attribute["test_value"] = old_attr.get("test_value", None)
 
         # Update the existing variable with new data
         index = project.custom_variables.index(variable)

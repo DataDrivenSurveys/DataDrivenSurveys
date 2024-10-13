@@ -137,6 +137,9 @@ def create_db_session() -> None:
 
 @app.teardown_appcontext
 def shutdown_session(response_or_exc) -> None:
+    logger.info("Closing database session")
+    if response_or_exc is not None:
+        logger.info("Response received: %s", response_or_exc)
     db = flask.g.pop('db', None)
     if db is not None:
         db.close()  # This should now work without errors

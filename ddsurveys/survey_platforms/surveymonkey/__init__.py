@@ -10,6 +10,7 @@ __all__ = ["SurveyMonkeySurveyPlatform"]
 
 import json
 import os
+import traceback
 import uuid
 from typing import Any, ClassVar, Optional
 
@@ -41,54 +42,56 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     # Form fields declarations go here
     form_fields: ClassVar = [
         FormField(
-            name="survey_id",
-            type="text",
-            required=False,
-            data={"helper_url": "Update me"},
+                name="survey_id",
+                data_type="text",
+                required=False,
+                data={"helper_url": "Update me"},
         ),
         FormField(
-            name="access_token",
-            type="text",
-            required=True,
-            disabled=True,
-            visibility_conditions={
-                "show": [{"field": "access_token", "operator": "is_not_empty"}],
-                "hide": [{"field": "access_token", "operator": "is_empty"}],
-            },
+                name="access_token",
+                data_type="text",
+                required=True,
+                disabled=True,
+                visibility_conditions={
+                    "show": [{"field": "access_token", "operator": "is_not_empty"}],
+                    "hide": [{"field": "access_token", "operator": "is_empty"}],
+                },
         ),
         FormButton(
-            name="authorize",
-            on_click={
-                "action": "open_authorize_url",
-                "args": {
-                    "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={url:client_id}&response_type=code"
+                name="authorize",
+                on_click={
+                    "action": "open_authorize_url",
+                    "args": {
+                        "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={"
+                                    "url:client_id}&response_type=code"
+                    },
                 },
-            },
-            visibility_conditions={
-                "hide": [{"field": "access_token", "operator": "is_not_empty"}]
-            },
+                visibility_conditions={
+                    "hide": [{"field": "access_token", "operator": "is_not_empty"}]
+                },
         ),
         FormButton(
-            name="re-authorize",
-            on_click={
-                "action": "open_authorize_url",
-                "args": {
-                    "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={url:client_id}&response_type=code"
+                name="re-authorize",
+                on_click={
+                    "action": "open_authorize_url",
+                    "args": {
+                        "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={"
+                                    "url:client_id}&response_type=code"
+                    },
                 },
-            },
-            visibility_conditions={
-                "hide": [{"field": "access_token", "operator": "is_empty"}]
-            },
+                visibility_conditions={
+                    "hide": [{"field": "access_token", "operator": "is_empty"}]
+                },
         ),
     ]
 
     def __init__(
-        self,
-        survey_id: str = "",
-        client_id: str = "",
-        client_secret: str = "",
-        access_token: str = "",
-        **kwargs,
+            self,
+            survey_id: str = "",
+            client_id: str = "",
+            client_secret: str = "",
+            access_token: str = "",
+            **kwargs,
     ) -> None:
         """Args:
         client_id:
@@ -113,22 +116,22 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
     # OAuthSurveyPlatform methods
     def init_api_client(
-        self,
-        client_id: str,
-        client_secret: str,
-        redirect_uri: str | None = None,
-        access_token: str | None = None,
-        *args,
-        **kwargs,
+            self,
+            client_id: str,
+            client_secret: str,
+            redirect_uri: str | None = None,
+            access_token: str | None = None,
+            *args,
+            **kwargs,
     ) -> None:
         self.client_id: str = client_id
         self.client_secret: str = client_secret
 
         self.api_client = SMClient(
-            client_id=self.client_id,
-            client_secret=self.client_secret,
-            redirect_uri=self.redirect_uri,
-            access_token=self.access_token if self.access_token else None,
+                client_id=self.client_id,
+                client_secret=self.client_secret,
+                redirect_uri=self.redirect_uri,
+                access_token=self.access_token if self.access_token else None,
         )
 
     def init_oauth_client(self, *args, **kwargs) -> None:
@@ -147,7 +150,8 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         sm_client = SMClient(**app_credentials, redirect_uri=cls.get_redirect_uri())
         return sm_client.get_authorization_url()
 
-    def get_client_id(self) -> str: ...
+    def get_client_id(self) -> str:
+        ...
 
     def request_token(self, code: str) -> dict[str, Any]:
 
@@ -158,7 +162,8 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         return {"success": True, "data": json.loads(token)}
 
-    def revoke_token(self, token: str) -> bool: ...
+    def revoke_token(self, token: str) -> bool:
+        ...
 
     # SurveyPlatform methods
     def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
@@ -184,12 +189,13 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             survey_platform_info["connected"] = True
         except Exception:
             logger.exception("Error fetching survey platform info: %s")
+            logger.debug(traceback.format_exc())
             return 400, "api.survey_platforms.connection_failed", survey_platform_info
         else:
             return 200, message_id, survey_platform_info
 
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+            self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str, dict[str, Any]]:
         survey_platform_fields = {
             "survey_id": self.survey_id,
@@ -210,21 +216,23 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
                 survey_platform_fields["survey_name"] = survey_name
                 survey_platform_fields["survey_status"] = "active"
-
-                return (
-                    200,
-                    "api.survey_platforms.project_creation_success",
-                    "Project created successfully",
-                    survey_name,
-                    survey_platform_fields,
-                )
             except Exception:
+                logger.exception("Error creating a new survey: %s")
+                logger.debug(traceback.format_exc())
                 return (
                     400,
                     "api.survey.unknown_error_occurred",
                     "Unknown error occurred, please check your App Credentials",
                     None,
                     {},
+                )
+            else:
+                return (
+                    200,
+                    "api.survey_platforms.project_creation_success",
+                    "Project created successfully",
+                    survey_name,
+                    survey_platform_fields,
                 )
         else:
             try:
@@ -236,6 +244,8 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                 survey_platform_fields["survey_name"] = project_name
 
             except Exception:
+                logger.exception("Error creating a new survey: %s")
+                logger.debug(traceback.format_exc())
                 return (
                     400,
                     "api.survey.unknown_error_occurred",
@@ -260,7 +270,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         try:
             response = self.modify_specific_survey(
-                self.survey_id, custom_variables=modified_variables
+                    self.survey_id, custom_variables=modified_variables
             )
             logger.debug("SurveyMonkeySurveyPlatform response: %s", response)
 
@@ -270,21 +280,23 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                     "api.ddsurveys.survey_platforms.variables_sync.failed",
                     "Failed to sync variables!",
                 )
-            else:
-                return (
-                    200,
-                    "api.ddsurveys.survey_platforms.variables_sync.success",
-                    "Variables synced successfully!",
-                )
         except Exception:
+            logger.exception("Error syncing variables: %s")
+            logger.debug(traceback.format_exc())
             return (
                 401,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
                 "Failed to process sync request. Please check your API key and survey ID.",
             )
+        else:
+            return (
+                200,
+                "api.ddsurveys.survey_platforms.variables_sync.success",
+                "Variables synced successfully!",
+            )
 
     def handle_prepare_survey(
-        self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
+            self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
     ) -> tuple[bool, str | None]:
         """Handle the preparation of the survey for data collection in SurveyMonkey."""
         status, _, survey_platform_info = self.fetch_survey_platform_info()
@@ -301,7 +313,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
             # Create a new contact list for the survey
             new_contact_list = self.create_contact_list(
-                list_name=f"DataDrivenSurveys -- {project_short_id}"
+                    list_name=f"DataDrivenSurveys -- {project_short_id}"
             )
 
             contact_fields = self.get_contact_fields()
@@ -328,7 +340,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         }
 
         new_contact_id = self.create_contact(
-            contact_list_id, filled_contact_fields
+                contact_list_id, filled_contact_fields
         ).get("id")
 
         survey_id = survey_platform_fields.get("survey_id")
@@ -350,7 +362,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
     @staticmethod
     def get_preview_link(
-        survey_platform_fields, enabled_variables
+            survey_platform_fields, enabled_variables
     ) -> tuple[int, str, str, str]:
         """Handle the previewing of the survey."""
         raise NotImplementedError
@@ -360,7 +372,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     def get_specific_survey(self, survey_id: str) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-surveys-id-
         logger.debug(
-            "SurveyMonkeySurveyPlatform.get_specific_survey: %s", self.access_token
+                "SurveyMonkeySurveyPlatform.get_specific_survey: %s", self.access_token
         )
         endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint
@@ -369,7 +381,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         return response.json()
 
     def modify_specific_survey(
-        self, survey_id: str, custom_variables: dict[str, str]
+            self, survey_id: str, custom_variables: dict[str, str]
     ) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-patch-surveys-id-
         endpoint = f"/surveys/{survey_id}"

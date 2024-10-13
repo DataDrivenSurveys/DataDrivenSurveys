@@ -117,7 +117,7 @@ class SurveyPlatform(UIRegistry):
 
     @abstractmethod
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
         """Create a project in the survey platform and return the tuple with:
         - Status code (200 or 40x)
@@ -286,7 +286,7 @@ class FormField(BaseFormField):
     Attributes:
         name (str):
             The name of the field.
-        type (str):
+        data_type (str):
             The type of input that is expected.
             Allowed values are: "text"
         required (bool): Whether the field is required to be filled or not.

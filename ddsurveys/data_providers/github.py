@@ -211,7 +211,7 @@ class GitHubDataProvider(OAuthDataProvider):
     form_fields = [
         FormField(
             name="client_id",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
@@ -219,7 +219,7 @@ class GitHubDataProvider(OAuthDataProvider):
         ),
         FormField(
             name="client_secret",
-            type="text",
+            data_type="text",
             required=True,
             data={
                 # "helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"

@@ -116,11 +116,11 @@ const FieldVariableName = ({ row, onSelect }: FieldVariableNameProps): JSX.Eleme
   // Case where variable is a Custom Variable
   return (
     <FieldLayout isCustomVariable={true}>
-      {(row as unknown as API.Projects.CustomVariable).cv_attributes?.map((attr, index) => (
+      {(row as unknown as API.Projects.CustomVariable).cv_attributes?.map((attribute, index) => (
         <Stack direction="row" alignItems="center" key={index}>
           <Checkbox
             disabled={!row.enabled}
-            checked={attr.enabled}
+            checked={attribute.enabled}
             onChange={event => {
               const checked = event.target.checked;
               onSelect(index, checked);
@@ -129,7 +129,7 @@ const FieldVariableName = ({ row, onSelect }: FieldVariableNameProps): JSX.Eleme
           <Typography
             variant="body1"
             key={index}
-          >{`dds.${row.data_provider}.custom.${row.data_category}.${row.variable_name}.${attr.name}`}</Typography>
+          >{`dds.${row.data_provider}.custom.${row.data_category}.${row.variable_name}.${attribute.name}`}</Typography>
         </Stack>
       ))}
     </FieldLayout>
@@ -152,10 +152,10 @@ const FieldDescription = ({ row }: RowProps): JSX.Element => {
   // Case where variable is a Custom Variable
   return (
     <FieldLayout isCustomVariable={true}>
-      {row.cv_attributes?.map((attr, index) => (
+      {row.cv_attributes?.map((attribute, index) => (
         <Stack justifyContent="center" key={index}>
           <Typography variant="body1" key={index}>
-            {attr.description}
+            {attribute.description}
           </Typography>
         </Stack>
       ))}
@@ -179,10 +179,10 @@ const FieldDataType = ({ row }: RowProps): JSX.Element => {
   // Case where variable is a Custom Variable
   return (
     <FieldLayout isCustomVariable={true}>
-      {row.cv_attributes?.map((attr, index) => (
+      {row.cv_attributes?.map((attribute, index) => (
         <Stack justifyContent="center" key={index}>
           <Typography variant="body1" key={index}>
-            {attr.data_type}
+            {attribute.data_type}
           </Typography>
         </Stack>
       ))}
@@ -219,13 +219,13 @@ const FieldTestValue = ({ row, onChange }: FieldTestValueProps): JSX.Element => 
   // Case where variable is a Custom Variable
   return (
     <FieldLayout>
-      {row.cv_attributes?.map((attr, index) => (
+      {row.cv_attributes?.map((attribute, index) => (
         <Stack justifyContent="center" key={index}>
           <ValueInput
             label={t('ui.project.variables.grid.column.test_value')}
-            data_type={attr.data_type}
-            value={attr.test_value || attr.test_value_placeholder}
-            unit={attr.unit}
+            data_type={attribute.data_type}
+            value={attribute.test_value || attribute.test_value_placeholder}
+            unit={attribute.unit}
             minWidth={100}
             onChange={value => onChange(row, index, value)}
           />
@@ -260,12 +260,12 @@ const FieldInfo = ({ row }: RowProps): JSX.Element => {
   // Case where variable is a Custom Variable
   return (
     <FieldLayout isCustomVariable={true}>
-      {row.cv_attributes?.map((attr, index) => (
+      {row.cv_attributes?.map((attribute, index) => (
         <Tooltip
           key={index}
           title={
             <Typography variant="body1" color="primary.contrastText">
-              {attr.info}
+              {attribute.info}
             </Typography>
           }
           placement="left-start"
@@ -406,11 +406,11 @@ const VariableManagement = ({
       } else {
         const newVariables = customVariables.map(v => {
           if (v.variable_name === row.variable_name) {
-            const newAttributes = v.cv_attributes.map((attr, i) => {
+            const newAttributes = v.cv_attributes.map((attribute, i) => {
               if (i === index) {
-                return { ...attr, test_value: newValue };
+                return { ...attribute, test_value: newValue };
               }
-              return attr;
+              return attribute;
             });
             return { ...v, cv_attributes: newAttributes };
           }
@@ -439,7 +439,11 @@ const VariableManagement = ({
       sxTableHeaderCell: { minWidth: 100 },
       sxTableBodyCell: { minWidth: 100 },
     },
-    { field: 'type', headerName: t('ui.project.variables.grid.column.variable_nature'), minWidth: 100 },
+    {
+      field: 'type',
+      headerName: t('ui.project.variables.grid.column.variable_nature'),
+      minWidth: 100,
+    },
     {
       field: 'actions',
       headerName: t('ui.project.variables.grid.column.actions'),

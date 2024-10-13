@@ -8,7 +8,6 @@ Created on 2024-05-12 20:52
 __all__ = ["TemplateComplexDataProvider"]
 
 from collections.abc import Callable
-from functools import cached_property
 from typing import Any
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
@@ -44,8 +43,8 @@ class TemplateComplexDataProvider(OAuthDataProvider):
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
     form_fields = [
-        FormField(name="client_id", type="text", required=True, data={}),
-        FormField(name="client_secret", type="text", required=True, data={}),
+        FormField(name="client_id", data_type="text", required=True, data={}),
+        FormField(name="client_secret", data_type="text", required=True, data={}),
     ]
 
     # List all the data categories that this data provider supports.
@@ -104,5 +103,4 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     def repositories_by_stars(self, idx: int) -> str: ...
 
-    @cached_property
     def account_creation_date(self) -> str: ...

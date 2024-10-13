@@ -57,7 +57,7 @@ export const checkCustomVariableCompleteness = (customVariable: API.Projects.Cus
   }
 
   if (customVariable.selection) {
-    const { attr, operator } = customVariable.selection;
+    const { attribute, operator } = customVariable.selection;
     if (!operator) {
       return {
         success: false,
@@ -66,7 +66,7 @@ export const checkCustomVariableCompleteness = (customVariable: API.Projects.Cus
       };
     }
 
-    if (operator !== 'random' && !attr) {
+    if (operator !== 'random' && !attribute) {
       return {
         success: false,
         messageId: 'ui.custom_variables.error.selection_attr_required',
@@ -77,8 +77,8 @@ export const checkCustomVariableCompleteness = (customVariable: API.Projects.Cus
 
   if (customVariable.filters) {
     for (const filter of customVariable.filters) {
-      const { attr, operator, value } = filter;
-      if (!attr) {
+      const { attribute, operator, value } = filter;
+      if (!attribute) {
         return {
           success: false,
           messageId: 'ui.custom_variables.error.filter_attr_required',

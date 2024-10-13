@@ -8,7 +8,6 @@ You will need to replace the elipses (...) with the correct classes and code.
 __all__ = ["TemplateDataProvider"]
 
 from collections.abc import Callable
-from functools import cached_property
 from typing import Any
 
 from data_providers.data_categories import DataCategory
@@ -73,7 +72,7 @@ class ExampleDataCategory(DataCategory):
             data_type=VariableDataType.DATE,
             info="The date the account was created. It will be in the format YYYY-MM-DD.",
             is_indexed_variable=False,
-            extractor_func=lambda self: self.account_creation_date,
+            extractor_func=lambda self: self.account_creation_date(),
             data_origin=[],
         )
     ]
@@ -102,8 +101,8 @@ class TemplateDataProvider(OAuthDataProvider):
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
     form_fields = [
-        FormField(name="client_id", type="text", required=True, data={}),
-        FormField(name="client_secret", type="text", required=True, data={}),
+        FormField(name="client_id", data_type="text", required=True, data={}),
+        FormField(name="client_secret", data_type="text", required=True, data={}),
     ]
 
     # List all the data categories that this data provider supports.
@@ -162,5 +161,4 @@ class TemplateDataProvider(OAuthDataProvider):
 
     def repositories_by_stars(self, idx: int) -> str: ...
 
-    @cached_property
     def account_creation_date(self) -> str: ...

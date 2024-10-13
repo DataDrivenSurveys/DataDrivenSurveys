@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2024-07-24 13:11.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -14,9 +13,10 @@ if TYPE_CHECKING:
 
     from ddsurveys.data_providers.bases import DataProvider
     from ddsurveys.typings.data_providers.data_categories import DataCategoryDict
+    from ddsurveys.typings.models import VariableDict
 
     ExtractorFunction: TypeAlias = Callable[[DataProvider], TVariableValue] | Callable[[DataProvider, int], TVariableValue]
-
+    FrontendExtractorFunction: TypeAlias = Callable[[VariableDict, dict], TVariableValue]
 
 class DataOriginDict(TypedDict):
     method: str
@@ -60,7 +60,7 @@ class SelectionStrategyDict(TypedDict):
 
 
 class SelectionDict(TypedDict):
-    attr: str
+    attribute: str
     operator: str
 
 
@@ -101,3 +101,5 @@ class CustomVariableUploadDict(TypedDict):
 
 
 ComputedVariableDict: TypeAlias = dict[str, TVariableValue]
+
+ProjectVariableDict: TypeAlias = BuiltinVariableDict | CustomVariableDict

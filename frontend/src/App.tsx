@@ -1,9 +1,10 @@
 // import loadable from '@loadable/component';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
 import './styles/normalize.css';
+
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import React, { JSX } from 'react';
+import React from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -89,7 +90,7 @@ export const themeOptions = {
 
 const theme = createTheme(themeOptions);
 
-function App(): JSX.Element {
+function App(): React.JSX.Element {
   return (
     <React.StrictMode>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
