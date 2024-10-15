@@ -612,7 +612,7 @@ select = [
 extend-select = ["D"]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
-fixable = ["ALL"]
+#fixable = ["ALL"]
 unfixable = []
 
 typing-modules = [
