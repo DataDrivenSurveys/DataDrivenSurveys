@@ -29,14 +29,15 @@ from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
-    from typings.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
+
+    from ddsurveys.typings.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
 
 logger = get_logger(__name__)
 
 projects = Blueprint("projects", __name__)
-projects.register_blueprint(data_providers, url_prefix="/<string:project_id>/data-providers")
-projects.register_blueprint(respondent, url_prefix="/<string:project_short_id>/respondent")
-projects.register_blueprint(custom_variables, url_prefix="/<string:project_id>/custom-variables")
+projects.register_blueprint(blueprint=data_providers, url_prefix="/<string:project_id>/data-providers")
+projects.register_blueprint(blueprint=respondent, url_prefix="/<string:project_short_id>/respondent")
+projects.register_blueprint(blueprint=custom_variables, url_prefix="/<string:project_id>/custom-variables")
 
 
 @projects.url_value_preprocessor

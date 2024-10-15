@@ -54,7 +54,7 @@ interface DataTableProps {
 const DataTable = ({
   rows,
   columns,
-  selectable = false,
+  selectable,
   selectableLabel,
   selectableField,
   onRowSelectChange,
