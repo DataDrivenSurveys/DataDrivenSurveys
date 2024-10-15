@@ -9,11 +9,9 @@ import { useSnackbar } from '../../../context/SnackbarContext';
 import ConfirmationDialog from '../../feedback/ConfirmationDialog';
 
 const AddCustomVariableDialog = ({ project, open, onClose, onAdd }) => {
-
   const { t } = useTranslation();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
-
 
   const [customVariable, setCustomVariable] = useState({
     variable_name: '',
@@ -21,14 +19,13 @@ const AddCustomVariableDialog = ({ project, open, onClose, onAdd }) => {
 
   // reinitialize customVariable when the dialog is closed
   useEffect(() => {
-    if (!open) setCustomVariable({
-      variable_name: '',
-    });
+    if (!open)
+      setCustomVariable({
+        variable_name: '',
+      });
   }, [open]);
 
-
   const createCustomVariable = useCallback(async () => {
-
     const { success, messageId } = checkCustomVariableCompleteness(customVariable);
     if (!success) {
       showSnackbar(t(messageId), 'error');
@@ -45,9 +42,8 @@ const AddCustomVariableDialog = ({ project, open, onClose, onAdd }) => {
     });
 
     response.on('4xx', (status, data) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
-
   }, [showSnackbar, t, project.id, customVariable, onAdd]);
 
   const checkInputs = useCallback(() => {
@@ -65,17 +61,12 @@ const AddCustomVariableDialog = ({ project, open, onClose, onAdd }) => {
       disableConfirm={!checkInputs()}
       content={
         <Stack width={'100%'} alignItems={'flex-start'} pt={1}>
-          <CVEditor
-            project={project}
-            data={customVariable}
-            onChange={(data) => setCustomVariable(data)}
-          />
+          <CVEditor project={project} data={customVariable} onChange={data => setCustomVariable(data)} />
         </Stack>
       }
       confirmProps={{ variant: 'contained', disableElevation: true }}
     />
   );
 };
-
 
 export default AddCustomVariableDialog;

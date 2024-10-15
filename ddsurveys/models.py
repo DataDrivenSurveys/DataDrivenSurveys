@@ -1,20 +1,22 @@
-#!/usr/bin/env python3
 """This module defines the database models and utility functions for the project.
 
 It includes the definitions of tables such as Researcher, SurveyStatus, DataProvider,
-DataConnection, Collaboration, Project, Distribution, Respondent, and DataProviderAccess,
-which are essential for managing the data related to surveys, researchers, data providers,
-and respondents.
+DataConnection, Collaboration, Project, Distribution, Respondent, and
+DataProviderAccess, which are essential for managing the data related to surveys,
+researchers, data providers, and respondents.
 
-The module utilizes SQLAlchemy for ORM (Object-Relational Mapping) to facilitate database operations, such as creating,
-reading, updating, and deleting records. It also includes utility functions for database connection and session
+The module utilizes SQLAlchemy for ORM (Object-Relational Mapping) to facilitate
+database operations, such as creating, reading, updating, and deleting records.
+It also includes utility functions for database connection and session
 management, leveraging Flask for web application integration.
 
 Key Features:
 - Definition of database models using SQLAlchemy's declarative base.
-- Enumerations for SurveyStatus, DataProviderName, and DataProviderType to ensure data integrity.
+- Enumerations for SurveyStatus, DataProviderName, and DataProviderType to ensure data
+    integrity.
 - Relationships between tables to model complex data structures and associations.
-- Utility functions for initializing database connections and sessions within a Flask application context.
+- Utility functions for initializing database connections and sessions within a Flask
+    application context.
 
 Authors:
 - Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -22,13 +24,14 @@ Authors:
 
 Created on 2023-05-23 15:41
 """
+
 from __future__ import annotations
 
 import os
 import time
 import traceback
 import uuid
-from enum import Enum as PyEnum
+from enum import Enum as StrEnum
 from typing import TYPE_CHECKING, ClassVar
 
 from sonyflake import SonyFlake
@@ -152,10 +155,7 @@ class DBManager:
             None
         """
         cls.SESSION_MAKER = sessionmaker(
-            autocommit=False,
-            autoflush=False,
-            bind=cls.get_engine(app, database_url,
-                                force_new=force_new)
+            autocommit=False, autoflush=False, bind=cls.get_engine(app, database_url, force_new=force_new)
         )
 
     @classmethod
@@ -195,7 +195,9 @@ class DBManager:
         return cls.DB
 
     @staticmethod
-    def retry_query(query: Query, session: Session = None, retries: int = 3, *, orm_query: bool = True) -> Result | None:
+    def retry_query(
+        query: Query, session: Session = None, retries: int = 3, *, orm_query: bool = True
+    ) -> Result | None:
         """Executes a database query with retry logic in case of an OperationalError.
 
         This function attempts to execute the provided query using the given session.
@@ -250,6 +252,7 @@ class Researcher(Base):
         password (str): The hashed password of the researcher.
         collaborations (relationship): A relationship to the Collaboration table.
     """
+
     __tablename__ = "researcher"
 
     id = Column(Integer, primary_key=True)
@@ -276,7 +279,7 @@ class Researcher(Base):
         }
 
 
-class SurveyStatus(PyEnum):
+class SurveyStatus(StrEnum):
     """Enumeration for different survey statuses.
 
     Attributes:
@@ -284,13 +287,14 @@ class SurveyStatus(PyEnum):
         Inactive (str): Represents an inactive survey status.
         Unknown (str): Represents an unknown survey status.
     """
+
     Active = "active"
     Inactive = "inactive"
     Unknown = "unknown"
 
 
 # the enum entry "name" (ex. Fitbit) is used as name for the data provider
-class DataProviderName(PyEnum):
+class DataProviderName(StrEnum):
     """Enumeration for different data provider names.
 
     Attributes:
@@ -300,6 +304,7 @@ class DataProviderName(PyEnum):
         DDS (str): Represents the DDS (Data-Driven Surveys) data provider.
         GoogleContacts (str): Represents the Google Contacts data provider.
     """
+
     Fitbit = "fitbit"
     Instagram = "instagram"
     GitHub = "github"
@@ -307,7 +312,7 @@ class DataProviderName(PyEnum):
     GoogleContacts = "googlecontacts"
 
 
-class DataProviderType(PyEnum):
+class DataProviderType(StrEnum):
     """Enumeration for different types of data providers.
 
     Attributes:
@@ -315,6 +320,7 @@ class DataProviderType(PyEnum):
         oauth (str): Represents a data provider that uses OAuth for authentication.
         frontend (str): Represents a data provider that interacts with the frontend.
     """
+
     generic = "generic"
     oauth = "oauth"
     frontend = "frontend"
@@ -330,18 +336,15 @@ class DataProvider(Base):
         data_connections (relationship): A relationship to the DataConnection table.
         data_provider_accesses (relationship): A relationship to the DataProviderAccess table.
     """
+
     __tablename__ = "data_provider"
     data_provider_name = Column(Enum(DataProviderName), primary_key=True)
 
-    data_provider_type = Column(
-        Enum(DataProviderType), default=DataProviderType.generic
-    )
+    data_provider_type = Column(Enum(DataProviderType), default=DataProviderType.generic)
     name: str = Column(String(255))
 
     data_connections = relationship("DataConnection", back_populates="data_provider")
-    data_provider_accesses = relationship(
-        "DataProviderAccess", back_populates="data_provider"
-    )
+    data_provider_accesses = relationship("DataProviderAccess", back_populates="data_provider")
 
     def to_dict(self) -> DataProviderDict:
         """Converts the DataProvider instance to a dictionary.
@@ -367,11 +370,10 @@ class DataConnection(Base):
         fields (JSON): The fields associated with the data connection.
         project (relationship): A relationship to the Project table.
     """
+
     __tablename__ = "data_connection"
 
-    project_id = Column(
-        String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
-    )
+    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
     data_provider_name = Column(
         Enum(DataProviderName),
         ForeignKey("data_provider.data_provider_name", ondelete="CASCADE"),
@@ -393,9 +395,7 @@ class DataConnection(Base):
         return {
             "project_id": self.project_id,
             "data_provider_name": self.data_provider_name.value,
-            "data_provider": (
-                self.data_provider.to_dict() if self.data_provider else None
-            ),
+            "data_provider": (self.data_provider.to_dict() if self.data_provider else None),
             "fields": self.fields,
         }
 
@@ -407,20 +407,14 @@ class DataConnection(Base):
                   including only the data_provider.
         """
         return {
-            "data_provider": (
-                self.data_provider.to_dict() if self.data_provider else None
-            ),
+            "data_provider": (self.data_provider.to_dict() if self.data_provider else None),
         }
 
 
 class Collaboration(Base):
     __tablename__ = "collaboration"
-    project_id = Column(
-        String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
-    )
-    researcher_id = Column(
-        Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True
-    )
+    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    researcher_id = Column(Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True)
 
     researcher = relationship("Researcher", back_populates="collaborations")
     project = relationship("Project", back_populates="collaborations")
@@ -439,9 +433,7 @@ class Project(Base):
 
     short_id = Column(BigInteger, default=lambda: sony_flake.next_id())
     name = Column(String(255))
-    survey_status = Column(
-        Enum(SurveyStatus), default=SurveyStatus.Unknown, nullable=False
-    )
+    survey_status = Column(Enum(SurveyStatus), default=SurveyStatus.Unknown, nullable=False)
     survey_platform_name = Column(String(255))
     survey_platform_fields = Column(JSON)
     creation_date = Column(DateTime, default=func.now())
@@ -450,16 +442,10 @@ class Project(Base):
     variables = Column(JSON, default=[])
     custom_variables = Column(JSON, default=[])
 
-    data_connections = relationship(
-        "DataConnection", back_populates="project", cascade="all,delete"
-    )
+    data_connections = relationship("DataConnection", back_populates="project", cascade="all,delete")
     collaborations = relationship("Collaboration", back_populates="project")
-    respondents = relationship(
-        "Respondent", back_populates="project", cascade="all,delete"
-    )
-    data_provider_accesses = relationship(
-        "DataProviderAccess", back_populates="project", cascade="all,delete"
-    )
+    respondents = relationship("Respondent", back_populates="project", cascade="all,delete")
+    data_provider_accesses = relationship("DataProviderAccess", back_populates="project", cascade="all,delete")
 
     def to_dict(self) -> ProjectDict:
         return {
@@ -498,9 +484,7 @@ class Distribution(Base):
     id = Column(Integer, primary_key=True)
     url = Column(String(255))
 
-    respondent = relationship(
-        "Respondent", back_populates="distribution", uselist=False
-    )
+    respondent = relationship("Respondent", back_populates="distribution", uselist=False)
 
     def to_dict(self) -> DistributionDict:
         return {"id": self.id, "url": self.url}
@@ -521,9 +505,7 @@ class Respondent(Base):
 
     project = relationship("Project", back_populates="respondents")
 
-    data_provider_accesses = relationship(
-        "DataProviderAccess", back_populates="respondent", cascade="all, delete"
-    )
+    data_provider_accesses = relationship("DataProviderAccess", back_populates="respondent", cascade="all, delete")
 
     def to_dict(self) -> RespondentDict:
         return {
@@ -542,20 +524,14 @@ class DataProviderAccess(Base):
         primary_key=True,
     )
     user_id = Column(String(255), nullable=False, primary_key=True)
-    project_id = Column(
-        String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
-    )
-    respondent_id = Column(
-        String(36), ForeignKey("respondent.id", ondelete="CASCADE"), primary_key=True
-    )
+    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    respondent_id = Column(String(36), ForeignKey("respondent.id", ondelete="CASCADE"), primary_key=True)
 
     access_token = Column(Text, nullable=True)
     refresh_token = Column(Text, nullable=True)
 
     respondent = relationship("Respondent", back_populates="data_provider_accesses")
-    data_provider = relationship(
-        "DataProvider", back_populates="data_provider_accesses"
-    )
+    data_provider = relationship("DataProvider", back_populates="data_provider_accesses")
     project = relationship("Project", back_populates="data_provider_accesses")
 
     def to_dict(self) -> DataProviderAccessDict:

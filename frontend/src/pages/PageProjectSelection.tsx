@@ -67,7 +67,7 @@ const CellActions = ({ params, onDelete }: CellActionsProps): JSX.Element => {
               const response = await DEL(`/projects/${params.row.id}`);
               response.on('2xx', (status: number, data: API.ResponseData) => {
                 if (status === 200) {
-                  showSnackbar(t(data.message.id), 'success');
+                  showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
                   onDelete(params.row.id);
                   navigate('/projects');
                 }
@@ -181,7 +181,7 @@ const PageProjectSelection = (): JSX.Element => {
 
       response.on('4xx', (status: number, data: API.ResponseData) => {
         if (status === 401) {
-          showSnackbar(t(data.message.id), 'error');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
         }
       });
     })();

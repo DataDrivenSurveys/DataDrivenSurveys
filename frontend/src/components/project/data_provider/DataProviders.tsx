@@ -94,14 +94,14 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
 
       response.on('2xx', (status: number, data: API.ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
           setSelected(null);
           onChangeDataProviders();
         }
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     })();
   }, [selected, projectId, showSnackbar, t, onChangeDataProviders]);

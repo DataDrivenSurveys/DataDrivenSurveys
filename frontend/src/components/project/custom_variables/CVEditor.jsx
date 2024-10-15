@@ -11,7 +11,6 @@ import DropDown from '../../input/DropDown';
 import Logo from '../../Logo';
 
 const CVEditor = ({ project, data: initial, onChange }) => {
-
   const { t } = useTranslation();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
@@ -38,9 +37,8 @@ const CVEditor = ({ project, data: initial, onChange }) => {
     });
 
     response.on('4xx', (_, data) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
-
   }, [showSnackbar, t]);
 
   const fetchFilterOperators = useCallback(async () => {
@@ -53,19 +51,20 @@ const CVEditor = ({ project, data: initial, onChange }) => {
     });
 
     response.on('4xx', (_, data) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [showSnackbar, t]);
-
 
   useEffect(() => {
     fetchFilterOperators();
     fetchDataCategories();
-    setDataProviders(project?.data_connections.map(dc => ({
-      label: dc.data_provider.name,
-      value: dc.data_provider_name,
-      icon: <Logo name={dc.data_provider_name} size={18} />,
-    })));
+    setDataProviders(
+      project?.data_connections.map(dc => ({
+        label: dc.data_provider.name,
+        value: dc.data_provider_name,
+        icon: <Logo name={dc.data_provider_name} size={18} />,
+      }))
+    );
   }, [fetchFilterOperators, fetchDataCategories, project]);
 
   /* Input States */
@@ -110,7 +109,7 @@ const CVEditor = ({ project, data: initial, onChange }) => {
           label={t('ui.project.custom_variable.name.label') + '*'}
           helperText={t('ui.project.custom_variable.name.helper_text')}
           value={variableName}
-          onChange={(e) => {
+          onChange={e => {
             setVariableName(e.target.value);
             onChange({
               ...getData(),
@@ -123,7 +122,7 @@ const CVEditor = ({ project, data: initial, onChange }) => {
           label={t('ui.project.custom_variable.data_provider.label')}
           items={dataProviders}
           value={selectedDataProvider?.value}
-          onChange={(e) => {
+          onChange={e => {
             setSelectedDataProvider(dataProviders.find(dp => dp.value === e.target.value));
             onChange({
               ...getData(),
@@ -135,48 +134,43 @@ const CVEditor = ({ project, data: initial, onChange }) => {
           }}
         />
 
-        {
-          selectedDataProvider && dataCategories &&
-          (
-            <DropDown
-              label={t('ui.project.custom_variable.data_category.label')}
-              items={dataCategories.filter(dc => dc.data_provider_name === selectedDataProvider.label)}
-              value={selectedDataCategory?.value}
-              onChange={(e) => {
-                const dc = dataCategories.find(dc => dc.value === e.target.value);
-                setSelectedDataCategory(dc);
-                onChange({
-                  ...getData(),
-                  data_category: e.target.value,
-                  attributes: dc.attributes,
-                  filters: [],
-                  selection: null,
-                });
-              }}
-            />
-          )
-        }
+        {selectedDataProvider && dataCategories && (
+          <DropDown
+            label={t('ui.project.custom_variable.data_category.label')}
+            items={dataCategories.filter(dc => dc.data_provider_name === selectedDataProvider.label)}
+            value={selectedDataCategory?.value}
+            onChange={e => {
+              const dc = dataCategories.find(dc => dc.value === e.target.value);
+              setSelectedDataCategory(dc);
+              onChange({
+                ...getData(),
+                data_category: e.target.value,
+                attributes: dc.attributes,
+                filters: [],
+                selection: null,
+              });
+            }}
+          />
+        )}
 
-        {
-          selectedDataCategory &&
+        {selectedDataCategory && (
           <>
             <CVFilters
               filters={filters}
               dataCategory={selectedDataCategory}
               operators={filterOperators}
-              onChange={(filters) => {
+              onChange={filters => {
                 setFilters(filters);
                 onChange({
                   ...getData(),
                   filters: filters,
-
                 });
               }}
             />
             <CVSelection
               selection={selection}
               dataCategory={selectedDataCategory}
-              onChange={(selection) => {
+              onChange={selection => {
                 setSelection(selection);
                 onChange({
                   ...getData(),
@@ -185,12 +179,9 @@ const CVEditor = ({ project, data: initial, onChange }) => {
               }}
             />
           </>
-        }
-
+        )}
       </Stack>
-
     </Loading>
-
   );
 };
 

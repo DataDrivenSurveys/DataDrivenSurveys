@@ -6,7 +6,16 @@ services:
     command: bash -c "npm install && npm run dev"
     volumes:
       - ./frontend:/app
-#      - /app/node_modules
+    #      - /app/node_modules
+    #    develop:
+    #      watch:
+    #        - action: sync
+    #          path: ./frontend
+    #          target: /frontend/src
+    #          ignore:
+    #            - node_modules/
+    #        - action: rebuild
+    #          path: package.json
     ports:
       - 3000:3000
     networks:
@@ -20,13 +29,23 @@ services:
   backend:
     build: .
     working_dir: /app
-    volumes:
-      - .:/app
     ports:
       - 4000:4000
       - 4444:4444
+    volumes:
+      - ./ddsurveys:/app/ddsurveys
+    develop:
+      watch:
+        - action: sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: ./pyproject.toml
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - dds-dev-net
     environment:
@@ -43,6 +62,10 @@ services:
       - MYSQL_DATABASE=dds
     networks:
       - dds-dev-net
+    healthcheck:
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost" ]
+      interval: 3s
+      retries: 5
 
 networks:
   dds-dev-net:

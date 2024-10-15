@@ -61,12 +61,12 @@ const SurveyPlatformIntegration = ({ project }: SurveyPlatformIntegrationProps):
 
       response.on('2xx', async (status: number, data: API.ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
         }
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     },
     [projectId, showSnackbar, t]

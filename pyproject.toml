@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "ddsurveys"
 dynamic = ["version"]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = { file = "LICENSE" }
 authors = [
   { name = "Lev Velykoivanenko", email = "lev.velykoivanenko@unil.ch" },

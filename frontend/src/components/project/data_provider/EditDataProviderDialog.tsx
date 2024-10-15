@@ -61,13 +61,13 @@ const EditDataProviderDialog = ({ projectId, data, open, onClose, onEdit }: Edit
 
       response.on('2xx', (status: number, data: API.ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
           onEdit();
         }
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     })();
   }, [data, projectId, selected, fields, showSnackbar, onEdit, t]);

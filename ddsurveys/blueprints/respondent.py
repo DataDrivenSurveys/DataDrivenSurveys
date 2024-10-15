@@ -3,6 +3,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 import traceback
@@ -30,8 +31,6 @@ from ddsurveys.models import (
 from ddsurveys.models import DataProvider as DataProviderModel
 from ddsurveys.survey_platforms import SurveyPlatform
 
-# from ._common import get_project_data_connection
-
 if TYPE_CHECKING:
     from collections.abc import Generator
 
@@ -52,8 +51,7 @@ def get_project(db, short_id) -> Project:
 
 
 def get_used_data_providers(
-    project: Project,
-    respondent: Respondent
+    project: Project, respondent: Respondent
 ) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, tuple[None, None, Response, int]]:
     data_provider: DataProviderAccess
     for data_provider in respondent.data_provider_accesses:
@@ -62,9 +60,7 @@ def get_used_data_providers(
         refresh_token = data_provider.refresh_token
 
         if not access_token:
-            logger.error(
-                "Missing access token for data provider: %s", data_provider_name
-            )
+            logger.error("Missing access token for data provider: %s", data_provider_name)
             return (
                 None,
                 None,
@@ -74,15 +70,15 @@ def get_used_data_providers(
                             "id": "api.data_provider.missing_tokens",
                             "text": "Missing data provider tokens",
                         }
-                    }),
-                400
+                    }
+                ),
+                400,
             )
 
         # Get the correct data provider from the project.
         # We need its fields to create an instance of the data provider.
         project_data_connection = next(
-            (dc for dc in project.data_connections
-             if dc.data_provider.data_provider_name.value == data_provider_name),
+            (dc for dc in project.data_connections if dc.data_provider.data_provider_name.value == data_provider_name),
             None,
         )
 
@@ -91,24 +87,22 @@ def get_used_data_providers(
             return (
                 None,
                 None,
-                jsonify({
-                    "message": {
-                        "id": "api.data_provider.not_found",
-                        "text": "Data provider not found",
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.data_provider.not_found",
+                            "text": "Data provider not found",
+                        }
                     }
-                }),
+                ),
                 404,
             )
 
         fields = project_data_connection.fields
 
-        fields.update(
-            {"access_token": access_token, "refresh_token": refresh_token}
-        )
+        fields.update({"access_token": access_token, "refresh_token": refresh_token})
 
-        user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(
-            data_provider_name
-        )(**fields)
+        user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(data_provider_name)(**fields)
 
         yield user_data_provider, data_provider, None, None
 
@@ -130,14 +124,11 @@ def get_public_project() -> ResponseReturnValue:
             - 404: Project not found.
     """
     with DBManager.get_db() as db:
-
         project_short_id = g.get("project_short_id")
         project: Project = (
             db.query(Project)
             .options(
-                joinedload(Project.data_connections).joinedload(
-                    DataConnection.data_provider
-                ),
+                joinedload(Project.data_connections).joinedload(DataConnection.data_provider),
             )
             .filter(Project.short_id == project_short_id)
             .first()
@@ -160,9 +151,7 @@ def get_public_project() -> ResponseReturnValue:
         response_dict = project.to_public_dict()
         response_status = 200
 
-        all_data_connections_connected = (
-            True  # Assume all are connected until proven otherwise
-        )
+        all_data_connections_connected = True  # Assume all are connected until proven otherwise
         survey_platform_connected = False
 
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
@@ -175,9 +164,7 @@ def get_public_project() -> ResponseReturnValue:
             survey_platform = platform_class(**project.survey_platform_fields)
 
             # Fetch survey platform info using the platform method
-            status, _, survey_platform_info = (
-                survey_platform.fetch_survey_platform_info()
-            )
+            status, _, survey_platform_info = survey_platform.fetch_survey_platform_info()
 
             if status == 200:
                 survey_platform_connected = survey_platform_info["connected"]
@@ -185,7 +172,8 @@ def get_public_project() -> ResponseReturnValue:
             else:
                 logger.error(
                     "Survey on %s %s does not exist or there was an error fetching its info.",
-                    project.survey_platform_name, project.id
+                    project.survey_platform_name,
+                    project.id,
                 )
                 response_status = 400
                 all_data_connections_connected = False
@@ -202,11 +190,7 @@ def get_public_project() -> ResponseReturnValue:
 
             project_data_connections = project_dict["data_connections"]
             project_data_connection = next(
-                (
-                    dc
-                    for dc in project_data_connections
-                    if dc["data_provider"]["data_provider_name"] == provider_type
-                ),
+                (dc for dc in project_data_connections if dc["data_provider"]["data_provider_name"] == provider_type),
                 None,
             )
 
@@ -220,15 +204,11 @@ def get_public_project() -> ResponseReturnValue:
                 all_data_connections_connected = False
 
         has_oauth_data_providers = any(
-            dc.data_provider.data_provider_type == DataProviderType.oauth
-            for dc in project.data_connections
+            dc.data_provider.data_provider_type == DataProviderType.oauth for dc in project.data_connections
         )
 
         project_ready = (
-            all_data_connections_connected
-            and survey_platform_connected
-            and survey_active
-            and has_oauth_data_providers
+            all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
         )
         response_dict["project_ready"] = project_ready
         response_dict["used_variables"] = variables_per_data_provider
@@ -254,7 +234,6 @@ def get_public_data_providers() -> ResponseReturnValue:
             - 404: Project not found.
     """
     with DBManager.get_db() as db:
-
         project = get_project(db, g.get("project_short_id"))
         if not project:
             return (
@@ -272,7 +251,6 @@ def get_public_data_providers() -> ResponseReturnValue:
         # Get all data providers linked to the project.
         data_providers = []
         for data_connection in project.data_connections:
-
             data_provider = data_connection.data_provider
 
             cunstructor_fields = data_connection.fields
@@ -300,7 +278,6 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
     This endpoint should not provide any sensitive information.
     """
     with DBManager.get_db() as db:
-
         data = request.get_json()
 
         data_provider_name = data.get("data_provider_name")
@@ -327,11 +304,7 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
         # Get the correct data provider from the project
         # (we need its fields to create an instance of the data provider)
         project_data_connection = next(
-            (
-                dc
-                for dc in project.data_connections
-                if dc.data_provider.data_provider_name.value == data_provider_name
-            ),
+            (dc for dc in project.data_connections if dc.data_provider.data_provider_name.value == data_provider_name),
             None,
         )
 
@@ -354,21 +327,15 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
             provider_class = DataProvider.get_class_by_value(
                 project_data_connection.data_provider.data_provider_name.value
             )
-            provider_instance: OAuthDataProvider = provider_class(
-                **project_data_connection.fields
-            )
+            provider_instance: OAuthDataProvider = provider_class(**project_data_connection.fields)
 
             # Exchange the code for an access token
-            provider_instance.get_required_scopes(
-                project.variables, project.custom_variables
-            )
+            provider_instance.get_required_scopes(project.variables, project.custom_variables)
             logger.debug(data)
             response = provider_instance.request_token(data)
 
             if response["success"]:
-                logger.info(
-                    "Successfully exchanged code for tokens for: %s", data_provider_name
-                )
+                logger.info("Successfully exchanged code for tokens for: %s", data_provider_name)
                 return (
                     jsonify(
                         {
@@ -382,9 +349,7 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                     ),
                     200,
                 )
-            logger.error(
-                "Error exchanging code for tokens for: %s", data_provider_name
-            )
+            logger.error("Error exchanging code for tokens for: %s", data_provider_name)
             return (
                 jsonify(
                     {
@@ -440,9 +405,7 @@ def was_data_provider_used() -> ResponseReturnValue:
 
         data = request.get_json()
 
-        data_provider_name = DataProviderName(
-            data.get("data_provider_name")
-        )  # Converting the string to Enum.
+        data_provider_name = DataProviderName(data.get("data_provider_name"))  # Converting the string to Enum.
 
         user_id = data.get("user_id")
 
@@ -482,7 +445,6 @@ def prepare_survey() -> ResponseReturnValue:
     """
     try:
         with DBManager.get_db() as db:
-
             project_short_id = g.get("project_short_id")
 
             project = get_project(db, project_short_id)
@@ -549,8 +511,9 @@ def prepare_survey() -> ResponseReturnValue:
             if respondent.distribution:
                 logger.info("Respondent already has a distribution url.")
 
-                for user_data_provider, data_provider, response, error_status in get_used_data_providers(project,
-                                                                                                         respondent):
+                for user_data_provider, data_provider, response, error_status in get_used_data_providers(
+                    project, respondent
+                ):
                     if response is not None and error_status is not None:
                         return response, error_status
 
@@ -586,9 +549,7 @@ def prepare_survey() -> ResponseReturnValue:
 
             # check if the survey is active
             # Get the platform class
-            platform_class = SurveyPlatform.get_class_by_value(
-                project.survey_platform_name
-            )
+            platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
             if not platform_class:
                 logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
@@ -607,14 +568,13 @@ def prepare_survey() -> ResponseReturnValue:
             # Create an instance of the platform
             platform_instance = platform_class(**project.survey_platform_fields)
 
-            survey_platform_status, _, survey_platform_info = (
-                platform_instance.fetch_survey_platform_info()
-            )
+            survey_platform_status, _, survey_platform_info = platform_instance.fetch_survey_platform_info()
 
             if survey_platform_status != 200 and not survey_platform_info.get("active", False):
                 logger.error(
                     "Survey on %s %s does not exist or there was an error fetching its info.",
-                    project.survey_platform_name, project.id
+                    project.survey_platform_name,
+                    project.id,
                 )
                 return (
                     jsonify(
@@ -631,24 +591,21 @@ def prepare_survey() -> ResponseReturnValue:
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: dict[str, Any] = {}
 
-            for user_data_provider, data_provider, response, error_status in get_used_data_providers(project,
-                                                                                                     respondent):
+            for user_data_provider, data_provider, response, error_status in get_used_data_providers(
+                project, respondent
+            ):
                 if response is not None and error_status is not None:
                     return response, error_status
 
                 data_to_upload.update(
-                    user_data_provider.calculate_variables(
-                        project.variables, project.custom_variables
-                    )
+                    user_data_provider.calculate_variables(project.variables, project.custom_variables)
                 )
 
                 # revoke the access tokens
                 try:
                     user_data_provider.revoke_token(data_provider.access_token)
                 except Exception:
-                    logger.exception(
-                        "Failed to revoke access token for data provider '%s'\n", user_data_provider.name
-                    )
+                    logger.exception("Failed to revoke access token for data provider '%s'\n", user_data_provider.name)
                     logger.debug(traceback.format_exc())
 
                 # set the data provider access tokens to Null
@@ -680,12 +637,10 @@ def prepare_survey() -> ResponseReturnValue:
                 for variable_name, value in data_to_upload.items()
             }
 
-            success_preparing_survey, unique_url = (
-                platform_instance.handle_prepare_survey(
-                    project_short_id=project_short_id,
-                    survey_platform_fields=project.survey_platform_fields,
-                    embedded_data=data_to_upload,
-                )
+            success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
+                project_short_id=project_short_id,
+                survey_platform_fields=project.survey_platform_fields,
+                embedded_data=data_to_upload,
             )
 
             if success_preparing_survey:
@@ -747,9 +702,7 @@ def prepare_survey() -> ResponseReturnValue:
         )
 
 
-def check_data_provider_access_tokens(
-    project_id, data_provider_name, access_token, refresh_token
-):
+def check_data_provider_access_tokens(project_id, data_provider_name, access_token, refresh_token):
     with DBManager.get_db() as db:
         # Get project and its associated data connections.
         project = db.query(Project).get(project_id)
@@ -758,9 +711,7 @@ def check_data_provider_access_tokens(
             return False
 
         data_connection = (
-            db.query(DataConnection)
-            .filter_by(project_id=project_id, data_provider_name=data_provider_name)
-            .first()
+            db.query(DataConnection).filter_by(project_id=project_id, data_provider_name=data_provider_name).first()
         )
 
         if not data_connection:
@@ -818,9 +769,7 @@ def connect_respondent() -> ResponseReturnValue:
         respondent = None
 
         for data in data_providers:
-            data_provider_name = DataProviderName(
-                data.get("data_provider_name")
-            )  # Converting the string to Enum.
+            data_provider_name = DataProviderName(data.get("data_provider_name"))  # Converting the string to Enum.
 
             # Get the data provider
             data_provider: DataProviderModel = db.query(DataProviderModel).get(data_provider_name)
@@ -844,9 +793,7 @@ def connect_respondent() -> ResponseReturnValue:
             access_token = token.get("access_token")
             refresh_token = token.get("refresh_token")
 
-            if not check_data_provider_access_tokens(
-                project.id, data_provider_name, access_token, refresh_token
-            ):
+            if not check_data_provider_access_tokens(project.id, data_provider_name, access_token, refresh_token):
                 logger.error("Invalid token for data provider: %s", data_provider_name)
                 return (
                     jsonify(
@@ -959,9 +906,7 @@ def connect_respondent() -> ResponseReturnValue:
             )
         except IntegrityError:
             db.rollback()
-            logger.exception(
-                "Error creating a new respondent:\n%s", traceback.format_exc()
-            )
+            logger.exception("Error creating a new respondent:\n%s", traceback.format_exc())
             return (
                 jsonify(
                     {

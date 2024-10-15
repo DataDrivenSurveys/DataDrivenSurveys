@@ -118,7 +118,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [projectShortId, showSnackbar, t]);
 
@@ -220,14 +220,14 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
 
       setPreparingSurvey(false);
 
-      showSnackbar(t(data.message.id), 'success');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
 
       response_prepare.on('2xx', (status: number, data: API.Respondent.ResponseDataSurveyDistribution) => {
         if (status === 200) {
           resetEvents();
           setSurveyURL(data.entity.url);
           // wait 2 seconds and then redirect
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
           setTimeout(() => {
             let separator = '';
             let storedParams = '';
@@ -249,13 +249,13 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
 
       response_prepare.on('4xx', (_: number, data: API.ResponseData) => {
         setPreparingSurvey(false);
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     });
 
     connect_response.on('4xx', (_: number, data: API.ResponseData) => {
       setPreparingSurvey(false);
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [
     anyProviderAlreadyUsed,

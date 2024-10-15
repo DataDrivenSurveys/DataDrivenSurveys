@@ -4,9 +4,10 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, g, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -19,6 +20,7 @@ from ddsurveys.models import DataProvider as DataProviderModel
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
+    from werkzeug.sansio.response import Response
 
 logger = get_logger(__name__)
 
@@ -43,7 +45,6 @@ def add_data_provider_to_project() -> ResponseReturnValue:
     logger.debug("Adding data provider to project")
 
     with DBManager.get_db() as db:
-
         project_id = g.get("project_id")
 
         user = get_jwt_identity()
@@ -73,12 +74,10 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_name(
-            selected_data_provider["label"]
-        )
+        provider_class = DataProvider.get_class_by_name(selected_data_provider["label"])
 
         if not provider_class:
-            logger.error("Data provider %s not found", selected_data_provider['value'])
+            logger.error("Data provider %s not found", selected_data_provider["value"])
             return (
                 jsonify(
                     {
@@ -130,9 +129,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         )
 
         if data_connection:
-            logger.info(
-                "Data connection with %s already exists for project %s", data_provider.name, project_id
-            )
+            logger.info("Data connection with %s already exists for project %s", data_provider.name, project_id)
             return (
                 jsonify(
                     {
@@ -145,9 +142,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_name(
-            data_provider.name
-        )
+        provider_class = DataProvider.get_class_by_name(data_provider.name)
 
         if not provider_class:
             logger.error("Data provider %s not found", data_provider.name)
@@ -210,14 +205,16 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+        project_response, data_connection_int = get_project_data_connection(
+            db=db,
+            user=user,
+            data_provider_name=data_provider_name,
         )
-        if status is not None:
-            data_connection: ResponseReturnValue
+        if isinstance(data_connection_int, int):
+            project_response: cast(Response, project_response)
             # Case where something could not be found in the database
-            return data_connection, status
-        data_connection: DataConnection
+            return project_response, data_connection_int
+        data_connection: DataConnection = data_connection_int
 
         data = request.get_json()
         fields_data = data.get("fields", [])
@@ -239,12 +236,10 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
                 400,
             )
 
-        provider_class = DataProvider.get_class_by_name(
-            selected_data_provider["label"]
-        )
+        provider_class = DataProvider.get_class_by_name(selected_data_provider["label"])
 
         if not provider_class:
-            logger.error("Data provider %s not found", selected_data_provider['label'])
+            logger.error("Data provider %s not found", selected_data_provider["label"])
             return (
                 jsonify(
                     {
@@ -280,9 +275,7 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
         )
 
         if not data_provider:
-            logger.error(
-                "Data provider '%s' does not exist", selected_data_provider['value']
-            )
+            logger.error("Data provider '%s' does not exist", selected_data_provider["value"])
             return (
                 jsonify(
                     {
@@ -338,35 +331,32 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+        project_response, data_connection_int = get_project_data_connection(
+            db=db,
+            user=user,
+            data_provider_name=data_provider_name,
         )
-        if status is not None:
-            data_connection: ResponseReturnValue
+        if isinstance(data_connection_int, int):
+            project_response: cast(Response, project_response)
             # Case where something could not be found in the database
-            return data_connection, status
-        data_connection: DataConnection
+            return project_response, data_connection_int
+        project: Project = project_response
+        data_connection: DataConnection = data_connection_int
 
         # delete the variables related to the data connection
-        if project.variables is not None and isinstance(
-            project.variables, list | tuple
-        ):
+        if project.variables is not None and isinstance(project.variables, list | tuple):
             project.variables = [
                 variable
                 for variable in project.variables
-                if variable["data_provider"]
-                   != data_connection.data_provider.data_provider_name.value
+                if variable["data_provider"] != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the custom variables related to the data connection
-        if project.custom_variables is not None and isinstance(
-            project.custom_variables, list | tuple
-        ):
+        if project.custom_variables is not None and isinstance(project.custom_variables, list | tuple):
             project.custom_variables = [
                 variable
                 for variable in project.custom_variables
-                if variable["data_provider"]
-                   != data_connection.data_provider.data_provider_name.value
+                if variable["data_provider"] != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the data connection and update the project variables
@@ -412,21 +402,21 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
-        project, data_connection, status = get_project_data_connection(
-            db, user, data_provider_name
+        project_response, data_connection_int = get_project_data_connection(
+            db=db,
+            user=user,
+            data_provider_name=data_provider_name,
         )
-        if status is not None:
-            data_connection: ResponseReturnValue
+        if isinstance(data_connection_int, int):
+            project_response: cast(Response, project_response)
             # Case where something could not be found in the database
-            return data_connection, status
-        data_connection: DataConnection
+            return project_response, data_connection_int
+        data_connection: DataConnection = data_connection_int
 
         # check the connection
         data_provider = db.query(DataProviderModel).get(data_provider_name)
 
-        provider_class = DataProvider.get_class_by_name(
-            data_provider.name
-        )
+        provider_class = DataProvider.get_class_by_name(data_provider.name)
         provider_instance: DataProvider = provider_class(**data_connection.fields)
         success = provider_instance.test_connection()
 
