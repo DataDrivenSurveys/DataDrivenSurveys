@@ -68,6 +68,8 @@ jobs:
           cd /home/admin/dds
           sudo docker compose down
           sudo rm -rf ./frontend/build
+          sudo rm -rf ./frontend/src
+          sudo rm -rf ./ddsurveys
 
     - name: Copy the project to the server
       uses: appleboy/scp-action@master
