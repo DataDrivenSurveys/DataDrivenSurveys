@@ -173,7 +173,7 @@ const PageCreateProject = (): JSX.Element => {
 
     response.on('2xx', (status: number, data: API.Projects.ResponseCreateProjectSuccess) => {
       if (status === 201) {
-        showSnackbar(t(data.message.id), 'success');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
         navigate(`/projects/${data.entity.id}`);
         // remove all fields from local storage
         localStorage.removeItem('projectName');
@@ -184,7 +184,7 @@ const PageCreateProject = (): JSX.Element => {
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [
     name,

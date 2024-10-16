@@ -1,21 +1,16 @@
-#!/usr/bin/env python3
 """Created on 2024-07-24 13:11.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, NotRequired, TypeAlias, TypedDict
+from typing import TYPE_CHECKING, NotRequired, TypedDict
 
 from ddsurveys.typings.variable_types import TVariableValue
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from ddsurveys.data_providers.bases import DataProvider
-    from ddsurveys.typings.data_providers.data_categories import DataCategoryDict
-
-    ExtractorFunction: TypeAlias = Callable[[DataProvider], TVariableValue] | Callable[[DataProvider, int], TVariableValue]
+    from ddsurveys.data_providers.data_categories import DataCategoryDict
 
 
 class DataOriginDict(TypedDict):
@@ -69,7 +64,7 @@ class CVSelectionDict(TypedDict):
     attribute: AttributeDict | None
 
 
-DataDict: TypeAlias = dict[str, TVariableValue]
+DataDict = dict[str, TVariableValue]
 
 
 class CVFilterDict(TypedDict):
@@ -100,4 +95,4 @@ class CustomVariableUploadDict(TypedDict):
     type: str
 
 
-ComputedVariableDict: TypeAlias = dict[str, TVariableValue]
+ComputedVariableDict = dict[str, TVariableValue]

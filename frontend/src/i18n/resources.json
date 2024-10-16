@@ -10,7 +10,8 @@
           "password_required": "Password is required",
           "registered_successfully": "Registered successfully",
           "registration_failed": "Failed to register",
-          "user_already_exists": "User already exists"
+          "user_already_exists": "User already exists",
+          "unauthorized": "Unauthorized"
         },
         "custom_variables": {
           "error": {

@@ -58,12 +58,12 @@ const ProjectNameField = ({ project }: ProjectNameFieldProps): JSX.Element => {
 
         response.on('2xx', async (status: number, data: ResponseData) => {
           if (status === 200) {
-            showSnackbar(t(data.message.id), 'success');
+            showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
           }
         });
 
         response.on('4xx', (_: number, data: ResponseData) => {
-          showSnackbar(t(data.message.id), 'error');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
         });
       },
       [project, showSnackbar, t]
@@ -122,7 +122,7 @@ const PageProject = (): JSX.Element => {
       });
 
       response.on('4xx', (status: number, data: ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
         setLoadingSurveyPlatformIntegration(false); // Stop loading
         setLoadingDataProviders(false); // Stop loading
         setLoadingVariables(false); // Stop loading
@@ -147,13 +147,13 @@ const PageProject = (): JSX.Element => {
       setlastSynced(null);
       response.on('2xx', (status: number, data: ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
           setlastSynced(new Date().toISOString());
         }
       });
 
       response.on('4xx', (_: number, data: ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
         setlastSynced(lastSynced);
       });
 
@@ -183,7 +183,7 @@ const PageProject = (): JSX.Element => {
     });
 
     response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
 
     response.on('5xx', (_: number, data: ResponseError) => {
@@ -201,7 +201,7 @@ const PageProject = (): JSX.Element => {
     });
 
     response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
 
     response.on('5xx', (_: number, data: ResponseError) => {
@@ -214,12 +214,12 @@ const PageProject = (): JSX.Element => {
 
     response.on('2xx', (status: number, data: ResponseData) => {
       if (status === 200) {
-        showSnackbar(t(data.message.id), 'success');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
       }
     });
 
     response.on('4xx', (_: number, data: ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
 
     response.on('5xx', (_: number, data: ResponseError) => {

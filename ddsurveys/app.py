@@ -5,6 +5,7 @@ Created on 2023-05-23 15:41.
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 import datetime
@@ -56,7 +57,6 @@ APP_CONFIG = {
     "DDS_ONLY_LOG_DDS": env.get("DDS_ONLY_LOG_DDS", "true").casefold() == "true",
     # Set all loggers to the same level
     "DDS_SET_LEVEL_FOR_ALL_LOGGERS": env.get("DDS_SET_LEVEL_FOR_ALL_LOGGERS", "true").casefold() == "true",
-
     # Flask settings
     "LOG_LEVEL": env.get("DDS_LOG_LEVEL", "DEBUG"),
     # JWT Configuration
@@ -84,7 +84,7 @@ JWT_FUNCTIONS_TO_WRAP: list[str] = [
 
 
 def jwt_callback_wrapper(func):
-    """Wraps default JWT callback functions and formats their return values to match the expected format.
+    """Wrapper to format default JWT function return values.
 
     Args:
         func: Function to be wrapped.
@@ -94,6 +94,7 @@ def jwt_callback_wrapper(func):
         ({"message": {"id": resources_key, "text": message_text}}, status_code)
 
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         result, status = func(*args, **kwargs)
@@ -102,13 +103,9 @@ def jwt_callback_wrapper(func):
             name = name[8:]
         if name.endswith("_callback"):
             name = name[:-9]
-        new_result = {
-            "message": {
-                "id": f"api.jwt.{name}",
-                "text": result.json["message"]
-            }
-        }
+        new_result = {"message": {"id": f"api.jwt.{name}", "text": result.json["message"]}}
         return jsonify(new_result), status
+
     return wrapper
 
 
@@ -130,20 +127,23 @@ for func_name in JWT_FUNCTIONS_TO_WRAP:
     func = jwt_callback_wrapper(func)
     setattr(jwt, fname, func)
 
+
 # App configuration
 @app.before_request
 def create_db_session() -> None:
     flask.g.db = DBManager.get_db()  # Store the database session in the Flask global context
 
+
 @app.teardown_appcontext
 def shutdown_session(response_or_exc) -> None:
-    db = flask.g.pop('db', None)
+    db = flask.g.pop("db", None)
     if db is not None:
         db.close()  # This should now work without errors
 
-app.register_blueprint(auth, url_prefix='/auth')
-app.register_blueprint(projects, url_prefix='/projects')
-app.register_blueprint(survey_platforms, url_prefix='/survey-platforms')
+
+app.register_blueprint(auth, url_prefix="/auth")
+app.register_blueprint(projects, url_prefix="/projects")
+app.register_blueprint(survey_platforms, url_prefix="/survey-platforms")
 
 # declare_app_routes(app)
 
@@ -152,28 +152,33 @@ app.register_blueprint(survey_platforms, url_prefix='/survey-platforms')
 
 # def declare_app_routes(app) -> None:
 
-    # TODO : Discuss eventual migration of these routes into respective blueprints
+# TODO : Discuss eventual migration of these routes into respective blueprints
 
-@app.route('/survey-platforms', methods=['GET'])
+
+@app.route("/survey-platforms", methods=["GET"])
 @jwt_required()
 def list_survey_platforms():
     return SurveyPlatform.get_all_form_fields(), 200
 
-@app.route('/data-providers', methods=['GET'])
+
+@app.route("/data-providers", methods=["GET"])
 @jwt_required()
 def list_data_providers():
     return DataProvider.get_all_form_fields(), 200
 
-@app.route('/data-providers/data-categories', methods=['GET'])
+
+@app.route("/data-providers/data-categories", methods=["GET"])
 def list_data_categories():
     return DataProvider.get_all_data_categories(), 200
 
-@app.route('/custom-variables/filter-operators/<data_type>', methods=['GET'])
+
+@app.route("/custom-variables/filter-operators/<data_type>", methods=["GET"])
 def list_filter_operators(data_type):
     data_type = VariableDataType(data_type)
     data_class = Data.get_class_by_type(data_type)
     return data_class.get_filter_operators(), 200
 
-@app.route('/custom-variables/filter-operators', methods=['GET'])
+
+@app.route("/custom-variables/filter-operators", methods=["GET"])
 def list_all_filter_operators():
     return Data.get_all_filter_operators(), 200

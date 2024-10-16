@@ -18,7 +18,7 @@ def client() -> Generator[Flask, None, None]:
 
     # Create the database schema
     Base.metadata.create_all(DBManager.get_engine(app))
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
 
     with app.test_client() as client:
         yield client

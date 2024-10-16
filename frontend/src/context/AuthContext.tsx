@@ -88,7 +88,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
 
     response.on('4xx', (status: number, data: API.ResponseData) => {
       if (status === 401) {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       }
     });
   };
@@ -113,13 +113,13 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
 
     response.on('2xx', (status: number, data: API.ResponseData) => {
       if (status === 200) {
-        showSnackbar(t(data.message.id), 'success');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
         navigate('/projects');
       }
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   };
 

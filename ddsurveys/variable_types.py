@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module contains classes that are specs for important types and data standards, type declarations,
 and Data types used for variables.
 
@@ -13,30 +12,33 @@ Authors:
     - Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
     - Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 import re
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
-    from ddsurveys.typings.variable_types import OperatorDict, OperatorsDict, TDataClass
+    from ddsurveys.typings.variable_types import OperatorDict, OperatorsDict
 
 
 __all__: list[str] = [
     # Enum class exports
     "Operator",
     "VariableType",
-
     "VariableDataType",
     # Data type class exports
     "Data",
     "Date",
     "Number",
     "Text",
+    #
+    "TDataClass",
+    "TData",
 ]
 
 
@@ -164,10 +166,7 @@ class Data:
                 if op_key == operator
             ]
         # Convert the operators dictionary to the desired list format
-        return [
-            {"label": op_info["label"], "value": op_key}
-            for op_key, op_info in cls.operators.items()
-        ]
+        return [{"label": op_info["label"], "value": op_key} for op_key, op_info in cls.operators.items()]
 
     @classmethod
     def is_this_data_type(cls, data: Any) -> bool:
@@ -471,3 +470,6 @@ class Text(Data):
 Data.register(VariableDataType.DATE, Date)
 Data.register(VariableDataType.NUMBER, Number)
 Data.register(VariableDataType.TEXT, Text)
+
+TDataClass = type[Data]
+TData = TypeVar("TData", bound=Data)

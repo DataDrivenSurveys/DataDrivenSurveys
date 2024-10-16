@@ -62,14 +62,14 @@ const PageSurveyPlatformOauth2Redirect = (): JSX.Element => {
       response.on('4xx', (_: number, data: API.ResponseData) => {
         setStatus({
           failed: true,
-          message: t(data.message.id),
+          message: t(data.message.id, { defaultValue: data.message.text }),
         });
       });
 
       response.on('5xx', (_: number, data: API.ResponseData) => {
         setStatus({
           failed: true,
-          message: t(data.message.id),
+          message: t(data.message.id, { defaultValue: data.message.text }),
         });
       });
     })();

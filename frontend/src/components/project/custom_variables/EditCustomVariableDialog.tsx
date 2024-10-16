@@ -41,7 +41,7 @@ const EditCustomVariableDialog = ({
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     },
     [showSnackbar, t]
@@ -65,11 +65,11 @@ const EditCustomVariableDialog = ({
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
 
     response.on('5xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [showSnackbar, t, project.id, customVariable, customVariableId, onEdit]);
 

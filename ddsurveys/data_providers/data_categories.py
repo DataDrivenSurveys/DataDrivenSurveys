@@ -1,24 +1,39 @@
-#!/usr/bin/env python3
-"""@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
+"""This module defines the DataCategory class and related types.
+
+@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, TypeVar
 
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
     from ddsurveys.data_providers.bases import DataProvider
     from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
-    from ddsurveys.typings.data_providers.data_categories import DataCategoryDict, TDataCategoryClass
     from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CVAttributeDict, DataOriginDict
 
-__all__ = ["DataCategory"]
-
+__all__ = [
+    "DataCategory",
+    #
+    "DataCategoryDict",
+    "TDataCategoryClass",
+    "TDataCategory",
+]
 
 logger = get_logger(__name__)
+
+
+class DataCategoryDict(TypedDict):
+    label: str
+    value: str
+    custom_variables_enabled: bool
+    builtin_variables: list[BuiltinVariableDict]
+    cv_attributes: list[CVAttributeDict]
+    data_origin: list[DataOriginDict]
 
 
 class DataCategoryBase(ABCMeta):
@@ -78,8 +93,7 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
     __repr__ = __str__
 
     @abstractmethod
-    def fetch_data(self) -> list[dict[str, Any]]:
-        ...
+    def fetch_data(self) -> list[dict[str, Any]]: ...
 
     @classmethod
     def get_by_value(cls, value: str) -> TDataCategoryClass:
@@ -110,8 +124,8 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
 
     @staticmethod
     def _include_builtin_variable_category(d_: BuiltinVariableDict, category: str) -> BuiltinVariableDict:
-            d_["category"] = category
-            return d_
+        d_["category"] = category
+        return d_
 
     @staticmethod
     def _include_cv_attribute_category(d_: CVAttributeDict, category: str) -> CVAttributeDict:
@@ -140,3 +154,8 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
         # If not found
         msg: str = f"Variable {name} not found in {cls.__name__}"
         raise ValueError(msg)
+
+
+# Type hint for subclasses of DataCategory
+TDataCategoryClass = type[DataCategory]
+TDataCategory = TypeVar("TDataCategory", bound=DataCategory)

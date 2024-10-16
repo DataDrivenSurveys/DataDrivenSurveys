@@ -4,6 +4,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 from typing import Any, ClassVar
@@ -29,7 +30,6 @@ from ddsurveys.survey_platforms.qualtrics.flow import Flow
 
 __all__ = ["QualtricsSurveyPlatform"]
 
-
 logger = get_logger(__name__)
 
 
@@ -40,8 +40,20 @@ class QualtricsSurveyPlatform(SurveyPlatform):
     survey platform.
     """
 
+    max_variable_name_length: int = 45
+    """Maximum length for Qualtrics variable names.
+
+    According to the Qualtrics documentation, the maximum length should be 200
+    characters:
+    https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/embedded-data/#BestPractices
+
+    In practice, when a variable is longer than 45 characters, it is clipped during
+    data export.
+    This leads to `.exists` variables overwriting the actual variable values.
+    """
+
     # Form fields declarations go here
-    form_fields: ClassVar = [
+    form_fields: ClassVar[list[FormField]] = [
         FormField(
             name="survey_id",
             type="text",
@@ -52,15 +64,11 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             name="survey_platform_api_key",
             type="text",
             required=True,
-            data={
-                "helper_url": "https://api.qualtrics.com/ZG9jOjg3NjYzMg-api-key-authentication"
-            },
+            data={"helper_url": "https://api.qualtrics.com/ZG9jOjg3NjYzMg-api-key-authentication"},
         ),
     ]
 
-    def __init__(
-        self, survey_id: str | None = None, survey_platform_api_key: str | None = None, **kwargs
-    ) -> None:
+    def __init__(self, survey_id: str | None = None, survey_platform_api_key: str | None = None, **kwargs) -> None:
         """Initialize the QualtricsSurveyPlatform instance.
 
         This constructor initializes the QualtricsSurveyPlatform with the provided
@@ -81,9 +89,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         self.survey_platform_api_key = survey_platform_api_key
 
         self.surveys_api = SurveysAPI(api_token=self.survey_platform_api_key)
-        self.distributions_api = DistributionsAPI(
-            api_token=self.survey_platform_api_key
-        )
+        self.distributions_api = DistributionsAPI(api_token=self.survey_platform_api_key)
 
     def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
         survey_platform_info = {
@@ -107,13 +113,9 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             survey_info = self.surveys_api.get_survey(self.survey_id).json()
             survey_active = survey_info["result"]["SurveyStatus"] == "Active"
 
-            survey_platform_info["survey_name"] = survey_info["result"][
-                "SurveyName"
-            ]
+            survey_platform_info["survey_name"] = survey_info["result"]["SurveyName"]
             survey_platform_info["active"] = survey_active
-            survey_platform_info["survey_status"] = (
-                "active" if survey_active else "inactive"
-            )
+            survey_platform_info["survey_status"] = "active" if survey_active else "inactive"
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
@@ -167,15 +169,11 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         else:
             try:
-                response = self.surveys_api.create_survey(
-                    survey_name=project_name
-                ).json()
+                response = self.surveys_api.create_survey(survey_name=project_name).json()
 
                 if "result" in response:
                     # Must get the survey info to get the base url
-                    survey_info = self.surveys_api.get_survey(
-                        response["result"]["SurveyID"]
-                    ).json()
+                    survey_info = self.surveys_api.get_survey(response["result"]["SurveyID"]).json()
                     survey_name = survey_info["result"]["SurveyName"]
                     survey_id = response["result"]["SurveyID"]
                     base_url = survey_info["result"]["BrandBaseURL"]
@@ -273,9 +271,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     survey_platform_fields["mailing_list_id"] = mailing_list_id
                     survey_platform_fields["directory_id"] = directory_id
             # Create a new contact in the mailing list
-            new_contact_dict = self.distributions_api.create_contact(
-                directory_id, mailing_list_id, embedded_data
-            )
+            new_contact_dict = self.distributions_api.create_contact(directory_id, mailing_list_id, embedded_data)
             contact_lookup_id = new_contact_dict["contactLookupId"]
 
             survey_id = survey_platform_fields.get("survey_id")
@@ -326,13 +322,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             )
 
     @staticmethod
-    def get_preview_link(
-        survey_platform_fields: dict, enabled_variables: list[dict]
-    ) -> tuple[int, str, str, str]:
-        if (
-            "base_url" not in survey_platform_fields
-            or "survey_id" not in survey_platform_fields
-        ):
+    def get_preview_link(survey_platform_fields: dict, enabled_variables: list[dict]) -> tuple[int, str, str, str]:
+        if "base_url" not in survey_platform_fields or "survey_id" not in survey_platform_fields:
             return (
                 400,
                 "api.ddsurveys.survey_platforms.get_preview_link.error",
@@ -344,10 +335,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         survey_id = survey_platform_fields["survey_id"]
 
         url_params = "&".join(
-            [
-                f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value'])}"
-                for var in enabled_variables
-            ]
+            [f"{quote_plus(var['qualified_name'])}={quote_plus(var['test_value'])}" for var in enabled_variables]
         )
 
         link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"

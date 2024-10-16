@@ -12,7 +12,6 @@ import { useAuth } from '../context/AuthContext';
 import { useSnackbar } from '../context/SnackbarContext';
 import useInput from '../hook/useInput';
 
-
 const SignIn = (): JSX.Element => {
   const { t } = useTranslation();
   const { signin } = useAuth();
@@ -21,7 +20,11 @@ const SignIn = (): JSX.Element => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { bind: bindEmail, value: email, error: errorEmail } = useInput({
+  const {
+    bind: bindEmail,
+    value: email,
+    error: errorEmail,
+  } = useInput({
     label: t('ui.auth.field.email'),
     value: '',
     minLength: 3,
@@ -29,7 +32,11 @@ const SignIn = (): JSX.Element => {
     required: true,
   });
 
-  const { bind: bindPassword, value: password, error: errorPassword } = useInput({
+  const {
+    bind: bindPassword,
+    value: password,
+    error: errorPassword,
+  } = useInput({
     label: t('ui.auth.field.password'),
     value: '',
     minLength: 3,
@@ -37,22 +44,25 @@ const SignIn = (): JSX.Element => {
     required: true,
   });
 
-  const handleSignIn = useCallback(async (event: { preventDefault: () => void; }) => {
-    event.preventDefault();
-    if ([errorEmail, errorPassword].some((error) => error)) {
-      showSnackbar(t('ui.auth.error.missing_fields'), 'error');
-      return;
-    }
-    setLoading(true);
-    try {
-      await signin(email, password);
-      // Redirect to the page the user tried to access, or default to /projects
-      const from = location.state?.from?.pathname || '/projects';
-      navigate(from, { replace: true });
-    } finally {
-      setLoading(false);
-    }
-  }, [errorEmail, errorPassword, signin, showSnackbar, email, password, t, navigate, location.state]);
+  const handleSignIn = useCallback(
+    async (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+      if ([errorEmail, errorPassword].some(error => error)) {
+        showSnackbar(t('ui.auth.error.missing_fields'), 'error');
+        return;
+      }
+      setLoading(true);
+      try {
+        await signin(email, password);
+        // Redirect to the page the user tried to access, or default to /projects
+        const from = location.state?.from?.pathname || '/projects';
+        navigate(from, { replace: true });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [errorEmail, errorPassword, signin, showSnackbar, email, password, t, navigate, location.state]
+  );
 
   return (
     <LayoutMain
@@ -90,7 +100,6 @@ const SignIn = (): JSX.Element => {
   );
 };
 
-
 function PageSignIn(): JSX.Element {
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
@@ -107,10 +116,7 @@ function PageSignIn(): JSX.Element {
     return <LoadingPageContent />;
   }
 
-  return (
-    <SignIn />
-  );
+  return <SignIn />;
 }
-
 
 export default React.memo(PageSignIn);

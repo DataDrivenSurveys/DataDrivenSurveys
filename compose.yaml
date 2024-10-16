@@ -10,7 +10,8 @@ services:
     expose:
       - "4000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - net
     environment:
@@ -57,9 +58,13 @@ services:
     ports:
       - "3306:3306"
     expose:
-     - "3306"
+      - "3306"
     networks:
       - net
+    healthcheck:
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost" ]
+      interval: 3s
+      retries: 5
 
 networks:
   net:

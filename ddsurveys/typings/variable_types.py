@@ -1,14 +1,12 @@
-#!/usr/bin/env python3
 """Created on 2024-07-24 13:44.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, TypeAlias, TypedDict, TypeVar
-
-from ddsurveys.variable_types import Data
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -17,17 +15,15 @@ __all__ = [
     # TypedDict exports
     "OperatorDict",
     "OperatorsDict",
-
     # Variable specification class exports
     "Variable",
     "VariableFunction",
-
     # Type and TypeVar exports
-    "TData",
-    "TDataClass",
     "TVariable",
     "TVariableFunction",
     "TVariableValue",
+    "OperatorDict",
+    "OperatorsDict",
 ]
 
 
@@ -36,20 +32,22 @@ class OperatorDict(TypedDict):
     func: Callable[[TVariableValue, TVariableValue], bool]
 
 
-OperatorsDict: TypeAlias = dict[str, OperatorDict]
+OperatorsDict = dict[str, OperatorDict]
 
 
 class VariableFunction(ABC):
     """This class is used for type hinting only and should not be used directly.
 
-    Functions that calculate variable values have additional attributes that this class describes.
+    Functions that calculate variable values have additional attributes that this class
+    describes.
 
     Attributes:
         variable_name (str): The name of the variable that gets calculated.
         is_indexed_variable (bool): Whether the variable is indexed or not.
         index_start (int): The start index of the variable.
         index_end (int): The end index of the variable.
-        fully_indexed (bool): Whether all indexed references of the variable have been added to a `DataProvider`'s variable_funcs dictionary.
+        fully_indexed (bool): Whether all indexed references of the variable have been
+            added to a `DataProvider`'s variable_funcs dictionary.
     """
 
     def __init__(
@@ -65,11 +63,18 @@ class VariableFunction(ABC):
         """Initializes a new instance of the VariableFunction class.
 
         Parameters:
-            variable_name (str): The name of the variable to be calculated. Defaults to an empty string.
-            is_indexed_variable (bool, optional): Flag indicating whether the variable is indexed. Defaults to None.
-            index_start (int, optional): The starting index for indexed variables. Defaults to None.
-            index_end (int, optional): The ending index for indexed variables. Defaults to None.
-            fully_indexed (bool): Flag indicating whether all indexed references of the variable have been fully added. Defaults to False.
+            variable_name (str): The name of the variable to be calculated.
+                Defaults to an empty string.
+            is_indexed_variable (bool): Flag indicating whether the variable
+                is indexed.
+                Defaults to None.
+            index_start (int): The starting index for indexed variables.
+                Defaults to None.
+            index_end (int): The ending index for indexed variables.
+                Defaults to None.
+            fully_indexed (bool): Flag indicating whether all indexed references of the
+                variable have been fully added.
+                Defaults to False.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
         """
@@ -91,34 +96,45 @@ class VariableFunction(ABC):
             **kwargs: Arbitrary keyword arguments.
 
         Returns:
-            TVariableValue: The calculated value of the variable. This can be of type Union[str, float, int, bool, None].
+            TVariableValue: The calculated value of the variable. This can be of type Union[str, float, int, bool,
+            None].
         """
         ...
 
 
 class Variable(ABC):
-    """A class to define the structure and behavior of variables within a data provider context.
+    """A class to define the structure and behavior of variables used by data providers.
 
-    This class is designed to encapsulate the attributes and functionalities of variables that are used in data
-    processing and analysis. It allows for the standardized handling of variables, including their definition,
-    categorization, and value computation. Variables can be either built-in or custom-defined, and they may also
-    be indexed to represent a series of values rather than a single value.
+    This class is designed to encapsulate the attributes and functionalities of
+    variables that are used in data processing and analysis.
+    It allows for the standardized handling of variables, including their definition,
+    categorization, and value computation.
+    Variables can be either built-in or custom-defined, and they may also be indexed
+    to represent a series of values rather than a single value.
 
     Attributes:
-        data_provider (str): Identifier for the data provider to which the variable belongs.
-        category (str): A classification or grouping for the variable, aiding in its organization.
-        type_ (str): Specifies whether the variable is 'Builtin' or 'Custom', indicating its origin.
+        data_provider (str): Identifier for the data provider to which the variable
+            belongs.
+        category (str): A classification or grouping for the variable, aiding in its
+            organization.
+        type_ (Literal): Specifies whether the variable is 'Builtin' or 'Custom', indicating
+            its origin.
         name (str): The unique name of the variable, used for identification.
-        description (str): A brief description of the variable, explaining its purpose or usage.
-        data_type (str): The type of data the variable represents (e.g., 'Number', 'Text', 'Date').
-        test_value_placeholder (str): A placeholder value used for testing or in documentation, which may include
-            an index for indexed variables.
-        info (str): Additional information about the variable, typically displayed in a UI element like an info bubble.
-        is_indexed_variable (bool): Indicates whether the variable is indexed, meaning it can represent multiple
-            values based on an index range.
-        index_start (Optional[int]): The starting index for indexed variables, defaulting to 0 if not specified.
-        index_end (Optional[int]): The ending index for indexed variables, defaulting to 5 if not specified.
-        value (Optional[TVariableValue]): The computed or assigned value of the variable, which can be of various
+        description (str): A brief description of the variable, explaining its purpose
+            or usage.
+        data_type (str): The type of data the variable represents
+            (e.g., 'Number', 'Text', 'Date').
+        test_value_placeholder (str): A placeholder value used for testing or in
+            documentation, which may include an index for indexed variables.
+        info (str): Additional information about the variable, typically displayed in a
+            UI element like an info bubble.
+        is_indexed_variable (bool): Indicates whether the variable is indexed, meaning
+            it can represent multiple values based on an index range.
+        index_start (int): The starting index for indexed variables.
+            Default value is 0.
+        index_end (int): The ending index for indexed variables.
+            Default value is None.
+        value (TVariableValue): The computed or assigned value of the variable, which can be of various
             types including string, float, int, bool, or None.
 
     Methods:
@@ -132,7 +148,7 @@ class Variable(ABC):
         self,
         data_provider: str = "",
         category: str = "",
-        type_: str = "",
+        type_: Literal["Builtin", "Custom"] = "",
         name: str = "",
         description: str = "",
         data_type: str = "",
@@ -156,9 +172,9 @@ class Variable(ABC):
             test_value_placeholder (str): A placeholder for the variable's test value.
             info (str): Additional information about the variable.
             is_indexed_variable (bool): Flag indicating if the variable is indexed.
-            index_start (Optional[int]): The starting index for indexed variables.
-            index_end (Optional[int]): The ending index for indexed variables.
-            value (Optional[TVariableValue]): The value of the variable.
+            index_start (int): The starting index for indexed variables.
+            index_end (int): The ending index for indexed variables.
+            value (TVariableValue): The value of the variable.
 
         Returns:
             None
@@ -218,10 +234,8 @@ class Variable(ABC):
 
 
 # Class types (used for type hinting that something is that class object)
-TDataClass = type[Data]
 
 # TypeVars (used for type hinting that something is an instance of that class)
-TVariableValue: TypeAlias = str | float | int | bool | None
+TVariableValue = str | float | int | bool | None
 TVariableFunction = TypeVar("TVariableFunction", bound=VariableFunction)
 TVariable = TypeVar("TVariable", bound=Variable)
-TData = TypeVar("TData", bound=Data)

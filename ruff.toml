@@ -56,7 +56,7 @@ extend-include = [
 
 line-length = 120
 indent-width = 4
-target-version = "py311"
+target-version = "py312"
 #unsafe-fixes = true
 
 [format]
@@ -89,9 +89,11 @@ select = [
   "ARG004",
   "ARG005",
   "ASYNC100",
-  # "ASYNC101",
-  # "ASYNC102",
+  "ASYNC116",
+  "ASYNC105",
+  "ASYNC109",
   "ASYNC110",
+  "ASYNC115",
   "B002",
   "B003",
   "B004",
@@ -173,7 +175,6 @@ select = [
   "E742",
   "E743",
   "E902",
-  "E999",
   "EM101",
   "EM102",
   "EM103",
@@ -317,7 +318,6 @@ select = [
   "PLR0133",
   "PLR0206",
   "PLR0402",
-  "PLR1701",
   "PLR1711",
   "PLR1714",
   "PLR1722",
@@ -538,11 +538,6 @@ select = [
   "TID251",
   "TID252",
   "TID253",
-  "TRIO100",
-  "TRIO105",
-  "TRIO109",
-  "TRIO110",
-  "TRIO115",
   "TRY002",
   "TRY003",
   "TRY004",
@@ -576,7 +571,6 @@ select = [
   "UP024",
   "UP025",
   "UP026",
-  "UP027",
   "UP028",
   "UP029",
   "UP030",
@@ -611,9 +605,11 @@ select = [
 
 extend-select = ["D"]
 
+preview = true
+
 # Allow fix for all enabled rules (when `--fix`) is provided.
-fixable = ["ALL"]
-unfixable = []
+#fixable = ["ALL"]
+unfixable = ["F401"]
 
 typing-modules = [
   "ddsurveys.typings"

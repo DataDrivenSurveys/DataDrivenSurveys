@@ -1,23 +1,16 @@
-#!/usr/bin/env python3
-"""This module defines classes and methods for handling custom variables in a data-driven survey system.
+"""This module defines classes and methods for variables in the DDS system.
 
 Classes:
     Attribute: An abstract base class representing a generic attribute.
     BuiltInVariable: A class representing built-in variables with additional properties.
     CVAttribute: A class representing custom variable attributes.
     SelectionOperator: An enumeration of selection operators.
-    CVSelection: A class implementing the strategy pattern for custom variable selection.
+    CVSelection: A class implementing the strategy pattern for custom variable
+        selection.
     CVFilter: A class representing filters applied to custom variables.
     CustomVariableRow: A class representing a row of custom variable data.
-    CustomVariable: A class representing a custom variable with associated data and methods.
-
-Functions:
-    count_words(note): Counts the number of words in a note.
-    count_sentences(note): Counts the number of sentences in a note.
-    classify_note_length(note): Classifies the length of a note.
-    classify_contacts(contacts): Classifies contacts based on certain criteria.
-    generate_large_dataset(num_contacts): Generates a large dataset of contacts.
-    main(): The main function to execute the script.
+    CustomVariable: A class representing a custom variable with associated data and
+        methods.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
@@ -28,7 +21,7 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast, override
 
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.get_logger import get_logger
@@ -42,7 +35,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ddsurveys.data_providers.bases import DataProvider
-    from ddsurveys.typings.data_providers.data_categories import TDataCategoryClass
+    from ddsurveys.data_providers.data_categories import TDataCategoryClass
     from ddsurveys.typings.data_providers.variables import (
         AttributeDict,
         ComputedVariableDict,
@@ -52,7 +45,6 @@ if TYPE_CHECKING:
         CVSelectionDict,
         DataDict,
         DataOriginDict,
-        ExtractorFunction,
         SelectionDict,
         SelectionStrategyDict,
     )
@@ -60,7 +52,14 @@ if TYPE_CHECKING:
     from ddsurveys.typings.variable_types import TDataClass, TVariableValue
     from ddsurveys.variable_types import OperatorDict
 
-__all__ = ["Attribute", "CVFilter", "CustomVariableRow", "CustomVariable"]
+    ExtractorFunction = Callable[[DataProvider], TVariableValue] | Callable[[DataProvider, int], TVariableValue]
+
+__all__ = [
+    "Attribute",
+    "CVFilter",
+    "CustomVariableRow",
+    "CustomVariable",
+]
 
 logger = get_logger(__name__)
 
@@ -95,9 +94,11 @@ class Attribute(ABC):
         if self.test_value != "":
             self.test_value: str = self.test_value_placeholder
 
+    @override
     def __str__(self):
         return f"{self.__class__.__name__}: name={self.name}, label={self.label}, data_type={self.data_type}"
 
+    @override
     def __repr__(self) -> str:
         attrs = ", ".join(f"{name}={value!r}" for name, value in self.to_dict().items())
         return f"{self.__class__.__name__}({attrs})"
@@ -366,6 +367,8 @@ class CVSelection:
 
 
 class CVFilter:
+    __slots__ = ("attribute", "operator", "value")
+
     def __init__(self, attribute: CVAttribute, operator: str, value: str) -> None:
         if attribute is None or operator is None or value is None:
             msg = "Attribute, operator, and value must be provided."
@@ -398,18 +401,27 @@ class CVFilter:
         other_value: TVariableValue = custom_variable_row.data[self.attribute.attribute]
         return self.operator["func"](other_value, self.value)
 
+    @override
     def __str__(self) -> str:
         return (
             f"{self.__class__.__name__}: attribute={self.attribute.attribute}, "
             f"operator={self.operator.get('label')}, value={self.value}"
         )
 
+    @override
     def __repr__(self) -> str:
         attrs = ", ".join(f"{key}={value!r}" for key, value in self.to_dict().items())
         return f"{self.__class__.__name__}({attrs})"
 
 
 class CustomVariableRow:
+    __slots__ = (
+        "variable_name",
+        "data_category",
+        "filters",
+        "data",
+    )
+
     def __init__(
         self,
         variable_name: str,
@@ -427,6 +439,7 @@ class CustomVariableRow:
     def apply_filters(self) -> bool:
         return all(filter_(self) for filter_ in self.filters)
 
+    @override
     def __repr__(self) -> str:
         return (
             f"CustomVariableRow(variable_name={self.variable_name!r}, data_category={self.data_category.__name__!r}, "
@@ -434,8 +447,14 @@ class CustomVariableRow:
         )
 
 
+# TODO: make this class inherit from Attribute
 class CustomVariable:
-    def __init__(self, *, data_provider: DataProvider | None, custom_variable: CustomVariableDict) -> None:
+    def __init__(
+        self,
+        *,
+        data_provider: DataProvider | None,
+        custom_variable: CustomVariableDict,
+    ) -> None:
         self.data_list: list[dict[str, Any]] = []
 
         self.data_provider = data_provider
@@ -481,6 +500,7 @@ class CustomVariable:
 
         self.selected_row = None
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(data_provider={self.data_provider!r},"
 
@@ -529,7 +549,7 @@ class CustomVariable:
                     "info": attribute.get("info"),
                     "variable_name": attribute.get("variable_name"),
                     "qualified_name": f"dds.{entry['data_provider']}.custom.{entry['data_category']}."
-                                      f"{entry['variable_name']}.{attribute['name']}",
+                    f"{entry['variable_name']}.{attribute['name']}",
                     "test_value_placeholder": attribute.get("test_value", ""),
                     "type": entry["type"],
                 }

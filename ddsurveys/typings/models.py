@@ -3,6 +3,7 @@
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
@@ -84,7 +85,7 @@ class CustomVariableDict(TypedDict):
     enabled: bool
 
 
-class VariableDict(TypedDict):
+class BuiltinVariableDict(TypedDict):
     id: int
     category: str
     data_origin: list[DataOriginDict]
@@ -105,8 +106,7 @@ class VariableDict(TypedDict):
     unit: NotRequired[str]
 
 
-class BuiltinVariableDict(VariableDict):
-    ...
+class BuiltinVariableDict_(BuiltinVariableDict): ...
 
 
 class IndexedVariableDict(TypedDict):
@@ -161,7 +161,7 @@ class ProjectDict(TypedDict):
     last_modified: datetime
     creation_date: datetime
     last_synced: datetime
-    variables: list[VariableDict]
+    variables: list[BuiltinVariableDict]
     custom_variables: list[CustomVariableDict]
     data_connections: list[DataConnectionDict]
     collaborations: list[CollaborationDict]

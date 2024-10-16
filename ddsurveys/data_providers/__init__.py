@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module dynamically loads all the data_provider submodules.
 
 The dynamic loading makes it function as plug and play for adding new data providers.
@@ -11,13 +10,22 @@ Created on 2023-05-23 14:00
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 __all__ = ["DataProvider"]
 
-from ddsurveys.data_providers.bases import DataProvider, OAuthDataProvider
+from ddsurveys.data_providers.bases import DataProvider
 from ddsurveys.dynamic_import import dynamic_import
 
-excluded_dynamic_load_modules = ("bases", "custom_variables", "variables", "__init__", "_registration",
-                                 "template", "template_complex", "utils")
+excluded_dynamic_load_modules = (
+    "bases",
+    "custom_variables",
+    "variables",
+    "__init__",
+    "_registration",
+    "template",
+    "template_complex",
+    "utils",
+)
 
 # All data providers need to be imported before calling DataProvider.register_subclasses()
 # Any data providers that are not imported will not be registered.

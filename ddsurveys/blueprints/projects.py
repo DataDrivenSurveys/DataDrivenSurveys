@@ -3,9 +3,11 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 import datetime
+from http import HTTPStatus
 from io import BytesIO
 from typing import TYPE_CHECKING, cast
 
@@ -15,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
+from ddsurveys.api_responses import APIResponses
 from ddsurveys.blueprints._common import abbreviate_variable_name, get_researcher, insert_exists_variables
 from ddsurveys.blueprints.custom_variables import custom_variables
 from ddsurveys.blueprints.data_providers import data_providers
@@ -26,20 +29,16 @@ from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
-    from typings.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
+    from werkzeug.sansio.response import Response as WerkzeugResponse
+
+    from ddsurveys.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
 
 logger = get_logger(__name__)
 
 projects = Blueprint("projects", __name__)
-projects.register_blueprint(
-    data_providers, url_prefix="/<string:project_id>/data-providers"
-)
-projects.register_blueprint(
-    respondent, url_prefix="/<string:project_short_id>/respondent"
-)
-projects.register_blueprint(
-    custom_variables, url_prefix="/<string:project_id>/custom-variables"
-)
+projects.register_blueprint(blueprint=data_providers, url_prefix="/<string:project_id>/data-providers")
+projects.register_blueprint(blueprint=respondent, url_prefix="/<string:project_short_id>/respondent")
+projects.register_blueprint(blueprint=custom_variables, url_prefix="/<string:project_id>/custom-variables")
 
 
 @projects.url_value_preprocessor
@@ -72,14 +71,11 @@ def list_projects() -> ResponseReturnValue:
         researcher = cast(Researcher, researcher)
 
         # get the projects
-        projects = (
-            db.query(Project)
-            .join(Collaboration)
-            .filter(Collaboration.researcher_id == researcher.id)
-            .all()
+        projects: list[Project] = (
+            db.query(Project).join(Collaboration).filter(Collaboration.researcher_id == researcher.id).all()
         )
 
-        return jsonify([project.to_dict() for project in projects]), 200
+        return jsonify([project.to_dict() for project in projects]), HTTPStatus.OK
 
 
 @projects.route("/", methods=["POST"])
@@ -110,14 +106,12 @@ def create_project() -> ResponseReturnValue:
                 400,
             )
 
-        fields = {
-            field.get("name"): field.get("value", None) for field in data.get("fields")
-        }
+        fields = {field.get("name"): field.get("value", None) for field in data.get("fields")}
 
         # survey_id becomes required if use_existing_survey is True
         override_required = ["survey_id"] if use_existing_survey else []
 
-        platform_class = SurveyPlatform.get_class_by_value(survey_platform_name)
+        platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(survey_platform_name)
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", survey_platform_name)
@@ -156,36 +150,34 @@ def create_project() -> ResponseReturnValue:
         # get the researcher
         researcher, status = get_researcher(db, user)
         if status is not None:
-            researcher: ResponseReturnValue
+            researcher = cast(WerkzeugResponse, researcher)
             # Case where the user could not be found
             return researcher, status
-        researcher: Researcher
+        researcher = cast(Researcher, researcher)
 
         # create an instance of the survey platform
-        survey_platform = platform_class(**fields)
+        survey_platform: TSurveyPlatform = platform_class(**fields)
 
         # Handle the project creation
         status, message_id, text_message, project_name, survey_platform_fields = (
-            survey_platform.handle_project_creation(project_name, use_existing_survey)
+            survey_platform.handle_project_creation(project_name, use_existing_survey=use_existing_survey)
         )
 
         # Check if an error occurred
-        if status != 200:
+        if status != HTTPStatus.OK:
             logger.error("Error during project creation: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
                 status,
             )
 
-        new_project = Project(
+        new_project: Project = Project(
             name=project_name,
             survey_platform_name=survey_platform_name,
             survey_platform_fields=survey_platform_fields,
         )
 
-        new_collaboration = Collaboration(
-            researcher_id=researcher.id, project=new_project
-        )
+        new_collaboration = Collaboration(researcher_id=researcher.id, project=new_project)
 
         db.add(new_collaboration)
         db.add(new_project)
@@ -205,9 +197,7 @@ def create_project() -> ResponseReturnValue:
                 201,
             )
         except SQLAlchemyError:
-            import traceback
-
-            logger.info(traceback.format_exc())
+            logger.exception("An error occurred while creating the project. Rolling back changes.")
             db.rollback()
             return (
                 jsonify(
@@ -233,33 +223,29 @@ def get_project(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response containing the project details if found.
-        - 200: If the project is successfully retrieved.
+        - HTTPStatus.OK: If the project is successfully retrieved.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
     logger.debug("Getting project with id: %s", id_)
 
     with DBManager.get_db() as db:
-
         user = get_jwt_identity()
 
         # get the researcher
         researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
         # get the project by id if it is in the collaborations
-        project = (
+        project: Project = (
             db.query(Project)
             .options(
-                joinedload(Project.data_connections).joinedload(
-                    DataConnection.data_provider
-                ),
+                joinedload(Project.data_connections).joinedload(DataConnection.data_provider),
             )
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -279,7 +265,7 @@ def get_project(id_: str) -> ResponseReturnValue:
                 404,
             )
 
-        return jsonify(project.to_dict()), 200
+        return jsonify(project.to_dict()), HTTPStatus.OK
 
 
 # Update
@@ -293,7 +279,7 @@ def update_project(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response indicating the result of the update operation.
-        - 200: If the project is successfully updated.
+        - HTTPStatus.OK: If the project is successfully updated.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
@@ -302,17 +288,16 @@ def update_project(id_: str) -> ResponseReturnValue:
     with DBManager.get_db() as db:
         data = request.get_json()
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
         # get the project
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -343,7 +328,7 @@ def update_project(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                200,
+                HTTPStatus.OK,
             )
 
         return (
@@ -370,32 +355,26 @@ def delete_project(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
-        - 200: If the project and collaboration are successfully deleted.
+        - HTTPStatus.OK: If the project and collaboration are successfully deleted.
         - 401: If the user is unauthorized.
         - 404: If the project or collaboration is not found.
     """
     logger.debug("Deleting project with id: %s", id_)
 
     with DBManager.get_db() as db:
-
         # Get the current researcher's identity
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
         # Get the project and collaboration
-        project = db.query(Project).get(id_)
-        collaboration = (
-            db.query(Collaboration)
-            .filter_by(project_id=id_, researcher_id=researcher.id)
-            .first()
-        )
+        project: Project = db.query(Project).get(id_)
+        collaboration = db.query(Collaboration).filter_by(project_id=id_, researcher_id=researcher.id).first()
 
         if project and collaboration:
             db.delete(collaboration)
@@ -410,7 +389,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                200,
+                HTTPStatus.OK,
             )
 
         return (
@@ -437,7 +416,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
-        - 200: If all respondents are successfully deleted.
+        - HTTPStatus.OK: If all respondents are successfully deleted.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
     """
@@ -445,17 +424,16 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
 
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -497,11 +475,11 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            200,
+            HTTPStatus.OK,
         )
 
 
-def get_survey_platform_connection(project) -> ResponseReturnValue:
+def get_survey_platform_connection(project: Project) -> ResponseReturnValue:
     survey_platform_info = {
         "survey_platform_name": project.survey_platform_name,
         "connected": False,
@@ -514,13 +492,13 @@ def get_survey_platform_connection(project) -> ResponseReturnValue:
 
     if not platform_class:
         survey_platform_info["id"] = "api.survey.platform_not_supported"
-        return (400, "api.survey.platform_not_supported", survey_platform_info)
+        return 400, "api.survey.platform_not_supported", survey_platform_info
 
     try:
         platform = platform_class(**project.survey_platform_fields)
         return platform.fetch_survey_platform_info()
     except Exception:
-        return (400, "api.survey.failed_to_check_connection", survey_platform_info)
+        return 400, "api.survey.failed_to_check_connection", survey_platform_info
 
 
 @projects.route("/<string:id_>/survey_platform/check_connection", methods=["GET"])
@@ -533,7 +511,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response indicating the result of the connection check.
-        - 200: If the connection check is successful.
+        - HTTPStatus.OK: If the connection check is successful.
         - 400: If the survey platform is not supported or there is a failure in checking
             the connection.
         - 401: If the user is unauthorized.
@@ -543,16 +521,15 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -572,11 +549,9 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
                 404,
             )
 
-        status, message_id, survey_platform_info = get_survey_platform_connection(
-            project
-        )
+        status, message_id, survey_platform_info = get_survey_platform_connection(project)
 
-        if status != 200:
+        if status != HTTPStatus.OK:
             return (
                 jsonify(
                     {
@@ -593,20 +568,14 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             project.survey_platform_fields = {}
 
         # Set the survey_status
-        project.survey_platform_fields["survey_status"] = survey_platform_info.get(
-            "survey_status"
-        )
+        project.survey_platform_fields["survey_status"] = survey_platform_info.get("survey_status")
 
         # Check for the existence of the survey in the survey platform info
         if survey_platform_info.get("exists"):
             # If the survey name from the survey platform info doesn't match the current
             # survey name in project.survey_platform_fields, update it
-            if survey_platform_info.get(
-                "survey_name"
-            ) != project.survey_platform_fields.get("survey_name"):
-                project.survey_platform_fields["survey_name"] = (
-                    survey_platform_info.get("survey_name")
-                )
+            if survey_platform_info.get("survey_name") != project.survey_platform_fields.get("survey_name"):
+                project.survey_platform_fields["survey_name"] = survey_platform_info.get("survey_name")
         else:
             # If the survey doesn't exist in the survey platform info, set the
             # survey_name in project.survey_platform_fields to None
@@ -632,7 +601,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the synchronization
             operation.
-        - 200: If the variables are successfully synchronized.
+        - HTTPStatus.OK: If the variables are successfully synchronized.
         - 400: If the survey platform is not supported.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
@@ -641,16 +610,11 @@ def sync_variables(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -672,16 +636,10 @@ def sync_variables(id_: str) -> ResponseReturnValue:
 
         enabled_variables = []
         if project.variables:
-            enabled_variables = [
-                variable for variable in project.variables if variable["enabled"]
-            ]
+            enabled_variables = [variable for variable in project.variables if variable["enabled"]]
         if project.custom_variables:
             enabled_custom_variables = CustomVariable.custom_variables_as_list(
-                [
-                    variable
-                    for variable in project.custom_variables
-                    if variable.get("enabled", False)
-                ]
+                [variable for variable in project.custom_variables if variable.get("enabled", False)]
             )
             logger.info("Stored custom variables: %s", project.custom_variables)
             logger.info("Upload custom variables: %s", enabled_custom_variables)
@@ -711,15 +669,13 @@ def sync_variables(id_: str) -> ResponseReturnValue:
                 variable_name=variable["qualified_name"],
                 first_apply="dp",
                 strategy="full",
-                max_length=45
+                max_length=survey_platform.max_variable_name_length,
             )
 
-        status, message_id, text_message = survey_platform.handle_variable_sync(
-            enabled_variables
-        )
+        status, message_id, text_message = survey_platform.handle_variable_sync(enabled_variables)
 
         # Check if an error occurred
-        if status != 200:
+        if status != HTTPStatus.OK:
             logger.error("Error during variable syncing: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
@@ -742,7 +698,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response indicating the result of the export operation.
-        - 200: If the survey responses are successfully exported and the file is sent.
+        - HTTPStatus.OK: If the survey responses are successfully exported and the file is sent.
         - 400: If the survey platform is not supported.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
@@ -752,16 +708,15 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -799,12 +754,10 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
         survey_platform = platform_class(**project.survey_platform_fields)
 
-        status, message_id, text_message, content = (
-            survey_platform.handle_export_survey_responses()
-        )
+        status, message_id, text_message, content = survey_platform.handle_export_survey_responses()
 
         # Check if an error occurred
-        if status != 200:
+        if status != HTTPStatus.OK:
             logger.error("Error during survey response export: %s", text_message)
             return (
                 jsonify({"message": {"id": message_id, "text": text_message}}),
@@ -851,7 +804,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
 
     Returns:
         Response: A JSON response containing the preview link if successful.
-        - 200: If the preview link is successfully generated.
+        - HTTPStatus.OK: If the preview link is successfully generated.
         - 400: If the survey platform is not supported.
         - 401: If the user is unauthorized.
         - 404: If the project is not found.
@@ -860,16 +813,15 @@ def preview_survey(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
-            return (
-                jsonify(
-                    {"message": {"id": "api.unauthorised", "text": "Unauthorised"}}
-                ),
-                401,
-            )
+            # return (
+            #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
+            #     401,
+            # )
+            return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project = (
+        project: Project = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -907,26 +859,18 @@ def preview_survey(id_: str) -> ResponseReturnValue:
 
         enabled_variables = []
         if project.variables:
-            enabled_variables = [
-                variable for variable in project.variables if variable["enabled"]
-            ]
+            enabled_variables = [variable for variable in project.variables if variable["enabled"]]
         if project.custom_variables:
             enabled_custom_variables = CustomVariable.custom_variables_as_list(
-                [
-                    variable
-                    for variable in project.custom_variables
-                    if variable.get("enabled", False)
-                ]
+                [variable for variable in project.custom_variables if variable.get("enabled", False)]
             )
             enabled_variables.extend(enabled_custom_variables)
 
         survey_platform_fields = project.survey_platform_fields
 
-        status, message_id, message, link = platform_class.get_preview_link(
-            survey_platform_fields, enabled_variables
-        )
+        status, message_id, message, link = platform_class.get_preview_link(survey_platform_fields, enabled_variables)
 
-        if status != 200:
+        if status != HTTPStatus.OK:
             logger.error("Error during survey preview: %s", link)
             return jsonify({"message": {"id": message_id, "text": message}}), status
 

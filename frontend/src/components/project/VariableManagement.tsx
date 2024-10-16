@@ -317,12 +317,12 @@ const VariableManagement = ({
 
       response.on('2xx', (status: number, data: API.ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
         }
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     },
     [project, showSnackbar, t]
@@ -339,11 +339,11 @@ const VariableManagement = ({
     });
 
     response.on('4xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
 
     response.on('5xx', (_: number, data: API.ResponseData) => {
-      showSnackbar(t(data.message.id), 'error');
+      showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
     });
   }, [showSnackbar, t, project.id, selectedCustomVariableId]);
 
@@ -356,12 +356,12 @@ const VariableManagement = ({
 
       response.on('2xx', (status: number, data: API.ResponseData) => {
         if (status === 200) {
-          showSnackbar(t(data.message.id), 'success');
+          showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
         }
       });
 
       response.on('4xx', (_: number, data: API.ResponseData) => {
-        showSnackbar(t(data.message.id), 'error');
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
     },
     [project, showSnackbar, t]

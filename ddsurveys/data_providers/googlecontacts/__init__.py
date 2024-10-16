@@ -5,12 +5,13 @@ The GoogleContactsDataProvider class is responsible for fetching and processing 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 import operator
 import traceback
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, override
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -33,8 +34,8 @@ if TYPE_CHECKING:
 
     from googleapiclient.discovery import Resource
 
+    from ddsurveys.data_providers.data_categories import DataCategory
     from ddsurveys.data_providers.googlecontacts.api_response_dicts import ContactDict
-    from ddsurveys.typings.data_providers.data_categories import DataCategory
     from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
@@ -54,33 +55,28 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     # The following attributes need to be re-declared in child classes.
     # You can copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
-    all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    factory_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    variable_funcs: dict[str, TVariableFunction] = {}  # Leave unchanged.
-    fields: list[dict[str, Any]] = {}  # Leave unchanged.
+    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
+    factory_funcs: ClassVar[dict[str, Callable]] = {}
+    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
+    fields: ClassVar[list[dict[str, Any]]] = {}
 
     # Update the following attributes:
-    app_creation_url: str = (
-        "https://console.cloud.google.com/apis/credentials/oauthclient"
-    )
-    instructions_helper_url: str = (
-        "https://developers.google.com/people/quickstart/python"
-    )
+    app_creation_url: str = "https://console.cloud.google.com/apis/credentials/oauthclient"
+    instructions_helper_url: str = "https://developers.google.com/people/quickstart/python"
 
     # Unique class attributes go here
     _scopes: ClassVar[list[str]] = [
         "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/contacts.readonly"
+        "https://www.googleapis.com/auth/contacts.readonly",
     ]
 
     _scopes_names: ClassVar[dict[str, str]] = {
         "https://www.googleapis.com/auth/userinfo.profile": "Profile Information",
-        "https://www.googleapis.com/auth/contacts.readonly": "Contacts"
+        "https://www.googleapis.com/auth/contacts.readonly": "Contacts",
     }
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
-    _categories_scopes: ClassVar = {
-    }
+    _categories_scopes: ClassVar = {}
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
@@ -131,6 +127,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     _person_fields = ",".join(_person_fields_list)
 
     # In the functions below, update the elipses (...) with the correct classes and code.
+    @override
     def __init__(self, **kwargs):
         """Initialization function.
 
@@ -161,6 +158,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         self.text_structure_analyzer = SpacyTextStructureAnalyzer(preload_models=False)
 
     # OAuthBase methods
+    @override
     def init_api_client(
         self,
         token: str | None = None,
@@ -187,6 +185,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
         self.api_client = build("people", "v1", credentials=self.credentials)
 
+    @override
     def init_oauth_client(
         self,
         client_id: str | None = None,
@@ -223,39 +222,43 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             }
         }
 
-        self.oauth_client = Flow.from_client_config(
-            client_config=client_config, scopes=self.scopes
-        )
+        self.oauth_client = Flow.from_client_config(client_config=client_config, scopes=self.scopes)
 
         # Set redirect_uri
         self.oauth_client.redirect_uri = self.redirect_uri
 
+    @override
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+        self,
+        builtin_variables: list[dict],
+        custom_variables: list[dict] | None = None,
     ) -> str:
         url, state = self.oauth_client.authorization_url(
             # Recommended: enable offline access so that you can refresh an access token
             # without re-prompting the user for permission.
             access_type="offline",
-
             # Optional, enable incremental authorization. Recommended as a best practice
-            include_granted_scopes='true',
-
+            include_granted_scopes="true",
             # Optional, set prompt to 'consent' will prompt the user for consent
-            prompt='select_account consent',
+            prompt="select_account consent",
         )
         self.state = state
         return url
 
+    @override
     def get_client_id(self) -> str:
         return self.client_id
 
+    @override
     def get_required_scopes(
-        self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
+        self,
+        builtin_variables: list[dict] | None = None,
+        custom_variables: list[dict] | None = None,
     ) -> list[str]:
         self.required_scopes = self.__class__._scopes
         return self.required_scopes
 
+    @override
     def request_token(self, data: dict[str, Any]) -> dict[str, Any]:
         url_params = data.get("url_params", {})
         code: str | None = url_params.get("code", None)
@@ -271,9 +274,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         exchange_failed = False
         credentials: Credentials | _MockCredentials
         try:
-            self.oauth_client.fetch_token(
-                authorization_response=f"{self.redirect_uri}?code={code}"
-            )
+            self.oauth_client.fetch_token(authorization_response=f"{self.redirect_uri}?code={code}")
             credentials = self.oauth_client.credentials
         except (Warning, InvalidGrantError):
             logger.exception("Failed to exchange the code for token.")
@@ -284,13 +285,15 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         except Exception as e:
             logger.exception("An unknown error occurred while exchanging the code for token.")
             logger.error("Exchange failed: %s", traceback.format_exc())  # noqa: TRY400
-            text = "".join((
-                "Please send the following message to the researchers running the survey:\n",
-                "An error occurred while exchanging the code for token: ",
-                str(e),
-                "\nTraceback:\n",
-                repr(traceback.format_exc()),
-            ))
+            text = "".join(
+                (
+                    "Please send the following message to the researchers running the survey:\n",
+                    "An error occurred while exchanging the code for token: ",
+                    str(e),
+                    "\nTraceback:\n",
+                    repr(traceback.format_exc()),
+                )
+            )
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.unexpected_error",
@@ -310,7 +313,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
         # Get profile information
         people_service = build("people", "v1", credentials=credentials)
-        profile = people_service.people().get(resourceName='people/me', personFields='names').execute()
+        profile = people_service.people().get(resourceName="people/me", personFields="names").execute()
 
         logger.info("Profile: %s", profile)
         self.credentials = credentials
@@ -323,6 +326,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             "user_name": profile["names"][0]["displayName"],
         }
 
+    @override
     def revoke_token(self, token: str | None = None) -> bool:
         if token is None:
             if self.credentials is None:
@@ -345,6 +349,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return False
 
     # DataProvider methods
+    @override
     def test_connection_before_extraction(self) -> bool:
         self.init_api_client()
         try:
@@ -366,6 +371,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             # return results.get("connections") is not None
             return True
 
+    @override
     def test_connection(self) -> bool:
         """Tests the connection to the Google People API using the provided OAuth credentials.
 
@@ -404,17 +410,11 @@ class GoogleContactsDataProvider(OAuthDataProvider):
                 or description.casefold == "Unauthorized".casefold()
             ):
                 return False
-            elif (
-                error == "invalid_grant"
-                and description.casefold() == "Bad Request".casefold()
-            ):
+            if error == "invalid_grant" and description.casefold() == "Bad Request".casefold():
                 return True
-            else:
-                raise
+            raise
         except Exception:
-            logger.exception(
-                "An unexpected error occurred when verifying the client credentials.\n"
-            )
+            logger.exception("An unexpected error occurred when verifying the client credentials.\n")
             logger.debug(traceback.format_exc())
             return False
 
@@ -470,18 +470,15 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((cat := c.get(category, [])) or True)
-               and len(cat) > 0
-               and any(subcat.get(subcategory, "") != "" for subcat in cat)
+            and len(cat) > 0
+            and any(subcat.get(subcategory, "") != "" for subcat in cat)
         ]
 
     @cache
-    def with_category_count(self, category: str, operator_: callable = operator.gt, count: int = 0) -> list[
-        ContactDict]:
-        return [
-            c
-            for c in self.contacts
-            if ((cat := c.get(category, [])) or True) and operator_(len(cat), count)
-        ]
+    def with_category_count(
+        self, category: str, operator_: callable = operator.gt, count: int = 0
+    ) -> list[ContactDict]:
+        return [c for c in self.contacts if ((cat := c.get(category, [])) or True) and operator_(len(cat), count)]
 
     @cached_property
     def with_first_name(self) -> list[ContactDict]:
@@ -500,9 +497,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return [
             c
             for c in self.contacts
-            if ((names := c.get("nicknames", [])) or True)
-               and len(names) > 0
-               and names[0].get("value", "") != ""
+            if ((names := c.get("nicknames", [])) or True) and len(names) > 0 and names[0].get("value", "") != ""
         ]
 
     @cached_property
@@ -519,8 +514,8 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((organizations := c.get("organizations", [])) or True)
-               and len(organizations) > 0
-               and any(org.get("name", "") != "" or org.get("title", "") != "" for org in organizations)
+            and len(organizations) > 0
+            and any(org.get("name", "") != "" or org.get("title", "") != "" for org in organizations)
         ]
 
     @cached_property
@@ -528,9 +523,12 @@ class GoogleContactsDataProvider(OAuthDataProvider):
         return [
             c
             for c in self.contacts
-            if ((photos := c.get("photos", [])) or True) and len(photos) > 0
-               and any(photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
-                       for photo in photos)
+            if ((photos := c.get("photos", [])) or True)
+            and len(photos) > 0
+            and any(
+                photo.get("metadata", {}).get("primary", False) and "/contacts/" in photo.get("url", "")
+                for photo in photos
+            )
         ]
 
     @cached_property
@@ -539,17 +537,15 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             c
             for c in self.contacts
             if ((birthdays := c.get("birthdays", [])) or True)
-               and len(birthdays) > 0
-               and birthdays[0].get("date", {}).get("year") is not None
+            and len(birthdays) > 0
+            and birthdays[0].get("date", {}).get("year") is not None
         ]
 
     @cached_property
     def count_num_contacts_by_biography_length(self) -> dict[str, int]:
         counts = {"few words": 0, "few sentences": 0, "few paragraphs": 0}
         for c in self.with_category("biographies"):
-            type_ = self.classify_text(
-                c["biographies"][0]["value"]
-            )
+            type_ = self.classify_text(c["biographies"][0]["value"])
             counts[type_] += 1
 
         return counts
@@ -659,7 +655,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     def classify_text(self, text: str, few_words_threshold: int = 5, few_sentences_threshold: int = 3) -> str:
         words, sentences, paragraphs = self.text_structure_analyzer.analyze_text(text)
         if sentences == 1 and words <= few_words_threshold:
-            return 'few words'
+            return "few words"
         if sentences <= few_sentences_threshold:
-            return 'few sentences'
-        return 'few paragraphs'
+            return "few sentences"
+        return "few paragraphs"

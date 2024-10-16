@@ -1,5 +1,6 @@
-#!/usr/bin/env python3
-"""Created on 2023-05-23 14:08.
+"""This module provides base classes for creating survey platform integration classes.
+
+Created on 2023-05-23 14:08.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
@@ -9,25 +10,34 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, ClassVar
+from typing import Any, ClassVar, TypeVar
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.shared_bases import FormButton as BaseFormButton
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import UIRegistry
 
-logger = get_logger(__name__)
-
 __all__ = [
     "SurveyPlatform",
     "OAuthSurveyPlatform",
     "FormField",
-    "FormButton"
+    "FormButton",
+    #
+    "TSurveyPlatformClass",
+    "TSurveyPlatform",
+    "TOAuthSurveyPlatformClass",
+    "TOAuthSurveyPlatform",
+    "TSurveyPlatformFormFieldClass",
+    "TSurveyPlatformFormField",
+    "TSurveyPlatformFormButtonClass",
+    "TSurveyPlatformFormButton",
 ]
+
+logger = get_logger(__name__)
 
 
 class SurveyPlatform(UIRegistry):
-    """Interface class defining methods and attributes that survey platforms should support."""
+    """Interface class for survey platforms."""
 
     # General class attributes
     # base_name will decide the key in the class registry where each child class of SurveyPlatform will be stored.
@@ -50,6 +60,21 @@ class SurveyPlatform(UIRegistry):
     fields: ClassVar[list[dict[str, Any]]] = []
 
     # Unique class attributes go here
+
+    # TODO: update variable name generation to take this into account
+    max_variable_name_length: int = -1
+    """Maximum length for variable names that can be uploaded to the survey platform.
+
+    Default value is -1, meaning no maximum length is set.
+    """
+
+    # TODO: update variable name generation to take this into account
+    variable_replacement_rules: list[tuple[str, str, int]] = ()
+    """Rules for replacing values in variable names.
+
+    The rules coming from SurveyPlatforms should be used for replacing illegal
+    characters.
+    """
 
     # Form fields declarations go here
     # Child classes should redeclare the form_fields attribute and populate the list
@@ -117,39 +142,41 @@ class SurveyPlatform(UIRegistry):
 
     @abstractmethod
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
-        """Create a project in the survey platform and return the tuple with:
-        - Status code (200 or 40x)
-        - Message ID (str)
-        - Message English Text (str)
-        - Project Name (str) - The project name can be conditional (user input or survey name) and should be returned
-        here.
-        - Fields for the survey platform (dict)
-        - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
+        """Create a project in the survey platform.
 
         Args:
-            project_name
-            use_existing_survey
+            project_name: The name of the project.
+            use_existing_survey: Whether to use an existing survey or create a new one.
 
         Returns:
+            A tuple with the following structure:
+            - Status code (200 or 40x)
+            - Message ID (str)
+            - Message English Text (str)
+            - Project Name (str) - The project name can be conditional (user input or survey name) and should be
+            returned here.
+            - Fields for the survey platform (dict)
+            - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
 
         """
         ...
 
     @abstractmethod
     def handle_variable_sync(self, enabled_variables: dict) -> tuple[int, str, str]:
-        """Sync the variables in the survey platform and return the tuple with:
-        - Status code (200 or 40x)
-        - Message ID (str)
-        - Message English Text (str)
-        The status 200 means that the variables were successfully synced.
-        The status 40x means that the variables were not synced.
+        """Sync the variables from DDS to the survey platform.
 
         Args:
             enabled_variables:
 
         Returns:
+            A tuple:
+            - Status code (200 or 40x)
+            - Message ID (str)
+            - Message English Text (str)
+            The status 200 means that the variables were successfully synced.
+            The status 40x means that the variables were not synced.
 
         """
         ...
@@ -158,9 +185,7 @@ class SurveyPlatform(UIRegistry):
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: str, embedded_data: dict
     ) -> tuple[bool, str | None]:
-        """Prepare the survey in the survey platform and return the tuple with:
-        - Boolean representing whether the survey was successfully prepared or not.
-        - Unique Distribution URL (str) - The URL that will be used to distribute the survey.
+        """Prepare the survey on the survey platform.
 
         Args:
             project_short_id:
@@ -168,34 +193,31 @@ class SurveyPlatform(UIRegistry):
             embedded_data:
 
         Returns:
-            tuple made of the: bool representing whether the survey was successfully prepared or not, and the unique
-            distribution URL.
+            tuple:
+            - bool representing whether the survey was successfully prepared or not
+            - the unique distribution URL
         """
         ...
 
     @abstractmethod
-    def handle_export_survey_responses(
-        self, project_short_id: str | None = None
-    ) -> tuple[int, str, str, str]:
-        """Download the responses from the survey platform and return a tuple with:
-        - Status code (200 or 40x)
-        - Message ID (str)
-        - Message English Text (str)
-        - File Content (str) - The content of the file that was downloaded.
+    def handle_export_survey_responses(self, project_short_id: str | None = None) -> tuple[int, str, str, str]:
+        """Downloads the responses from the survey platform.
 
         Args:
             project_short_id:
 
         Returns:
-            tuple made of the: status code, message id, message english text, and the file content.
+            tuple made of the:
+            - Status code (200 or 40x)
+            - Message ID (str)
+            - Message English Text (str)
+            - File Content (str) - The content of the file that was downloaded.
         """
         ...
 
     @staticmethod
     @abstractmethod
-    def get_preview_link(
-        survey_platform_fields: dict, enabled_variables: dict
-    ) -> tuple[int, str, str, str]:
+    def get_preview_link(survey_platform_fields: dict, enabled_variables: dict) -> tuple[int, str, str, str]:
         """Get the preview link for the survey.
         - Status code (200 or 40x)
         - Message ID (str)
@@ -338,3 +360,16 @@ class FormButton(BaseFormButton):
     _package: str = ""
     _registry_class = SurveyPlatform
     _registry_class_name: str = ""  # No need to set this manually.
+
+
+TSurveyPlatformClass = type["SurveyPlatform"]
+TSurveyPlatform = TypeVar("TSurveyPlatform", bound=SurveyPlatform)
+
+TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
+TOAuthSurveyPlatform = TypeVar("TOAuthSurveyPlatform", bound=OAuthSurveyPlatform)
+
+TSurveyPlatformFormFieldClass = type["FormField"]
+TSurveyPlatformFormField = TypeVar("TSurveyPlatformFormField", bound=FormField)
+
+TSurveyPlatformFormButtonClass = type["FormButton"]
+TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound=FormButton)
