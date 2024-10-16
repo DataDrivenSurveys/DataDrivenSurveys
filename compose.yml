@@ -3,8 +3,8 @@ services:
   ddsurveys:
     build: .
     restart: on-failure
-    volumes:
-      - .:/app
+#    volumes:
+#      - .:/app
     ports:
       - "4000:4000" # to be removed
     expose:
