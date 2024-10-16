@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """This module provides utility functions used for various tests."""
+
 from __future__ import annotations
 
 import random
@@ -15,8 +16,7 @@ if TYPE_CHECKING:
     from collections.abc import Hashable
 
     from ddsurveys.typings.data_providers.variables import CVAttributeDict
-    from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict
-
+    from ddsurveys.typings.models import BuiltinVariableDict_, CustomVariableDict
 
 
 def random_string(length: int = 8) -> str:
@@ -72,7 +72,7 @@ def assert_has_value(d: dict[Hashable, Any], key: Hashable, message: str) -> Non
     assert d.get(key) is not None, message
 
 
-def builtin_variable_to_qualname(variable: BuiltinVariableDict) -> str:
+def builtin_variable_to_qualname(variable: BuiltinVariableDict_) -> str:
     qual_name = f"dds.{variable['data_provider']}.builtin.{variable['category'].lower()}." f"{variable['name']}"
     if variable["is_indexed_variable"]:
         qual_name += f"{variable.get('index', '')}"

@@ -36,7 +36,12 @@ class ResponseDict(TypedDict):
     message: ResponseMessageDict
 
 
-@dataclass
+class ResponseDictUpdateDict(TypedDict, total=False):
+    message: ResponseMessageDict
+
+
+# TODO: test using/integrating the extra_response_dict_data field
+@dataclass(slots=True)
 class APIResponseMixin:
     """Mixin for API responses containing message ID, text, and status code."""
 
@@ -44,14 +49,35 @@ class APIResponseMixin:
     text: str
     status: HTTPStatus
 
+    # extra_response_dict_data: ResponseDictUpdateDict = field(default_factory=dict)
+
+    # @property
+    # def response_dict(self) -> ResponseDict:
+    #     """Returns a JSON response with the provided data."""
+    #     return {"message": {"id": self.id, "text": self.text}, **self.extra_response_dict_data}
+
     @property
     def response_value(self) -> tuple[ResponseDict, HTTPStatus]:
+        """Returns a non-jsonify minimal response with the provided data."""
         return {"message": {"id": self.id, "text": self.text}}, self.status
 
     @property
     def response(self) -> APIResponseValue:
-        """Returns a JSON response with the provided data."""
+        """Returns a minimal JSON response with the provided data."""
         return jsonify({"message": {"id": self.id, "text": self.text}}), self.status
+
+    def get_updated_response(self, response_data: ResponseDictUpdateDict) -> APIResponseValue:
+        """Returns a JSON response after updating the response data.
+
+        Args:
+            response_data: The data to use for ing the response message.
+
+        Returns:
+            A JSON response with the provided data and the updated message.
+        """
+        message_dict, status = self.response_value
+        message_dict.update(response_data)
+        return jsonify(message_dict), status
 
 
 class APIResponseEnum(APIResponseMixin, Enum):
@@ -82,6 +108,12 @@ class Authorization(APIResponseEnum):
 
 class CustomVariables(APIResponseEnum):
     """/custom-variables/ endpoint responses."""
+
+
+class ExchangeCodeError(APIResponseEnum):
+    """/projects/{{project_short_id}}/respondent/exchange-code endpoint responses."""
+
+    NO_CODE = ("api.data_provider.exchange_code_error.no_code", "No code provided", HTTPStatus.BAD_REQUEST)
 
 
 class DataProvider(APIResponseEnum):

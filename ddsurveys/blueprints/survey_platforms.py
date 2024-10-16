@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 """This module provides blueprints for handling survey platforms.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -17,7 +17,7 @@ from ddsurveys.survey_platforms import SurveyPlatform
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
 
-    from ddsurveys.typings.survey_platforms.bases import (
+    from ddsurveys.survey_platforms.bases import (
         TOAuthSurveyPlatform,
         TOAuthSurveyPlatformClass,
         TSurveyPlatformClass,
@@ -83,9 +83,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
         survey_platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(survey_platform_type)
 
         if not survey_platform_class:
-            logger.error(
-                "Error exchanging code for tokens for: %s", survey_platform_type
-            )
+            logger.error("Error exchanging code for tokens for: %s", survey_platform_type)
             return (
                 jsonify(
                     {
@@ -110,9 +108,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
         response = provider_instance.request_token(code)
 
         if response["success"]:
-            logger.info(
-                "Successfully exchanged code for tokens for: %s", survey_platform_type
-            )
+            logger.info("Successfully exchanged code for tokens for: %s", survey_platform_type)
             return (
                 jsonify(
                     {
@@ -125,21 +121,18 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                 ),
                 200,
             )
-        else:
-            logger.error(
-                "Error exchanging code for tokens for: %s", survey_platform_type
-            )
-            return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": response["message_id"],
-                            "text": "Full scope not granted",
-                        },
-                    }
-                ),
-                500,
-            )
+        logger.error("Error exchanging code for tokens for: %s", survey_platform_type)
+        return (
+            jsonify(
+                {
+                    "message": {
+                        "id": response["message_id"],
+                        "text": "Full scope not granted",
+                    },
+                }
+            ),
+            500,
+        )
     except Exception:
         logger.exception("Error exchanging code for tokens for: %s\n", survey_platform_type)
         return (

@@ -7,7 +7,8 @@
 from __future__ import annotations
 
 import traceback
-from typing import TYPE_CHECKING, Any
+from http import HTTPStatus
+from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, Response, g, jsonify, request
 from sqlalchemy import and_
@@ -16,7 +17,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
 from ddsurveys.blueprints._common import abbreviate_variable_name
-from ddsurveys.data_providers import DataProvider, OAuthDataProvider
+from ddsurveys.data_providers import DataProvider
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import (
     DataConnection,
@@ -30,13 +31,20 @@ from ddsurveys.models import (
 )
 from ddsurveys.models import DataProvider as DataProviderModel
 from ddsurveys.survey_platforms import SurveyPlatform
+from ddsurveys.typings.models import SurveyPlatformFieldsDict
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from flask.typing import ResponseReturnValue
-
-    from ddsurveys.typings.data_providers.bases import TOAuthDataProviderClass
+    from ddsurveys.api_responses import APIResponseValue
+    from ddsurveys.data_providers.bases import (
+        OAuthDataProvider,
+        TFrontendDataProvider,
+        TFrontendDataProviderClass,
+        TOAuthDataProviderClass,
+    )
+    from ddsurveys.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
+    from ddsurveys.typings.data_providers.variables import ComputedVariableDict
 
 logger = get_logger(__name__)
 
@@ -47,12 +55,16 @@ All of the endpoints in blueprint file are public
 
 
 def get_project(db, short_id) -> Project:
+    """Get a project by its short ID."""
     return db.query(Project).filter_by(short_id=short_id).first()
 
 
 def get_used_data_providers(
     project: Project, respondent: Respondent
 ) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, tuple[None, None, Response, int]]:
+    """Get used data providers for a specific project and respondent."""
+    # TODO: Update this function to return only two values.
+    #       This should make code that uses this function easier to read and understand.
     data_provider: DataProviderAccess
     for data_provider in respondent.data_provider_accesses:
         data_provider_name = data_provider.data_provider_name.value
@@ -72,7 +84,7 @@ def get_used_data_providers(
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         # Get the correct data provider from the project.
@@ -95,7 +107,7 @@ def get_used_data_providers(
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         fields = project_data_connection.fields
@@ -108,7 +120,7 @@ def get_used_data_providers(
 
 
 @respondent.route("/", methods=["GET"])
-def get_public_project() -> ResponseReturnValue:
+def get_public_project() -> APIResponseValue:
     """Reads public project data and checks the readiness of the project.
 
     This function checks the connection status of all data providers and the survey
@@ -117,11 +129,12 @@ def get_public_project() -> ResponseReturnValue:
     It does not provide any detailed explanation of why the project is not ready.
 
     Returns:
-        ResponseReturnValue: A JSON response containing the public project data and readiness status.
+        APIResponseValue:
+            A JSON response containing the public project data and readiness status.
             Possible status codes are:
-            - 200: Successfully retrieved project data.
-            - 400: Bad request, e.g., unknown survey platform.
-            - 404: Project not found.
+            - HTTPStatus.OK: Successfully retrieved project data.
+            - HTTPStatus.BAD_REQUEST: Bad request, e.g., unknown survey platform.
+            - HTTPStatus.NOT_FOUND: Project not found.
     """
     with DBManager.get_db() as db:
         project_short_id = g.get("project_short_id")
@@ -145,11 +158,11 @@ def get_public_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         response_dict = project.to_public_dict()
-        response_status = 200
+        response_status = HTTPStatus.OK
 
         all_data_connections_connected = True  # Assume all are connected until proven otherwise
         survey_platform_connected = False
@@ -158,7 +171,7 @@ def get_public_project() -> ResponseReturnValue:
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
-            response_status = 400
+            response_status = HTTPStatus.BAD_REQUEST
             all_data_connections_connected = False
         else:
             survey_platform = platform_class(**project.survey_platform_fields)
@@ -166,7 +179,7 @@ def get_public_project() -> ResponseReturnValue:
             # Fetch survey platform info using the platform method
             status, _, survey_platform_info = survey_platform.fetch_survey_platform_info()
 
-            if status == 200:
+            if status == HTTPStatus.OK:
                 survey_platform_connected = survey_platform_info["connected"]
                 survey_active = survey_platform_info["active"]
             else:
@@ -175,7 +188,7 @@ def get_public_project() -> ResponseReturnValue:
                     project.survey_platform_name,
                     project.id,
                 )
-                response_status = 400
+                response_status = HTTPStatus.BAD_REQUEST
                 all_data_connections_connected = False
 
         project_dict = project.to_dict()
@@ -217,7 +230,7 @@ def get_public_project() -> ResponseReturnValue:
 
 
 @respondent.route("/data-providers", methods=["GET"])
-def get_public_data_providers() -> ResponseReturnValue:
+def get_public_data_providers() -> APIResponseValue:
     """Provides the data providers information linked to a project.
 
     The data provider information enables a respondent to data providers linked to a
@@ -227,11 +240,11 @@ def get_public_data_providers() -> ResponseReturnValue:
     This endpoint should not provide any sensitive information.
 
     Returns:
-        ResponseReturnValue: A JSON response containing the details of data providers
+        APIResponseValue: A JSON response containing the details of data providers
             linked to the project.
             Possible status codes are:
-            - 200: Successfully retrieved data providers.
-            - 404: Project not found.
+            - HTTPStatus.OK: Successfully retrieved data providers.
+            - HTTPStatus.NOT_FOUND: Project not found.
     """
     with DBManager.get_db() as db:
         project = get_project(db, g.get("project_short_id"))
@@ -245,7 +258,7 @@ def get_public_data_providers() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         # Get all data providers linked to the project.
@@ -267,11 +280,11 @@ def get_public_data_providers() -> ResponseReturnValue:
                 # Include data_connection.fields in the data provider dictionary.
                 data_providers.append(dp_public_dict)
 
-        return jsonify(data_providers), 200
+        return jsonify(data_providers), HTTPStatus.OK
 
 
 @respondent.route("/exchange-code", methods=["POST"])
-def exchange_code_for_tokens() -> ResponseReturnValue:
+def exchange_code_for_tokens() -> APIResponseValue:
     """Exchanges the code for an access token. (using OAuth2 Code Flow).
 
     This is a public endpoint, so no authentication is required.
@@ -285,7 +298,7 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
         project_short_id = g.get("project_short_id")
 
         # Get project and its associated data connections.
-        project = get_project(db, project_short_id)
+        project: Project = get_project(db, project_short_id)
 
         if not project:
             logger.error("No project found for project_short_id: %s", project_short_id)
@@ -298,17 +311,17 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         # Get the correct data provider from the project
         # (we need its fields to create an instance of the data provider)
-        project_data_connection = next(
+        project_data_connection: DataConnection = next(
             (dc for dc in project.data_connections if dc.data_provider.data_provider_name.value == data_provider_name),
             None,
         )
 
-        if not project_data_connection:
+        if not project_data_connection or project_data_connection is None:
             logger.error("No data connection for data provider: %s", data_provider_name)
             return (
                 jsonify(
@@ -319,7 +332,7 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         try:
@@ -334,39 +347,26 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
             logger.debug(data)
             response = provider_instance.request_token(data)
 
-            if response["success"]:
-                logger.info("Successfully exchanged code for tokens for: %s", data_provider_name)
+            if not response["success"]:
+                logger.error("Error exchanging code for tokens for: %s", data_provider_name)
                 return (
                     jsonify(
                         {
                             "message": {
-                                "id": "api.data_provider.exchange_code_success",
-                                "text": "Successfully exchanged code for tokens",
+                                "id": response.get(
+                                    "message_id", "api.data_provider.exchange_code_error.unexpected_error"
+                                ),
+                                "text": response.get("text", "An unknown error occurred"),
+                                "required_scopes": response.get("required_scopes", []),
+                                "accepted_scopes": response.get("accepted_scopes", []),
+                                "data_provider_name": provider_instance.name,
                             },
-                            "tokens": response,
-                            "data_provider_name": provider_instance.name,
                         }
                     ),
-                    200,
+                    HTTPStatus.BAD_REQUEST,
                 )
-            logger.error("Error exchanging code for tokens for: %s", data_provider_name)
-            return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": response.get("message_id", "api.data_provider.exchange_code_error.unexpected_error"),
-                            "text": response.get("text", "An unknown error occurred"),
-                            "required_scopes": response.get("required_scopes", []),
-                            "accepted_scopes": response.get("accepted_scopes", []),
-                            "data_provider_name": provider_instance.name,
-                        },
-                    }
-                ),
-                400,
-            )
         except Exception:
-            logger.exception("Error exchanging code for tokens for: %s\n", data_provider_name)
-            logger.debug(traceback.format_exc())
+            logger.exception("Error exchanging code for tokens for: %s", data_provider_name)
             return (
                 jsonify(
                     {
@@ -377,12 +377,27 @@ def exchange_code_for_tokens() -> ResponseReturnValue:
                         },
                     }
                 ),
-                500,
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+        else:
+            logger.info("Successfully exchanged code for tokens for: %s", data_provider_name)
+            return (
+                jsonify(
+                    {
+                        "message": {
+                            "id": "api.data_provider.exchange_code_success",
+                            "text": "Successfully exchanged code for tokens",
+                        },
+                        "tokens": response,
+                        "data_provider_name": provider_instance.name,
+                    }
+                ),
+                HTTPStatus.OK,
             )
 
 
 @respondent.route("/data-provider/was-used", methods=["POST"])
-def was_data_provider_used() -> ResponseReturnValue:
+def was_data_provider_used() -> APIResponseValue:
     with DBManager.get_db() as db:
         project_short_id = g.get("project_short_id")
 
@@ -400,7 +415,7 @@ def was_data_provider_used() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         data = request.get_json()
@@ -420,13 +435,16 @@ def was_data_provider_used() -> ResponseReturnValue:
         )
 
         if data_provider_access:
-            return jsonify({"was_used": True}), 200
-        return jsonify({"was_used": False}), 200
+            return jsonify({"was_used": True}), HTTPStatus.OK
+        return jsonify({"was_used": False}), HTTPStatus.OK
 
 
 @respondent.route("/prepare-survey", methods=["POST"])
-def prepare_survey() -> ResponseReturnValue:
-    """Prepares a survey for a respondent by creating a unique distribution link and handling data provider tokens.
+def prepare_survey() -> APIResponseValue:
+    """Prepares a survey for a respondent.
+
+     A survey is prepared by creating a unique distribution link and the handling data
+     provider tokens.
 
     This function performs the following steps:
     1. Retrieves the project and respondent information from the database.
@@ -436,18 +454,18 @@ def prepare_survey() -> ResponseReturnValue:
     5. Creates a unique distribution link for the respondent.
 
     Returns:
-        ResponseReturnValue: A JSON response containing the distribution link or an error message.
+        APIResponseValue: A JSON response containing the distribution link or an error message.
             Possible status codes are:
-            - 200: Successfully created a unique distribution link.
-            - 400: Missing respondent ID or unsupported survey platform.
-            - 404: Project or respondent not found, or survey not active.
-            - 500: Error preparing the survey.
+            - HTTPStatus.OK: Successfully created a unique distribution link.
+            - HTTPStatus.BAD_REQUEST: Missing respondent ID or unsupported survey platform.
+            - HTTPStatus.NOT_FOUND: Project or respondent not found, or survey not active.
+            - HTTPStatus.INTERNAL_SERVER_ERROR: Error preparing the survey.
     """
     try:
         with DBManager.get_db() as db:
             project_short_id = g.get("project_short_id")
 
-            project = get_project(db, project_short_id)
+            project: Project = get_project(db=db, short_id=project_short_id)
 
             if not project:
                 logger.error("Project not found: %s", project_short_id)
@@ -460,7 +478,7 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    404,
+                    HTTPStatus.NOT_FOUND,
                 )
 
             data = request.get_json()
@@ -479,7 +497,7 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             respondent: Respondent = (
@@ -504,7 +522,7 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    404,
+                    HTTPStatus.NOT_FOUND,
                 )
 
             # check if the respondent already has a distribution
@@ -544,14 +562,16 @@ def prepare_survey() -> ResponseReturnValue:
                             "entity": respondent.distribution.to_dict(),
                         }
                     ),
-                    200,
+                    HTTPStatus.OK,
                 )
 
             # check if the survey is active
             # Get the platform class
-            platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+            survey_platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(
+                project.survey_platform_name
+            )
 
-            if not platform_class:
+            if not survey_platform_class:
                 logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
                 return (
                     jsonify(
@@ -562,15 +582,17 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             # Create an instance of the platform
-            platform_instance = platform_class(**project.survey_platform_fields)
+            survey_platform: TSurveyPlatform = survey_platform_class(
+                **cast(SurveyPlatformFieldsDict, project.survey_platform_fields)
+            )
 
-            survey_platform_status, _, survey_platform_info = platform_instance.fetch_survey_platform_info()
+            survey_platform_status, _, survey_platform_info = survey_platform.fetch_survey_platform_info()
 
-            if survey_platform_status != 200 and not survey_platform_info.get("active", False):
+            if survey_platform_status != HTTPStatus.OK and not survey_platform_info.get("active", False):
                 logger.error(
                     "Survey on %s %s does not exist or there was an error fetching its info.",
                     project.survey_platform_name,
@@ -585,11 +607,11 @@ def prepare_survey() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    404,
+                    HTTPStatus.NOT_FOUND,
                 )
 
             # Create the data_to_upload dictionary outside the loop
-            data_to_upload: dict[str, Any] = {}
+            data_to_upload: ComputedVariableDict = {}
 
             for user_data_provider, data_provider, response, error_status in get_used_data_providers(
                 project, respondent
@@ -614,7 +636,7 @@ def prepare_survey() -> ResponseReturnValue:
 
                 db.commit()
 
-            frontend_data_providers = [
+            frontend_data_providers: list[DataConnection] = [
                 dc
                 for dc in project.data_connections
                 if dc.data_provider.data_provider_type == DataProviderType.frontend
@@ -622,8 +644,8 @@ def prepare_survey() -> ResponseReturnValue:
             for dc in frontend_data_providers:
                 data_provider_name = dc.data_provider.data_provider_name.value
 
-                provider_class = DataProvider.get_class_by_value(data_provider_name)
-                provider_instance = provider_class()
+                provider_class: TFrontendDataProviderClass = DataProvider.get_class_by_value(data_provider_name)
+                provider_instance: TFrontendDataProvider = provider_class()
 
                 data_to_upload.update(
                     provider_instance.calculate_variables(
@@ -631,13 +653,19 @@ def prepare_survey() -> ResponseReturnValue:
                         data=frontend_variables,
                     )
                 )
+            logger.debug("Data to upload: %s", data_to_upload)
 
             data_to_upload = {
-                abbreviate_variable_name(variable_name, "dp", "full"): value
+                abbreviate_variable_name(
+                    variable_name=variable_name,
+                    first_apply="dp",
+                    strategy="full",
+                    max_length=survey_platform.max_variable_name_length,
+                ): value
                 for variable_name, value in data_to_upload.items()
             }
 
-            success_preparing_survey, unique_url = platform_instance.handle_prepare_survey(
+            success_preparing_survey, unique_url = survey_platform.handle_prepare_survey(
                 project_short_id=project_short_id,
                 survey_platform_fields=project.survey_platform_fields,
                 embedded_data=data_to_upload,
@@ -657,7 +685,7 @@ def prepare_survey() -> ResponseReturnValue:
                 flag_modified(project, "survey_platform_fields")
                 db.commit()
 
-                if survey_platform_status == 200:
+                if survey_platform_status == HTTPStatus.OK:
                     return (
                         jsonify(
                             {
@@ -668,12 +696,12 @@ def prepare_survey() -> ResponseReturnValue:
                                 "entity": distribution.to_dict(),
                             }
                         ),
-                        200,
+                        HTTPStatus.OK,
                     )
             else:
                 logger.error("Failed to prepare survey.")
-                if survey_platform_status == 200:
-                    survey_platform_status = 500
+                if survey_platform_status == HTTPStatus.OK:
+                    survey_platform_status = HTTPStatus.INTERNAL_SERVER_ERROR
                 return (
                     jsonify(
                         {
@@ -698,7 +726,7 @@ def prepare_survey() -> ResponseReturnValue:
                     }
                 }
             ),
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
 
@@ -736,13 +764,18 @@ def check_data_provider_access_tokens(project_id, data_provider_name, access_tok
 
 
 @respondent.route("/connect", methods=["POST"])
-def connect_respondent() -> ResponseReturnValue:
-    """This function receives a JSON array of data providers and perform checks for each one.
+def connect_respondent() -> APIResponseValue:
+    """This function checks each data provider that it receives.
+
+    This function receives a JSON array of data providers and performs checks
+    for each one.
 
     If all data providers exist, it will return the already existing respondent.
     If some exist and some do not, it will return a bad request.
-    If none exist, it will create an associated data providers and a new respondent and return it.
-    It will check that each data provider access token is valid before updating or creating.
+    If none exist, it will create an associated data providers and a new respondent
+    and return it.
+    It will check that each data provider access token is valid before updating or
+    creating.
     """
     project_short_id = g.get("project_short_id")
     data_providers = request.get_json().get("data_providers")
@@ -761,7 +794,7 @@ def connect_respondent() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         new_data_provider_accesses = []
@@ -784,7 +817,7 @@ def connect_respondent() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    404,
+                    HTTPStatus.NOT_FOUND,
                 )
 
             token = data.get("token")
@@ -804,7 +837,7 @@ def connect_respondent() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             # Check if DataProviderAccess exists
@@ -843,7 +876,7 @@ def connect_respondent() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
         if existing_data_provider_accesses:
             # All data providers already exist; update tokens and return the respondent
@@ -862,7 +895,7 @@ def connect_respondent() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    500,
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
                 )
 
             respondent = existing_data_provider_accesses[0].respondent
@@ -876,7 +909,7 @@ def connect_respondent() -> ResponseReturnValue:
                         "entity": respondent.to_dict(),
                     }
                 ),
-                200,
+                HTTPStatus.OK,
             )
 
         # Handle new data provider accesses
@@ -916,5 +949,5 @@ def connect_respondent() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )

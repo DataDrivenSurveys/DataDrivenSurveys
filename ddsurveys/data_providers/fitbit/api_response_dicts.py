@@ -3,6 +3,7 @@
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 __all__ = [
     # TypedDicts for daily stats summaries API Responses
     "ActiveZoneMinutesValueDict",
@@ -10,7 +11,6 @@ __all__ = [
     "ActiveZoneMinutesSeriesResponseDict",
     "ActivityTimeSeriesDayDict",
     "ActivityTimeSeriesResponseDict",
-
     # TypedDicts for Activities List API Responses
     "MinutesInHeartRateZoneDict",
     "ActiveZoneMinutesDict",
@@ -19,17 +19,13 @@ __all__ = [
     "ActivityDict",
     "ActivitiesListPaginationDict",
     "ActivitiesListResponseDict",
-
     # TypedDicts for Sleep API Responses
     "DeviceDict",
-
     # User Profile API Responses
     "UserDict",
     "UserProfileResponseDict",
-
     # Frequent Activities API endpoints
     "FrequentActivityDict",
-
     # Favorite Activities API endpoints
     "FavoriteActivityDict",
 ]
@@ -51,8 +47,7 @@ class ActiveZoneMinutesDay(TypedDict):
 
 
 ActiveZoneMinutesSeriesResponseDict = TypedDict(
-    "ActiveZoneMinutesSeriesResponseDict",
-    {"activities-active-zone-minutes": list[ActiveZoneMinutesDay]}
+    "ActiveZoneMinutesSeriesResponseDict", {"activities-active-zone-minutes": list[ActiveZoneMinutesDay]}
 )
 
 
@@ -84,7 +79,7 @@ ActivityTimeSeriesResponseDict = TypedDict(
         "activities-tracker-minutesFairlyActive": NotRequired[list[ActivityTimeSeriesDayDict]],
         "activities-tracker-minutesVeryActive": NotRequired[list[ActivityTimeSeriesDayDict]],
         "activities-tracker-steps": NotRequired[list[ActivityTimeSeriesDayDict]],
-    }
+    },
 )
 
 
@@ -93,8 +88,8 @@ class MinutesInHeartRateZoneDict(TypedDict):
     minuteMultiplier: int
     minutes: int
     order: int
-    type: Literal['OUT_OF_ZONE', 'FAT_BURN', 'CARDIO', 'PEAK']
-    zoneName: Literal['Out of Range', 'Fat Burn', 'Cardio', 'Peak']
+    type: Literal["OUT_OF_ZONE", "FAT_BURN", "CARDIO", "PEAK"]
+    zoneName: Literal["Out of Range", "Fat Burn", "Cardio", "Peak"]
 
 
 class ActiveZoneMinutesDict(TypedDict):
@@ -104,19 +99,21 @@ class ActiveZoneMinutesDict(TypedDict):
 
 class ActivityLevelDict(TypedDict):
     """A dictionary containing information about a given activity level."""
+
     minutes: int
-    name: Literal['sedentary', 'lightly', 'fairly', 'very']
+    name: Literal["sedentary", "lightly", "fairly", "very"]
 
 
 class HeartRateZoneDict(TypedDict):
     """A dictionary containing information about an activity's heart rate zones.
     The Heart Rate scope is required to retrieve this dictionary.
     """
+
     caloriesOut: int
     max: int
     min: int
     minutes: int
-    name: Literal['Cardio', 'Fat Burn', 'Out of Range', 'Peak']
+    name: Literal["Cardio", "Fat Burn", "Out of Range", "Peak"]
 
 
 class ManualValuesSpecifiedDict(TypedDict):
@@ -125,19 +122,25 @@ class ManualValuesSpecifiedDict(TypedDict):
     steps: bool
 
 
+class IntervalWorkoutData(TypedDict):
+    intervalSummaries: list
+    numRepeats: int
+
+
 class SourceDict(TypedDict):
     """A dictionary containing information about an activity's source.
 
     Attributes:
         id (str): The unique identifier of the source.
         name (str): The name of the source.
-        trackerFeatures (list[Literal['CALORIES', 'DISTANCE', 'ELEVATION', 'GPS', 'HEARTRATE', 'PACE', 'STEPS', 'VO2_MAX']]): A list of the features supported by the source.
+        trackerFeatures (list[Literal]): A list of the features supported by the source.
         type (str): The type of the source.
         url (str): The URL of the source.
     """
+
     id: str
     name: str
-    trackerFeatures: list[Literal['CALORIES', 'DISTANCE', 'ELEVATION', 'GPS', 'HEARTRATE', 'PACE', 'STEPS', 'VO2_MAX']]
+    trackerFeatures: list[Literal["CALORIES", "DISTANCE", "ELEVATION", "GPS", "HEARTRATE", "PACE", "STEPS", "VO2_MAX"]]
     type: str
     url: str
 
@@ -188,6 +191,7 @@ class ActivityDict(TypedDict):
         steps (int): The number of steps taken during the activity.
         tcxLink (NotRequired[str]): The link to the TCX file for the activity.
     """
+
     activeDuration: int
     activeZoneMinutes: NotRequired[ActiveZoneMinutesDict]
     activityLevel: list[ActivityLevelDict]
@@ -204,9 +208,11 @@ class ActivityDict(TypedDict):
     hasActiveZoneMinutes: NotRequired[bool]
     heartRateLink: NotRequired[str]
     heartRateZones: NotRequired[HeartRateZoneDict]
+    inProgress: bool
+    intervalWorkoutData: NotRequired[IntervalWorkoutData]
     lastModified: str
     logId: int
-    logType: Literal['auto_detected', 'manual', 'mobile_run', 'tracker']
+    logType: Literal["auto_detected", "manual", "mobile_run", "tracker"]
     manualValuesSpecified: ManualValuesSpecifiedDict
     originalDuration: int
     originalStartTime: str

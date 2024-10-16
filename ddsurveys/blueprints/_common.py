@@ -39,7 +39,7 @@ Created on 2023-09-08 13:52
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypedDict
 
 from flask import g
 
@@ -64,7 +64,21 @@ __all__ = [
 
 logger = get_logger(__name__)
 
-REPLACEMENT_RULES: dict[str, list[tuple[str, str, int]]] = {
+# TODO: move the replacement rules to the DP classes
+
+StrReplaceRule = tuple[str, str, int]
+
+
+class TReplacementRules(TypedDict):
+    common: list[StrReplaceRule]
+    dds: list[StrReplaceRule]
+    fitbit: list[StrReplaceRule]
+    github: list[StrReplaceRule]
+    googlecontacts: list[StrReplaceRule]
+    instagram: list[StrReplaceRule]
+
+
+REPLACEMENT_RULES: TReplacementRules = {
     "common": [
         (".builtin.", ".b.", -1),
         (".custom.", ".c.", -1),
@@ -74,6 +88,7 @@ REPLACEMENT_RULES: dict[str, list[tuple[str, str, int]]] = {
         ("_paragraphs", "_paras", -1),
         ("_addresses", "_addrs", -1),
         ("_address", "_addr", -1),
+        ("average", "avg", -1),
     ],
     "dds": [
         (".frontendactivity.", ".frntendact.", -1),
@@ -81,11 +96,25 @@ REPLACEMENT_RULES: dict[str, list[tuple[str, str, int]]] = {
         ("_table", "_tbl", -1),
     ],
     "fitbit": [
+        # DP name
         (".fitbit.", ".fitb.", -1),
+        # DataCategories
         (".steps.", ".st.", -1),
         (".calories.", ".cl.", -1),
         (".distance.", ".dr.", -1),
         (".floors.", ".fl.", -1),
+        (".account.", ".acc.", -1),
+        (".activeminutes.", ".actvmin.", -1),
+        (".daily.", ".dly.", -1),
+        # Variable names
+        (".account_created_at_least_1_year_ago", ".created_at_least_1_year_ago", -1),
+        ("_weekly_heart_zone_time_last_6_months", "_wkl_hrt_zn_6_mnths", -1),
+        ("_weekly_active_time_last_6_months", "_wkl_actv_6_mnths", -1),
+        ("_weekly_active_time_all_sources_last_6_months", "_wkl_actv_all_6_mnths", -1),
+        ("_weekly_activity_time_last_6_months", "_wkl_actvty_6_mnths", -1),
+        (".highest_steps_last_6_months_steps", ".hghst_stps_lst_6_mnths_stps", -1),
+        (".highest_steps_last_6_months_date", ".hghst_stps_lst_6_mnths_date", -1),
+        # ("", "", -1),
     ],
     "github": [
         (".github.", ".gh.", -1),
@@ -120,7 +149,6 @@ def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None]
     if not researcher:
         logger.error("User %s not found", user["email"])
         return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
-        # return jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}), HTTPStatus.UNAUTHORIZED
 
     return researcher, None
 
@@ -143,8 +171,6 @@ def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | API
     if not project:
         logger.error("Project %s not found", project_id)
         return APIResponses.PROJECTS.NOT_FOUND.response
-        # return jsonify({"message": {"id": "api.projects.not_found", "text": "Project not found"}}),
-        # HTTPStatus.NOT_FOUND
 
     return project, None
 
@@ -165,12 +191,6 @@ def get_project_data_connection(
 
     if not data_connection:
         logger.error("Data connection for %s not found in project %s", data_provider_name, project.id)
-        # return (
-        #     None,
-        #     jsonify({"message": {"id": "api.data_provider.connection_not_found", "text": "Data connection not
-        #     found"}}),
-        #     HTTPStatus.NOT_FOUND,
-        # )
         return APIResponses.DATA_PROVIDER.CONNECTION_NOT_FOUND.response
 
     return project, data_connection.first()
@@ -190,9 +210,12 @@ def abbreviate_variable_name(
     strategy: Literal["full", "minimal"] = "full",
     max_length: int = 45,
 ) -> str:
-    """Shorten variable names to conform to Qualtrics standards."""
+    """Shorten variable names to conform to SurveyPlatform requirements standards."""
+    if max_length == -1:
+        return variable_name
+
     if max_length <= 0:
-        msg = "max_length must be greater than 0"
+        msg = f"max_length must be greater than 0 or -1. Received: {max_length}"
         raise ValueError(msg)
 
     if strategy != "full" and len(variable_name) < max_length:
@@ -220,7 +243,8 @@ def abbreviate_variable_name(
     if len(name) > max_length:
         msg = (
             f"Variable name '{variable_name}' could not be shortened to fit the maximum {max_length} characters. "
-            f"End result: '{name}'"
+            f"End result: '{name}'. "
+            f"Shortened from: {len(variable_name)} -> {len(name)}"
         )
         raise ValueError(msg)
 

@@ -31,8 +31,10 @@ import os
 import time
 import traceback
 import uuid
+from abc import abstractmethod
+from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING, ClassVar, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -51,7 +53,9 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import Query, Session, declarative_base, relationship, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Mapped, Query, Session, mapped_column, relationship, sessionmaker
+
+from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, SurveyPlatformFieldsDict
 
 try:
     from ddsurveys.get_logger import get_logger
@@ -72,6 +76,7 @@ if TYPE_CHECKING:
         DistributionDict,
         ProjectDict,
         ProjectPublicDict,
+        ResearcherDict,
         RespondentDict,
     )
 
@@ -238,47 +243,7 @@ class DBManager:
         return None
 
 
-Base = declarative_base()
-
-
-class Researcher(Base):
-    """Represents a researcher in the database.
-
-    Attributes:
-        id (int): The unique identifier for the researcher.
-        firstname (str): The first name of the researcher.
-        lastname (str): The last name of the researcher.
-        email (str): The email address of the researcher.
-        password (str): The hashed password of the researcher.
-        collaborations (relationship): A relationship to the Collaboration table.
-    """
-
-    __tablename__ = "researcher"
-
-    id = Column(Integer, primary_key=True)
-
-    firstname = Column(String(255))
-    lastname = Column(String(255))
-    email = Column(String(255))
-    password = Column(String(512))  # Scrypt hashed password
-
-    collaborations = relationship("Collaboration", back_populates="researcher")
-
-    def to_dict(self) -> dict[str, Column[int] | Column[str]]:
-        """Converts the Researcher instance to a dictionary.
-
-        Returns:
-            dict: A dictionary representation of the Researcher instance, including
-                  the id, firstname, lastname, and email.
-        """
-        return {
-            "id": self.id,
-            "firstname": self.firstname,
-            "lastname": self.lastname,
-            "email": self.email,
-        }
-
-
+# Enums
 class SurveyStatus(StrEnum):
     """Enumeration for different survey statuses.
 
@@ -326,26 +291,118 @@ class DataProviderType(StrEnum):
     frontend = "frontend"
 
 
+# Database models
+class Base(DeclarativeBase):
+    """Base class for all database models."""
+
+    @abstractmethod
+    def to_dict(self) -> dict:
+        """Creates a dictionary representation of a database row."""
+
+    def to_public_dict(self) -> dict:
+        """Creates a dictionary representation of a database row, wit no sensitive data."""
+
+
+class Researcher(Base):
+    """Represents a researcher in the database.
+
+    Attributes:
+        id (int): The unique identifier for the researcher.
+        firstname (str): The first name of the researcher.
+        lastname (str): The last name of the researcher.
+        email (str): The email address of the researcher.
+        password (str): The hashed password of the researcher.
+        collaborations (relationship): A relationship to the Collaboration table.
+    """
+
+    __tablename__ = "researcher"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    firstname: Mapped[str] = mapped_column(String(255))
+    lastname: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255))
+    password: Mapped[str] = mapped_column(String(512))  # Scrypt hashed password
+
+    collaborations: Mapped[list[Collaboration]] = relationship("Collaboration", back_populates="researcher")
+
+    @override
+    def to_dict(self) -> ResearcherDict:
+        """Converts the Researcher instance to a dictionary.
+
+        Returns:
+            ResearcherDict:
+                A dictionary representation of the Researcher instance, including
+                the id, firstname, lastname, and email.
+        """
+        return {
+            "id": self.id,
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "email": self.email,
+        }
+
+
+class Collaboration(Base):
+    """This represents a collaboration between a researcher and a project."""
+
+    __tablename__ = "collaboration"
+    # project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    # researcher_id = Column(Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True)
+
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("project.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    researcher_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("researcher.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    researcher: Mapped[Researcher] = relationship("Researcher", back_populates="collaborations")
+    project: Mapped[Project] = relationship("Project", back_populates="collaborations")
+
+    @override
+    def to_dict(self) -> CollaborationDict:
+        return {
+            "project_id": self.project_id,
+            "researcher": self.researcher.to_dict() if self.researcher else None,
+        }
+
+
 class DataProvider(Base):
     """Represents a data provider in the database.
 
     Attributes:
-        data_provider_name (Enum): The name of the data provider, which serves as the primary key.
-        data_provider_type (Enum): The type of the data provider, with a default value of 'generic'.
+        data_provider_name (Enum):The name of the data provider, which serves as the
+            primary key.
+        data_provider_type (Enum): The type of the data provider, with a default value
+            of 'generic'.
         name (str): The human-readable name of the data provider.
         data_connections (relationship): A relationship to the DataConnection table.
-        data_provider_accesses (relationship): A relationship to the DataProviderAccess table.
+        data_provider_accesses (relationship): A relationship to the DataProviderAccess
+            table.
     """
 
     __tablename__ = "data_provider"
-    data_provider_name = Column(Enum(DataProviderName), primary_key=True)
+    data_provider_name: Mapped[DataProviderName] = mapped_column(Enum(DataProviderName), primary_key=True)
 
-    data_provider_type = Column(Enum(DataProviderType), default=DataProviderType.generic)
-    name: str = Column(String(255))
+    data_provider_type: Mapped[DataProviderType] = mapped_column(
+        Enum(DataProviderType), default=DataProviderType.generic
+    )
+    name: Mapped[str] = mapped_column(String(255))
 
-    data_connections = relationship("DataConnection", back_populates="data_provider")
-    data_provider_accesses = relationship("DataProviderAccess", back_populates="data_provider")
+    data_connections: Mapped[list[DataConnection]] = relationship(
+        "DataConnection",
+        back_populates="data_provider",
+    )
+    data_provider_accesses: Mapped[list[DataProviderAccess]] = relationship(
+        "DataProviderAccess",
+        back_populates="data_provider",
+    )
 
+    @override
     def to_dict(self) -> DataProviderDict:
         """Converts the DataProvider instance to a dictionary.
 
@@ -373,18 +430,23 @@ class DataConnection(Base):
 
     __tablename__ = "data_connection"
 
-    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
-    data_provider_name = Column(
+    project_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("project.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    data_provider_name: Mapped[DataProviderName] = mapped_column(
         Enum(DataProviderName),
         ForeignKey("data_provider.data_provider_name", ondelete="CASCADE"),
         primary_key=True,
     )
 
-    fields = Column(JSON)
+    fields: Mapped[JSON] = mapped_column(JSON)
 
-    data_provider = relationship("DataProvider", back_populates="data_connections")
-    project = relationship("Project", back_populates="data_connections")
+    data_provider: Mapped[DataProvider] = relationship("DataProvider", back_populates="data_connections")
+    project: Mapped[Project] = relationship("Project", back_populates="data_connections")
 
+    @override
     def to_dict(self) -> DataConnectionDict:
         """Converts the DataConnection instance to a dictionary.
 
@@ -399,6 +461,7 @@ class DataConnection(Base):
             "fields": self.fields,
         }
 
+    @override
     def to_public_dict(self) -> DataConnectionPublicDict:
         """Converts the DataConnection instance to a public dictionary.
 
@@ -411,42 +474,46 @@ class DataConnection(Base):
         }
 
 
-class Collaboration(Base):
-    __tablename__ = "collaboration"
-    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
-    researcher_id = Column(Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True)
-
-    researcher = relationship("Researcher", back_populates="collaborations")
-    project = relationship("Project", back_populates="collaborations")
-
-    def to_dict(self) -> CollaborationDict:
-        return {
-            "project_id": self.project_id,
-            "researcher": self.researcher.to_dict() if self.researcher else None,
-        }
-
-
 class Project(Base):
     __tablename__ = "project"
 
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    # TODO: change the project to use integer ids instead of uuid
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
-    short_id = Column(BigInteger, default=lambda: sony_flake.next_id())
-    name = Column(String(255))
-    survey_status = Column(Enum(SurveyStatus), default=SurveyStatus.Unknown, nullable=False)
-    survey_platform_name = Column(String(255))
-    survey_platform_fields = Column(JSON)
-    creation_date = Column(DateTime, default=func.now())
-    last_modified = Column(DateTime, default=func.now(), onupdate=func.now())
-    last_synced = Column(DateTime)
-    variables = Column(JSON, default=[])
-    custom_variables = Column(JSON, default=[])
+    short_id: Mapped[int] = mapped_column(BigInteger, default=lambda: sony_flake.next_id())
+    name: Mapped[str] = mapped_column(String(255))
+    survey_status: Mapped[SurveyStatus] = mapped_column(
+        Enum(SurveyStatus), default=SurveyStatus.Unknown, nullable=False
+    )
+    survey_platform_name: Mapped[str] = mapped_column(String(255))
+    survey_platform_fields: Mapped[JSON] = mapped_column(JSON)
+    creation_date: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    last_modified: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
+    last_synced: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    variables: Mapped[list[BuiltinVariableDict]] = mapped_column(JSON, default=[])
+    custom_variables: Mapped[list[CustomVariableDict]] = mapped_column(JSON, default=[])
 
-    data_connections = relationship("DataConnection", back_populates="project", cascade="all,delete")
-    collaborations = relationship("Collaboration", back_populates="project")
-    respondents = relationship("Respondent", back_populates="project", cascade="all,delete")
-    data_provider_accesses = relationship("DataProviderAccess", back_populates="project", cascade="all,delete")
+    data_connections: Mapped[list[DataConnection]] = relationship(
+        "DataConnection",
+        back_populates="project",
+        cascade="all,delete",
+    )
+    collaborations: Mapped[list[Collaboration]] = relationship(
+        "Collaboration",
+        back_populates="project",
+    )
+    respondents: Mapped[list[Respondent]] = relationship(
+        "Respondent",
+        back_populates="project",
+        cascade="all,delete",
+    )
+    data_provider_accesses: Mapped[list[DataProviderAccess]] = relationship(
+        "DataProviderAccess",
+        back_populates="project",
+        cascade="all,delete",
+    )
 
+    @override
     def to_dict(self) -> ProjectDict:
         return {
             "id": self.id,
@@ -465,6 +532,7 @@ class Project(Base):
             "respondents": [res.to_dict() for res in self.respondents],
         }
 
+    @override
     def to_public_dict(self) -> ProjectPublicDict:
         return {
             "id": self.id,
@@ -481,32 +549,36 @@ class Project(Base):
 
 class Distribution(Base):
     __tablename__ = "distribution"
-    id = Column(Integer, primary_key=True)
-    url = Column(String(255))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    url: Mapped[str] = mapped_column(String(255))
 
-    respondent = relationship("Respondent", back_populates="distribution", uselist=False)
+    respondent: Mapped[Respondent] = relationship("Respondent", back_populates="distribution", uselist=False)
 
+    @override
     def to_dict(self) -> DistributionDict:
         return {"id": self.id, "url": self.url}
 
 
 class Respondent(Base):
     __tablename__ = "respondent"
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"))
-    distribution_id = Column(Integer, ForeignKey("distribution.id", ondelete="CASCADE"))
+    id: Mapped[int] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("project.id", ondelete="CASCADE"))
+    distribution_id: Mapped[int] = mapped_column(Integer, ForeignKey("distribution.id", ondelete="CASCADE"))
 
-    distribution = relationship(
+    distribution: Mapped[Distribution] = relationship(
         "Distribution",
         back_populates="respondent",
         uselist=False,
         cascade="all, delete",
     )
 
-    project = relationship("Project", back_populates="respondents")
+    project: Mapped[Project] = relationship("Project", back_populates="respondents")
 
-    data_provider_accesses = relationship("DataProviderAccess", back_populates="respondent", cascade="all, delete")
+    data_provider_accesses: Mapped[list[DataProviderAccess]] = relationship(
+        "DataProviderAccess", back_populates="respondent", cascade="all, delete"
+    )
 
+    @override
     def to_dict(self) -> RespondentDict:
         return {
             "id": self.id,
@@ -518,22 +590,25 @@ class Respondent(Base):
 class DataProviderAccess(Base):
     __tablename__ = "data_provider_access"
 
-    data_provider_name = Column(
+    data_provider_name: Mapped[DataProviderName] = mapped_column(
         Enum(DataProviderName),
         ForeignKey("data_provider.data_provider_name", ondelete="CASCADE"),
         primary_key=True,
     )
-    user_id = Column(String(255), nullable=False, primary_key=True)
-    project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
-    respondent_id = Column(String(36), ForeignKey("respondent.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True)
+    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    respondent_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("respondent.id", ondelete="CASCADE"), primary_key=True
+    )
 
-    access_token = Column(Text, nullable=True)
-    refresh_token = Column(Text, nullable=True)
+    access_token: Mapped[str] = mapped_column(Text, nullable=True)
+    refresh_token: Mapped[str] = mapped_column(Text, nullable=True)
 
-    respondent = relationship("Respondent", back_populates="data_provider_accesses")
-    data_provider = relationship("DataProvider", back_populates="data_provider_accesses")
-    project = relationship("Project", back_populates="data_provider_accesses")
+    respondent: Mapped[Respondent] = relationship("Respondent", back_populates="data_provider_accesses")
+    data_provider: Mapped[DataProvider] = relationship("DataProvider", back_populates="data_provider_accesses")
+    project: Mapped[Project] = relationship("Project", back_populates="data_provider_accesses")
 
+    @override
     def to_dict(self) -> DataProviderAccessDict:
         return {
             "respondent_id": self.respondent_id,
