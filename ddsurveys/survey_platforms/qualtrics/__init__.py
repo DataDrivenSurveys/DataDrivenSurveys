@@ -292,7 +292,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                 return False, None
 
         except FailedQualtricsRequest:
-            logger.debug("Failed to prepare survey for data collection")
+            logger.exception("Failed to prepare survey for data collection")
             return False, None
 
     def handle_export_survey_responses(self) -> tuple[int, str, str, bytes | str | None]:
