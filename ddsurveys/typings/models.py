@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
 
+from sqlalchemy import JSON
+
 if TYPE_CHECKING:
     from datetime import datetime
 
@@ -65,7 +67,7 @@ class CollaborationDict(TypedDict):
 class DataConnectionDict(TypedDict):
     project_id: str
     data_provider_name: str
-    data_provider: DataProviderDict
+    data_provider: DataProviderDict | None
     fields: FieldsDict
 
 
@@ -157,7 +159,7 @@ class ProjectDict(TypedDict):
     name: str
     survey_status: str
     survey_platform_name: str
-    survey_platform_fields: SurveyPlatformFieldsDict
+    survey_platform_fields: SurveyPlatformFieldsDict | JSON
     last_modified: datetime
     creation_date: datetime
     last_synced: datetime

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import Any, ClassVar
 from urllib.parse import quote_plus
 
@@ -104,7 +105,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         if not self.surveys_api.survey_exists(self.survey_id):
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.survey_platforms.connection_failed",
                 survey_platform_info,
             )
@@ -119,9 +120,9 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
-            return 400, None, survey_platform_info
+            return HTTPStatus.BAD_REQUEST, None, survey_platform_info
         else:
-            return 200, message_id, survey_platform_info
+            return HTTPStatus.OK, message_id, survey_platform_info
 
     def handle_project_creation(
         self, project_name: str, use_existing_survey: bool = False
@@ -138,7 +139,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         if use_existing_survey:
             if not self.survey_id:
-                return 400, "api.survey.missing_id", "Survey ID is required", None, {}
+                return HTTPStatus.BAD_REQUEST, "api.survey.missing_id", "Survey ID is required", None, {}
 
             try:
                 survey_info = self.surveys_api.get_survey(self.survey_id).json()
@@ -152,7 +153,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             except AuthorizationError:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.failed_to_retrieve_survey_name",
                     "Failed to retrieve survey name, please check your API key and survey ID",
                     None,
@@ -160,7 +161,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                 )
             except FailedQualtricsRequest:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.unknown_error_occurred",
                     "Unknown error occurred, please check your API key and survey ID",
                     None,
@@ -184,7 +185,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     survey_platform_fields["base_url"] = base_url
                 else:
                     return (
-                        400,
+                        HTTPStatus.BAD_REQUEST,
                         "api.survey.unknown_error_occurred",
                         "Unknown error occurred, please check your API key and survey ID",
                         None,
@@ -193,14 +194,14 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             except FailedQualtricsRequest:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.create_failed",
                     "Failed to create survey",
                     None,
                     {},
                 )
 
-        return 200, "", "", project_name, survey_platform_fields
+        return HTTPStatus.OK, "", "", project_name, survey_platform_fields
 
     def handle_variable_sync(self, enabled_variables) -> tuple[int, str, str]:
         """Handle the syncing of variables for the given survey."""
@@ -217,22 +218,22 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             # Update the variables on Qualtrics
             resp = self.surveys_api.update_flow(self.survey_id, flow.to_dict())
-            if resp.status_code == 200:
+            if resp.status_code == HTTPStatus.OK:
                 return (
-                    200,
+                    HTTPStatus.OK,
                     "api.ddsurveys.survey_platforms.variables_sync.success",
                     "Variables synced successfully!",
                 )
 
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.variables_sync.failed",
                 "Failed to sync variables!",
             )
         except (FailedQualtricsRequest, PermissionError):
             logger.debug("Failed to sync variables for survey %s", self.survey_id)
             return (
-                401,
+                HTTPStatus.UNAUTHORIZED,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
                 "Failed to process sync request. Please check your API key and survey ID.",
             )
@@ -247,7 +248,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             mailing_list_id = survey_platform_fields.get("mailing_list_id")
             directory_id = survey_platform_fields.get("directory_id")
 
-            if status != 200:
+            if status != HTTPStatus.OK:
                 return False, None
 
             if not survey_platform_info["active"]:
@@ -301,13 +302,13 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             content = self.surveys_api.export_survey_responses(self.survey_id)
             if content:
                 return (
-                    200,
+                    HTTPStatus.OK,
                     "api.ddsurveys.survey_platforms.export_survey_responses.success",
                     "Exported survey responses successfully!",
                     content,
                 )
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.export_survey_responses.failed",
                 "Failed to export survey responses!",
                 None,
@@ -315,7 +316,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         except FailedQualtricsRequest:
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.export_survey_responses.request_failed",
                 "Failed to process export request. Please check your API key and survey ID.",
                 None,
@@ -325,7 +326,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
     def get_preview_link(survey_platform_fields: dict, enabled_variables: list[dict]) -> tuple[int, str, str, str]:
         if "base_url" not in survey_platform_fields or "survey_id" not in survey_platform_fields:
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.get_preview_link.error",
                 "Failed to get preview link. Please check your survey ID and base URL.",
                 None,
@@ -341,7 +342,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"
 
         return (
-            200,
+            HTTPStatus.OK,
             "api.ddsurveys.survey_platforms.get_preview_link.success",
             "Preview link retrieved successfully!",
             link,

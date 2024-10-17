@@ -22,11 +22,12 @@ class DistributionsAPI(QualtricsRequests):
     def __init__(
         self,
         api_token="",
-        datacenter_location: str = "EU",
-        accept_datacenter_redirect: bool = True,
+        data_center_location: str = "EU",
         mailing_list_id: str | None = None,
+        *,
+        accept_data_center_redirect: bool = True,
     ):
-        super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
+        super().__init__(api_token=api_token, data_center_location=data_center_location, accept_data_center_redirect=accept_data_center_redirect)
         self.mailing_list_id = mailing_list_id
 
     @staticmethod

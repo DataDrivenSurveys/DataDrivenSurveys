@@ -1,4 +1,5 @@
 import json
+from http import HTTPStatus
 
 import pytest
 
@@ -18,13 +19,20 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
 @pytest.mark.parametrize(
     ("name", "use_existing_survey", "survey_platform_name", "fields", "expected_status_code", "expected_message_id"),
     [
-        ("Test Project", False, "qualtrics", fields_valid, 201, "api.projects.project_created_successfully"),
+        (
+            "Test Project",
+            False,
+            "qualtrics",
+            fields_valid,
+            HTTPStatus.CREATED,
+            "api.projects.project_created_successfully",
+        ),
         (
             "Test Project",
             False,
             "qualtrics",
             fields_missing_survey_id,
-            201,
+            HTTPStatus.CREATED,
             "api.projects.project_created_successfully",
         ),
         (
@@ -32,17 +40,24 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
             False,
             "qualtrics",
             fields_missing_survey_platform_api_key,
-            400,
+            HTTPStatus.BAD_REQUEST,
             "api.ddsurveys.survey_platforms.bases.survey_platform_api_key.missing",
         ),
-        ("Test Project", True, "qualtrics", fields_valid, 201, "api.projects.project_created_successfully"),
-        (None, True, "qualtrics", fields_valid, 201, "api.projects.project_created_successfully"),
+        (
+            "Test Project",
+            True,
+            "qualtrics",
+            fields_valid,
+            HTTPStatus.CREATED,
+            "api.projects.project_created_successfully",
+        ),
+        (None, True, "qualtrics", fields_valid, HTTPStatus.CREATED, "api.projects.project_created_successfully"),
         (
             None,
             True,
             "qualtrics",
             fields_missing_survey_id,
-            400,
+            HTTPStatus.BAD_REQUEST,
             "api.ddsurveys.survey_platforms.bases.survey_id.missing",
         ),
         (
@@ -50,10 +65,10 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
             True,
             "qualtrics",
             fields_missing_survey_platform_api_key,
-            400,
+            HTTPStatus.BAD_REQUEST,
             "api.ddsurveys.survey_platforms.bases.survey_platform_api_key.missing",
         ),
-        ("Test Project", False, "unknown", fields_valid, 400, "api.survey.platform_not_supported"),
+        ("Test Project", False, "unknown", fields_valid, HTTPStatus.BAD_REQUEST, "api.survey.platform_not_supported"),
     ],
 )
 def test_create_project(

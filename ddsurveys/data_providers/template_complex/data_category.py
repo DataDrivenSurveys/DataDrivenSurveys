@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
 """Created on 2024-05-14 11:40.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from data_providers.data_categories import DataCategory
+from typings.data_providers.variables import DataOriginDict
 
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
@@ -21,7 +21,7 @@ logger = get_logger(__name__)
 # In practice, each endpoint can be turned into a data category.
 class ExampleDataCategory(DataCategory):
 
-    data_origin = [
+    data_origin: ClassVar[list[DataOriginDict]] = [
         {
             "method": "get_user",
             "endpoint": "https://api.dataprovider.com/account",
@@ -36,7 +36,7 @@ class ExampleDataCategory(DataCategory):
     def fetch_data(self) -> list[dict[str, Any]]:
         return self.api.get_user()
 
-    cv_attributes = [
+    cv_attributes: ClassVar[list[CVAttribute]] = [
         CVAttribute(
             name="name",
             label="Users Name",

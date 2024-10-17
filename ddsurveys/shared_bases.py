@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module defines a flexible framework for creating and managing form elements within a UI, specifically
 tailored for
 data providers. It includes classes for form elements such as buttons, fields, and text blocks, each with customizable
@@ -20,15 +19,16 @@ Created on 2023-09-05 18:07
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from ast import TypeVar
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
-from typing_extensions import override
-
+from ddsurveys import __package__
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
@@ -36,10 +36,29 @@ if TYPE_CHECKING:
 
     from typings.shared_bases import FormFieldDict
 
+
+__all__ = [
+    "FormElement",
+    "FormButton",
+    "FormField",
+    "FormTextBlock",
+    "RegistryBase",
+    "Registry",
+    "UIRegistry",
+    #
+    "TRegistryClass",
+    "TRegistry",
+    "TUIRegistryClass",
+    "TUIRegistry",
+]
+
+
 logger: Logger = get_logger(__name__)
 
 TRegistryClass = type["Registry"]
+TRegistry = TypeVar("TRegistry", bound="Registry")
 TUIRegistryClass = type["UIRegistry"]
+TUIRegistry = TypeVar("TUIRegistry", bound="UIRegistry")
 
 
 class FormElement(ABC):
@@ -71,13 +90,13 @@ class FormElement(ABC):
     shared_prefix_text: str = "ddsurveys"
 
     def __init__(
-            self,
-            name: str,
-            label: str | None = None,
-            helper_text: str | None = None,
-            data: dict[str, Any] | None = None,
-            visibility_conditions: dict[str, Any] | None = None,
-            interaction_effects: dict[str, Any] | None = None,
+        self,
+        name: str,
+        label: str | None = None,
+        helper_text: str | None = None,
+        data: dict[str, Any] | None = None,
+        visibility_conditions: dict[str, Any] | None = None,
+        interaction_effects: dict[str, Any] | None = None,
     ) -> None:
         """Initialize a new instance of FormElement.
 
@@ -119,9 +138,10 @@ class FormElement(ABC):
             elif not set(class_.__module__.split(".")).isdisjoint(class_.package.split(".")):
                 package_parts = class_.package.split(".")
                 module_parts = class_.__module__.split(".")
-                overlap_index = next((i for i, part in enumerate(module_parts) if part in package_parts),
-                                     len(module_parts))
-                overlap_parts = '.'.join(package_parts + module_parts[overlap_index + 1:])
+                overlap_index = next(
+                    (i for i, part in enumerate(module_parts) if part in package_parts), len(module_parts)
+                )
+                overlap_parts = ".".join(package_parts + module_parts[overlap_index + 1 :])
                 label = f"{cls.shared_prefix_text}.{overlap_parts}.{text}"
             else:
                 label = f"{cls.shared_prefix_text}.{text}"
@@ -166,8 +186,7 @@ class FormElement(ABC):
         self.__class__._package = value
 
     @abstractmethod
-    def register_field(self, cls: type) -> type:
-        ...
+    def register_field(self, cls: type) -> type: ...
 
 
 class FormButton(FormElement):
@@ -277,13 +296,13 @@ class FormField(FormElement):
     """
 
     def __init__(
-            self,
-            type: str = "text",
-            value: str = "",
-            *,
-            required: bool = True,
-            disabled: bool = False,
-            **kwargs,
+        self,
+        type: str = "text",
+        value: str = "",
+        *,
+        required: bool = True,
+        disabled: bool = False,
+        **kwargs,
     ) -> None:
         """Initializes a new instance of FormField.
 
@@ -355,11 +374,11 @@ class FormField(FormElement):
 
     @classmethod
     def check_input_fields(
-            cls,
-            fields: list[dict],
-            form_fields: list[FormField | FormButton],
-            override_required_fields: list[str] | None = None,
-            class_: type | None = None,
+        cls,
+        fields: list[dict],
+        form_fields: list[FormField | FormButton],
+        override_required_fields: list[str] | None = None,
+        class_: type | None = None,
     ) -> tuple[bool, str | None]:
         """Checks if all required fields are present and not empty in the input fields.
 
@@ -522,7 +541,10 @@ class RegistryBase(type):
 
     @classmethod
     def getattr_from_all_parents(
-            cls, class_: Registry, attribute: str, values: list | None = None
+        cls,
+        class_: TRegistryClass,
+        attribute: str,
+        values: list | None = None,
     ) -> list:
         """This function collects all the values of a given attribute from the class hierarchy.
 
@@ -550,9 +572,7 @@ class RegistryBase(type):
         return values
 
     @classmethod
-    def get_first_defined_from_parents(
-            cls, class_: Registry, attribute: str, default=None
-    ) -> Any:
+    def get_first_defined_from_parents(cls, class_: Registry, attribute: str, default=None) -> Any:
         """Recursively searches for the first defined value of a given attribute in the class hierarchy,
         starting from the specified class and moving up its parent classes.
 
@@ -573,9 +593,7 @@ class RegistryBase(type):
         val = getattr(class_._parent, attribute, None)
         if val:
             return val
-        return cls.get_first_defined_from_parents(
-            class_._parent, attribute, default
-        )
+        return cls.get_first_defined_from_parents(class_._parent, attribute, default)
 
     # @staticmethod
     # def bind_to_base(base_class: Registry, child_class: Registry, attr_name: str) -> None:
@@ -583,9 +601,7 @@ class RegistryBase(type):
     #         setattr(child_class, attr_name, getattr(base_class, attr_name))
 
     @staticmethod
-    def bind_to_base(
-            base_class: Registry, child_class: Registry, attributes: list[str]
-    ) -> None:
+    def bind_to_base(base_class: Registry, child_class: Registry, attributes: list[str]) -> None:
         """Binds specified attributes from a base class to a child class.
 
         This method is used to inherit attributes from a base class to its subclasses dynamically. It is particularly
@@ -672,9 +688,7 @@ class RegistryBase(type):
         parents = [b for b in bases if isinstance(b, RegistryBase)]
         if len(parents) == 0:
             new_class = super_new(cls, name, bases, attrs)
-            cls.rebind_wrangled_attributes(
-                new_class, attrs.get("attrs_to_unwrangle", [])
-            )
+            cls.rebind_wrangled_attributes(new_class, attrs.get("attrs_to_unwrangle", []))
             return new_class
 
         # Create the class.
@@ -697,15 +711,9 @@ class RegistryBase(type):
         attrs_to_unwrangle = deepcopy(attrs.get("attrs_to_unwrangle", []))
         to_dict_attrs = deepcopy(attrs.get("to_dict_attrs", []))
 
-        attrs_to_bind_to_base.extend(
-            cls.get_first_defined_from_parents(new_class, "attrs_to_bind_to_base")
-        )
-        attrs_to_unwrangle.extend(
-            cls.get_first_defined_from_parents(new_class, "attrs_to_unwrangle")
-        )
-        to_dict_attrs.extend(
-            cls.get_first_defined_from_parents(new_class, "to_dict_attrs", [])
-        )
+        attrs_to_bind_to_base.extend(cls.get_first_defined_from_parents(new_class, "attrs_to_bind_to_base"))
+        attrs_to_unwrangle.extend(cls.get_first_defined_from_parents(new_class, "attrs_to_unwrangle"))
+        to_dict_attrs.extend(cls.get_first_defined_from_parents(new_class, "to_dict_attrs", []))
 
         new_class.attrs_to_bind_to_base = attrs_to_bind_to_base
         new_class.attrs_to_unwrangle = attrs_to_unwrangle
@@ -714,11 +722,7 @@ class RegistryBase(type):
         registration_base: Registry | None = None
         direct_base_name = ""
 
-        base_name_list = [
-            p.base_name
-            for p in parents
-            if hasattr(p, "base_name") and p.base_name != ""
-        ]
+        base_name_list = [p.base_name for p in parents if hasattr(p, "base_name") and p.base_name != ""]
         if len(base_name_list) > 0 and "base_name" not in attrs:
             direct_base_name = base_name_list[-1]
 
@@ -740,9 +744,10 @@ class RegistryBase(type):
 
         cls.bind_to_base(registration_base, new_class, attrs_to_bind_to_base)
 
-        if (registration_base is not None
-                and name not in registration_base.registry_exclude
-                and name not in registration_base.cls_form_fields
+        if (
+            registration_base is not None
+            and name not in registration_base.registry_exclude
+            and name not in registration_base.cls_form_fields
         ):
             new_class.register()
 
@@ -755,7 +760,7 @@ class RegistryBase(type):
         return new_class
 
 
-class Registry(metaclass=RegistryBase):
+class Registry[T: TRegistryClass](metaclass=RegistryBase):
     """A base class for creating registries.
 
     This class, along with its metaclass `RegistryBase`, facilitates the creation of a
@@ -793,21 +798,22 @@ class Registry(metaclass=RegistryBase):
         package (str): The package or module name that contains the class.
             This is used for namespacing and organization.
     """
+
     # General class attributes
     base_name: str = "Registry"
     attrs_to_bind_to_base: ClassVar[list[str]] = ["registry", "registry_exclude"]
     attrs_to_unwrangle: ClassVar[list[str]] = ["__registry", "__registry_exclude"]
-    _package = __package__
-    _parent: Registry = None
+    _package: str = __package__
+    _parent: TRegistryClass | None = None
 
     to_dict_attrs: ClassVar[list[str]] = []
 
-    __registry: ClassVar[dict[str, dict[str, TRegistryClass]]] = {}
+    __registry: dict[str, dict[str, T]] = {}
     __registry_exclude: ClassVar[list[str]] = []
 
     # The following are placeholder properties for convenient access to the name wrangled dicts
-    registry: ClassVar[dict[str, dict[str, TRegistryClass]]] = None
-    registry_exclude: ClassVar[list[str]] = None
+    registry: dict[str, dict[str, T]] = {}
+    registry_exclude: list[str] = []
 
     # The following attributes (normally) do not need to be re-declared in child classes
     name: str = ""
@@ -866,7 +872,7 @@ class Registry(metaclass=RegistryBase):
                 subclass.register()
 
     @classmethod
-    def get_registry(cls) -> dict[str, TRegistryClass]:
+    def get_registry(cls) -> dict[str, T]:
         """Retrieves the registry dictionary for the current class.
 
         This dictionary contains all registered subclasses, allowing for dynamic lookup
@@ -887,7 +893,7 @@ class Registry(metaclass=RegistryBase):
         return registry
 
     @classmethod
-    def get_class_by_name(cls, name) -> TRegistryClass | None:
+    def get_class_by_name(cls, name) -> T | None:
         """Retrieves a class from the registry by its name.
 
         Args:
@@ -899,7 +905,7 @@ class Registry(metaclass=RegistryBase):
         return cls.registry.get(cls.base_name, {}).get(name, None)
 
     @classmethod
-    def get_class_by_value(cls, value) -> TRegistryClass | None:
+    def get_class_by_value(cls, value) -> T | None:
         """Retrieves a class from the registry by its value attribute.
 
         This method is useful for cases where classes are referenced by a value
@@ -931,7 +937,7 @@ class Registry(metaclass=RegistryBase):
         return {attr: getattr(cls, attr) for attr in cls.to_dict_attrs}
 
 
-class UIRegistry(Registry):
+class UIRegistry[T: TUIRegistryClass](Registry[T]):
     """A subclass of Registry tailored for UI components.
 
     It allows for managing the registration and retrieval of UI-related classes.
@@ -974,6 +980,7 @@ class UIRegistry(Registry):
         get_all_form_fields: Collects and returns form fields from all registered
             UI classes.
     """
+
     base_name = "UIRegistry"
 
     attrs_to_bind_to_base: ClassVar[list[str]] = ["cls_form_fields"]
@@ -1004,7 +1011,7 @@ class UIRegistry(Registry):
     # Class attributes that need be re-declared or redefined in child classes.
     # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
-    fields: ClassVar[list[dict[str, Any]]] = []
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Form fields declarations go here
     # Child classes should redeclare the form_fields attribute and populate the list
@@ -1026,9 +1033,7 @@ class UIRegistry(Registry):
 
         package = f"{cls._package}" if cls._package != "" else ""
         cls.instructions = f"api.{package}.{cls.name_lower}.instructions.text"
-        cls.instructions_helper_url = (
-            f"api.{package}.{cls.name_lower}.instructions.helper_url"
-        )
+        cls.instructions_helper_url = f"api.{package}.{cls.name_lower}.instructions.helper_url"
 
         cls.callback_url = f"dist/redirect/{cls.name_lower}"
 
@@ -1089,7 +1094,7 @@ class UIRegistry(Registry):
 
         result = []
 
-        subclass: UIRegistry
+        subclass: TUIRegistryClass
         for subclass in registry.values():
             item = {
                 "label": subclass.label,
@@ -1141,6 +1146,7 @@ class OAuthBase:
         request_token(self, code: str) -> dict[str, Any]: Requests an access token using the provided code.
         revoke_token(self, token: str) -> bool: Revokes the provided token.
     """
+
     # General class attributes
     # These attributes need to be overridden
 
@@ -1153,12 +1159,12 @@ class OAuthBase:
     _categories_scopes: dict[str, str] = {}
 
     def __init__(
-            self,
-            client_id: str | None = None,
-            client_secret: str | None = None,
-            access_token: str | None = None,
-            refresh_token: str | None = None,
-            **kwargs,
+        self,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        **kwargs,
     ) -> None:
         """Initializes an OAuthBase instance with the necessary credentials and tokens for OAuth authentication flow.
 
@@ -1242,9 +1248,7 @@ class OAuthBase:
         ...
 
     @abstractmethod
-    def get_authorize_url(
-            self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
-    ) -> str:
+    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] | None = None) -> str:
         """Generates the authorization URL that clients will use to initiate the OAuth authorization flow.
 
         This method constructs the URL required for the user to grant authorization to the application. It may include
@@ -1341,5 +1345,4 @@ class OAuthBase:
 
 class JSONCompatible(ABC):
     @abstractmethod
-    def to_json(self) -> dict[str, int | float | str | bool | list | dict | None]:
-        ...
+    def to_json(self) -> dict[str, int | float | str | bool | list | dict | None]: ...

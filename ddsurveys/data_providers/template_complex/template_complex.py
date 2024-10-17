@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """You will need to replace the elipses (...) with the correct classes and code.
 
 Created on 2024-05-12 20:52
@@ -16,7 +15,7 @@ from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 # Import the required libraries to make this work
 from ddsurveys.data_providers.template_complex.data_category import ExampleDataCategory
 from ddsurveys.get_logger import get_logger
-from ddsurveys.variable_types import TVariableFunction
+from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 

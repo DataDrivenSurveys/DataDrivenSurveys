@@ -74,7 +74,7 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
     label: str = ""
     value: str = ""
 
-    api: ClassVar[DataProvider] = None
+    api: ClassVar[DataProvider] | None = None
     """Instance of the API from the container DataProvider class."""
 
     # data_provider: ClassVar[DataProvider] = None

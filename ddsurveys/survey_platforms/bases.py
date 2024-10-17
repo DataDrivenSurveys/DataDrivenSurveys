@@ -36,7 +36,20 @@ __all__ = [
 logger = get_logger(__name__)
 
 
-class SurveyPlatform(UIRegistry):
+TSurveyPlatformClass = type["SurveyPlatform"]
+TSurveyPlatform = TypeVar("TSurveyPlatform", bound="SurveyPlatform")
+
+TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
+TOAuthSurveyPlatform = TypeVar("TOAuthSurveyPlatform", bound="OAuthSurveyPlatform")
+
+TSurveyPlatformFormFieldClass = type["FormField"]
+TSurveyPlatformFormField = TypeVar("TSurveyPlatformFormField", bound="FormField")
+
+TSurveyPlatformFormButtonClass = type["FormButton"]
+TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound="FormButton")
+
+
+class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
     """Interface class for survey platforms."""
 
     # General class attributes
@@ -152,7 +165,7 @@ class SurveyPlatform(UIRegistry):
 
         Returns:
             A tuple with the following structure:
-            - Status code (200 or 40x)
+            - Status code (HTTPStatus.OK or 40x)
             - Message ID (str)
             - Message English Text (str)
             - Project Name (str) - The project name can be conditional (user input or survey name) and should be
@@ -172,10 +185,10 @@ class SurveyPlatform(UIRegistry):
 
         Returns:
             A tuple:
-            - Status code (200 or 40x)
+            - Status code (HTTPStatus.OK or 40x)
             - Message ID (str)
             - Message English Text (str)
-            The status 200 means that the variables were successfully synced.
+            The status HTTPStatus.OK means that the variables were successfully synced.
             The status 40x means that the variables were not synced.
 
         """
@@ -208,7 +221,7 @@ class SurveyPlatform(UIRegistry):
 
         Returns:
             tuple made of the:
-            - Status code (200 or 40x)
+            - Status code (HTTPStatus.OK or 40x)
             - Message ID (str)
             - Message English Text (str)
             - File Content (str) - The content of the file that was downloaded.
@@ -219,7 +232,7 @@ class SurveyPlatform(UIRegistry):
     @abstractmethod
     def get_preview_link(survey_platform_fields: dict, enabled_variables: dict) -> tuple[int, str, str, str]:
         """Get the preview link for the survey.
-        - Status code (200 or 40x)
+        - Status code (HTTPStatus.OK or 40x)
         - Message ID (str)
         - Message English Text (str)
         - Preview Link (str) - The preview link for the survey.
@@ -360,16 +373,3 @@ class FormButton(BaseFormButton):
     _package: str = ""
     _registry_class = SurveyPlatform
     _registry_class_name: str = ""  # No need to set this manually.
-
-
-TSurveyPlatformClass = type["SurveyPlatform"]
-TSurveyPlatform = TypeVar("TSurveyPlatform", bound=SurveyPlatform)
-
-TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
-TOAuthSurveyPlatform = TypeVar("TOAuthSurveyPlatform", bound=OAuthSurveyPlatform)
-
-TSurveyPlatformFormFieldClass = type["FormField"]
-TSurveyPlatformFormField = TypeVar("TSurveyPlatformFormField", bound=FormField)
-
-TSurveyPlatformFormButtonClass = type["FormButton"]
-TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound=FormButton)

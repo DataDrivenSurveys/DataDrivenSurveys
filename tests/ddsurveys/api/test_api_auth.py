@@ -34,7 +34,7 @@ def test_auth_signup(client: FlaskClient):
 
     # Try signing up again with the same email
     response = client.post(signup_endpoint, data=json.dumps(jane_doe), content_type="application/json")
-    assert response.status_code == 409
+    assert response.status_code == HTTPStatus.CONFLICT
     assert json.loads(response.data)["message"]["id"] == "api.auth.user_already_exists"
 
 
@@ -56,7 +56,7 @@ def test_auth_signin(client):
     jane_doe = get_user("jane_doe")
     jane_doe["password"] = "wrongPassword123"
     response = client.post(signin_endpoint, data=json.dumps(jane_doe), content_type="application/json")
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert json.loads(response.data)["message"]["id"] == "api.auth.invalid_username_or_password"
 
 
@@ -92,4 +92,4 @@ def test_auth_me(client: FlaskClient):
 
     # Access /me without a token
     response = client.get(me_endpoint)
-    assert response.status_code == 401
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
