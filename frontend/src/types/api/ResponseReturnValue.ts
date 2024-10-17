@@ -12,9 +12,8 @@ export interface ResponseError {
 }
 
 interface ResponseReturnValue {
-  status: number;
   data: ResponseData;
+  status: number;
 }
-
 
 export default ResponseReturnValue;

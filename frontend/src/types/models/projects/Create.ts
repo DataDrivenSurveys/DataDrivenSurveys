@@ -1,8 +1,8 @@
-import { JSX } from 'react';
+import type { JSX } from 'react';
 
-import { API } from '../../';
+import type { API } from '../../';
 
 export interface SurveyPlatform extends API.SurveyPlatforms.SurveyPlatform {
-  label: string | undefined;
   icon: JSX.Element | undefined;
+  label: string | undefined;
 }

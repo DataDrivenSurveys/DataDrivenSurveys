@@ -1,7 +1,7 @@
-import { Bases, ResponseData } from '.';
-import { DataOrigin, DataProviderType } from '../Shared';
-import * as Projects from './Projects';
-import { MessageData } from './ResponseReturnValue';
+import type { Bases, ResponseData } from '.';
+import type { DataOrigin, DataProviderType } from '../Shared';
+import type * as Projects from './Projects';
+import type { MessageData } from './ResponseReturnValue';
 
 export interface DataConnection {
   data_provider: {
@@ -12,11 +12,11 @@ export interface DataConnection {
 }
 
 export interface BuiltinVariable {
-  data_provider: string;
-  variable_name: string;
-  description: string;
-  data_origin: DataOrigin[];
   type: 'Builtin';
+  data_origin: DataOrigin[];
+  data_provider: string;
+  description: string;
+  variable_name: string;
 }
 
 export interface CVFilter extends Bases.CVFilter {
@@ -24,37 +24,37 @@ export interface CVFilter extends Bases.CVFilter {
 }
 
 export interface CVSelectionOperator {
-  strategy: '_max_strategy' | '_min_strategy' | '_random_strategy';
   operator: 'max' | 'min' | 'random';
+  strategy: '_max_strategy' | '_min_strategy' | '_random_strategy';
 }
 
 export interface CVSelection {
-  operator: CVSelectionOperator;
   attribute: Bases.CVAttribute | null;
+  operator: CVSelectionOperator;
 }
 
 export interface CustomVariableData {
-  variable_name: string;
-  qualified_name: string;
-  data_category: Bases.DataCategory;
   attributes: Bases.CVAttribute[];
+  data_category: Bases.DataCategory;
   filters: CVFilter[];
+  qualified_name: string;
   selection: CVSelection;
+  variable_name: string;
 }
 
 export interface CustomVariable {
-  data_provider: string;
-  variable_name: string;
+  type: 'Custom';
   data: CustomVariableData;
   data_origin: DataOrigin[];
-  type: 'Custom';
+  data_provider: string;
+  variable_name: string;
 }
 
 export interface DataProvider {
-  data_provider_name: string;
   type: DataProviderType;
-  client_id: string;
   authorize_url: string;
+  client_id: string;
+  data_provider_name: string;
 }
 
 // @ts-expect-error Ignore extending incompatible types
@@ -63,33 +63,33 @@ export interface UsedVariable extends BuiltinVariable, CustomVariable, Projects.
 }
 
 export interface Project {
-  id: string;
-  short_id: string;
-  name: string;
-  survey_name: string;
   data_connections: DataConnection[];
+  id: string;
+  name: string;
   project_ready: boolean;
+  short_id: string;
+  survey_name: string;
   used_variables: UsedVariable[];
 }
 
 // Responses
 
 export interface ResponseExchangeCodeSuccess extends ResponseData {
+  data_provider_name: string;
   tokens: {
-    success: true;
     access_token: string;
     refresh_token: string;
+    success: true;
     user_id: string;
     user_name: string;
   };
-  data_provider_name: string;
 }
 
 export interface MessageExchangeCodeFailure extends MessageData {
-  text: string;
-  required_scopes: string[];
   accepted_scopes: string[];
   data_provider_name: string;
+  required_scopes: string[];
+  text: string;
 }
 
 export interface ResponseExchangeCodeFailure extends ResponseData {
@@ -97,9 +97,9 @@ export interface ResponseExchangeCodeFailure extends ResponseData {
 }
 
 export interface ResponseDataSurveyDistribution {
-  message: MessageData;
   entity: {
     id: string;
     url: string;
   };
+  message: MessageData;
 }

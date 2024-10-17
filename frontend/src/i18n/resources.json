@@ -783,9 +783,13 @@
               "disconnect": "Disconnect",
               "go_back": "Go Back"
             },
+            "button_variables_table": {
+              "show": "Show Collected Data",
+              "hide": "Hide Collected Data",
+              "instructions_text": "Click the following button to see a summary of the data that this survey will collect from your accounts:"
+            },
             "click_here": "Click here",
             "click_here_to_read_privacy_policy": " to read the privacy policy and participation conditions of the study.",
-            "click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts": "Click here to see the data that this survey will collect from your accounts.",
             "connect_to_data_providers": "Please login with and grant access to the following:",
             "data_provider": {
               "status.error": "This account does not match the other account(s) that were used to fill this survey.",

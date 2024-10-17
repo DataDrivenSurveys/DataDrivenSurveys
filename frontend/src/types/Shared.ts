@@ -1,6 +1,6 @@
-export type DataProviderType = 'frontend' | 'oauth' | 'generic';
+export type DataProviderType = 'frontend' | 'generic' | 'oauth';
 
-export type SurveyStatus = 'active' | 'inactive' | 'unknown' | 'loading';
+export type SurveyStatus = 'active' | 'inactive' | 'loading' | 'unknown';
 
 export type VariableType = 'Builtin' | 'Custom';
 

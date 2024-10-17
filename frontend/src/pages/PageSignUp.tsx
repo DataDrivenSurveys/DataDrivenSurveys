@@ -1,7 +1,8 @@
 import LoginIcon from '@mui/icons-material/Login';
 import { LoadingButton } from '@mui/lab';
 import { Button, Stack, Typography } from '@mui/material';
-import React, { JSX, useCallback, useState } from 'react';
+import type { JSX } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
@@ -22,56 +23,56 @@ const PageSignUp = (): JSX.Element => {
 
   const {
     bind: bingFirstName,
-    value: firstName,
     error: errorFirstName,
+    value: firstName,
   } = useInput({
     label: t('ui.auth.field.firstname'),
-    value: '',
-    minLength: 3,
     maxLength: 50,
+    minLength: 3,
     required: true,
+    value: '',
   });
 
   const {
     bind: bindLastName,
-    value: lastName,
     error: errorLastName,
+    value: lastName,
   } = useInput({
     label: t('ui.auth.field.lastname'),
-    value: '',
-    minLength: 3,
     maxLength: 50,
+    minLength: 3,
     required: true,
+    value: '',
   });
 
   const {
     bind: bindEmail,
-    value: email,
     error: errorEmail,
+    value: email,
   } = useInput({
     label: t('ui.auth.field.email'),
-    value: '',
-    minLength: 3,
     maxLength: 50,
+    minLength: 3,
     required: true,
+    value: '',
   });
 
   const {
     bind: bindPassword,
-    value: password,
     error: errorPassword,
+    value: password,
   } = useInput({
     label: t('ui.auth.field.password'),
-    value: '',
-    minLength: 3,
     maxLength: 50,
+    minLength: 3,
     required: true,
+    value: '',
   });
 
   const handleSignup = useCallback(
     (event: { preventDefault: () => void }) => {
       event.preventDefault();
-      if ([errorFirstName, errorLastName, errorEmail, errorPassword].some(error => error === true)) {
+      if ([errorFirstName, errorLastName, errorEmail, errorPassword].some(error => error)) {
         showSnackbar(t('ui.auth.error.missing_fields'), 'error');
         return;
       }
@@ -96,11 +97,11 @@ const PageSignUp = (): JSX.Element => {
 
   return (
     <LayoutMain backUrl={-1} header={<Typography variant="h3">{t('ui.auth.titles.signup')}</Typography>}>
-      <Stack alignItems={'center'} justifyContent={'center'} height={'100vh'} pb={12}>
+      <Stack alignItems={'center'} height={'100vh'} justifyContent={'center'} pb={12}>
         <form onSubmit={handleSignup}>
-          <Stack spacing={2} alignItems={'center'} width={'400px'}>
-            <Stack sx={{ width: '60px', height: '60px' }}>
-              <img src="/svg/unauthorized.svg" alt="Logo" />
+          <Stack alignItems={'center'} spacing={2} width={'400px'}>
+            <Stack sx={{ height: '60px', width: '60px' }}>
+              <img alt="Logo" src="/svg/unauthorized.svg" />
             </Stack>
 
             <TextInput autoFocus showClear {...bingFirstName} sxStack={{ width: '100%' }} />
@@ -111,11 +112,11 @@ const PageSignUp = (): JSX.Element => {
 
             <TextInput showClear {...bindPassword} sxStack={{ width: '100%' }} type="password" />
 
-            <Stack spacing={2} direction={'row'} justifyContent={'space-between'} width={'100%'}>
-              <Button component={Link} to="/signin" variant="text" color="primary">
+            <Stack direction={'row'} justifyContent={'space-between'} spacing={2} width={'100%'}>
+              <Button color="primary" component={Link} to="/signin" variant="text">
                 {t('ui.auth.button.signin')}
               </Button>
-              <LoadingButton loading={loading} startIcon={<LoginIcon />} variant="contained" type="submit">
+              <LoadingButton loading={loading} startIcon={<LoginIcon />} type="submit" variant="contained">
                 {t('ui.auth.button.signup')}
               </LoadingButton>
             </Stack>

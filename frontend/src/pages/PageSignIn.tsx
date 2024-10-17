@@ -28,6 +28,7 @@ const SignIn = (): JSX.Element => {
     label: t('ui.auth.field.email'),
     value: '',
     minLength: 3,
+
     maxLength: 50,
     required: true,
   });
