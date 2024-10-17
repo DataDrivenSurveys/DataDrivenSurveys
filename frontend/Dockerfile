@@ -8,8 +8,8 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 #copy the files from the host to the container.
-COPY package.json ./
-COPY package-lock.json ./
+ADD package.json ./
+ADD yarn.lock ./
 
 #install npm and react versions.
 RUN npm install --silent

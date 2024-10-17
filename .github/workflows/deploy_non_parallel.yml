@@ -25,16 +25,16 @@ jobs:
         echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production.local
         echo REACT_APP_FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> frontend/.env.production.local
 
-    - name: Cache node modules
-      id: cache-npm
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.npm
-          frontend/node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-modules-
+#    - name: Cache node modules
+#      id: cache-npm
+#      uses: actions/cache@v3
+#      with:
+#        path: |
+#          ~/.npm
+#          frontend/node_modules
+#        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+#        restore-keys: |
+#          ${{ runner.os }}-node-modules-
 
     - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
       name: List the state of node modules
