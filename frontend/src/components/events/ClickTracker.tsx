@@ -1,5 +1,7 @@
+import type { JSX } from 'react';
+
 import { Box } from '@mui/material';
-import React, { JSX } from 'react';
+import React from 'react';
 
 import useEventTracker from './useEventTracker';
 

@@ -105,14 +105,14 @@ export default tseslint.config(
       'no-unused-vars': 'off',
       'no-empty': 'warn',
 
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
-          'newlines-between': 'always',
-          alphabetize: { order: 'asc', caseInsensitive: true },
-        },
-      ],
+      // 'import/order': [
+      //   'error',
+      //   {
+      //     groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index']],
+      //     'newlines-between': 'always',
+      //     alphabetize: { order: 'asc', caseInsensitive: true },
+      //   },
+      // ],
 
       '@typescript-eslint/no-confusing-void-expression': 'off',
 
@@ -363,7 +363,7 @@ export default tseslint.config(
 
   // define the jest globals for all test files
   {
-    files: ['packages/*/tests/**/*.{ts,tsx,cts,mts}'],
+    files: ['tests/**/*.{ts,tsx,cts,mts}'],
     languageOptions: {
       globals: {
         ...jestPlugin.environments.globals.globals,
@@ -402,19 +402,6 @@ export default tseslint.config(
       'jest/no-deprecated-functions': 'error',
     },
   },
-  // plugin rule tests
-  {
-    files: [
-      'packages/eslint-plugin-internal/tests/rules/**/*.test.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin-tslint/tests/rules/**/*.test.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin/tests/rules/**/*.test.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin/tests/eslint-rules/**/*.test.{ts,tsx,cts,mts}',
-    ],
-    rules: {
-      '@typescript-eslint/internal/plugin-test-formatting': 'error',
-    },
-  },
-
   //
   // tools and tests
   //
@@ -434,57 +421,8 @@ export default tseslint.config(
   },
 
   //
-  // plugin source file linting
-  //
-
-  {
-    files: [
-      'packages/eslint-plugin-internal/**/*.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin-tslint/**/*.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin/**/*.{ts,tsx,cts,mts}',
-    ],
-    rules: {
-      '@typescript-eslint/internal/no-typescript-estree-import': 'error',
-    },
-
-    extends: [...compat.config(eslintPluginPlugin.configs.recommended)],
-  },
-  {
-    files: [
-      'packages/eslint-plugin-internal/src/rules/**/*.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin-tslint/src/rules/**/*.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin/src/configs/**/*.{ts,tsx,cts,mts}',
-      'packages/typescript-eslint/src/configs/**/*.{ts,tsx,cts,mts}',
-      'packages/core/src/configs/**/*.{ts,tsx,cts,mts}',
-      'packages/eslint-plugin/src/rules/**/*.{ts,tsx,cts,mts}',
-    ],
-    rules: {
-      'eslint-plugin/no-property-in-node': [
-        'error',
-        {
-          additionalNodeTypeFiles: ['packages[\\/]types[\\/]src[\\/]generated[\\/]ast-spec.ts'],
-        },
-      ],
-      'eslint-plugin/require-meta-docs-description': ['error', { pattern: '^(Enforce|Require|Disallow) .+[^. ]$' }],
-
-      // specifically for rules - default exports makes the tooling easier
-      'import/no-default-export': 'off',
-
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector:
-            'ExportDefaultDeclaration Property[key.name="create"] MemberExpression[object.name="context"][property.name="options"]',
-          message: "Retrieve options from create's second parameter so that defaultOptions are applied.",
-        },
-      ],
-    },
-  },
-
-  //
   // website linting
   //
-
   {
     files: ['src/**/*.{ts,tsx,mts,cts,js,jsx}'],
     extends: [

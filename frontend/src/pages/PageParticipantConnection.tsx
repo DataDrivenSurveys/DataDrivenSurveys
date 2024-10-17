@@ -1,12 +1,13 @@
+import type { JSX } from 'react';
+
 import loadable from '@loadable/component';
 import AddIcon from '@mui/icons-material/Add';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Alert, AlertTitle, Box, Button, CircularProgress, Collapse, Link, Stack, Typography } from '@mui/material';
-import type { JSX } from 'react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+
+import type { API, Models } from '../types';
 
 import { PUBLIC_GET, PUBLIC_POST } from '../code/http_requests';
 import ClickTracker from '../components/events/ClickTracker';
@@ -14,7 +15,6 @@ import useEventTracker from '../components/events/useEventTracker';
 import ConnectionBadge from '../components/feedback/ConnectionBadge';
 import LayoutMain from '../components/layout/LayoutMain';
 import { useSnackbar } from '../context/SnackbarContext';
-import type { API, Models } from '../types';
 
 const UsedVariablesTable = loadable(() => import('../components/layout/UsedVariablesTable'));
 
@@ -298,8 +298,11 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                 </Typography>
               </Box>
 
-              {project.used_variables && (
-                <Box>
+              <Box>
+                <Stack alignItems="left" direction="column">
+                  <Typography variant="body1">
+                    {t('ui.respondent.connection.button_variables_table.instructions_text')}
+                  </Typography>
                   <ClickTracker
                     details={{
                       id: 'dds.dds.builtin.frontendactivity.open_transparency_table',
@@ -307,25 +310,17 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                       type: 'click',
                     }}
                   >
-                    <Stack
-                      alignItems="center"
-                      direction="row"
-                      onClick={() => setExpand(!expand)}
-                      sx={{ cursor: 'pointer' }}
-                    >
-                      {expand ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                      <Typography variant="body1">
-                        {t(
-                          'ui.respondent.connection.click_here_to_see_the_data_that_this_survey_will_collect_from_your_accounts'
-                        )}
-                      </Typography>
-                    </Stack>
+                    <Button onClick={() => setExpand(!expand)} variant="outlined">
+                      {expand
+                        ? t('ui.respondent.connection.button_variables_table.hide')
+                        : t('ui.respondent.connection.button_variables_table.show')}
+                    </Button>
                   </ClickTracker>
-                  <Collapse in={expand}>
-                    <UsedVariablesTable used_variables={project.used_variables} />
-                  </Collapse>
-                </Box>
-              )}
+                </Stack>
+                <Collapse in={expand}>
+                  <UsedVariablesTable used_variables={project.used_variables} />
+                </Collapse>
+              </Box>
 
               <Box>
                 <Typography variant="body1">
