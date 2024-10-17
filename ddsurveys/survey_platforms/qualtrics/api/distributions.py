@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 """Created on 2023-06-05 14:42.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 import functools
 from datetime import date
 
@@ -27,7 +27,11 @@ class DistributionsAPI(QualtricsRequests):
         *,
         accept_data_center_redirect: bool = True,
     ):
-        super().__init__(api_token=api_token, data_center_location=data_center_location, accept_data_center_redirect=accept_data_center_redirect)
+        super().__init__(
+            api_token=api_token,
+            data_center_location=data_center_location,
+            accept_data_center_redirect=accept_data_center_redirect,
+        )
         self.mailing_list_id = mailing_list_id
 
     @staticmethod
@@ -70,6 +74,7 @@ class DistributionsAPI(QualtricsRequests):
         directory_id: str,
         name: str,
         owner_id: str,
+        *,
         prioritize_list_metadata: bool = True,
     ):
         payload = {
@@ -90,9 +95,9 @@ class DistributionsAPI(QualtricsRequests):
         phone: str = "",
         ext_ref: str = "",
         language: str = "",
+        *,
         unsubscribed: bool = False,
     ):
-
         data = {}
         for k, v in embedded_data.items():
             if isinstance(v, bool):
@@ -132,7 +137,10 @@ class DistributionsAPI(QualtricsRequests):
         return resp.json()["result"]
 
     def create_unique_distribution_link(
-        self, survey_id: str, mailing_list_id: str, contact_lookup_id: str
+        self,
+        survey_id: str,
+        mailing_list_id: str,
+        contact_lookup_id: str,
     ) -> str:
         one_month = date.today() + relativedelta(months=+1)
 
@@ -154,7 +162,11 @@ class DistributionsAPI(QualtricsRequests):
 
         return resp.json()["result"]["elements"][0]["link"]
 
-    def get_preview_survey_url(self, survey_id: str, mailing_list_id: str) -> str:
+    def get_preview_survey_url(
+        self,
+        survey_id: str,
+        mailing_list_id: str,
+    ) -> str:
         payload = {"surveyId": survey_id, "mailingListId": mailing_list_id}
         resp = self.post("distributions/preview", json=payload)
         return resp.json()["result"]["previewLink"]
