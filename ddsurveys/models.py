@@ -34,7 +34,7 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -301,6 +301,8 @@ class Base(DeclarativeBase):
 
     def to_public_dict(self) -> dict:
         """Creates a dictionary representation of a database row, wit no sensitive data."""
+        msg = "Subclasses must implement this method."
+        raise NotImplementedError(msg)
 
 
 class Researcher(Base):

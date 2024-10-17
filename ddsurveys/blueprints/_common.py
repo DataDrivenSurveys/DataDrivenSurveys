@@ -39,8 +39,9 @@ Created on 2023-09-08 13:52
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal, TypedDict
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
+from flask import Response as FlaskResponse
 from flask import g
 
 from ddsurveys.api_responses import APIResponses
@@ -49,7 +50,9 @@ from ddsurveys.models import Collaboration, DataConnection, Project, Researcher
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from http import HTTPStatus
 
+    from sqlalchemy.orm import Query
     from sqlalchemy.orm.session import Session
 
     from ddsurveys.api_responses import APIResponseValue
@@ -154,14 +157,19 @@ def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None]
 
 
 def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | APIResponseValue:
-    researcher, satus = get_researcher(db, user)
-    if satus is not None:
+    researcher: Researcher | FlaskResponse | None
+    status: HTTPStatus | None
+    researcher, status = get_researcher(db, user)
+    if status is not None:
+        researcher = cast(FlaskResponse, researcher)
         # Case where the user or project could not be found
-        return researcher, satus
+        return researcher, status
+
+    researcher = cast(Researcher, researcher)
 
     # get the project
     project_id = g.get("project_id")
-    project = (
+    project: Project | None = (
         db.query(Project)
         .join(Collaboration)
         .filter(Collaboration.researcher_id == researcher.id, Project.id == project_id)
@@ -181,19 +189,27 @@ def get_project_data_connection(
     data_provider_name: str,
     # ) -> tuple[Project, DataConnection, None] | tuple[None, ResponseReturnValue, int]:
 ) -> tuple[Project, DataConnection] | APIResponseValue:
-    project, satus = get_project(db, user)
-    if satus is not None:
+    project: Project | FlaskResponse | None
+    status: HTTPStatus | None
+    project, status = get_project(db, user)
+    if status is not None:
+        project = cast(FlaskResponse, project)
         # Case where the user or project could not be found
-        return None, project, satus
+        return project, status
+
+    project = cast(Project, project)
 
     # get the data connection
-    data_connection = db.query(DataConnection).filter_by(project_id=project.id, data_provider_name=data_provider_name)
+    data_connection: Query[DataConnection] = db.query(DataConnection).filter_by(
+        project_id=project.id,
+        data_provider_name=data_provider_name,
+    )
 
     if not data_connection:
         logger.error("Data connection for %s not found in project %s", data_provider_name, project.id)
         return APIResponses.DATA_PROVIDER.CONNECTION_NOT_FOUND.response
 
-    return project, data_connection.first()
+    return project, cast(DataConnection, data_connection.first())
 
 
 def _apply_abbreviation_rules(name: str, ruleset: str, condition: Callable[[str, int], bool], max_length: int) -> str:

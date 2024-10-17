@@ -10,20 +10,30 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 from http import HTTPStatus
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
 
 import flask
+from flask import Response as FlaskResponse
 
-if TYPE_CHECKING:
-    from werkzeug.sansio.response import Response as WerkzeugResponse
+__all__ = [
+    "APIResponseValue",
+    #
+    "ResponseMessageDict",
+    "ResponseDict",
+    "ResponseDictUpdateDict",
+    #
+    "APIResponseMixin",
+    "APIResponses",
+]
 
-    APIResponseValue = tuple[WerkzeugResponse, HTTPStatus]
+
+APIResponseValue = tuple[FlaskResponse, HTTPStatus]
 
 if flask.has_app_context():
     from flask import jsonify
 else:
 
-    def jsonify(data: dict) -> WerkzeugResponse:
+    def jsonify(data: dict) -> FlaskResponse:
         return data
 
 

@@ -7,9 +7,11 @@
 
 from __future__ import annotations
 
+from http import HTTPStatus
 from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, g, jsonify, request
+from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from ddsurveys.blueprints._common import get_project, get_project_data_connection
@@ -22,6 +24,8 @@ if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
     from werkzeug.sansio.response import Response
 
+    from ddsurveys.api_responses import APIResponseValue
+
 logger = get_logger(__name__)
 
 data_providers = Blueprint("data-providers", __name__)
@@ -33,14 +37,17 @@ data_providers = Blueprint("data-providers", __name__)
 def add_data_provider_to_project() -> ResponseReturnValue:
     """Adds a data provider to a project.
 
-    This function handles the addition of a data provider to a project. It validates the provided data,
-    checks if the data provider exists, and creates a new data connection if it does not already exist.
+    This function handles the addition of a data provider to a project.
+    It validates the provided data, checks if the data provider exists,
+    and creates a new data connection if it does not already exist.
 
     Returns:
-        ResponseReturnValue: A JSON response indicating the result of the operation. Possible status codes are:
-            - 201: Data connection created successfully.
-            - 400: Bad request, e.g., missing data provider or data connection already exists.
-            - 404: Data provider not found or not supported.
+        ResponseReturnValue: A JSON response indicating the result of the operation.
+            Possible status codes are:
+            - HTTPStatus.CREATED: Data connection created successfully.
+            - HTTPStatus.BAD_REQUEST: Bad request, e.g., missing data provider or data
+                connection already exists.
+            - HTTPStatus.NOT_FOUND: Data provider not found or not supported.
     """
     logger.debug("Adding data provider to project")
 
@@ -49,12 +56,13 @@ def add_data_provider_to_project() -> ResponseReturnValue:
 
         user = get_jwt_identity()
 
-        project, status = get_project(db, user)
-        if status is not None:
-            project: ResponseReturnValue
+        project: Project | FlaskResponse
+        project, status_code = get_project(db, user)
+        if status_code is not None:
+            project = cast(FlaskResponse, project)
+            status_code = cast(int, status_code)
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return project, status_code
 
         data = request.get_json()
 
@@ -71,7 +79,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         provider_class = DataProvider.get_class_by_name(selected_data_provider["label"])
@@ -87,7 +95,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         fields_data = data.get("fields", [])
@@ -95,7 +103,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
 
         provider_instance = provider_class(**fields_dict)
 
-        status = provider_instance.test_connection()
+        status: bool = provider_instance.test_connection()
 
         # check if the data provider already exists
         logger.debug("%s", selected_data_provider)
@@ -139,7 +147,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         provider_class = DataProvider.get_class_by_name(data_provider.name)
@@ -155,7 +163,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         # add variables related to the data provider
@@ -177,13 +185,13 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         db.add(data_connection)
         db.commit()
 
-        return jsonify(data_connection.to_dict()), 201
+        return jsonify(data_connection.to_dict()), HTTPStatus.CREATED
 
 
 # Update
 @data_providers.route("/<string:data_provider_name>", methods=["PUT"])
 @jwt_required()
-def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
+def update_data_provider(data_provider_name: str) -> APIResponseValue:
     """Updates the data provider for a project.
 
     This function handles the update of a data provider for a project.
@@ -196,22 +204,24 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
     Returns:
         ResponseReturnValue: A JSON response indicating the result of the operation.
             Possible status codes are:
-            - 200: Data provider updated successfully.
-            - 400: Bad request, e.g., missing data provider.
-            - 404: Data provider not found or not supported.
+            - HTTPStatus.OK: Data provider updated successfully.
+            - HTTPStatus.BAD_REQUEST: Bad request, e.g., missing data provider.
+            - HTTPStatus.NOT_FOUND: Data provider not found or not supported.
     """
     logger.debug("Updating data provider")
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
 
+        project_response: Project | FlaskResponse
+        data_connection_int: DataConnection | HTTPStatus
         project_response, data_connection_int = get_project_data_connection(
             db=db,
             user=user,
             data_provider_name=data_provider_name,
         )
         if isinstance(data_connection_int, int):
-            project_response: cast(Response, project_response)
+            project_response = cast(FlaskResponse, project_response)
             # Case where something could not be found in the database
             return project_response, data_connection_int
         data_connection: DataConnection = data_connection_int
@@ -233,7 +243,7 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         provider_class = DataProvider.get_class_by_name(selected_data_provider["label"])
@@ -249,15 +259,15 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         provider_instance = provider_class(**fields_dict)
 
-        status = provider_instance.test_connection()
+        status: bool = provider_instance.test_connection()
 
-        # check if status is between 200 and 299
-        if 200 <= status < 300:
+        # check if status is successful
+        if HTTPStatus(status).is_success:
             data_connection.connected = True
             db.commit()
         else:
@@ -285,7 +295,7 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         # update the data connection
@@ -302,7 +312,7 @@ def update_data_provider(data_provider_name: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            200,
+            HTTPStatus.OK,
         )
 
 
@@ -322,9 +332,9 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
     Returns:
         ResponseReturnValue: A JSON response indicating the result of the operation.
             Possible status codes are:
-            - 200: Data connection deleted successfully.
-            - 400: Bad request, e.g., missing data provider.
-            - 404: Data provider not found or not supported.
+            - HTTPStatus.OK: Data connection deleted successfully.
+            - HTTPStatus.BAD_REQUEST: Bad request, e.g., missing data provider.
+            - HTTPStatus.NOT_FOUND: Data provider not found or not supported.
     """
     logger.debug("Deleting data provider")
 
@@ -372,7 +382,7 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            200,
+            HTTPStatus.OK,
         )
 
 
@@ -393,9 +403,9 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
     Returns:
         ResponseReturnValue: A JSON response indicating the result of the operation.
             Possible status codes are:
-            - 200: Data connection is successful.
-            - 400: Data connection failed.
-            - 404: Data provider not found or not supported.
+            - HTTPStatus.OK: Data connection is successful.
+            - HTTPStatus.BAD_REQUEST: Data connection failed.
+            - HTTPStatus.NOT_FOUND: Data provider not found or not supported.
     """
     logger.debug("Checking data provider connection")
 
@@ -428,4 +438,4 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
                     "text": "Data connection status",
                 }
             }
-        ), (200 if success else 400)
+        ), (HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST)

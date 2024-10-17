@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-04-27 13:48.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -8,6 +7,7 @@ import functools
 import os
 import re
 from datetime import datetime
+from http import HTTPStatus
 
 import requests
 
@@ -25,8 +25,9 @@ logger = get_logger(__name__)
 
 
 class QualtricsDataCenter:
-    """References:
-    ----------
+    """Class providing methods to update the data center that requests will be made to.
+
+    References:
     `API Documentation <https://api.qualtrics.com/60d24f6897737-qualtrics-survey-api>`_
     """
 
@@ -57,24 +58,22 @@ class QualtricsDataCenter:
     }
 
     @classmethod
-    def get_datacenter_url(cls, datacenter_name_or_location: str) -> str:
+    def get_data_center_url(cls, data_center_name_or_location: str) -> str:
         key = None
-        for datacenter_name, abbreviations in cls.extra_keys.items():
+        for data_center_name, abbreviations in cls.extra_keys.items():
             if (
-                datacenter_name_or_location == datacenter_name
-                or datacenter_name_or_location in abbreviations
+                data_center_name_or_location == data_center_name
+                or data_center_name_or_location in abbreviations
             ):
-                key = datacenter_name
+                key = data_center_name
                 break
         if key is None:
             msg = (
-                f"Could not identify the requested datacenter: {datacenter_name_or_location}\n"
-                f"Here is a list of complete datacenter names and abbreviations to select them:\n"
+                f"Could not identify the requested data center: {data_center_name_or_location}\n"
+                f"Here is a list of complete data center names and abbreviations to select them:\n"
                 f"{cls.extra_keys}"
             )
-            raise ValueError(
-                msg
-            )
+            raise ValueError(msg)
         return cls.data_centers[key]
 
 
@@ -90,18 +89,19 @@ class QualtricsRequests:
         "X-API-TOKEN": "",
     }
 
-    _re_datacenter_redirect = re.compile(r".*: (.+?\.qualtrics.com)$")
+    _re_data_center_redirect = re.compile(r".*: (.+?\.qualtrics.com)$")
 
     _session = requests.Session()
 
     def __init__(
         self,
         api_token: str = "",
-        datacenter_location: str = "EU",
-        accept_datacenter_redirect: bool = True,
+        data_center_location: str = "EU",
+        *,
+        accept_data_center_redirect: bool = True,
     ) -> None:
-        self.accept_datacenter_redirect: bool = accept_datacenter_redirect
-        self.base_url: str = QualtricsDataCenter.get_datacenter_url(datacenter_location)
+        self.accept_data_center_redirect: bool = accept_data_center_redirect
+        self.base_url: str = QualtricsDataCenter.get_data_center_url(data_center_location)
         self._api_token: str = ""
 
         if api_token != "":
@@ -121,10 +121,10 @@ class QualtricsRequests:
 
         self.session.headers.update(self.headers)
 
-    def update_datacenter_on_redirect(
+    def update_data_center_on_redirect(
         self, response: requests.Response
     ) -> requests.Response:
-        if self.accept_datacenter_redirect:
+        if self.accept_data_center_redirect:
             resp_json = response.json()
             redirect_info_str = (
                 "Request proxied. For faster response times, use this host instead:"
@@ -133,42 +133,41 @@ class QualtricsRequests:
                 "notice" in resp_json["meta"]
                 and redirect_info_str in resp_json["meta"]["notice"]
             ):
-                match = self.__class__._re_datacenter_redirect.match(
+                match = self.__class__._re_data_center_redirect.match(
                     resp_json["meta"]["notice"]
                 )
                 if match is not None:
                     self.base_url = f"https://{match.group(1)}/API/v3"
                 else:
-                    logger.error("Failed to extract the redirected datacenter.")
+                    logger.error("Failed to extract the redirected data center.")
         return response
 
     @staticmethod
-    def update_datacenter_wrapper(func):
+    def update_data_center_wrapper(func):
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
-            return self.update_datacenter_on_redirect(func(self, *args, **kwargs))
+            return self.update_data_center_on_redirect(func(self, *args, **kwargs))
 
         return wrapper
 
     @staticmethod
-    def handle_response_status(acceptable_statuses: tuple = (200, 201, 202, 204)):
+    def handle_response_status(acceptable_statuses: tuple = (HTTPStatus.OK, HTTPStatus.CREATED, HTTPStatus.ACCEPTED, HTTPStatus.NO_CONTENT)):
         def decorator(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
                 resp: requests.Response = func(*args, **kwargs)
                 if resp.status_code not in acceptable_statuses:
-                    if resp.status_code == 400:
+                    if resp.status_code == HTTPStatus.BAD_REQUEST:
                         raise BadRequestError(resp)
-                    elif resp.status_code == 404:
+                    if resp.status_code == HTTPStatus.NOT_FOUND:
                         raise NotFoundError(resp)
-                    elif resp.status_code == 401:
+                    if resp.status_code == HTTPStatus.UNAUTHORIZED:
                         raise AuthorizationError(resp)
-                    elif resp.status_code == 403:
+                    if resp.status_code == HTTPStatus.FORBIDDEN:
                         raise PermissionError(resp)
-                    elif resp.status_code >= 500:
+                    if resp.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR:
                         raise ServerError(resp)
-                    else:
-                        raise UnhandledStatusCodeError(resp)
+                    raise UnhandledStatusCodeError(resp)
                 return resp
 
             return wrapper
@@ -200,7 +199,7 @@ class QualtricsRequests:
         return QualtricsRequests._session
 
     @handle_response_status()
-    @update_datacenter_wrapper
+    @update_data_center_wrapper
     def get(
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
@@ -211,7 +210,7 @@ class QualtricsRequests:
 
 
     @handle_response_status()
-    @update_datacenter_wrapper
+    @update_data_center_wrapper
     def put(
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
@@ -222,7 +221,7 @@ class QualtricsRequests:
 
 
     @handle_response_status()
-    @update_datacenter_wrapper
+    @update_data_center_wrapper
     def post(
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:
@@ -233,7 +232,7 @@ class QualtricsRequests:
 
 
     @handle_response_status()
-    @update_datacenter_wrapper
+    @update_data_center_wrapper
     def delete(
         self, endpoint=None, data=None, json=None, *args, **kwargs
     ) -> requests.Response:

@@ -935,7 +935,7 @@ def connect_respondent() -> APIResponseValue:
                         "entity": respondent.to_dict(),
                     }
                 ),
-                201,
+                HTTPStatus.CREATED,
             )
         except IntegrityError:
             db.rollback()

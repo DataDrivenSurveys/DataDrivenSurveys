@@ -9,9 +9,10 @@ from __future__ import annotations
 import datetime
 from http import HTTPStatus
 from io import BytesIO
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from flask import Blueprint, g, jsonify, request, send_file
+from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
@@ -29,9 +30,9 @@ from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
-    from werkzeug.sansio.response import Response as WerkzeugResponse
 
     from ddsurveys.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
+    from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CustomVariableUploadDict
 
 logger = get_logger(__name__)
 
@@ -103,7 +104,7 @@ def create_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         fields = {field.get("name"): field.get("value", None) for field in data.get("fields")}
@@ -124,7 +125,7 @@ def create_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         # Validate fields using check_inputs method
@@ -144,13 +145,13 @@ def create_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         # get the researcher
         researcher, status = get_researcher(db, user)
         if status is not None:
-            researcher = cast(WerkzeugResponse, researcher)
+            researcher = cast(FlaskResponse, researcher)
             # Case where the user could not be found
             return researcher, status
         researcher = cast(Researcher, researcher)
@@ -194,7 +195,7 @@ def create_project() -> ResponseReturnValue:
                         "entity": new_project.to_dict(),
                     }
                 ),
-                201,
+                HTTPStatus.CREATED,
             )
         except SQLAlchemyError:
             logger.exception("An error occurred while creating the project. Rolling back changes.")
@@ -208,7 +209,7 @@ def create_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
 
@@ -224,8 +225,8 @@ def get_project(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response containing the project details if found.
         - HTTPStatus.OK: If the project is successfully retrieved.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Getting project with id: %s", id_)
 
@@ -237,7 +238,7 @@ def get_project(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -262,7 +263,7 @@ def get_project(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         return jsonify(project.to_dict()), HTTPStatus.OK
@@ -280,8 +281,8 @@ def update_project(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the update operation.
         - HTTPStatus.OK: If the project is successfully updated.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Updating project with id: %s", id_)
 
@@ -292,7 +293,7 @@ def update_project(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -340,7 +341,7 @@ def update_project(id_: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            404,
+            HTTPStatus.NOT_FOUND,
         )
 
 
@@ -356,8 +357,8 @@ def delete_project(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
         - HTTPStatus.OK: If the project and collaboration are successfully deleted.
-        - 401: If the user is unauthorized.
-        - 404: If the project or collaboration is not found.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project or collaboration is not found.
     """
     logger.debug("Deleting project with id: %s", id_)
 
@@ -368,7 +369,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -401,7 +402,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            404,
+            HTTPStatus.NOT_FOUND,
         )
 
 
@@ -417,8 +418,8 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the deletion operation.
         - HTTPStatus.OK: If all respondents are successfully deleted.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Deleting project with id: %s", id_)
 
@@ -429,7 +430,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -450,7 +451,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         respondents = (
@@ -479,8 +480,8 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         )
 
 
-def get_survey_platform_connection(project: Project) -> ResponseReturnValue:
-    survey_platform_info = {
+def get_survey_platform_connection(project: Project) -> tuple[int, str | None, dict[str, Any]]:
+    survey_platform_info: dict[str, str | bool | None] = {
         "survey_platform_name": project.survey_platform_name,
         "connected": False,
         "exists": False,
@@ -488,17 +489,18 @@ def get_survey_platform_connection(project: Project) -> ResponseReturnValue:
         "survey_status": "unknown",
     }
 
-    platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+    platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
-    if not platform_class:
+    if platform_class is None:
         survey_platform_info["id"] = "api.survey.platform_not_supported"
-        return 400, "api.survey.platform_not_supported", survey_platform_info
+        return HTTPStatus.BAD_REQUEST, "api.survey.platform_not_supported", survey_platform_info
 
     try:
         platform = platform_class(**project.survey_platform_fields)
         return platform.fetch_survey_platform_info()
     except Exception:
-        return 400, "api.survey.failed_to_check_connection", survey_platform_info
+        logger.exception("Failed to check connection with survey platform")
+        return HTTPStatus.BAD_REQUEST, "api.survey.failed_to_check_connection", survey_platform_info
 
 
 @projects.route("/<string:id_>/survey_platform/check_connection", methods=["GET"])
@@ -512,31 +514,31 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the connection check.
         - HTTPStatus.OK: If the connection check is successful.
-        - 400: If the survey platform is not supported or there is a failure in checking
+        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported or there is a failure in checking
             the connection.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Checking survey platform connection for project with id: %s", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
-        if not researcher:
+        researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
+        if researcher is None:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
-        if not project:
+        if project is None:
             return (
                 jsonify(
                     {
@@ -546,7 +548,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         status, message_id, survey_platform_info = get_survey_platform_connection(project)
@@ -602,9 +604,9 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         Response: A JSON response indicating the result of the synchronization
             operation.
         - HTTPStatus.OK: If the variables are successfully synchronized.
-        - 400: If the survey platform is not supported.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Syncing variables for project with id: %s", id_)
 
@@ -614,14 +616,14 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         if not researcher:
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
             .first()
         )
 
-        if not project:
+        if project is None:
             return (
                 jsonify(
                     {
@@ -631,10 +633,10 @@ def sync_variables(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
-        enabled_variables = []
+        enabled_variables: list[BuiltinVariableDict | CustomVariableUploadDict] = []
         if project.variables:
             enabled_variables = [variable for variable in project.variables if variable["enabled"]]
         if project.custom_variables:
@@ -658,7 +660,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         survey_platform: TSurveyPlatform = platform_class(**project.survey_platform_fields)
@@ -699,10 +701,10 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the export operation.
         - HTTPStatus.OK: If the survey responses are successfully exported and the file is sent.
-        - 400: If the survey platform is not supported.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
-        - 500: If there is an error during the export process.
+        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
+        - HTTPStatus.INTERNAL_SERVER_ERROR: If there is an error during the export process.
     """
     logger.debug("Exporting survey responses for project with id: %s", id_)
 
@@ -712,7 +714,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -733,7 +735,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
@@ -749,7 +751,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         survey_platform = platform_class(**project.survey_platform_fields)
@@ -790,7 +792,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
                     }
                 }
             ),
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
 
@@ -805,9 +807,9 @@ def preview_survey(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response containing the preview link if successful.
         - HTTPStatus.OK: If the preview link is successfully generated.
-        - 400: If the survey platform is not supported.
-        - 401: If the user is unauthorized.
-        - 404: If the project is not found.
+        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported.
+        - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
+        - HTTPStatus.NOT_FOUND: If the project is not found.
     """
     logger.debug("Previewing survey for project with id: %s", id_)
 
@@ -817,7 +819,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
-            #     401,
+            #     HTTPStatus.UNAUTHORIZED,
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
@@ -838,7 +840,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         platform_class = SurveyPlatform.get_class_by_value(project.survey_platform_name)
@@ -854,7 +856,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         enabled_variables = []

@@ -72,7 +72,7 @@ class FailedQualtricsRequest(Exception):
 
 
 class BadRequestError(FailedQualtricsRequest):
-    """Exception raised when a 400 Bad Request error occurs."""
+    """Exception raised when a HTTPStatus.BAD_REQUEST Bad Request error occurs."""
 
     def __init__(self, resp: Response):
         message = "Possible cause: Your request is malformed. Check the syntax and structure of your request."
@@ -80,7 +80,7 @@ class BadRequestError(FailedQualtricsRequest):
 
 
 class AuthorizationError(FailedQualtricsRequest):
-    """Exception raised when a 401 Unauthorized error occurs."""
+    """Exception raised when a HTTPStatus.UNAUTHORIZED Unauthorized error occurs."""
 
     def __init__(self, resp: Response):
         message = "Possible cause: You're not authenticated or don't have permission to access the requested resource."
@@ -88,7 +88,7 @@ class AuthorizationError(FailedQualtricsRequest):
 
 
 class NotFoundError(FailedQualtricsRequest):
-    """Exception raised when a 404 Not Found error occurs."""
+    """Exception raised when a HTTPStatus.NOT_FOUND Not Found error occurs."""
 
     def __init__(self, resp: Response):
         message = "Possible cause: The requested resource could not be found."
@@ -96,7 +96,7 @@ class NotFoundError(FailedQualtricsRequest):
 
 
 class ServerError(FailedQualtricsRequest):
-    """Exception raised when a 500 Internal Server Error occurs."""
+    """Exception raised when a HTTPStatus.INTERNAL_SERVER_ERROR Internal Server Error occurs."""
 
     def __init__(self, resp: Response):
         message = "Possible cause: The server encountered an internal error."

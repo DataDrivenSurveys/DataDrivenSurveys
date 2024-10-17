@@ -7,10 +7,12 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from http import HTTPStatus
+from typing import Any, ClassVar, TypedDict
 from urllib.parse import quote_plus
 
 from ddsurveys.get_logger import get_logger
+from ddsurveys.models import SurveyStatus
 from ddsurveys.survey_platforms.bases import FormField, SurveyPlatform
 
 # API related classes
@@ -18,6 +20,7 @@ from ddsurveys.survey_platforms.qualtrics.api import (
     AuthorizationError,
     DistributionsAPI,
     FailedQualtricsRequest,
+    NotFoundError,
     SurveysAPI,
 )
 
@@ -33,6 +36,18 @@ __all__ = ["QualtricsSurveyPlatform"]
 logger = get_logger(__name__)
 
 
+class QualtricsSurveyPlatformFieldsDict(TypedDict):
+    """Qualtrics survey platform fields dictionary stored in the database."""
+
+    survey_id: str
+    survey_platform_api_key: str
+    survey_name: str
+    base_url: str
+    survey_status: SurveyStatus
+    mailing_list_id: str
+    directory_id: str
+
+
 class QualtricsSurveyPlatform(SurveyPlatform):
     """Qualtrics survey platform class.
 
@@ -45,7 +60,8 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
     According to the Qualtrics documentation, the maximum length should be 200
     characters:
-    https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/embedded-data/#BestPractices
+    https://www.qualtrics.com/support/survey-platform/survey-module/survey-flow/standard-elements/embedded-data
+    /#BestPractices
 
     In practice, when a variable is longer than 45 characters, it is clipped during
     data export.
@@ -104,7 +120,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         if not self.surveys_api.survey_exists(self.survey_id):
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.survey_platforms.connection_failed",
                 survey_platform_info,
             )
@@ -119,12 +135,12 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
-            return 400, None, survey_platform_info
+            return HTTPStatus.BAD_REQUEST, None, survey_platform_info
         else:
-            return 200, message_id, survey_platform_info
+            return HTTPStatus.OK, message_id, survey_platform_info
 
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str | None, dict[str, Any]]:
         # survey_platform_fields to update project.survey_platform_fields
         logger.debug("Creating project with name: %s", project_name)
@@ -138,7 +154,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
         if use_existing_survey:
             if not self.survey_id:
-                return 400, "api.survey.missing_id", "Survey ID is required", None, {}
+                return HTTPStatus.BAD_REQUEST, "api.survey.missing_id", "Survey ID is required", None, {}
 
             try:
                 survey_info = self.surveys_api.get_survey(self.survey_id).json()
@@ -152,7 +168,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             except AuthorizationError:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.failed_to_retrieve_survey_name",
                     "Failed to retrieve survey name, please check your API key and survey ID",
                     None,
@@ -160,7 +176,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                 )
             except FailedQualtricsRequest:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.unknown_error_occurred",
                     "Unknown error occurred, please check your API key and survey ID",
                     None,
@@ -184,7 +200,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     survey_platform_fields["base_url"] = base_url
                 else:
                     return (
-                        400,
+                        HTTPStatus.BAD_REQUEST,
                         "api.survey.unknown_error_occurred",
                         "Unknown error occurred, please check your API key and survey ID",
                         None,
@@ -193,14 +209,14 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             except FailedQualtricsRequest:
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.create_failed",
                     "Failed to create survey",
                     None,
                     {},
                 )
 
-        return 200, "", "", project_name, survey_platform_fields
+        return HTTPStatus.OK, "", "", project_name, survey_platform_fields
 
     def handle_variable_sync(self, enabled_variables) -> tuple[int, str, str]:
         """Handle the syncing of variables for the given survey."""
@@ -217,28 +233,33 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             # Update the variables on Qualtrics
             resp = self.surveys_api.update_flow(self.survey_id, flow.to_dict())
-            if resp.status_code == 200:
+            if resp.status_code != HTTPStatus.OK:
                 return (
-                    200,
-                    "api.ddsurveys.survey_platforms.variables_sync.success",
-                    "Variables synced successfully!",
+                    HTTPStatus.BAD_REQUEST,
+                    "api.ddsurveys.survey_platforms.variables_sync.failed",
+                    "Failed to sync variables!",
                 )
-
-            return (
-                400,
-                "api.ddsurveys.survey_platforms.variables_sync.failed",
-                "Failed to sync variables!",
-            )
         except (FailedQualtricsRequest, PermissionError):
             logger.debug("Failed to sync variables for survey %s", self.survey_id)
             return (
-                401,
+                HTTPStatus.UNAUTHORIZED,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
                 "Failed to process sync request. Please check your API key and survey ID.",
             )
+        else:
+            return (
+                HTTPStatus.OK,
+                "api.ddsurveys.survey_platforms.variables_sync.success",
+                "Variables synced successfully!",
+            )
+
+    def create_mailing_list(self, directory_id: str | None = None, mailing_list_id: str | None = None): ...
 
     def handle_prepare_survey(
-        self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
+        self,
+        project_short_id: str,
+        survey_platform_fields: QualtricsSurveyPlatformFieldsDict,
+        embedded_data: dict,
     ) -> tuple[bool, str | None]:
         """Handle the preparation of the survey for data collection."""
         try:
@@ -247,7 +268,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             mailing_list_id = survey_platform_fields.get("mailing_list_id")
             directory_id = survey_platform_fields.get("directory_id")
 
-            if status != 200:
+            if status != HTTPStatus.OK:
                 return False, None
 
             if not survey_platform_info["active"]:
@@ -270,8 +291,45 @@ class QualtricsSurveyPlatform(SurveyPlatform):
                     # update the survey_platform_fields
                     survey_platform_fields["mailing_list_id"] = mailing_list_id
                     survey_platform_fields["directory_id"] = directory_id
+
             # Create a new contact in the mailing list
-            new_contact_dict = self.distributions_api.create_contact(directory_id, mailing_list_id, embedded_data)
+            try:
+                new_contact_dict = self.distributions_api.create_contact(
+                    directory_id=directory_id,
+                    mailing_list_id=mailing_list_id,
+                    embedded_data=embedded_data,
+                )
+            except NotFoundError:
+                logger.info(
+                    "Failed to create contact in mailing list for survey '%s' with directory_id: '%s' "
+                    "mailing_list_id: '%s'",
+                    self.survey_id,
+                    directory_id,
+                    mailing_list_id,
+                )
+                logger.info("Creating new mailing list and trying again.")
+                # the first respondent will create the mailing list and directory
+                directory_id = self.distributions_api.get_first_directory_id()
+
+                # Get the user id of the account making API calls
+                user_id = self.distributions_api.get_user_id()
+                # Create a new mailing list for the survey in the first directory
+                mailing_list_id = self.distributions_api.create_mailing_list(
+                    directory_id,
+                    f"DataDrivenSurveys -- ${project_short_id}",
+                    user_id,
+                ).json()["result"]["id"]
+
+                # update the survey_platform_fields
+                survey_platform_fields["mailing_list_id"] = mailing_list_id
+                survey_platform_fields["directory_id"] = directory_id
+
+                new_contact_dict = self.distributions_api.create_contact(
+                    directory_id=directory_id,
+                    mailing_list_id=mailing_list_id,
+                    embedded_data=embedded_data,
+                )
+
             contact_lookup_id = new_contact_dict["contactLookupId"]
 
             survey_id = survey_platform_fields.get("survey_id")
@@ -299,33 +357,33 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         """Handle the downloading of responses from the survey platform."""
         try:
             content = self.surveys_api.export_survey_responses(self.survey_id)
-            if content:
+            if not content:
                 return (
-                    200,
-                    "api.ddsurveys.survey_platforms.export_survey_responses.success",
-                    "Exported survey responses successfully!",
-                    content,
+                    HTTPStatus.BAD_REQUEST,
+                    "api.ddsurveys.survey_platforms.export_survey_responses.failed",
+                    "Failed to export survey responses!",
+                    None,
                 )
-            return (
-                400,
-                "api.ddsurveys.survey_platforms.export_survey_responses.failed",
-                "Failed to export survey responses!",
-                None,
-            )
-
         except FailedQualtricsRequest:
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.export_survey_responses.request_failed",
                 "Failed to process export request. Please check your API key and survey ID.",
                 None,
+            )
+        else:
+            return (
+                HTTPStatus.OK,
+                "api.ddsurveys.survey_platforms.export_survey_responses.success",
+                "Exported survey responses successfully!",
+                content,
             )
 
     @staticmethod
     def get_preview_link(survey_platform_fields: dict, enabled_variables: list[dict]) -> tuple[int, str, str, str]:
         if "base_url" not in survey_platform_fields or "survey_id" not in survey_platform_fields:
             return (
-                400,
+                HTTPStatus.BAD_REQUEST,
                 "api.ddsurveys.survey_platforms.get_preview_link.error",
                 "Failed to get preview link. Please check your survey ID and base URL.",
                 None,
@@ -341,7 +399,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         link = f"{base_url}/jfe/preview/{survey_id}?Q_CHL=preview&Q_SurveyVersionID=current&{url_params}"
 
         return (
-            200,
+            HTTPStatus.OK,
             "api.ddsurveys.survey_platforms.get_preview_link.success",
             "Preview link retrieved successfully!",
             link,

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-04-26 12:18.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -12,6 +11,8 @@ import functools
 import re
 import time
 from datetime import datetime
+from http import HTTPStatus
+from typing import override
 
 import requests
 
@@ -23,34 +24,36 @@ logger = get_logger(__name__)
 
 
 class SurveysAPI(QualtricsRequests):
-    """References:
-    ----------
-    `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
+    """Class for interacting with Qualtrics surveys API.
+
+    References:
+        `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
     """
 
     # TODO: Convert methods to return results or raise exceptions if requests fail.
     _endpoint = "survey-definitions"
     _re_survey_id = re.compile(r"^SV_[a-zA-Z0-9]{11,15}$")
 
+    @override
     def __init__(
         self,
         api_token: str = "",
-        datacenter_location: str = "EU",
-        accept_datacenter_redirect: bool = True,
+        data_center_location: str = "EU",
         survey_id: str | None = None,
+        *,
+        accept_data_center_redirect: bool = True,
     ) -> None:
-        super().__init__(api_token, datacenter_location, accept_datacenter_redirect)
+        super().__init__(api_token=api_token, data_center_location=data_center_location, accept_data_center_redirect=accept_data_center_redirect)
         self._survey_id = survey_id
 
     @property
     def survey_url(self) -> str:
         if self._survey_id is not None:
             return f"{self.base_url}/{self._survey_id}"
-        else:
-            logger.warning(
-                "No survey id is currently set. Set it by setting the `survey_id` property."
-            )
-            return f"{self.base_url}/"
+        logger.warning(
+            "No survey id is currently set. Set it by setting the `survey_id` property."
+        )
+        return f"{self.base_url}/"
 
     @property
     def survey_id(self):
@@ -58,7 +61,9 @@ class SurveysAPI(QualtricsRequests):
 
     @survey_id.setter
     def survey_id(self, value) -> None:
-        assert self.__class__._re_survey_id.match(value) is not None
+        if self.__class__._re_survey_id.match(value) is None:
+            msg = f"Invalid survey ID: {value}"
+            raise ValueError(msg)
         self._survey_id = value
 
     def get_survey_url(self, survey_id: str | None = None) -> str:
@@ -91,18 +96,15 @@ class SurveysAPI(QualtricsRequests):
     ) -> requests.Response:
         """Creates a new survey on Qualtrics.
 
-        Parameters
-        ----------
-        survey_name
-        language
-        project_category
+        Args:
+            survey_name
+            language
+            project_category
 
         Returns:
-        -------
 
         References:
-        ----------
-        `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
+            `API Documentation <https://api.qualtrics.com/41ff4dba22c75-create-survey>`_
         """
         json_data = {
             "SurveyName": survey_name,
@@ -114,25 +116,21 @@ class SurveysAPI(QualtricsRequests):
     def survey_exists(self, survey_id: str) -> bool:
         """Checks if a survey exists in Qualtrics.
 
-        Parameters
-        ----------
-        survey_id
+        Args:
+            survey_id:
 
         Returns:
-        -------
-        Boolean - True if the survey exists, False otherwise.
+            True if the survey exists, False otherwise.
         """
         try:
             # We use the get method provided by the base class
             response = self.get(endpoint=f"surveys/{survey_id}")
-
-            # Check if the response was successful
-            if response.status_code == 200:
-                return True
         except FailedQualtricsRequest:
-            pass
-
-        return False
+            logger.exception("Failed to check if survey exists")
+            return False
+        else:
+            # Check if the response was successful
+            return response.status_code == HTTPStatus.OK
 
     @survey_id_wrapper
     def get_survey(
@@ -201,21 +199,20 @@ class SurveysAPI(QualtricsRequests):
         survey_expiration_date: datetime,
         survey_description: str | None = None,
     ) -> requests.Response:
-        """Parameters
-        ----------
-        survey_id
-        survey_name
-        survey_status
-        survey_start_date
-        survey_expiration_date
-        survey_description
+        """Wrapper function for updating survey metadata.
+
+        Args:
+            survey_id:
+            survey_name:
+            survey_status:
+            survey_start_date:
+            survey_expiration_date
+            survey_description
 
         Returns:
-        -------
 
         References:
-        ----------
-        `API Documentation <https://api.qualtrics.com/ae7f40bbcb91a-update-metadata>`_
+            `API Documentation <https://api.qualtrics.com/ae7f40bbcb91a-update-metadata>`_
         """
         assert survey_status in ["Active", "Inactive"]
         assert isinstance(survey_start_date, datetime)
@@ -237,9 +234,10 @@ class SurveysAPI(QualtricsRequests):
     # Survey Flows
     @survey_id_wrapper
     def get_flow(self, survey_id: str | None = None) -> requests.Response:
-        """Parameters
-        ----------
-        survey_id
+        """
+
+        Args:
+            survey_id:
 
         Returns:
         -------
@@ -260,9 +258,9 @@ class SurveysAPI(QualtricsRequests):
         contains all the previous blocks to avoid deleting everything except for the custom variables block.
 
 
-        Arguments:
-            survey_id
-            flow
+        Args:
+            survey_id:
+            flow:
 
         Returns:
 
@@ -319,8 +317,7 @@ class SurveysAPI(QualtricsRequests):
         result = response.json()["result"]
         if result["status"] == "complete":
             return result["fileId"]
-        else:
-            return None
+        return None
 
     @survey_id_wrapper
     def download_export_file(self, survey_id: str, file_id: str) -> bytes:

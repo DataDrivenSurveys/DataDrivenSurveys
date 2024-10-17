@@ -12,6 +12,7 @@ import operator
 import traceback
 from functools import cache, cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, override
+from http import HTTPStatus
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -340,7 +341,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             timeout=5,
         )
 
-        if r.status_code == 200:
+        if r.status_code == HTTPStatus.OK:
             logger.info("Successfully revoked google token")
             return True
 

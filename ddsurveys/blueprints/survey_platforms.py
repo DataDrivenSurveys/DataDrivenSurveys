@@ -42,9 +42,9 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
     Returns:
         ResponseReturnValue: A JSON response indicating the result of the operation.
             Possible status codes are:
-            - 200: Successfully exchanged code for tokens.
-            - 400: Bad request, e.g., missing survey platform or code.
-            - 500: Internal server error, e.g., error exchanging code for tokens.
+            - HTTPStatus.OK: Successfully exchanged code for tokens.
+            - HTTPStatus.BAD_REQUEST: Bad request, e.g., missing survey platform or code.
+            - HTTPStatus.INTERNAL_SERVER_ERROR: Internal server error, e.g., error exchanging code for tokens.
     """
     data = request.get_json()
 
@@ -62,7 +62,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                     },
                 }
             ),
-            400,
+            HTTPStatus.BAD_REQUEST,
         )
 
     if not code:
@@ -75,7 +75,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                     },
                 }
             ),
-            400,
+            HTTPStatus.BAD_REQUEST,
         )
 
     try:
@@ -93,7 +93,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                         },
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         survey_platform_class: TOAuthSurveyPlatformClass
@@ -119,7 +119,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                         "entity": response,
                     }
                 ),
-                200,
+                HTTPStatus.OK,
             )
         logger.error("Error exchanging code for tokens for: %s", survey_platform_type)
         return (
@@ -131,7 +131,7 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                     },
                 }
             ),
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
     except Exception:
         logger.exception("Error exchanging code for tokens for: %s\n", survey_platform_type)
@@ -144,5 +144,5 @@ def exchange_code_for_tokens(survey_platform: str) -> ResponseReturnValue:
                     },
                 }
             ),
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )

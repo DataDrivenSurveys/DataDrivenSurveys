@@ -1,17 +1,16 @@
-#!/usr/bin/env python3
 """Created on 2023-10-31 13:53.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
-from __future__ import annotations
 
-__all__ = ["SurveyMonkeySurveyPlatform"]
+from __future__ import annotations
 
 import json
 import os
 import uuid
-from typing import Any, ClassVar, Optional
+from http import HTTPStatus
+from typing import Any, ClassVar, override
 
 import requests
 from surveymonkey.client import Client as SMClient
@@ -31,6 +30,8 @@ from surveymonkey.exceptions import (
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.survey_platforms.bases import FormButton, FormField, OAuthSurveyPlatform
+
+__all__ = ["SurveyMonkeySurveyPlatform"]
 
 logger = get_logger(__name__)
 
@@ -64,9 +65,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                     "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={url:client_id}&response_type=code"
                 },
             },
-            visibility_conditions={
-                "hide": [{"field": "access_token", "operator": "is_not_empty"}]
-            },
+            visibility_conditions={"hide": [{"field": "access_token", "operator": "is_not_empty"}]},
         ),
         FormButton(
             name="re-authorize",
@@ -76,9 +75,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                     "auth_url": "https://api.surveymonkey.com/oauth/authorize?client_id={url:client_id}&response_type=code"
                 },
             },
-            visibility_conditions={
-                "hide": [{"field": "access_token", "operator": "is_empty"}]
-            },
+            visibility_conditions={"hide": [{"field": "access_token", "operator": "is_empty"}]},
         ),
     ]
 
@@ -90,12 +87,14 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         access_token: str = "",
         **kwargs,
     ) -> None:
-        """Args:
-        client_id:
-        client_secret:
-        access_token:
-        refresh_token:
-        **kwargs:
+        """Initialize SurveyMonkeySurveyPlatform.
+
+        Args:
+            client_id:
+            client_secret:
+            access_token:
+            refresh_token:
+            **kwargs:
         """
         super().__init__(**kwargs)
 
@@ -103,7 +102,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         self.client_id: str = client_id
         self.client_secret: str = client_secret
         self.access_token: str = access_token
-        self.redirect_uri: str = kwargs.get("redirect_uri", None)
+        self.redirect_uri: str | None = kwargs.get("redirect_uri")
 
         if self.redirect_uri is None:
             self.redirect_uri = self.get_redirect_uri()
@@ -142,6 +141,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         }
 
     @classmethod
+    @override
     def get_authorize_url(cls) -> str:
         app_credentials = cls.get_app_credentials()
         sm_client = SMClient(**app_credentials, redirect_uri=cls.get_redirect_uri())
@@ -150,7 +150,6 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
     def get_client_id(self) -> str: ...
 
     def request_token(self, code: str) -> dict[str, Any]:
-
         token = self.api_client.exchange_code(code=code)
 
         if token is False:
@@ -183,13 +182,13 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except Exception:
-            logger.exception("Error fetching survey platform info: %s")
-            return 400, "api.survey_platforms.connection_failed", survey_platform_info
+            logger.exception("Error fetching survey platform info.")
+            return HTTPStatus.BAD_REQUEST, "api.survey_platforms.connection_failed", survey_platform_info
         else:
-            return 200, message_id, survey_platform_info
+            return HTTPStatus.OK, message_id, survey_platform_info
 
     def handle_project_creation(
-        self, project_name: str, use_existing_survey: bool = False
+        self, project_name: str, *, use_existing_survey: bool = False
     ) -> tuple[int, str, str, str, dict[str, Any]]:
         survey_platform_fields = {
             "survey_id": self.survey_id,
@@ -201,7 +200,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         if use_existing_survey:
             if not self.survey_id:
-                return 400, "api.survey.missing_id", "Survey ID is required", None, {}
+                return HTTPStatus.BAD_REQUEST, "api.survey.missing_id", "Survey ID is required", None, {}
 
             try:
                 survey_info = self.get_specific_survey(self.survey_id)
@@ -210,21 +209,22 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
                 survey_platform_fields["survey_name"] = survey_name
                 survey_platform_fields["survey_status"] = "active"
-
-                return (
-                    200,
-                    "api.survey_platforms.project_creation_success",
-                    "Project created successfully",
-                    survey_name,
-                    survey_platform_fields,
-                )
             except Exception:
+                logger.exception("Error fetching existing survey information.")
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.unknown_error_occurred",
                     "Unknown error occurred, please check your App Credentials",
                     None,
                     {},
+                )
+            else:
+                return (
+                    HTTPStatus.OK,
+                    "api.survey_platforms.project_creation_success",
+                    "Project created successfully",
+                    survey_name,
+                    survey_platform_fields,
                 )
         else:
             try:
@@ -236,52 +236,49 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                 survey_platform_fields["survey_name"] = project_name
 
             except Exception:
+                logger.exception("Error creating new survey in SurveyMonkey.")
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.survey.unknown_error_occurred",
                     "Unknown error occurred, please check your App Credentials",
                     None,
                     {},
                 )
 
-        return 200, "", "", project_name, survey_platform_fields
+        return HTTPStatus.OK, "", "", project_name, survey_platform_fields
 
     def handle_variable_sync(self, enabled_variables: dict) -> tuple[int, str, str]:
-
         variables: dict[str, str] = {
-            variable["qualified_name"]: variable["test_value_placeholder"]
-            for variable in enabled_variables
+            variable["qualified_name"]: variable["test_value_placeholder"] for variable in enabled_variables
         }
 
         modified_variables = {
-            key.replace(".", "_").replace("[", "_").replace("]", ""): value
-            for key, value in variables.items()
+            key.replace(".", "_").replace("[", "_").replace("]", ""): value for key, value in variables.items()
         }
 
         try:
-            response = self.modify_specific_survey(
-                self.survey_id, custom_variables=modified_variables
-            )
+            response = self.modify_specific_survey(self.survey_id, custom_variables=modified_variables)
             logger.debug("SurveyMonkeySurveyPlatform response: %s", response)
 
             if response.get("error"):
                 return (
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                     "api.ddsurveys.survey_platforms.variables_sync.failed",
                     "Failed to sync variables!",
                 )
-            else:
-                return (
-                    200,
-                    "api.ddsurveys.survey_platforms.variables_sync.success",
-                    "Variables synced successfully!",
-                )
         except Exception:
+            logger.exception("Error syncing variables.")
             return (
-                401,
+                HTTPStatus.UNAUTHORIZED,
                 "api.ddsurveys.survey_platforms.variables_sync.request_failed",
                 "Failed to process sync request. Please check your API key and survey ID.",
             )
+        else:
+            return (
+                    HTTPStatus.OK,
+                    "api.ddsurveys.survey_platforms.variables_sync.success",
+                    "Variables synced successfully!",
+                )
 
     def handle_prepare_survey(
         self, project_short_id: str, survey_platform_fields: dict, embedded_data: dict
@@ -291,23 +288,18 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         contact_list_id = survey_platform_fields.get("contact_list_id")
 
-        if status != 200:
+        if status != HTTPStatus.OK:
             return False, None
 
         if not survey_platform_info["active"]:
             return False, None
 
         if not contact_list_id:
-
             # Create a new contact list for the survey
-            new_contact_list = self.create_contact_list(
-                list_name=f"DataDrivenSurveys -- {project_short_id}"
-            )
+            new_contact_list = self.create_contact_list(list_name=f"DataDrivenSurveys -- {project_short_id}")
 
             contact_fields = self.get_contact_fields()
-            contact_field_ids = [
-                field["id"] for field in contact_fields.get("data", [])
-            ]
+            contact_field_ids = [field["id"] for field in contact_fields.get("data", [])]
 
             field_id_to_key_map = {}
             for field_id, (key, _value) in zip(contact_field_ids, embedded_data.items(), strict=False):
@@ -322,14 +314,9 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         contact_fields = survey_platform_fields.get("contact_fields")
 
-        filled_contact_fields = {
-            field_id: embedded_data.get(label)
-            for field_id, label in contact_fields.items()
-        }
+        filled_contact_fields = {field_id: embedded_data.get(label) for field_id, label in contact_fields.items()}
 
-        new_contact_id = self.create_contact(
-            contact_list_id, filled_contact_fields
-        ).get("id")
+        new_contact_id = self.create_contact(contact_list_id, filled_contact_fields).get("id")
 
         survey_id = survey_platform_fields.get("survey_id")
 
@@ -349,28 +336,23 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         raise NotImplementedError
 
     @staticmethod
-    def get_preview_link(
-        survey_platform_fields, enabled_variables
-    ) -> tuple[int, str, str, str]:
+    def get_preview_link(survey_platform_fields, enabled_variables) -> tuple[int, str, str, str]:
         """Handle the previewing of the survey."""
         raise NotImplementedError
 
     # Temporary Survey Monkdey SDK methods
-    # using these function because the SM SDK does not handle errors properly, it only works well for 200 responses
+    # using these function because the SM SDK does not handle errors properly,
+    # it only works well for HTTPStatus.OK responses
     def get_specific_survey(self, survey_id: str) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-surveys-id-
-        logger.debug(
-            "SurveyMonkeySurveyPlatform.get_specific_survey: %s", self.access_token
-        )
+        logger.debug("SurveyMonkeySurveyPlatform.get_specific_survey: %s", self.access_token)
         endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint
         _headers = {"Authorization": f"Bearer {self.access_token}"}
         response = requests.get(url, headers=_headers)
         return response.json()
 
-    def modify_specific_survey(
-        self, survey_id: str, custom_variables: dict[str, str]
-    ) -> dict:
+    def modify_specific_survey(self, survey_id: str, custom_variables: dict[str, str]) -> dict:
         # https://api.surveymonkey.com/v3/docs#api-endpoints-patch-surveys-id-
         endpoint = f"/surveys/{survey_id}"
         url = SurveyMonkeySurveyPlatform.API_URL + endpoint
@@ -420,7 +402,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         response = requests.post(url, headers=headers, json=data)
 
         # Check for successful response
-        if response.status_code == 201:
+        if response.status_code == HTTPStatus.CREATED:
             return response.json()
         logger.error("Failed to create contact list: %s", response.text)
         return {}
@@ -444,7 +426,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         # Check for existing collectors
         check_response = requests.get(check_url, headers=headers, timeout=10)
-        if check_response.status_code == 200:
+        if check_response.status_code == HTTPStatus.OK:
             collectors = check_response.json().get("data", [])
             if collectors:
                 # Fetch the full details of the first existing collector
@@ -452,7 +434,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
                 details_endpoint: str = f"/collectors/{collector_id}"
                 details_url: str = SurveyMonkeySurveyPlatform.API_URL + details_endpoint
                 details_response: requests.Response = requests.get(details_url, headers=headers, timeout=10)
-                if details_response.status_code == 200:
+                if details_response.status_code == HTTPStatus.OK:
                     return details_response.json()
 
         # No existing collector found, create a new one
@@ -466,7 +448,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         create_response = requests.post(create_url, headers=headers, json=data, timeout=10)
 
-        if create_response.status_code == 201:
+        if create_response.status_code == HTTPStatus.CREATED:
             return create_response.json()
         logger.error("Failed to create or get collector: %s", create_response.text)
         return {}
@@ -494,11 +476,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
 
         # replace None values with empty strings
         filled_contact_fields = {
-            key: (
-                str(value).lower()
-                if isinstance(value, bool)
-                else ("" if value is None else str(value))
-            )
+            key: (str(value).lower() if isinstance(value, bool) else ("" if value is None else str(value)))
             for key, value in filled_contact_fields.items()
         }
 
@@ -510,7 +488,7 @@ class SurveyMonkeySurveyPlatform(OAuthSurveyPlatform):
         response: requests.Response = requests.post(url, headers=headers, json=data, timeout=10)
 
         # Check for successful response
-        if response.status_code == 201:
+        if response.status_code == HTTPStatus.CREATED:
             return response.json()
 
         logger.error("Failed to create contact: %s", response.text)

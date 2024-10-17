@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime
 from functools import wraps
+from http import HTTPStatus
 
 # Import installed libraries
 import flask
@@ -158,27 +159,27 @@ app.register_blueprint(survey_platforms, url_prefix="/survey-platforms")
 @app.route("/survey-platforms", methods=["GET"])
 @jwt_required()
 def list_survey_platforms():
-    return SurveyPlatform.get_all_form_fields(), 200
+    return SurveyPlatform.get_all_form_fields(), HTTPStatus.OK
 
 
 @app.route("/data-providers", methods=["GET"])
 @jwt_required()
 def list_data_providers():
-    return DataProvider.get_all_form_fields(), 200
+    return DataProvider.get_all_form_fields(), HTTPStatus.OK
 
 
 @app.route("/data-providers/data-categories", methods=["GET"])
 def list_data_categories():
-    return DataProvider.get_all_data_categories(), 200
+    return DataProvider.get_all_data_categories(), HTTPStatus.OK
 
 
 @app.route("/custom-variables/filter-operators/<data_type>", methods=["GET"])
 def list_filter_operators(data_type):
     data_type = VariableDataType(data_type)
     data_class = Data.get_class_by_type(data_type)
-    return data_class.get_filter_operators(), 200
+    return data_class.get_filter_operators(), HTTPStatus.OK
 
 
 @app.route("/custom-variables/filter-operators", methods=["GET"])
 def list_all_filter_operators():
-    return Data.get_all_filter_operators(), 200
+    return Data.get_all_filter_operators(), HTTPStatus.OK

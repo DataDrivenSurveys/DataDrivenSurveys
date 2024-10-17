@@ -9,6 +9,7 @@ Created on 2023-08-31 16:59.
 from __future__ import annotations
 
 from functools import cached_property
+from http import HTTPStatus
 from typing import TYPE_CHECKING, Any
 
 import requests
@@ -275,8 +276,8 @@ class InstagramDataProvider(OAuthDataProvider):
         }
         try:
             response = requests.post(self.token_url, headers=headers, data=data)
-            success = response.status_code == 200
-            if response.status_code != 200:
+            success = response.status_code == HTTPStatus.OK
+            if response.status_code != HTTPStatus.OK:
                 error = response.json().get("error_message")
                 success = error not in ("Invalid platform app", "Invalid Client ID")
             return success  # Returns the status code. In real use, you'd want to handle different response codes differently.

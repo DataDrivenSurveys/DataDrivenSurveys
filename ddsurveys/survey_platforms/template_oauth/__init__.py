@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-10-31 13:53.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -25,7 +24,6 @@ logger = get_logger(__name__)
 class TemplateOAuthSurveyPlatform(OAuthSurveyPlatform):
     # Form fields declarations go here
     form_fields: ClassVar[list[FormField | FormButton]] = [
-        ...
     ]
 
     def __init__(

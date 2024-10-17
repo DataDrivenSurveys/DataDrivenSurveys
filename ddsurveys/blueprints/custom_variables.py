@@ -44,7 +44,7 @@ def get_project_custom_variables() -> ResponseReturnValue:
             return project, status
         project: Project
 
-        return jsonify(project.custom_variables), 200
+        return jsonify(project.custom_variables), HTTPStatus.OK
 
 
 def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
@@ -192,7 +192,7 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
         is_valid, message_id, validation_msg = check_custom_variable_data(data)
         if not is_valid:
             logger.error("Failed to add custom variable: %s", validation_msg)
-            return jsonify({"message": {"id": message_id, "text": validation_msg}}), 400
+            return jsonify({"message": {"id": message_id, "text": validation_msg}}), HTTPStatus.BAD_REQUEST
 
         # Check if variable name already exists
         current_custom_variables = project.custom_variables or []
@@ -226,7 +226,7 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                400,
+                HTTPStatus.BAD_REQUEST,
             )
 
         try:
@@ -249,10 +249,10 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
                         }
                     }
                 ),
-                500,
+                HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
-        return jsonify(project.custom_variables), 200
+        return jsonify(project.custom_variables), HTTPStatus.OK
 
 
 @custom_variables.route("/<int:variable_id>", methods=["GET"])
@@ -287,10 +287,10 @@ def get_project_custom_variable(variable_id: int) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
-        return jsonify(variable), 200
+        return jsonify(variable), HTTPStatus.OK
 
 
 @custom_variables.route("/<int:variable_id>", methods=["PUT"])
@@ -324,7 +324,7 @@ def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         new_variable_data = request.get_json()
@@ -337,7 +337,7 @@ def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
             logger.error(
                 "Failed to update custom variable: %s: %s", message_id, validation_msg
             )
-            return jsonify({"message": {"id": message_id, "text": validation_msg}}), 400
+            return jsonify({"message": {"id": message_id, "text": validation_msg}}), HTTPStatus.BAD_REQUEST
 
         new_variable_data["id"] = variable["id"]
         new_variable_data["enabled"] = variable.get("enabled", False)
@@ -364,7 +364,7 @@ def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
 
         db.commit()
 
-        return jsonify(project.custom_variables), 200
+        return jsonify(project.custom_variables), HTTPStatus.OK
 
 
 @custom_variables.route("/<int:variable_id>", methods=["DELETE"])
@@ -400,7 +400,7 @@ def delete_project_custom_variable(variable_id: int) -> ResponseReturnValue:
                         }
                     }
                 ),
-                404,
+                HTTPStatus.NOT_FOUND,
             )
 
         # Delete the variable from the custom_variables list
@@ -413,4 +413,4 @@ def delete_project_custom_variable(variable_id: int) -> ResponseReturnValue:
         db.commit()
 
         logger.debug("Deleted custom variable: %s", variable_id)
-        return jsonify(project.custom_variables), 200
+        return jsonify(project.custom_variables), HTTPStatus.OK

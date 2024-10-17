@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import traceback
+from http import HTTPStatus
 from typing import TYPE_CHECKING
 
 from flask import Blueprint, jsonify, request
@@ -43,7 +44,7 @@ def signup() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    409,
+                    HTTPStatus.CONFLICT,
                 )
 
             firstname = data.get("firstname")
@@ -60,7 +61,7 @@ def signup() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             if not lastname or lastname == "":
@@ -74,7 +75,7 @@ def signup() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             if not data["email"] or data["email"] == "":
@@ -88,7 +89,7 @@ def signup() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             if not data["password"] or data["password"] == "":
@@ -102,7 +103,7 @@ def signup() -> ResponseReturnValue:
                             }
                         }
                     ),
-                    400,
+                    HTTPStatus.BAD_REQUEST,
                 )
 
             hashed_password = generate_password_hash(data["password"], method="scrypt")
@@ -125,7 +126,7 @@ def signup() -> ResponseReturnValue:
                         }
                     }
                 ),
-                200,
+                HTTPStatus.OK,
             )
     except Exception as e:
         logger.critical("This error should be excepted correctly: %s", e)
@@ -139,7 +140,7 @@ def signup() -> ResponseReturnValue:
                     }
                 }
             ),
-            500,
+            HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
 
@@ -158,7 +159,7 @@ def signin() -> ResponseReturnValue:
                         }
                     }
                 ),
-                401,
+                HTTPStatus.UNAUTHORIZED,
             )
         token = create_access_token(
             identity={
@@ -169,11 +170,11 @@ def signin() -> ResponseReturnValue:
             }
         )
         logger.info("Successfully signed in: %s", user.email)
-        return jsonify({"token": token}), 200
+        return jsonify({"token": token}), HTTPStatus.OK
 
 
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def session() -> ResponseReturnValue:
     current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    return jsonify(logged_in_as=current_user), HTTPStatus.OK
