@@ -1,5 +1,7 @@
+import type { JSX } from 'react';
+
 import { Link, Typography } from '@mui/material';
-import React, { JSX } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import LayoutMain from '../components/layout/LayoutMain';
@@ -14,24 +16,20 @@ function TermsOfServiceContent(): JSX.Element {
 
       <Typography variant="h4">{t('terms_of_service.definitions.title')}</Typography>
       <Typography paragraph>
-        <span style={{ fontWeight: 'bold' }}>
-         1. {t('terms_of_service.definitions.dds.title')}
-        </span>: {t('terms_of_service.definitions.dds.content')}
+        <span style={{ fontWeight: 'bold' }}>1. {t('terms_of_service.definitions.dds.title')}</span>:{' '}
+        {t('terms_of_service.definitions.dds.content')}
       </Typography>
       <Typography paragraph>
-        <span style={{ fontWeight: 'bold' }}>
-          2. {t('terms_of_service.definitions.dp.title')}
-        </span>: {t('terms_of_service.definitions.dp.content')}
+        <span style={{ fontWeight: 'bold' }}>2. {t('terms_of_service.definitions.dp.title')}</span>:{' '}
+        {t('terms_of_service.definitions.dp.content')}
       </Typography>
       <Typography paragraph>
-        <span style={{ fontWeight: 'bold' }}>
-          3. {t('terms_of_service.definitions.users.title')}
-        </span>: {t('terms_of_service.definitions.users.content')}
+        <span style={{ fontWeight: 'bold' }}>3. {t('terms_of_service.definitions.users.title')}</span>:{' '}
+        {t('terms_of_service.definitions.users.content')}
       </Typography>
       <Typography paragraph>
-        <span style={{ fontWeight: 'bold' }}>
-          4. {t('terms_of_service.definitions.content.title')}
-        </span>: {t('terms_of_service.definitions.content.content')}
+        <span style={{ fontWeight: 'bold' }}>4. {t('terms_of_service.definitions.content.title')}</span>:{' '}
+        {t('terms_of_service.definitions.content.content')}
       </Typography>
 
       <Typography variant="h4">{t('terms_of_service.user_accounts.title')}</Typography>
@@ -72,9 +70,13 @@ function TermsOfServiceContent(): JSX.Element {
 
       <Typography variant="h4">{t('terms_of_service.contact_information.title')}</Typography>
       <Typography paragraph>
-        {t('terms_of_service.contact_information.content')}: {
-          <Link href={`mailto:${t('terms_of_service.contact_information.email')}`} rel="noopener noreferrer"
-            color="primary">
+        {t('terms_of_service.contact_information.content')}:{' '}
+        {
+          <Link
+            color="primary"
+            href={`mailto:${t('terms_of_service.contact_information.email')}`}
+            rel="noopener noreferrer"
+          >
             {t('terms_of_service.contact_information.contact_email')}
           </Link>
         }
@@ -87,10 +89,7 @@ function PageTermsOfService(): JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <LayoutMain
-      header={<Typography variant="h3">{t('terms_of_service.title')}</Typography>}
-      backUrl={-1}
-    >
+    <LayoutMain backUrl={-1} header={<Typography variant="h3">{t('terms_of_service.title')}</Typography>}>
       <TermsOfServiceContent />
     </LayoutMain>
   );

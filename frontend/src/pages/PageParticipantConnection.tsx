@@ -3,7 +3,8 @@ import AddIcon from '@mui/icons-material/Add';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { Alert, AlertTitle, Box, Button, CircularProgress, Collapse, Link, Stack, Typography } from '@mui/material';
-import React, { JSX, useCallback, useEffect, useMemo, useState } from 'react';
+import type { JSX } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
@@ -13,7 +14,7 @@ import useEventTracker from '../components/events/useEventTracker';
 import ConnectionBadge from '../components/feedback/ConnectionBadge';
 import LayoutMain from '../components/layout/LayoutMain';
 import { useSnackbar } from '../context/SnackbarContext';
-import { API, Models } from '../types';
+import type { API, Models } from '../types';
 
 const UsedVariablesTable = loadable(() => import('../components/layout/UsedVariablesTable'));
 
@@ -23,8 +24,8 @@ const isDataProviderAlreadyUsed = async function isDataProviderAlreadyUsed(
   user_id: string
 ): Promise<boolean> {
   const response = await PUBLIC_POST(`/projects/${projectShortId}/respondent/data-provider/was-used`, {
-    data_provider_name: data_provider_name,
-    user_id: user_id,
+    data_provider_name,
+    user_id,
   });
 
   let was_used = false;
@@ -45,7 +46,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
   const { showBottomCenter: showSnackbar } = useSnackbar();
 
   const { projectShortId } = useParams<{ projectShortId: string }>();
-  const { reset: resetEvents, getEvents } = useEventTracker();
+  const { getEvents, reset: resetEvents } = useEventTracker();
 
   const [project, setProject] = useState<API.Respondent.Project | null>(null);
   const [dataProviders, setDataProviders] = useState<Models.Dist.DataProvider[]>([]);
@@ -108,7 +109,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
             return {
               ...data_provider,
               token,
-              was_used: was_used,
+              was_used,
             };
           }
         );
@@ -214,8 +215,8 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
 
     connect_response.on('2xx', async (_: number, data: API.Respondent.ResponseDataSurveyDistribution) => {
       const response_prepare = await PUBLIC_POST(`/projects/${projectShortId}/respondent/prepare-survey`, {
-        respondent_id: data.entity.id,
         frontend_variables: getEvents(),
+        respondent_id: data.entity.id,
       });
 
       setPreparingSurvey(false);
@@ -272,8 +273,8 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
     <LayoutMain
       header={
         project && (
-          <Stack direction="row" alignItems="center" justifyContent={'center'}>
-            <Typography variant="h5" style={{ whiteSpace: 'nowrap' }}>
+          <Stack alignItems="center" direction="row" justifyContent={'center'}>
+            <Typography style={{ whiteSpace: 'nowrap' }} variant="h5">
               <b>{project.survey_name}</b>
             </Typography>
           </Stack>
@@ -297,18 +298,18 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                 </Typography>
               </Box>
 
-              {project?.used_variables && (
+              {project.used_variables && (
                 <Box>
                   <ClickTracker
                     details={{
-                      type: 'click',
                       id: 'dds.dds.builtin.frontendactivity.open_transparency_table',
                       time: new Date().toISOString(),
+                      type: 'click',
                     }}
                   >
                     <Stack
-                      direction="row"
                       alignItems="center"
+                      direction="row"
                       onClick={() => setExpand(!expand)}
                       sx={{ cursor: 'pointer' }}
                     >
@@ -335,36 +336,36 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                 {dataProviders.map((data_provider, index) => {
                   return (
                     <Stack
+                      alignItems={'center'}
                       direction={'row'}
+                      justifyContent={'space-between'}
                       key={index}
                       spacing={2}
-                      alignItems={'center'}
-                      justifyContent={'space-between'}
                     >
                       <ConnectionBadge name={data_provider.data_provider_name} />
                       {data_provider.token ? (
-                        <Stack direction={'row'} alignItems={'center'}>
+                        <Stack alignItems={'center'} direction={'row'}>
                           <Typography variant="body1">Connected as {data_provider.token.user_name}</Typography>
                           <Button
-                            variant={'text'}
                             color={'primary'}
-                            onClick={() => handleDisconnect(data_provider.data_provider_name)}
                             disabled={preparingSurvey || surveyURL !== null}
+                            onClick={() => handleDisconnect(data_provider.data_provider_name)}
+                            variant={'text'}
                           >
                             {t('ui.respondent.connection.button.disconnect')}
                           </Button>
                           <DataProviderConnectionStatus
-                            was_used={data_provider.was_used}
-                            anyProviderAlreadyUsed={anyProviderAlreadyUsed}
                             allProvidersAlreadyUsed={allProvidersAlreadyUsed}
+                            anyProviderAlreadyUsed={anyProviderAlreadyUsed}
+                            was_used={data_provider.was_used}
                           />
                         </Stack>
                       ) : (
                         <Button
-                          variant={'contained'}
                           color={'primary'}
-                          startIcon={<AddIcon />}
                           onClick={() => handleConnect(data_provider.data_provider_name)}
+                          startIcon={<AddIcon />}
+                          variant={'contained'}
                         >
                           {t('ui.respondent.connection.button.connect')}
                         </Button>
@@ -374,19 +375,19 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                 })}
               </Stack>
               {preparingSurvey && (
-                <Stack direction={'row'} spacing={2} alignItems={'center'} justifyContent={'center'}>
+                <Stack alignItems={'center'} direction={'row'} justifyContent={'center'} spacing={2}>
                   <CircularProgress size={24} value={100} />
                   <Alert severity="info">{t('ui.respondent.connection.alert.preparing_survey')}</Alert>
                 </Stack>
               )}
               {surveyURL && (
-                <Stack direction={'row'} spacing={2} alignItems={'center'} justifyContent={'center'}>
+                <Stack alignItems={'center'} direction={'row'} justifyContent={'center'} spacing={2}>
                   <Alert severity="success">
                     <AlertTitle>{t('ui.respondent.connection.alert.survey_ready.title')}</AlertTitle>
                     <Typography variant="body1">
                       {t('ui.respondent.connection.alert.survey_ready.message.will_be_redirected')}
                     </Typography>
-                    <Link href={surveyURL} target={'_blank'} rel="noreferrer" variant="body1" color="primary">
+                    <Link color="primary" href={surveyURL} rel="noreferrer" target={'_blank'} variant="body1">
                       {t('ui.respondent.connection.click_here')}
                     </Link>{' '}
                     {t('ui.respondent.connection.if_not_redirected_automatically')}
@@ -395,19 +396,19 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
               )}
               {!preparingSurvey && !surveyURL && (
                 <ConnectionStatus
-                  allProvidersConnected={allProvidersConnected}
-                  anyProviderConnected={anyProviderConnected}
-                  anyProviderAlreadyUsed={anyProviderAlreadyUsed}
                   allProvidersAlreadyUsed={allProvidersAlreadyUsed}
+                  allProvidersConnected={allProvidersConnected}
+                  anyProviderAlreadyUsed={anyProviderAlreadyUsed}
+                  anyProviderConnected={anyProviderConnected}
                 />
               )}
 
-              <Stack spacing={2} alignItems={'center'}>
+              <Stack alignItems={'center'} spacing={2}>
                 <Button
-                  variant={'contained'}
                   color={'primary'}
                   disabled={!allProvidersConnected || preparingSurvey || surveyURL !== null}
                   onClick={handleProceed}
+                  variant={'contained'}
                 >
                   {allProvidersConnected && allProvidersAlreadyUsed ? 'Resume' : 'Proceed'}
                 </Button>
@@ -434,7 +435,7 @@ const CheckProjectReadiness = ({ children, project_ready }: CheckProjectReadines
   return project_ready ? (
     children
   ) : (
-    <Stack width={'100vw'} height={'100vh'} justifyContent={'center'} alignItems={'center'}>
+    <Stack alignItems={'center'} height={'100vh'} justifyContent={'center'} width={'100vw'}>
       <Alert severity="error">
         <Typography variant="body1">{t('ui.respondent.connection.project_not_ready')}</Typography>
       </Alert>
@@ -443,15 +444,15 @@ const CheckProjectReadiness = ({ children, project_ready }: CheckProjectReadines
 };
 
 interface DataProviderConnectionStatusProps {
-  was_used: boolean;
-  anyProviderAlreadyUsed: boolean;
   allProvidersAlreadyUsed: boolean;
+  anyProviderAlreadyUsed: boolean;
+  was_used: boolean;
 }
 
 const DataProviderConnectionStatus = ({
-  was_used,
-  anyProviderAlreadyUsed,
   allProvidersAlreadyUsed,
+  anyProviderAlreadyUsed,
+  was_used,
 }: DataProviderConnectionStatusProps): JSX.Element | boolean => {
   const { t } = useTranslation();
 
@@ -473,18 +474,18 @@ const DataProviderConnectionStatus = ({
 };
 
 interface ConnectionStatusProps {
-  allProvidersConnected: boolean;
-  anyProviderConnected: boolean;
-  anyProviderAlreadyUsed: boolean;
   allProvidersAlreadyUsed: boolean;
+  allProvidersConnected: boolean;
+  anyProviderAlreadyUsed: boolean;
+  anyProviderConnected: boolean;
 }
 
 const ConnectionStatus = ({
-  allProvidersConnected,
-  anyProviderConnected,
-  anyProviderAlreadyUsed,
   allProvidersAlreadyUsed,
-}: ConnectionStatusProps): boolean | JSX.Element => {
+  allProvidersConnected,
+  anyProviderAlreadyUsed,
+  anyProviderConnected,
+}: ConnectionStatusProps): JSX.Element | boolean => {
   const { t } = useTranslation();
 
   const warning = anyProviderConnected && !allProvidersConnected && anyProviderAlreadyUsed;

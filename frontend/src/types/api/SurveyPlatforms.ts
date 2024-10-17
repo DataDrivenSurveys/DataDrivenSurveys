@@ -1,5 +1,5 @@
-import { Bases } from '.';
-import { ResponseData } from './ResponseReturnValue';
+import type { Bases } from '.';
+import type { ResponseData } from './ResponseReturnValue';
 
 export interface SurveyPlatformFieldData {
   helper_url: string;
