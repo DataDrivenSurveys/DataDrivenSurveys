@@ -60,7 +60,7 @@ def get_project(db, short_id) -> Project:
 
 
 def get_used_data_providers(
-    project: Project, respondent: Respondent
+        project: Project, respondent: Respondent
 ) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, tuple[None, None, Response, int]]:
     """Get used data providers for a specific project and respondent."""
     # TODO: Update this function to return only two values.
@@ -221,7 +221,7 @@ def get_public_project() -> APIResponseValue:
         )
 
         project_ready = (
-            all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
+                all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
         )
         response_dict["project_ready"] = project_ready
         response_dict["used_variables"] = variables_per_data_provider
@@ -454,11 +454,14 @@ def prepare_survey() -> APIResponseValue:
     5. Creates a unique distribution link for the respondent.
 
     Returns:
-        APIResponseValue: A JSON response containing the distribution link or an error message.
+        APIResponseValue: A JSON response containing the distribution link or an error
+            message.
             Possible status codes are:
             - HTTPStatus.OK: Successfully created a unique distribution link.
-            - HTTPStatus.BAD_REQUEST: Missing respondent ID or unsupported survey platform.
-            - HTTPStatus.NOT_FOUND: Project or respondent not found, or survey not active.
+            - HTTPStatus.BAD_REQUEST: Missing respondent ID or unsupported survey
+                platform.
+            - HTTPStatus.NOT_FOUND: Project or respondent not found, or survey not
+                active.
             - HTTPStatus.INTERNAL_SERVER_ERROR: Error preparing the survey.
     """
     try:
@@ -500,7 +503,7 @@ def prepare_survey() -> APIResponseValue:
                     HTTPStatus.BAD_REQUEST,
                 )
 
-            respondent: Respondent = (
+            respondent: Respondent | None = (
                 db.query(Respondent)
                 .filter(
                     and_(
@@ -530,7 +533,7 @@ def prepare_survey() -> APIResponseValue:
                 logger.info("Respondent already has a distribution url.")
 
                 for user_data_provider, data_provider, response, error_status in get_used_data_providers(
-                    project, respondent
+                        project, respondent
                 ):
                     if response is not None and error_status is not None:
                         return response, error_status
@@ -614,21 +617,23 @@ def prepare_survey() -> APIResponseValue:
             data_to_upload: ComputedVariableDict = {}
 
             for user_data_provider, data_provider, response, error_status in get_used_data_providers(
-                project, respondent
+                    project, respondent
             ):
                 if response is not None and error_status is not None:
                     return response, error_status
 
-                data_to_upload.update(
-                    user_data_provider.calculate_variables(project.variables, project.custom_variables)
-                )
+                try:
+                    data_to_upload.update(
+                        user_data_provider.calculate_variables(project.variables, project.custom_variables)
+                    )
+                except Exception:
+                    logger.exception("Failed to calculate variables for data provider '%s'.", user_data_provider.name)
 
                 # revoke the access tokens
                 try:
                     user_data_provider.revoke_token(data_provider.access_token)
                 except Exception:
-                    logger.exception("Failed to revoke access token for data provider '%s'\n", user_data_provider.name)
-                    logger.debug(traceback.format_exc())
+                    logger.exception("Failed to revoke access token for data provider '%s'.", user_data_provider.name)
 
                 # set the data provider access tokens to Null
                 data_provider.access_token = None
@@ -715,8 +720,7 @@ def prepare_survey() -> APIResponseValue:
                 )
 
     except Exception:
-        logger.exception("Error preparing survey.\n")
-        logger.debug("Error traceback: %s", traceback.format_exc())
+        logger.exception("Error preparing survey.")
         return (
             jsonify(
                 {

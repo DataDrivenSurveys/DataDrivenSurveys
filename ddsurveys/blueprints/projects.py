@@ -365,7 +365,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
     with DBManager.get_db() as db:
         # Get the current researcher's identity
         user = get_jwt_identity()
-        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             # return (
             #     jsonify({"message": {"id": "api.unauthorized", "text": "Unauthorized"}}),
@@ -421,11 +421,11 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
         - HTTPStatus.NOT_FOUND: If the project is not found.
     """
-    logger.debug("Deleting project with id: %s", id_)
+    logger.debug("Received delete respondents request for project with id: '%s'", id_)
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
-        researcher: Researcher = db.query(Researcher).filter_by(email=user["email"]).first()
+        researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
 
         if not researcher:
             # return (
@@ -434,7 +434,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
             # )
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -442,6 +442,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         )
 
         if not project:
+            logger.warning("Project not found with id: %s", id_)
             return (
                 jsonify(
                     {
@@ -461,6 +462,8 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
             )
             .all()
         )
+
+        logger.info("Deleting %s respondents for project with id: %s", len(respondents), id_)
 
         for respondent in respondents:
             db.delete(respondent)

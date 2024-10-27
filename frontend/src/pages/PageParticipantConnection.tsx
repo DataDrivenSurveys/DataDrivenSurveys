@@ -252,6 +252,11 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
         setPreparingSurvey(false);
         showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
       });
+
+      response_prepare.on('5xx', (_: number, data: API.ResponseData) => {
+        setPreparingSurvey(false);
+        showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'error');
+      });
     });
 
     connect_response.on('4xx', (_: number, data: API.ResponseData) => {
