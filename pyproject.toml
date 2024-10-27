@@ -136,6 +136,7 @@ dev-dependencies = [
   "semantic-version>=2.10.0",
   # Misc
   "tqdm>=4.66.5",
+  "types-flask-cors>=5.0.0.20240902",
 ]
 
 [tool.uv.sources]
@@ -209,3 +210,8 @@ omit = [
 
 warn_return_any = true
 warn_unused_configs = true
+
+exclude = [
+  "volumes",
+  ".venv",
+]

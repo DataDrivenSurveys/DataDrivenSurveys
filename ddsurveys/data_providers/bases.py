@@ -58,7 +58,7 @@ DATA_PROVIDER_BASE_CLASSES = ["DataProvider", "OAuthBase"]
 
 
 # TODO: stop using Enum attribute nomenclature and use attribute names that make sense
-class DataProvider(UIRegistry):
+class DataProvider(UIRegistry["TDataProviderClass"]):
     """Base class for data providers.
 
     This class provides common functionality for all data providers.

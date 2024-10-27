@@ -26,7 +26,7 @@ from abc import ABC, abstractmethod
 from ast import TypeVar
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, Self, override
 
 from ddsurveys import __package__
 from ddsurveys.get_logger import get_logger
@@ -813,7 +813,7 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
 
     # The following are placeholder properties for convenient access to the name wrangled dicts
     registry: dict[str, dict[str, T]] = {}
-    registry_exclude: list[str] = []
+    registry_exclude: ClassVar[list[str]] = []
 
     # The following attributes (normally) do not need to be re-declared in child classes
     name: str = ""
@@ -893,7 +893,7 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
         return registry
 
     @classmethod
-    def get_class_by_name(cls, name) -> T | None:
+    def get_class_by_name(cls, name: str) -> T:
         """Retrieves a class from the registry by its name.
 
         Args:
@@ -902,10 +902,14 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
         Returns:
             TRegistryClass: The class object associated with the given name.
         """
-        return cls.registry.get(cls.base_name, {}).get(name, None)
+        class_: T | None = cls.registry.get(cls.base_name, {}).get(name, None)
+        if class_ is not None:
+            return class_
+        msg: str = f"No class with name '{name}' found."
+        raise KeyError(msg)
 
     @classmethod
-    def get_class_by_value(cls, value) -> T | None:
+    def get_class_by_value(cls, value: str) -> T:
         """Retrieves a class from the registry by its value attribute.
 
         This method is useful for cases where classes are referenced by a value
@@ -915,16 +919,17 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
             value (str): The value associated with the class to retrieve.
 
         Returns:
-            TRegistryClass | None: The class object associated with the given value,
-                or None if no matching class is found.
+            The class object associated with the given value, or None if no matching
+            class is found.
         """
         for subclass in cls.registry.get(cls.base_name, {}).values():
             if subclass.name_lower == value:
                 return subclass
-        return None
+        msg: str = f"No class with value '{value}' found."
+        raise KeyError(msg)
 
     @classmethod
-    def to_dict(cls) -> dict:
+    def to_dict(cls) -> dict[str, Any]:
         """Converts the class attributes specified in `to_dict_attrs` to a dictionary.
 
         This is useful for serializing class information to a format that can be easily

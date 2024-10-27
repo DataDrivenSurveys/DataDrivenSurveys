@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import traceback
 from http import HTTPStatus
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, reveal_type
 
 from flask import Blueprint, Response, g, jsonify, request
 from sqlalchemy import and_
@@ -18,6 +18,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ddsurveys.blueprints._common import abbreviate_variable_name
 from ddsurveys.data_providers import DataProvider
+from ddsurveys.data_providers.bases import TOAuthDataProvider
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import (
     DataConnection,
@@ -39,6 +40,7 @@ if TYPE_CHECKING:
     from ddsurveys.api_responses import APIResponseValue
     from ddsurveys.data_providers.bases import (
         OAuthDataProvider,
+        TDataProviderClass,
         TFrontendDataProvider,
         TFrontendDataProviderClass,
         TOAuthDataProviderClass,
@@ -60,8 +62,8 @@ def get_project(db, short_id) -> Project:
 
 
 def get_used_data_providers(
-        project: Project, respondent: Respondent
-) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, tuple[None, None, Response, int]]:
+    project: Project, respondent: Respondent
+) -> Generator[tuple[OAuthDataProvider, DataProviderAccess], None, None] | tuple[Response, int]:
     """Get used data providers for a specific project and respondent."""
     # TODO: Update this function to return only two values.
     #       This should make code that uses this function easier to read and understand.
@@ -74,8 +76,6 @@ def get_used_data_providers(
         if not access_token:
             logger.error("Missing access token for data provider: %s", data_provider_name)
             return (
-                None,
-                None,
                 jsonify(
                     {
                         "message": {
@@ -97,8 +97,6 @@ def get_used_data_providers(
         if not project_data_connection:
             logger.error("Data provider not found: %s", data_provider_name)
             return (
-                None,
-                None,
                 jsonify(
                     {
                         "message": {
@@ -114,9 +112,11 @@ def get_used_data_providers(
 
         fields.update({"access_token": access_token, "refresh_token": refresh_token})
 
-        user_data_provider: OAuthDataProvider = DataProvider.get_class_by_value(data_provider_name)(**fields)
+        user_data_provider: TOAuthDataProvider = cast(
+            TOAuthDataProviderClass, DataProvider.get_class_by_value(data_provider_name)
+        )(**fields)
 
-        yield user_data_provider, data_provider, None, None
+        yield user_data_provider, data_provider
 
 
 @respondent.route("/", methods=["GET"])
@@ -138,7 +138,7 @@ def get_public_project() -> APIResponseValue:
     """
     with DBManager.get_db() as db:
         project_short_id = g.get("project_short_id")
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .options(
                 joinedload(Project.data_connections).joinedload(DataConnection.data_provider),
@@ -199,7 +199,7 @@ def get_public_project() -> APIResponseValue:
 
         for data_connection in response_dict["data_connections"]:
             provider_type = data_connection["data_provider"]["data_provider_name"]
-            provider_class = DataProvider.get_class_by_value(provider_type)
+            provider_class: TDataProviderClass = DataProvider.get_class_by_value(provider_type)
 
             project_data_connections = project_dict["data_connections"]
             project_data_connection = next(
@@ -622,12 +622,9 @@ def prepare_survey() -> APIResponseValue:
                 if response is not None and error_status is not None:
                     return response, error_status
 
-                try:
-                    data_to_upload.update(
-                        user_data_provider.calculate_variables(project.variables, project.custom_variables)
-                    )
-                except Exception:
-                    logger.exception("Failed to calculate variables for data provider '%s'.", user_data_provider.name)
+                data_to_upload.update(
+                    user_data_provider.calculate_variables(project.variables, project.custom_variables)
+                )
 
                 # revoke the access tokens
                 try:

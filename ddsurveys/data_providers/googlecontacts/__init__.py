@@ -11,8 +11,8 @@ from __future__ import annotations
 import operator
 import traceback
 from functools import cache, cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, override
 from http import HTTPStatus
+from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, override
 
 import requests
 from google.auth.exceptions import RefreshError
@@ -477,7 +477,7 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     @cache
     def with_category_count(
-        self, category: str, operator_: callable = operator.gt, count: int = 0
+        self, category: str, operator_: Callable[[object, object], bool] = operator.gt, count: int = 0
     ) -> list[ContactDict]:
         return [c for c in self.contacts if ((cat := c.get(category, [])) or True) and operator_(len(cat), count)]
 

@@ -34,7 +34,7 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -89,19 +89,54 @@ sony_flake: SonyFlake = SonyFlake()
 handle_env_file()
 
 
-class DBManager:
-    ENGINE: Engine = None
-    SESSION_MAKER: sessionmaker = None
-    DB: Session = None
+class CreateEngineKwargsDict(TypedDict, total=False):
+    # connect_args: Dict[Any, Any]
+    # convert_unicode: bool
+    # creator: _CreatorFnType | _CreatorWRecFnType
+    # echo: _EchoFlagType
+    # echo_pool: _EchoFlagType
+    # enable_from_linting: bool
+    # execution_options: _ExecuteOptions
+    # future: bool
+    # hide_parameters: bool
+    # implicit_returning: bool
+    # insertmanyvalues_page_size: int
+    # isolation_level: IsolationLevel
+    # json_deserializer: (...) -> Any
+    # json_serializer: (...) -> Any
+    # label_length: int | None
+    # logging_name: str
+    # max_identifier_length: int | None
+    # max_overflow: int
+    # module: Any | None
+    # paramstyle: _ParamStyle | None
+    # pool: Pool | None
+    # poolclass: type[Pool] | None
+    pool_logging_name: str
+    pool_pre_ping: bool
+    pool_size: int
+    pool_recycle: int
+    # pool_reset_on_return: ResetStyle | bool | Literal['commit', 'rollback'] | None
+    pool_timeout: float
+    pool_use_lifo: bool
+    # plugins: list[str]
+    # query_cache_size: int
+    # use_insertmanyvalues: bool
 
-    engine_args: ClassVar[dict] = {
+
+class DBManager:
+    ENGINE: Engine | None = None
+    SESSION_MAKER: sessionmaker | None = None
+    DB: Session | None = None
+
+    create_engine_kwargs: ClassVar[CreateEngineKwargsDict] = {
         "pool_pre_ping": True,  # Check if connection is alive before using it
         "pool_recycle": 1800,  # Recycle connection after 30 minutes to avoid timeouts
         "pool_size": 10,  # Number of connections to maintain in the pool
     }
 
     @classmethod
-    def get_engine(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> Engine:
+    def get_engine(cls, app: Flask | None= None, database_url: str = "", *, force_new: bool = False) -> Engine:
         """Retrieves or initializes the SQLAlchemy engine for database connections.
 
         This function checks if the global `ENGINE` variable is already initialized.
@@ -125,18 +160,18 @@ class DBManager:
         """
         if cls.ENGINE is None or force_new:
             if database_url != "":
-                cls.ENGINE = create_engine(url=database_url, **cls.engine_args)
+                cls.ENGINE = create_engine(url=database_url, **cls.create_engine_kwargs)
             elif app is not None:
                 try:
-                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"], **cls.engine_args)
+                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"], **cls.create_engine_kwargs)
                 except (AttributeError, KeyError):
-                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.engine_args)
+                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs)
             else:
-                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.engine_args)
+                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs)
         return cls.ENGINE
 
     @classmethod
-    def init_session(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> None:
+    def init_session(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> None:
         """Initializes the database session creator for the application.
 
         This function sets up the global SESSION_MAKER instance, which is used to create
@@ -164,7 +199,7 @@ class DBManager:
         )
 
     @classmethod
-    def get_db(cls, app: Flask = None, database_url: str = "", *, force_new: bool = False) -> Session:
+    def get_db(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> Session:
         """Provides a sqlalchemy.orm.session.Session instance for database operations.
 
         This function returns the global SessionLocal instance, which is configured

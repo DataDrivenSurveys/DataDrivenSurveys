@@ -53,7 +53,8 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
     """Interface class for survey platforms."""
 
     # General class attributes
-    # base_name will decide the key in the class registry where each child class of SurveyPlatform will be stored.
+    # base_name will decide the key in the class registry where each child class of
+    # SurveyPlatform will be stored.
     base_name: str = "SurveyPlatform"
     registry_exclude: ClassVar[list[str]] = ["SurveyPlatform", "OAuthSurveyPlatform"]
 
