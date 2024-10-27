@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import base64
-import os
 import re
 import urllib.parse
 from datetime import date, datetime, timedelta
@@ -24,7 +23,7 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
-from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek, range_date
+from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
 from ddsurveys.data_providers.fitbit.activity_log import Activity, ActivityLog
 from ddsurveys.data_providers.fitbit.daily_time_series import (
     AggregationFunctions,
@@ -1147,6 +1146,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def account_created_at_least_1_year_ago(self) -> bool:
+        # TODO: rename this method to be 6 months ago
         user = self.user_profile
         creation_date = datetime.strptime(user["memberSince"], "%Y-%m-%d").date()
-        return creation_date <= date.today() - relativedelta(years=1)
+        return creation_date <= date.today() - relativedelta(months=6)
