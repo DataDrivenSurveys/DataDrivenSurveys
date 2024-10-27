@@ -150,6 +150,7 @@ def signin() -> ResponseReturnValue:
         data = request.get_json()
         user = db.query(Researcher).filter_by(email=data["email"]).first()
         if not user or not check_password_hash(user.password, data["password"]):
+            logger.info("Failed to sign in: %s", data["email"])
             return (
                 jsonify(
                     {
