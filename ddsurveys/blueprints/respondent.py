@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import traceback
 from http import HTTPStatus
-from typing import TYPE_CHECKING, cast, reveal_type
+from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, Response, g, jsonify, request
 from sqlalchemy import and_
@@ -18,7 +18,10 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from ddsurveys.blueprints._common import abbreviate_variable_name
 from ddsurveys.data_providers import DataProvider
-from ddsurveys.data_providers.bases import TOAuthDataProvider
+from ddsurveys.data_providers.bases import (
+    TOAuthDataProvider,
+    TOAuthDataProviderClass,
+)
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import (
     DataConnection,
@@ -43,7 +46,6 @@ if TYPE_CHECKING:
         TDataProviderClass,
         TFrontendDataProvider,
         TFrontendDataProviderClass,
-        TOAuthDataProviderClass,
     )
     from ddsurveys.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
     from ddsurveys.typings.data_providers.variables import ComputedVariableDict
@@ -63,7 +65,7 @@ def get_project(db, short_id) -> Project:
 
 def get_used_data_providers(
     project: Project, respondent: Respondent
-) -> Generator[tuple[OAuthDataProvider, DataProviderAccess], None, None] | tuple[Response, int]:
+) -> Generator[tuple[OAuthDataProvider, DataProviderAccess, None, None], None, None] | tuple[None, None, Response, int]:
     """Get used data providers for a specific project and respondent."""
     # TODO: Update this function to return only two values.
     #       This should make code that uses this function easier to read and understand.
@@ -76,6 +78,8 @@ def get_used_data_providers(
         if not access_token:
             logger.error("Missing access token for data provider: %s", data_provider_name)
             return (
+                None,
+                None,
                 jsonify(
                     {
                         "message": {
@@ -97,6 +101,8 @@ def get_used_data_providers(
         if not project_data_connection:
             logger.error("Data provider not found: %s", data_provider_name)
             return (
+                None,
+                None,
                 jsonify(
                     {
                         "message": {
@@ -116,7 +122,7 @@ def get_used_data_providers(
             TOAuthDataProviderClass, DataProvider.get_class_by_value(data_provider_name)
         )(**fields)
 
-        yield user_data_provider, data_provider
+        yield user_data_provider, data_provider, None, None
 
 
 @respondent.route("/", methods=["GET"])
@@ -221,7 +227,7 @@ def get_public_project() -> APIResponseValue:
         )
 
         project_ready = (
-                all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
+            all_data_connections_connected and survey_platform_connected and survey_active and has_oauth_data_providers
         )
         response_dict["project_ready"] = project_ready
         response_dict["used_variables"] = variables_per_data_provider
@@ -533,7 +539,7 @@ def prepare_survey() -> APIResponseValue:
                 logger.info("Respondent already has a distribution url.")
 
                 for user_data_provider, data_provider, response, error_status in get_used_data_providers(
-                        project, respondent
+                    project, respondent
                 ):
                     if response is not None and error_status is not None:
                         return response, error_status
@@ -617,7 +623,7 @@ def prepare_survey() -> APIResponseValue:
             data_to_upload: ComputedVariableDict = {}
 
             for user_data_provider, data_provider, response, error_status in get_used_data_providers(
-                    project, respondent
+                project, respondent
             ):
                 if response is not None and error_status is not None:
                     return response, error_status

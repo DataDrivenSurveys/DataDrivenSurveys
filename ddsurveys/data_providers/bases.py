@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import os
-import traceback
 from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, TypeVar, cast, override
 
@@ -181,14 +180,15 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     # Methods used for extracting data
     def select_relevant_variables(self, variables: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        """Selects only the variables that are enabled and relevant to this data provider.
+        """Selects only enabled and relevant variables for this data provider.
 
         Args:
-            variables:
-                List of dicts where each dict contains key/value pairs conforming to the Variable class.
+            variables: List of dicts where each dict contains key/value pairs conforming
+                to the Variable class.
 
         Returns:
-            A list of dicts where each dict contains key/value pairs conforming to the Variable class.
+            A list of dicts where each dict contains key/value pairs conforming to the
+            Variable class.
         """
         return [
             variable
@@ -226,11 +226,10 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             try:
                 value = self.get_variable_value(**variable)
                 exists = value is not None
-            except ValueError:
-                logger.warning(
-                    "Variable %s could not be calculated with the following error:\n%s",
+            except Exception:
+                logger.exception(
+                    "Variable %s could not be calculated with the following error:",
                     variable["name"],
-                    traceback.format_exc(),
                 )
                 exists = False
 
@@ -251,6 +250,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         category: str = "",
         name: str = "",
         qualified_name: str = "",
+        *,
         is_indexed_variable: bool = False,
         index: int = 0,
         **kwargs,
@@ -397,7 +397,6 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
                 a list of built-in variables.
         """
         data_category: DataCategory
-        builtin_variable: BuiltInVariable
         dp_data_categories_dicts: list[DataProviderDataCategoryDict] = []
         for data_category in cls.data_categories:
             dp_data_category_dict: DataProviderDataCategoryDict = {
@@ -422,7 +421,6 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     @classmethod
     def get_all_data_categories(cls) -> list[DataProviderDataCategoryDict]:
-        subclass: TDataProviderClass
         categories: list[DataProviderDataCategoryDict] = [
             item for subclass in cls.registry["DataProvider"].values() for item in subclass.get_data_categories()
         ]
@@ -488,10 +486,17 @@ class FrontendDataProvider(DataProvider):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+    @override
     def test_connection(self) -> bool:
         return True
 
-    def get_variable_value(self, data: dict[str, Any], variable: dict[str, Any], **kwargs) -> TVariableValue:
+    @override
+    def get_variable_value(
+        self,
+        data: dict[str, Any],
+        variable: QualifiedBuiltInVariableDict,
+        **kwargs,
+    ) -> TVariableValue:
         name = variable["name"]
         category = variable["category"]
         qualified_name = variable["qualified_name"]
@@ -517,17 +522,27 @@ class FrontendDataProvider(DataProvider):
         )
         raise ValueError(msg)
 
-    def calculate_variables(self, project_builtin_variables: dict[str, Any], data: dict[str, Any]) -> dict[str, Any]:
+    @override
+    def calculate_variables(
+        self,
+        project_builtin_variables: list[BuiltinVariableDict],
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
         select_relevant_variables = self.select_relevant_variables(project_builtin_variables)
         calculated_variables = {}
         for variable in select_relevant_variables:
-            value = self.get_variable_value(data, variable)
-            exists = value is not None
-            if exists:
-                calculated_variables[variable["qualified_name"]] = value
-            else:
-                calculated_variables[variable["qualified_name"]] = ""
-            calculated_variables[f"{variable['qualified_name']}.exists"] = exists
+            try:
+                value = self.get_variable_value(data, variable)
+                exists = value is not None
+                if exists:
+                    calculated_variables[variable["qualified_name"]] = value
+                else:
+                    calculated_variables[variable["qualified_name"]] = ""
+                calculated_variables[f"{variable['qualified_name']}.exists"] = exists
+            except Exception:
+                logger.exception("Error calculating variable '%s'", variable["name"])
+                calculated_variables[variable["qualified_name"]] = "None"
+                calculated_variables[f"{variable['qualified_name']}.exists"] = False
 
         return calculated_variables
 
@@ -548,6 +563,7 @@ class OAuthDataProvider(DataProvider):
     _scopes_names: ClassVar[dict[str, str]] = {}
     _categories_scopes: ClassVar[dict[str, str]] = {}
 
+    @override
     def __init__(
         self,
         client_id: str | None = None,
@@ -572,6 +588,7 @@ class OAuthDataProvider(DataProvider):
         self.builtin_variables = builtin_variables
         self.custom_variables = custom_variables
 
+    @override
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(client_id={self.client_id!r}, client_secret={self.client_secret!r}, "
@@ -588,6 +605,7 @@ class OAuthDataProvider(DataProvider):
             logger.critical("FRONTEND_URL environment variable not set, empty, or failed to load.")
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
 
+    @override
     def to_public_dict(self) -> dict:
         # Now requires context data to generate the authorize_url
         authorize_url = self.get_authorize_url(
