@@ -10,7 +10,8 @@ from __future__ import annotations
 import base64
 import re
 import urllib.parse
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
+from enum import IntEnum
 from functools import cache, cached_property
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, override
@@ -52,6 +53,13 @@ if TYPE_CHECKING:
 __all__ = ["FitbitDataProvider"]
 
 logger = get_logger(__name__)
+
+
+class DailyStatsMaxDateRange(IntEnum):
+    """Maximum range for daily stats requests in Fitbit API."""
+
+    activityCalories = 30
+    OTHER = 1095
 
 
 class Account(DataCategory):
@@ -970,15 +978,38 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cache
     def daily_stats(
-        self, activity: str, start_date: datetime, end_date: datetime
+        self,
+        activity: Literal[
+            "activityCalories",
+            "calories",
+            "caloriesBMR",
+            "distance",
+            "elevation",
+            "floors",
+            "minutesSedentary",
+            "minutesLightlyActive",
+            "minutesFairlyActive",
+            "minutesVeryActive",
+            "steps",
+            "swimming-strokes",
+            "tracker/activityCalories",
+            "tracker/calories",
+            "tracker/distance",
+            "tracker/elevation",
+            "tracker/floors",
+            "tracker/minutesSedentary",
+            "tracker/minutesLightlyActive",
+            "tracker/minutesFairlyActive",
+            "tracker/minutesVeryActive",
+            "tracker/steps",
+        ],
+        start_date: datetime,
+        end_date: datetime,
     ) -> ActivityTimeSeriesResponseDict | ActiveZoneMinutesSeriesResponseDict:
         """Fetches the user's daily activity statistics.
 
         Args:
             activity: The type of activity to retrieve.
-                Allowed values are: 'activityCalories', 'calories', 'caloriesBMR', 'distance', 'elevation', 'floors',
-                'minutesSedentary', 'minutesLightlyActive', 'minutesFairlyActive', 'minutesVeryActive', and 'steps'.
-                You can add 'tracker/' before the activity name to only get data collected with a tracker.
             start_date: Start date of the range for which to retrieve data.
                 'activityCalories' has a maximum range of 30 days.
                 All other activities have a maximum range of 1095 days.
@@ -1011,27 +1042,22 @@ class FitbitDataProvider(OAuthDataProvider):
                     }
                   ]
                 }
-
-        Examples:
-
-
         """
         #  /1/user/[user-id]/activities/[resource-path]/date/[start-date]/[end-date].json
         #  GET https://api.fitbit.com/1/user/-/activities/steps/date/2019-01-01/2019-01-07.json
         if (
             activity == "activityCalories"
             or activity == "tracker/activityCalories"
-            and (end_date - start_date).days > 30
+            and (end_date - start_date).days > DailyStatsMaxDateRange.activityCalories
         ):
             msg = f"Maximum range for {activity} is 30 days. Received {(end_date - start_date).days} days."
             raise ValueError(msg)
-        if (end_date - start_date).days > 1095:
+        if (end_date - start_date).days > DailyStatsMaxDateRange.OTHER:
             msg = f"Maximum range for {activity} is 1095 days. Received {(end_date - start_date).days} days."
             raise ValueError(msg)
 
         url = (
-            f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date.strftime('%Y-%m-%d')}/"
-            f"{end_date.strftime('%Y-%m-%d')}.json"
+            f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date:%Y-%m-%d}/{end_date:%Y-%m-%d}.json"
         )
         return self.api_client.make_request(url)
 
@@ -1133,7 +1159,8 @@ class FitbitDataProvider(OAuthDataProvider):
             week = get_isoweek(activity.start_date)
             weekly_stats.setdefault(week, []).append(activity.activeDuration)
         average = (
-            sum(sum(durations) for durations in weekly_stats.values()) / 26 / 60_000  # convert milliseconds to minutes
+            sum(sum(durations) for durations in weekly_stats.values()) / 26 / 60_000
+            # convert milliseconds to minutes
         )
         if average > 0:
             return round(average, 1)
