@@ -10,15 +10,13 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, NotRequired, TypedDict, TypeVar
+from typing import Any, ClassVar, NotRequired, TypedDict, TypeVar
 
 from ddsurveys.get_logger import get_logger
+from ddsurveys.models import SurveyStatus
 from ddsurveys.shared_bases import FormButton as BaseFormButton
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import UIRegistry
-
-if TYPE_CHECKING:
-    from ddsurveys.models import SurveyStatus
 
 __all__ = [
     "SurveyPlatform",
