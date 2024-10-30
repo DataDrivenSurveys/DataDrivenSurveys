@@ -10,12 +10,15 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, NotRequired, TypedDict, TypeVar
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.shared_bases import FormButton as BaseFormButton
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import UIRegistry
+
+if TYPE_CHECKING:
+    from ddsurveys.models import SurveyStatus
 
 __all__ = [
     "SurveyPlatform",
@@ -47,6 +50,15 @@ TSurveyPlatformFormField = TypeVar("TSurveyPlatformFormField", bound="FormField"
 
 TSurveyPlatformFormButtonClass = type["FormButton"]
 TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound="FormButton")
+
+
+class SurveyPlatformInfoDict(TypedDict):
+    survey_platform_name: NotRequired[str]
+    survey_name: str
+    survey_status: SurveyStatus
+    connected: bool
+    active: bool
+    exists: bool
 
 
 class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
@@ -109,20 +121,20 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
         """Check if all the required fields are present and not empty.
 
         Args:
-            fields (list[dict]): A list of dictionaries representing the fields to be
+            fields: A list of dictionaries representing the fields to be
                 checked.
-            override_required_fields (list[str] | None, optional): A list of field names
+            override_required_fields: A list of field names
                 that should be considered required, overriding the default required fields.
                 Defaults to None.
-            class_ (type | None, optional): The class type to be used for checking the
+            class_: The class type to be used for checking the
                 fields.
                 Defaults to None.
 
         Returns:
-            tuple[bool, str | None]: A tuple where the first element is a boolean
-                indicating whether all required fields are present and not empty,
-                and the second element is a string containing an error message
-                if any required field is missing or empty, otherwise None.
+            A tuple where the first element is a boolean indicating whether all required
+            fields are present and not empty, and the second element is a string
+            containing an error message if any required field is missing or empty,
+            otherwise None.
         """
         if override_required_fields is None:
             override_required_fields = []
@@ -135,22 +147,36 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
             class_=class_,
         )
 
-    @abstractmethod
-    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
-        """Fetch information about the survey platform and translate it into the DDS format.
+    @classmethod
+    def get_default_survey_status_dict(cls) -> SurveyPlatformInfoDict:
+        """Get a default dictionary containing survey platform information.
 
-        Each survey platform should implement this method and decide what any of these keys mean in its own platform
-        context.
+        This method returns a dictionary with default values for survey platform status,
+        which can be used as a base for creating or initializing survey platform info.
 
         Returns:
-            dict with the following keys: {
-                "connected": False,        # Whether the survey platform is connected or not.
-                "active": False,           # Whether the survey is active or not.
-                "exists": False,           # Whether the survey exists or not.
-                "survey_name": None,       # The name of the survey.
-                "survey_status": "unknown" # The status of the survey. Allowed values are: "active", "inactive",
-                "unknown"
-            }
+            SurveyPlatformInfoDict: A dictionary containing the survey platform information.
+        """
+        return {
+            "survey_name": "",
+            "survey_status": SurveyStatus.Unknown,
+            "connected": False,
+            "active": False,
+            "exists": False,
+        }
+
+    @abstractmethod
+    def fetch_survey_platform_info(self) -> tuple[int, str | None, SurveyPlatformInfoDict]:
+        """Fetch information about the survey platform and convert it to the DDS format.
+
+        Each survey platform should implement this method and decide what any of these
+        keys mean in its own platform context.
+
+        Returns:
+            A tuple with the following structure:
+            - Status code (HTTPStatus.OK or 40x)
+            - Message ID (str)
+            - A SurveyPlatformInfoDict
         """
         ...
 
@@ -169,11 +195,11 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
             - Status code (HTTPStatus.OK or 40x)
             - Message ID (str)
             - Message English Text (str)
-            - Project Name (str) - The project name can be conditional (user input or survey name) and should be
-            returned here.
+            - Project Name (str) - The project name can be conditional
+                (user input or survey name) and should be returned here.
             - Fields for the survey platform (dict)
-            - The fields required for a particular survey platform. Stored in JSON field project.survey_platform_fields.
-
+            - The fields required for a particular survey platform.
+                Stored in JSON field project.survey_platform_fields.
         """
         ...
 

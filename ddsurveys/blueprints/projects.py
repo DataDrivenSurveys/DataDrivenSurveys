@@ -31,7 +31,7 @@ from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
 
-    from ddsurveys.survey_platforms.bases import TSurveyPlatform, TSurveyPlatformClass
+    from ddsurveys.survey_platforms.bases import SurveyPlatformInfoDict, TSurveyPlatform, TSurveyPlatformClass
     from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CustomVariableUploadDict
 
 logger = get_logger(__name__)
@@ -484,13 +484,8 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
 
 
 def get_survey_platform_connection(project: Project) -> tuple[int, str | None, dict[str, Any]]:
-    survey_platform_info: dict[str, str | bool | None] = {
-        "survey_platform_name": project.survey_platform_name,
-        "connected": False,
-        "exists": False,
-        "survey_name": None,
-        "survey_status": "unknown",
-    }
+    survey_platform_info: SurveyPlatformInfoDict = SurveyPlatform.get_default_survey_status_dict()
+    survey_platform_info["survey_platform_name"] = project.survey_platform_name
 
     platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(project.survey_platform_name)
 
@@ -517,8 +512,8 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
     Returns:
         Response: A JSON response indicating the result of the connection check.
         - HTTPStatus.OK: If the connection check is successful.
-        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported or there is a failure in checking
-            the connection.
+        - HTTPStatus.BAD_REQUEST: If the survey platform is not supported or there is a
+            failure in checking the connection.
         - HTTPStatus.UNAUTHORIZED: If the user is unauthorized.
         - HTTPStatus.NOT_FOUND: If the project is not found.
     """

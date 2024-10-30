@@ -108,13 +108,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         self.distributions_api = DistributionsAPI(api_token=self.survey_platform_api_key)
 
     def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
-        survey_platform_info = {
-            "connected": False,
-            "active": False,
-            "exists": False,
-            "survey_name": None,
-            "survey_status": "unknown",
-        }
+        survey_platform_info = self.get_default_survey_status_dict()
 
         message_id = None
 
@@ -131,7 +125,7 @@ class QualtricsSurveyPlatform(SurveyPlatform):
 
             survey_platform_info["survey_name"] = survey_info["result"]["SurveyName"]
             survey_platform_info["active"] = survey_active
-            survey_platform_info["survey_status"] = "active" if survey_active else "inactive"
+            survey_platform_info["survey_status"] = SurveyStatus.Active if survey_active else SurveyStatus.Inactive
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
