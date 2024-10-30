@@ -72,6 +72,7 @@ fields_missing_survey_platform_api_key = fields_valid[:1]
     ],
 )
 def test_create_project(
+    *,
     client,
     mock_surveys_api,
     name: str,
@@ -81,7 +82,7 @@ def test_create_project(
     expected_status_code: int,
     expected_message_id: str,
 ):
-    """Test the create project endpoint.
+    """Test the /projects/ [POST] endpoint.
 
     Using parametrize to test various scenarios.
     """
@@ -97,8 +98,6 @@ def test_create_project(
     response = client.post(
         project_endpoint, headers=headers, data=json.dumps(project_data), content_type="application/json"
     )
-
-    print()
 
     assert (
         response.status_code == expected_status_code

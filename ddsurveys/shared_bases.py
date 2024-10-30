@@ -893,30 +893,28 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
         return registry
 
     @classmethod
-    def get_class_by_name(cls, name: str) -> T:
+    def get_class_by_name(cls, name: str, *, default: T | None = None) -> T | None:
         """Retrieves a class from the registry by its name.
 
         Args:
-            name (str): The name of the class to retrieve.
+            name: The name of the class to retrieve.
+            default: The default value to return if no matching class is found.
 
         Returns:
             TRegistryClass: The class object associated with the given name.
         """
-        class_: T | None = cls.registry.get(cls.base_name, {}).get(name, None)
-        if class_ is not None:
-            return class_
-        msg: str = f"No class with name '{name}' found."
-        raise KeyError(msg)
+        return cls.registry.get(cls.base_name, {}).get(name, default)
 
     @classmethod
-    def get_class_by_value(cls, value: str) -> T:
+    def get_class_by_value(cls, value: str, *, default: T | None = None) -> T | None:
         """Retrieves a class from the registry by its value attribute.
 
         This method is useful for cases where classes are referenced by a value
         other than their name, such as a lowercase version of the name.
 
         Args:
-            value (str): The value associated with the class to retrieve.
+            value: The value associated with the class to retrieve.
+            default: The default value to return if no matching class is found.
 
         Returns:
             The class object associated with the given value, or None if no matching
@@ -925,8 +923,7 @@ class Registry[T: TRegistryClass](metaclass=RegistryBase):
         for subclass in cls.registry.get(cls.base_name, {}).values():
             if subclass.name_lower == value:
                 return subclass
-        msg: str = f"No class with value '{value}' found."
-        raise KeyError(msg)
+        return default
 
     @classmethod
     def to_dict(cls) -> dict[str, Any]:
