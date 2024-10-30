@@ -34,13 +34,12 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, cast, override
+from typing import TYPE_CHECKING, ClassVar, TypedDict, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
     JSON,
     BigInteger,
-    Column,
     DateTime,
     Engine,
     Enum,
@@ -55,7 +54,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Query, Session, mapped_column, relationship, sessionmaker
 
-from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, SurveyPlatformFieldsDict
+from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, FieldsDict, SurveyPlatformFieldsDict
 
 try:
     from ddsurveys.get_logger import get_logger
@@ -125,6 +124,8 @@ class CreateEngineKwargsDict(TypedDict, total=False):
 
 
 class DBManager:
+    """Singleton class for managing database connections and sessions."""
+
     ENGINE: Engine | None = None
     SESSION_MAKER: sessionmaker | None = None
     DB: Session | None = None
@@ -136,7 +137,7 @@ class DBManager:
     }
 
     @classmethod
-    def get_engine(cls, app: Flask | None= None, database_url: str = "", *, force_new: bool = False) -> Engine:
+    def get_engine(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> Engine:
         """Retrieves or initializes the SQLAlchemy engine for database connections.
 
         This function checks if the global `ENGINE` variable is already initialized.
@@ -330,12 +331,19 @@ class DataProviderType(StrEnum):
 class Base(DeclarativeBase):
     """Base class for all database models."""
 
+    type_annotation_map: ClassVar[type, JSON] = {
+        FieldsDict: JSON,
+        SurveyPlatformFieldsDict: JSON,
+        list[BuiltinVariableDict]: JSON,
+        list[CustomVariableDict]: JSON,
+    }
+
     @abstractmethod
     def to_dict(self) -> dict:
         """Creates a dictionary representation of a database row."""
 
     def to_public_dict(self) -> dict:
-        """Creates a dictionary representation of a database row, wit no sensitive data."""
+        """Creates a non-sensitive dictionary representation of a database row."""
         msg = "Subclasses must implement this method."
         raise NotImplementedError(msg)
 
@@ -381,11 +389,9 @@ class Researcher(Base):
 
 
 class Collaboration(Base):
-    """This represents a collaboration between a researcher and a project."""
+    """Collaboration between a researcher and a project."""
 
     __tablename__ = "collaboration"
-    # project_id = Column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
-    # researcher_id = Column(Integer, ForeignKey("researcher.id", ondelete="CASCADE"), primary_key=True)
 
     project_id: Mapped[str] = mapped_column(
         ForeignKey("project.id", ondelete="CASCADE"),
@@ -458,8 +464,10 @@ class DataConnection(Base):
     """Represents a data connection in the database.
 
     Attributes:
-        project_id (str): The unique identifier for the project associated with the data connection.
-        data_provider_name (Enum): The name of the data provider associated with the data connection.
+        project_id (str): The unique identifier for the project associated with the data
+            connection.
+        data_provider_name (Enum): The name of the data provider associated with the
+            data connection.
         data_provider (relationship): A relationship to the DataProvider table.
         fields (JSON): The fields associated with the data connection.
         project (relationship): A relationship to the Project table.
@@ -478,7 +486,7 @@ class DataConnection(Base):
         primary_key=True,
     )
 
-    fields: Mapped[JSON] = mapped_column(JSON)
+    fields: Mapped[FieldsDict] = mapped_column(JSON)
 
     data_provider: Mapped[DataProvider] = relationship("DataProvider", back_populates="data_connections")
     project: Mapped[Project] = relationship("Project", back_populates="data_connections")
@@ -512,6 +520,8 @@ class DataConnection(Base):
 
 
 class Project(Base):
+    """Project model."""
+
     __tablename__ = "project"
 
     # TODO: change the project to use integer ids instead of uuid
@@ -523,7 +533,7 @@ class Project(Base):
         Enum(SurveyStatus), default=SurveyStatus.Unknown, nullable=False
     )
     survey_platform_name: Mapped[str] = mapped_column(String(255))
-    survey_platform_fields: Mapped[JSON] = mapped_column(JSON)
+    survey_platform_fields: Mapped[SurveyPlatformFieldsDict] = mapped_column(JSON)
     creation_date: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     last_modified: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
     last_synced: Mapped[datetime] = mapped_column(DateTime, nullable=True)
@@ -576,16 +586,17 @@ class Project(Base):
             "short_id": str(self.short_id),
             "name": self.name,
             "survey_name": (
-                self.survey_platform_fields.get("survey_name", None)
-                if self.survey_platform_fields is not None
-                else None
+                self.survey_platform_fields.get("survey_name", "") if self.survey_platform_fields is not None else ""
             ),
             "data_connections": [dc.to_public_dict() for dc in self.data_connections],
         }
 
 
 class Distribution(Base):
+    """Distribution model."""
+
     __tablename__ = "distribution"
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     url: Mapped[str] = mapped_column(String(255))
 
@@ -597,8 +608,11 @@ class Distribution(Base):
 
 
 class Respondent(Base):
+    """Respondent model."""
+
     __tablename__ = "respondent"
-    id: Mapped[int] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("project.id", ondelete="CASCADE"))
     distribution_id: Mapped[int] = mapped_column(Integer, ForeignKey("distribution.id", ondelete="CASCADE"))
 
@@ -625,6 +639,8 @@ class Respondent(Base):
 
 
 class DataProviderAccess(Base):
+    """DataProviderAccess model."""
+
     __tablename__ = "data_provider_access"
 
     data_provider_name: Mapped[DataProviderName] = mapped_column(

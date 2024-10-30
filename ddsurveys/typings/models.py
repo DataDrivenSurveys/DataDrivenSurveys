@@ -1,5 +1,8 @@
-#!/usr/bin/env python3
-"""Created on 2024-07-24 13:07.
+"""Various types of data.
+
+This module is deprecated and will be merged into the base dddsurveys.models module.
+
+Created on 2024-07-24 13:07.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
@@ -61,7 +64,7 @@ class DataOriginDict(TypedDict):
 
 class CollaborationDict(TypedDict):
     project_id: str
-    researcher: ResearcherDict
+    researcher: ResearcherDict | None
 
 
 class DataConnectionDict(TypedDict):
@@ -143,14 +146,14 @@ class SurveyPlatformFieldsDict(TypedDict):
 
 
 class DistributionDict(TypedDict):
-    id: str
+    id: int
     url: str
 
 
 class RespondentDict(TypedDict):
     id: str
     project_id: str
-    distribution: DistributionDict
+    distribution: DistributionDict | None
 
 
 class ProjectDict(TypedDict):
