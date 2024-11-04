@@ -1,4 +1,4 @@
-name: Deploy to Debian Server
+name: Deploy to Debian Server (non-parallel)
 
 on:
   workflow_dispatch: {}
