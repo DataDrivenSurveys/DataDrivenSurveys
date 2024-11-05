@@ -8,11 +8,22 @@ The manual for this project is maintained as a [wiki](https://github.com/DataDri
 
 [The wiki](https://github.com/DataDrivenSurveys/DataDrivenSurveys/wiki) contains a variety of tutorials and explanations for things such as deployment, adding new data-providers, variables, survey platforms, etc.
 
+## Quick Setup Guide
+
+This project requires the following software:
+
+- `git`: For code version control. Installation instructions: [https://git-scm.com/downloads](https://git-scm.com/downloads)
+- `node`: For working on the `frontend`. Install instructions: [https://nodejs.org/en/download/prebuilt-installer/current](https://nodejs.org/en/download/prebuilt-installer/current)
+- `uv`: For python project management of the `ddsurveys` module. Installation instructions: [https://docs.astral.sh/uv/getting-started/installation/](https://docs.astral.sh/uv/getting-started/installation/)
+- `docker`: For development and production deployment. Installation instructions: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+
 ## Citation
 
 Here is how you should cite this repository, in the ACM Reference Format:
 
-Lev Velykoivanenko, Kavous Salehzadeh Niksirat, Stefan Teofanovic, Bertil Chapuis, Michelle L. Mazurek, and Kévin Huguenin. 2024. Designing a Data-Driven Survey System: Leveraging Participants' Online Data to Personalize Surveys. In Proceedings of the CHI Conference on Human Factors in Computing Systems (CHI '24). Association for Computing Machinery, New York, NY, USA, Article 498, 1–22. <https://doi.org/10.1145/3613904.3642572>
+```text
+Lev Velykoivanenko, Kavous Salehzadeh Niksirat, Stefan Teofanovic, Bertil Chapuis, Michelle L. Mazurek, and Kévin Huguenin. 2024. Designing a Data-Driven Survey System: Leveraging Participants' Online Data to Personalize Surveys. In Proceedings of the CHI Conference on Human Factors in Computing Systems (CHI '24). Association for Computing Machinery, New York, NY, USA, Article 498, 1–22. https://doi.org/10.1145/3613904.3642572
+```
 
 Here is the citation in bibtex format:
 

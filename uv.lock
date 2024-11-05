@@ -513,7 +513,7 @@ dev = [
     { name = "coverage", extras = ["toml"], specifier = ">=7.6.3" },
     { name = "docutils", specifier = ">=0.21.2" },
     { name = "groundwork-sphinx-theme", specifier = ">=1.1.1" },
-    { name = "ipython" },
+    { name = "ipython", specifier = ">=8.29.0" },
     { name = "mypy", specifier = ">=1.12.0" },
     { name = "mypy-extensions", specifier = ">=1.0.0" },
     { name = "pytest", specifier = ">=8.3.3" },
