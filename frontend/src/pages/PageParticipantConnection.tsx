@@ -51,6 +51,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
   const [project, setProject] = useState<API.Respondent.Project | null>(null);
   const [dataProviders, setDataProviders] = useState<Models.Dist.DataProvider[]>([]);
   const [expand, setExpand] = useState(false);
+  const [containerMaxWidth, setContainerMaxWidth] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl'>('sm');
 
   const [preparingSurvey, setPreparingSurvey] = useState<boolean>(false);
   const [surveyURL, setSurveyURL] = useState<string | null>(null);
@@ -274,6 +275,15 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
     t,
   ]);
 
+  const handleShowVariablesClicked = useCallback(() => {
+    setExpand(!expand);
+    if (expand) {
+      setContainerMaxWidth('sm');
+    } else {
+      setContainerMaxWidth('md');
+    }
+  }, [expand, setContainerMaxWidth]);
+
   return (
     <LayoutMain
       header={
@@ -285,7 +295,10 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
           </Stack>
         )
       }
-      horizontalContainerProps={{}}
+      horizontalContainerProps={{
+        maxWidth: containerMaxWidth,
+        sx: { position: 'relative' },
+      }}
       loading={!project || !dataProviders}
     >
       {project && (
@@ -316,7 +329,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                       type: 'click',
                     }}
                   >
-                    <Button onClick={() => setExpand(!expand)} variant="outlined">
+                    <Button onClick={() => handleShowVariablesClicked()} variant="outlined">
                       {expand
                         ? t('ui.respondent.connection.button_variables_table.hide')
                         : t('ui.respondent.connection.button_variables_table.show')}
