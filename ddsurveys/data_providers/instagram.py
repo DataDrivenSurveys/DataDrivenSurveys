@@ -6,11 +6,12 @@ Created on 2023-08-31 16:59.
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 from functools import cached_property
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
 import requests
 
@@ -26,18 +27,18 @@ __all__ = ["InstagramDataProvider"]
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from ddsurveys.data_providers.variables import CVAttribute
     from ddsurveys.typings.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
 
 class Media(DataCategory):
-
     def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
-    cv_attributes = []
-    builtin_variables = [
+    cv_attributes: ClassVar[list[CVAttribute]] = []
+    builtin_variables: ClassVar[list[list[BuiltInVariable]]] = [
         BuiltInVariable.create_instances(
             name="media_count",
             label="Media Count",
@@ -79,7 +80,7 @@ class InstagramDataProvider(OAuthDataProvider):
     # Unique class attributes go here
 
     # Form fields declarations go here
-    form_fields = [
+    form_fields: ClassVar = [
         FormField(
             name="client_id",
             type="text",
@@ -107,7 +108,6 @@ class InstagramDataProvider(OAuthDataProvider):
     @cached_property
     def media_count(self):
         try:
-
             media_count_url = f"https://graph.instagram.com/{self.api_version}/{self.user_id}?fields=media_count&access_token={self.access_token}"
 
             response = requests.get(media_count_url)
@@ -149,11 +149,7 @@ class InstagramDataProvider(OAuthDataProvider):
             "scope": "user_profile,user_media",
             "response_type": "code",
         }
-        return (
-            requests.Request("GET", self.base_authorize_url, params=params)
-            .prepare()
-            .url
-        )
+        return requests.Request("GET", self.base_authorize_url, params=params).prepare().url
 
     def get_client_id(self) -> str:
         return self.client_id
@@ -229,7 +225,9 @@ class InstagramDataProvider(OAuthDataProvider):
             }
 
         except requests.HTTPError:
-            logger.exception("HTTP error when exchanging Instagram code for token. Status code: %s", response.status_code)
+            logger.exception(
+                "HTTP error when exchanging Instagram code for token. Status code: %s", response.status_code
+            )
             return {
                 "success": False,
                 "message_id": "api.data_provider.exchange_code_error.general_error",
@@ -241,9 +239,11 @@ class InstagramDataProvider(OAuthDataProvider):
                 "message_id": "api.data_provider.exchange_code_error.general_error",
             }
 
-    def revoke_token(self, token: str) -> bool:
-        pass
+    @override
+    def revoke_token(self, token: str | None = None) -> bool:
+        return False
 
+    @override
     def test_connection_before_extraction(self) -> bool:
         try:
             # Use the access token to fetch the user's profile information
@@ -262,12 +262,13 @@ class InstagramDataProvider(OAuthDataProvider):
             return False
         return True
 
+    @override
     def test_connection(self) -> bool:
         # Using client credentials flow to check if the app id and secret are valid
-        headers = {
+        headers: dict[str, str] = {
             "accept": "application/json",
         }
-        data = {
+        data: dict[str, str] = {
             "client_id": self.client_id,
             "client_secret": self.client_secret,
             "grant_type": "authorization_code",
@@ -275,15 +276,16 @@ class InstagramDataProvider(OAuthDataProvider):
             "code": "<test-code>",  # replace with a test code
         }
         try:
-            response = requests.post(self.token_url, headers=headers, data=data)
-            success = response.status_code == HTTPStatus.OK
+            response: requests.Response = requests.post(self.token_url, headers=headers, data=data, timeout=5)
+            success: bool = response.status_code == HTTPStatus.OK
             if response.status_code != HTTPStatus.OK:
                 error = response.json().get("error_message")
                 success = error not in ("Invalid platform app", "Invalid Client ID")
-            return success  # Returns the status code. In real use, you'd want to handle different response codes differently.
-        except Exception as e:
-            logger.exception("Error connecting to Instagram: %s", e)
+        except Exception:
+            logger.exception("Error connecting to Instagram.")
             return False
+        else:
+            return success  # Returns the status code. In real use, you'd want to handle different response codes differently.
 
     # Properties to access class attributes
 

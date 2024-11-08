@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, TypeVar, cast, overr
 
 from ddsurveys.data_providers.variables import BuiltInVariable, CustomVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
+from ddsurveys.shared_bases import FormButton, UIRegistry
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import FormTextBlock as BaseFormTextBlock
-from ddsurveys.shared_bases import UIRegistry
 from ddsurveys.typings.data_providers.variables import (
     BuiltinVariableDict,
     CVAttributeDict,
@@ -23,10 +23,12 @@ from ddsurveys.typings.data_providers.variables import (
 )
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from ddsurveys.data_providers.data_categories import DataCategory
     from ddsurveys.typings.variable_types import TVariableValue
 
-__all__ = [
+__all__: list[str] = [
     "FormField",
     "DataProvider",
     "OAuthDataProvider",
@@ -39,7 +41,7 @@ __all__ = [
     "TOAuthDataProvider",
 ]
 
-logger = get_logger(__name__)
+logger: Logger = get_logger(__name__)
 
 
 class DataProviderDataCategoryDict(TypedDict):
@@ -53,10 +55,9 @@ class DataProviderDataCategoryDict(TypedDict):
 
 
 # Base classes used for defining data providers
-DATA_PROVIDER_BASE_CLASSES = ["DataProvider", "OAuthBase"]
+DATA_PROVIDER_BASE_CLASSES: list[str] = ["DataProvider", "OAuthBase"]
 
 
-# TODO: stop using Enum attribute nomenclature and use attribute names that make sense
 class DataProvider(UIRegistry["TDataProviderClass"]):
     """Base class for data providers.
 
@@ -65,7 +66,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     Child classes should follow the same class layout to standardize the code base and
     to facilitate development.
     Comments declare what type of methods are meant to go where.
-    Simply copy the class, delete the non-abstract methods, and implement the abstract
+    Copy the class, delete the non-abstract methods, and implement the abstract
     methods.
     Then you can add any class/instance attributes, form fields, variables, etc.
     """
@@ -78,7 +79,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         "OAuthDataProvider",
         "FrontendDataProvider",
     ]
-    _package = __package__
+    _package: str = __package__
 
     # Do not override the following attributes
     # __registry: dict[str, TDataProviderClass] = {}
@@ -113,16 +114,13 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     """
 
     # Form fields declarations go here
-    # Child classes should redeclare the form_fields attribute and populate the list
+    # Child classes should re-declare the form_fields attribute and populate the list
     # with instances of FormField.
     # These instances are used to create the form when adding a data provider in the UI.
-    form_fields: ClassVar[list[FormField]] = []
+    form_fields: ClassVar[list[FormField | FormButton]] = []
 
     # Custom Variable Data Categories
     data_categories: ClassVar[list[DataCategory]] = []
-
-    # Variable declarations go here
-    # Use the @variable decorator
 
     # Standard/builtin class methods go here
     @override
@@ -362,7 +360,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     def get_qualified_builtin_variable_dict(
         cls, builtin_variable: BuiltInVariable, data_category: DataCategory, type_: str
     ) -> QualifiedBuiltInVariableDict:
-        dct = builtin_variable.to_dict()
+        dct: BuiltinVariableDict = builtin_variable.to_dict()
         dct = cast(QualifiedBuiltInVariableDict, dct)
         dct["data_provider"] = cls.name_lower
         dct["category"] = data_category.label

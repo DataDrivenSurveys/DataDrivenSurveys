@@ -138,6 +138,7 @@ dev-dependencies = [
   "tqdm>=4.66.5",
   "types-flask-cors>=5.0.0.20240902",
   "ipython>=8.29.0",
+  "types-requests>=2.32.0.20241016",
 ]
 
 [tool.uv.sources]
