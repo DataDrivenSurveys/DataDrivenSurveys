@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+"""Tests for data providers."""
 
-# test_data_provider.py
-# (.venv) C:\UNIL\DataDrivenSurveys\ddsurveys>python -m pytest
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 import pytest
@@ -9,7 +9,7 @@ from flask import Flask
 
 from ddsurveys.data_providers.bases import DataProvider, OAuthDataProvider
 
-# TODO: for some reason the directly imported classes are not initialized correctly, as if they were not registered.
+# FIXME: for some reason the directly imported classes are not initialized correctly, as if they were not registered.
 from ddsurveys.data_providers.fitbit import FitbitDataProvider
 from ddsurveys.data_providers.instagram import InstagramDataProvider
 
@@ -97,8 +97,9 @@ def test_get_all_form_fields():
         for key in main_keys:
             assert key in provider_form, f"Key {key} missing in provider {provider_form.get('label', 'Unknown')}."
             if not isinstance(provider_form[key], bool):
+                assert provider_form[key] is not None, f"Key '{key}' has None value."
                 assert (
-                    provider_form[key] is not None and provider_form[key] != ""
+                    provider_form[key] != ""
                 ), f"Key {key} in provider {provider_form.get('label', 'Unknown')} has empty or None value."
 
         # Check if 'instructions' follow the expected pattern
@@ -426,48 +427,47 @@ def test_get_used_variables(provider_name):
             ], f"Missing documentation for the used variable {used_variable['variable_name']}."
 
 
-"""
-def test_get_the_github_token_from_refresh_token():
+# def test_get_the_github_token_from_refresh_token():
+#     client_id = ""
+#     client_secret = ""
+#     access_token = ""
+#     refresh_token = ""
 
+#     auth = Auth.Token(access_token)
+#     g = Github(auth=auth)
 
-    client_id = "Iv1.8227a9c24d394f95"
-    client_secret = "de1c6b38f695ae296cf32b1a1d679b2f2b0bf2a7"
-    access_token = "ghu_MPbyRZiwpQQJcFJ4xwYUcHMYaADREF28DtH9"
-    refresh_token = "ghr_PUUXjkWS1uS3XKiyZjZx8FCHxts6Rmo7p5r015mBLkCYpsrTdZTEYCXf3EnqhBXRajH2vq4JKz96"
+#     user = g.get_user()
 
-    auth = Auth.Token(access_token)
-    g = Github(auth=auth)
+#     orgs = user.get_orgs()
+#     repos = user.get_repos()
+#     stared = user.get_starred()
 
-    user = g.get_user()
+#     for org in orgs:
+#         print(org.login)
 
-    orgs = user.get_orgs()
-    repos = user.get_repos()
-    stared = user.get_starred()
+#     # Convert organizations into a list of dictionaries
+#     # orgs_list = [{"login": org.login, "description": org.description, "url": org.url} for org in orgs]
 
-    for org in orgs:
-        print(org.login)
+#     # Convert repositories into a list of dictionaries
+#     repos_list = [
+#         {
+#             "name": repo.name,
+#             "description": repo.description,
+#             "url": repo.html_url,
+#             "owner": repo.owner.login,
+#             "forks_count": repo.forks_count,
+#             "has_wiki": repo.has_wiki,
+#             "open_issues_count": repo.open_issues_count,
+#             "stargazers_count": repo.stargazers_count,
+#         }
+#         for repo in repos
+#     ]
 
-    # Convert organizations into a list of dictionaries
-    # orgs_list = [{"login": org.login, "description": org.description, "url": org.url} for org in orgs]
+#     # Convert starred repositories into a list of dictionaries
+#     starred_list = [
+#         {"name": star.name, "description": star.description, "url": star.html_url, "stars": star.stargazers_count}
+#         for star in stared
+#     ]
 
-    # Convert repositories into a list of dictionaries
-    repos_list = [{
-        "name": repo.name,
-        "description": repo.description,
-        "url": repo.html_url,
-        "owner": repo.owner.login,
-        "forks_count": repo.forks_count,
-        "has_wiki": repo.has_wiki,
-        "open_issues_count": repo.open_issues_count,
-        "stargazers_count": repo.stargazers_count
-    } for repo in repos]
-
-
-
-    # Convert starred repositories into a list of dictionaries
-    starred_list = [{"name": star.name, "description": star.description, "url": star.html_url, "stars": star.stargazers_count} for star in stared]
-
-
-    # Get the access token object
-    token = g._Github__requester._Requester__oauth_token
-"""
+#     # Get the access token object
+#     token = g._Github__requester._Requester__oauth_token
