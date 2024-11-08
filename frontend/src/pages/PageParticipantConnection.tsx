@@ -148,12 +148,12 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
 
     localStorage.setItem('RespondentTempProjectId', projectShortId);
 
-    fetchProject();
+    void fetchProject();
   }, [placeholder, fetchProject, projectShortId, urlParams, showSnackbar, t]);
 
   useEffect(() => {
     if (project) {
-      fetchOauthDataProviders();
+      void fetchOauthDataProviders();
     }
   }, [fetchOauthDataProviders, project]);
 
@@ -285,6 +285,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
           </Stack>
         )
       }
+      horizontalContainerProps={{}}
       loading={!project || !dataProviders}
     >
       {project && (
@@ -348,7 +349,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
                           <Typography variant="body1">Connected as {data_provider.token.user_name}</Typography>
                           <Button
                             color={'primary'}
-                            disabled={preparingSurvey || surveyURL !== null}
+                            disabled={preparingSurvey || surveyURL != null}
                             onClick={() => handleDisconnect(data_provider.data_provider_name)}
                             variant={'text'}
                           >
@@ -406,7 +407,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
               <Stack alignItems={'center'} spacing={2}>
                 <Button
                   color={'primary'}
-                  disabled={!allProvidersConnected || preparingSurvey || surveyURL !== null}
+                  disabled={!allProvidersConnected || preparingSurvey || surveyURL != null}
                   onClick={handleProceed}
                   variant={'contained'}
                 >

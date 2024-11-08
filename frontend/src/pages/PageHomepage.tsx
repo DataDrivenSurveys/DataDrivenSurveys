@@ -1,8 +1,10 @@
+import type { JSX } from 'react';
+
 // PageHomepage
 import ArticleIcon from '@mui/icons-material/Article';
 import LoginIcon from '@mui/icons-material/Login';
 import { Button, Divider, Link, Stack, Typography } from '@mui/material';
-import React, { JSX } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 
@@ -18,13 +20,13 @@ function AvailableDataProviders({ dataProviderNames }: AvailableDataProvidersPro
   return (
     dataProviderNames && (
       <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={{ xs: 1, sm: 2, md: 4 }}
-        divider={<Divider orientation="vertical" flexItem />}
+        direction={{ sm: 'row', xs: 'column' }}
+        divider={<Divider flexItem orientation="vertical" />}
+        spacing={{ md: 4, sm: 2, xs: 1 }}
         sx={{ marginBottom: '24px' }}
       >
         {dataProviderNames.map((name, index) => (
-          <Stack key={index} direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Stack direction="row" key={index} spacing={1} sx={{ alignItems: 'center' }}>
             <Logo name={name} size={18} />
             <Typography variant="body1">{name}</Typography>
           </Stack>
@@ -40,7 +42,7 @@ function DataProviderUsage({ dataProviderNames }: AvailableDataProvidersProps): 
     dataProviderNames && (
       <Stack spacing={2} sx={{ marginBottom: '24px' }}>
         {dataProviderNames.map((name, index) => (
-          <Stack key={index} direction="row" spacing={1}>
+          <Stack direction="row" key={index} spacing={1}>
             <Logo name={name} size={18} />
             &nbsp;
             <Typography variant="body1">
@@ -80,7 +82,7 @@ function HomePageContent(): JSX.Element {
         {t('homepage.how_we_use_your_data.content')}
       </Typography>
       <Typography component="div">
-        <ol style={{ paddingLeft: '20px', listStyleType: 'decimal' }}>
+        <ol style={{ listStyleType: 'decimal', paddingLeft: '20px' }}>
           {Array.from({ length: 3 }, (_, index) => (
             <li key={index} style={{ marginBottom: '8px' }}>
               {t(`homepage.how_we_use_your_data.step${index + 1}`)}
@@ -97,14 +99,14 @@ function HomePageContent(): JSX.Element {
         {t('homepage.more_information.content')}
       </Typography>
       <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={{ xs: 1, sm: 2, md: 4 }}
-        divider={<Divider orientation="vertical" flexItem />}
-        sx={{ marginBottom: '16px', alignContent: 'center' }}
+        direction={{ sm: 'row', xs: 'column' }}
+        divider={<Divider flexItem orientation="vertical" />}
+        spacing={{ md: 4, sm: 2, xs: 1 }}
+        sx={{ alignContent: 'center', marginBottom: '16px' }}
       >
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Logo name="dds" size={18} />
-          <Typography variant="body1" sx={{ alignContent: 'center', display: 'flex' }}>
+          <Typography sx={{ alignContent: 'center', display: 'flex' }} variant="body1">
             <Link href={`${baseUrl}/privacy-policy`} rel="noopener">
               {t('homepage.more_information.privacy_policy')}
             </Link>
@@ -113,7 +115,7 @@ function HomePageContent(): JSX.Element {
 
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Logo name="github" size={18} />
-          <Typography variant="body1" sx={{ alignContent: 'center', display: 'flex' }}>
+          <Typography sx={{ alignContent: 'center', display: 'flex' }} variant="body1">
             <Link href={t('homepage.more_information.source_code_link')} rel="noopener">
               {t('homepage.more_information.source_code')}
             </Link>
@@ -133,7 +135,7 @@ function HomePageContent(): JSX.Element {
       <Typography variant="h4">{t('homepage.contact_information.title')}</Typography>
       <Typography paragraph>
         {t('homepage.contact_information.content')}:&nbsp;
-        <Link href={`mailto:${t('homepage.contact_information.email')}`} rel="noopener noreferrer" color="primary">
+        <Link color="primary" href={`mailto:${t('homepage.contact_information.email')}`} rel="noopener noreferrer">
           {t('homepage.contact_information.contact_email')}
         </Link>
       </Typography>
@@ -148,7 +150,7 @@ function PageHomepage(): JSX.Element {
   return (
     <LayoutMain
       header={
-        <Stack direction="row" spacing={1} sx={{ marginLeft: 'auto', marginRight: 'auto', alignItems: 'center' }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', marginLeft: 'auto', marginRight: 'auto' }}>
           <Logo name="dds" size={30} />
           <Typography variant="h3">{t('homepage.title')}</Typography>
         </Stack>
@@ -158,28 +160,28 @@ function PageHomepage(): JSX.Element {
           <Button
             component={NavLink}
             startIcon={<LoginIcon />}
-            variant="contained"
-            to="/signin"
             sx={{
-              display: 'inline-flex',
               '@media (max-width: 550px)': {
                 display: 'none', // Hide text version below 550 px
               },
+              display: 'inline-flex',
             }}
+            to="/signin"
+            variant="contained"
           >
             {t('homepage.researcher_login.login_button')}
           </Button>
           <Button
             component={NavLink}
             startIcon={<LoginIcon />}
-            variant="contained"
-            to="/signin"
             sx={{
-              display: 'none',
               '@media (max-width: 550px)': {
                 display: 'inline-flex', // Show icon-only version below 550 px
               },
+              display: 'none',
             }} // Show only icon on small screens
+            to="/signin"
+            variant="contained"
           />
         </>
       }
