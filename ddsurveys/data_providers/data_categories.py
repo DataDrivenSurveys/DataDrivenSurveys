@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict
 
 from ddsurveys.get_logger import get_logger
 
@@ -158,4 +158,4 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
 
 # Type hint for subclasses of DataCategory
 TDataCategoryClass = type[DataCategory]
-TDataCategory = TypeVar("TDataCategory", bound=DataCategory)
+TDataCategory = NewType("TDataCategory", DataCategory)

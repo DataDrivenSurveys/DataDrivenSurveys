@@ -25,7 +25,7 @@ from ddsurveys.blueprints.data_providers import data_providers
 from ddsurveys.blueprints.respondent import respondent
 from ddsurveys.data_providers.bases import CustomVariable
 from ddsurveys.get_logger import get_logger
-from ddsurveys.models import Collaboration, DataConnection, DBManager, Project, Researcher, Respondent
+from ddsurveys.models import Collaboration, DataConnection, DBManager, Project, Researcher, Respondent, SurveyPlatformFieldsDict
 from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
@@ -243,7 +243,7 @@ def get_project(id_: str) -> ResponseReturnValue:
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
         # get the project by id if it is in the collaborations
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .options(
                 joinedload(Project.data_connections).joinedload(DataConnection.data_provider),
@@ -483,7 +483,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         )
 
 
-def get_survey_platform_connection(project: Project) -> tuple[int, str | None, dict[str, Any]]:
+def get_survey_platform_connection(project: Project) -> tuple[HTTPStatus, str, SurveyPlatformInfoDict]:
     survey_platform_info: SurveyPlatformInfoDict = SurveyPlatform.get_default_survey_status_dict()
     survey_platform_info["survey_platform_name"] = project.survey_platform_name
 
@@ -548,7 +548,9 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
                 ),
                 HTTPStatus.NOT_FOUND,
             )
-
+        status: int
+        message_id: str
+        survey_platform_info: SurveyPlatformInfoDict
         status, message_id, survey_platform_info = get_survey_platform_connection(project)
 
         if status != HTTPStatus.OK:
@@ -565,7 +567,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             )
 
         if project.survey_platform_fields is None:
-            project.survey_platform_fields = {}
+            project.survey_platform_fields = cast(SurveyPlatformFieldsDict, {})
 
         # Set the survey_status
         project.survey_platform_fields["survey_status"] = survey_platform_info.get("survey_status")

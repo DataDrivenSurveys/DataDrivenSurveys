@@ -10,13 +10,16 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import Any, ClassVar, NotRequired, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, NotRequired, TypedDict
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import SurveyStatus
 from ddsurveys.shared_bases import FormButton as BaseFormButton
 from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import UIRegistry
+
+if TYPE_CHECKING:
+    from http import HTTPStatus
 
 __all__ = [
     "SurveyPlatform",
@@ -38,19 +41,20 @@ logger = get_logger(__name__)
 
 
 TSurveyPlatformClass = type["SurveyPlatform"]
-TSurveyPlatform = TypeVar("TSurveyPlatform", bound="SurveyPlatform")
+TSurveyPlatform = NewType("TSurveyPlatform", "SurveyPlatform")
 
 TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
-TOAuthSurveyPlatform = TypeVar("TOAuthSurveyPlatform", bound="OAuthSurveyPlatform")
+TOAuthSurveyPlatform = NewType("TOAuthSurveyPlatform", "OAuthSurveyPlatform")
 
 TSurveyPlatformFormFieldClass = type["FormField"]
-TSurveyPlatformFormField = TypeVar("TSurveyPlatformFormField", bound="FormField")
+TSurveyPlatformFormField = NewType("TSurveyPlatformFormField", "FormField")
 
 TSurveyPlatformFormButtonClass = type["FormButton"]
-TSurveyPlatformFormButton = TypeVar("TSurveyPlatformFormButton", bound="FormButton")
+TSurveyPlatformFormButton = NewType("TSurveyPlatformFormButton", "FormButton")
 
 
 class SurveyPlatformInfoDict(TypedDict):
+    id: NotRequired[str]
     survey_platform_name: NotRequired[str]
     survey_name: str
     survey_status: SurveyStatus
@@ -164,7 +168,7 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
         }
 
     @abstractmethod
-    def fetch_survey_platform_info(self) -> tuple[int, str | None, SurveyPlatformInfoDict]:
+    def fetch_survey_platform_info(self) -> tuple[HTTPStatus, str, SurveyPlatformInfoDict]:
         """Fetch information about the survey platform and convert it to the DDS format.
 
         Each survey platform should implement this method and decide what any of these

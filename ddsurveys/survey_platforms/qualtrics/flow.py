@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
 """Created on 2023-05-02 16:38.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+from __future__ import annotations
+
 from copy import deepcopy
-from typing import Any, NoReturn
+from typing import Any
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.survey_platforms.qualtrics import EmbeddedDataBlock
@@ -13,15 +14,15 @@ from ddsurveys.survey_platforms.qualtrics import EmbeddedDataBlock
 logger = get_logger(__name__)
 
 
-# CustomVariables = dict[str, Union[str, list[dict[str, Any]]]]
-FlowType = dict[str, str | list[dict[str, Any]]]
+type FlowType = dict[str, str | list[dict[str, Any]]]
 
 
 class Flow:
-    """Attributes:
-    ----------
-    flow
-    _custom_variables : CustomVariables
+    """Class representing a Qualtrics survey flow.
+
+    Attributes:
+        flow
+        _custom_variables : CustomVariables
     """
 
     # TODO: Cleanup Flow class:
@@ -33,7 +34,7 @@ class Flow:
     # TODO: add `flow_type()` property that returns the flow type
     # TODO: make variable namespaces start with `dds.`
 
-    allowed_flow_types = [
+    allowed_flow_types: tuple[str, ...] = (
         "Authenticator",
         "Block",
         "BlockRandomizer",
@@ -49,13 +50,9 @@ class Flow:
         "SupplementalData",
         "TableOfContents",
         "WebService",
-    ]
+    )
 
     def __init__(self, flow: dict) -> None:
-        """Parameters
-        ----------
-        flow
-        """
         self._cv_block: EmbeddedDataBlock
         self._flow: FlowType
         self._cv_block_id: str
@@ -90,19 +87,14 @@ class Flow:
             self._cv_block = EmbeddedDataBlock(flow)
 
     @classmethod
-    def _get_flow_ids(cls, flow_blocks: list | dict, flow_ids: list) -> NoReturn:
+    def _get_flow_ids(cls, flow_blocks: list | dict, flow_ids: list) -> None:
         """This function recursively searches the passed `flow_blocks` and appends all the ids to the `flow_ids` list.
 
-        Parameters
-        ----------
-        flow_blocks
-            The list of flow blocks that needs to be searched.
-        flow_ids
-            The list to which found flow ids will be appended.
-
-        Returns:
-        -------
-
+        Args:
+            flow_blocks
+                The list of flow blocks that needs to be searched.
+            flow_ids
+                The list to which found flow ids will be appended.
         """
         if isinstance(flow_blocks, list):
             for block in flow_blocks:

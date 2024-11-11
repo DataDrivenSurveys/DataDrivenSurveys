@@ -373,7 +373,7 @@ class SurveysAPI(QualtricsRequests):
         return self.download_export_file(survey_id, file_id)
 
     # @survey_id_wrapper
-    # def update_flow_element_definition(self, _survey_id: str = None, flow: Union[Flow, dict, list] = None) -> requests.Response:
+    # def update_flow_element_definition(self, _survey_id: str = None, flow: Flow | dict | list | None = None) -> requests.Response:
     #     """
     #
     #     Parameters

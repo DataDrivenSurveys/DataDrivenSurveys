@@ -1,11 +1,13 @@
-#!/usr/bin/env python3
-"""This module provides logging functionalities tailored for the Data-Driven Surveys application.
-It includes custom logger creation, configuration, and filtering mechanisms to enhance logging output and management.
-The module facilitates the creation of loggers with a consistent naming convention, allows for dynamic log level
-adjustments, and provides utilities to restrict logging output to specific parts of the application.
-Additionally, it integrates colored logging for improved readability and supports matching Flask application log levels
-with custom loggers.
-This module is essential for effective logging and debugging within the Data-Driven Surveys project.
+"""This module provides logging functionalities tailored for the Data-Driven Surveys app.
+
+It includes custom logger creation, configuration, and filtering mechanisms to enhance
+logging output and management.
+The module facilitates the creation of loggers with a consistent naming convention,
+allows for dynamic log level
+adjustments, and provides utilities to restrict logging output to specific parts of the
+app.
+Additionally, it integrates colored logging for improved readability and supports
+matching Flask app log levels with custom loggers.
 
 Created on 2023-09-05 17:52
 
@@ -25,19 +27,23 @@ old_logger = logging.getLogger
 
 def get_logger(name: str) -> logging.Logger:
     """Creates or retrieves a logger with a hierarchical name that starts with 'ddsurveys'.
-    If the provided name does not start with 'ddsurveys', it is prefixed accordingly.
-    This ensures that all loggers used within the application follow a consistent naming convention,
-    facilitating easier management and filtering of log messages.
 
-    The function constructs the logger hierarchy by splitting the name on dots and creating or
-    retrieving loggers for each segment, setting each as the parent of the next. This hierarchical
-    structure allows for fine-grained control over logging levels and propagation.
+    If the provided name does not start with 'ddsurveys', it is prefixed accordingly.
+    This ensures that all loggers used within the app follow a consistent naming
+    convention, facilitating easier management and filtering of log messages.
+
+    The function constructs the logger hierarchy by splitting the name on dots and
+    creating or retrieving loggers for each segment, setting each as the parent of the
+    next.
+    This hierarchical structure allows for fine-grained control over logging levels
+    and propagation.
 
     Parameters:
-        name: The name of the logger. This will be prefixed with 'ddsurveys' if not already.
+        name: The name of the logger.
+            This will be prefixed with 'ddsurveys' if not already.
 
     Returns:
-        logging.Logger: The logger object with the specified name, following the application's naming convention.
+        The logger object with the specified name, following the app's naming convention.
 
     Note:
         If the logger for the specified name already exists, it will be retrieved instead of created.
@@ -67,11 +73,15 @@ module_logger: logging.Logger = get_logger(__name__)
 def only_log_ddsurveys() -> None:
     """Filters the logging output to only include messages from loggers that start with 'ddsurveys'.
 
-    This function specifically targets and silences the output from common imported packages such as 'urllib3' and
-    'requests_oauthlib' by setting their log level to CRITICAL. Additionally, it adds a filter to the root logger
-    to ensure that only log messages originating from loggers with names starting with 'ddsurveys' are displayed.
-    This is particularly useful for reducing noise in the application's log output, making it easier to focus on
-    relevant application-specific messages.
+    This function specifically targets and silences the output from common imported
+    packages such as 'urllib3' and 'requests_oauthlib' by setting their log level to
+    CRITICAL.
+
+    Additionally, it adds a filter to the root logger to ensure that only log messages
+    originating from loggers with names starting with 'ddsurveys' are displayed.
+
+    This is particularly useful for reducing noise in the app's log output,
+    making it easier to focus on relevant app-specific messages.
 
     There are no parameters or return values for this function.
     """
@@ -86,27 +96,37 @@ def set_logger_level(
     recursive: bool = False,
     include_root: bool = False,
 ) -> None:
-    """Sets the logging level for a specified logger. This function allows for the adjustment of logging levels
-    dynamically,
-    facilitating more granular control over logging output. It can operate on both individual loggers and hierarchies
-    of loggers,
-    and optionally adjust the root logger's level to match.
+    """Sets the logging level for a specified logger.
+
+    This function allows for the adjustment of logging levels
+    dynamically, facilitating more granular control over logging output.
+
+    It can operate on both individual loggers and hierarchies
+    of loggers, and optionally adjust the root logger's level to match.
 
     Args:
-      logger (Union[str, logging.Logger]):
-        The logger to adjust. This can be specified either by its name (str) or directly by passing a logging.Logger
-        instance. If a name is provided, the logger will be retrieved or created following the application's naming
-        convention.
-      level (Union[int, str], optional): The new logging level. This can be specified either as a logging level
-        constant (e.g., logging.INFO) or as a string (e.g., 'INFO'). Defaults to logging.INFO.
-      recursive (bool, optional): If True, the function will recursively set the logging level for all child
-        loggers of the specified logger. This is useful for adjusting logging levels across a section of the
-        application. Defaults to False.
-      include_root (bool, optional): If True, the root logger's level will also be set to the specified level. This
-        affects all loggers in the application and can be used to globally adjust logging verbosity. Defaults to False.
+        logger: The logger to adjust.
+            This can be specified either by its name (str) or directly by passing a
+            logging.Logger instance.
+            If a name is provided, the logger will be retrieved or created following
+            the application's naming convention.
+        level: The new logging level. This can be specified either as a logging level
+            constant (e.g., logging.INFO) or as a string (e.g., 'INFO').
+            Defaults to logging.INFO.
+        recursive: If True, the function will recursively set the logging level for all
+            child loggers of the specified logger.
+            This is useful for adjusting logging levels across a section of the
+            application.
+            Defaults to False.
+        include_root: If True, the root logger's level will also be set to the specified
+            level.
+            This affects all loggers in the application and can be used to globally
+            adjust logging verbosity.
+            Defaults to False.
 
     Returns:
-      None: This function does not return a value but modifies the logging configuration directly.
+        This function does not return a value but modifies the logging configuration
+        directly.
     """
     if not isinstance(logger, logging.Logger):
         logger = get_logger(logger)
@@ -123,9 +143,9 @@ def set_logger_level(
 
     l: logging.Logger
     loggers = [
-        l for l in logger.manager.loggerDict.values()
-        if (hasattr(l, "parent") and l.parent == logger)
-           or (hasattr(l, "name") and logger.name in l.name)
+        l
+        for l in logger.manager.loggerDict.values()
+        if (hasattr(l, "parent") and l.parent == logger) or (hasattr(l, "name") and logger.name in l.name)
     ]
 
     for l in loggers:
@@ -134,6 +154,7 @@ def set_logger_level(
 
 def match_app_logger_level(only_log_ddsurveys_: bool = False) -> None:
     """Matches the logging level of the application's custom loggers with the Flask application's current logging level.
+
     This function ensures that the logging output from the custom loggers ('ddsurveys' prefixed) is consistent with
     the Flask application's logging level, providing a unified logging verbosity across the application. Additionally,
     it can filter the logging output to only include messages from 'ddsurveys' prefixed loggers, reducing noise from
@@ -157,13 +178,9 @@ def match_app_logger_level(only_log_ddsurveys_: bool = False) -> None:
     from flask import current_app as app
 
     try:
-        set_logger_level(
-            "ddsurveys", app.logger.level, recursive=True, include_root=True
-        )
+        set_logger_level("ddsurveys", app.logger.level, recursive=True, include_root=True)
         coloredlogs.set_level(app.logger.level)
         if only_log_ddsurveys_:
             only_log_ddsurveys()
     except RuntimeError:
-        module_logger.warning(
-            "Tried to call match_app_logger_level while not in a flask app context."
-        )
+        module_logger.warning("Tried to call match_app_logger_level while not in a flask app context.")

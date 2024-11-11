@@ -1,18 +1,26 @@
-"""This module defines a flexible framework for creating and managing form elements within a UI, specifically
-tailored for
-data providers. It includes classes for form elements such as buttons, fields, and text blocks, each with customizable
-attributes for labels, helper texts, visibility conditions, and interaction effects. The module also introduces a
-registry system to dynamically manage these form elements and ensure their proper integration and functionality within
+"""This module provides base classes for core backend capabilities.
+
+It defines a flexible framework for creating and managing form elements within a UI,
+specifically tailored for data providers.
+
+It includes classes for form elements such as buttons, fields, and text blocks,
+each with customizable attributes for labels, helper texts, visibility conditions,
+and interaction effects. The module also introduces a registry system to dynamically
+manage these form elements and ensure their proper integration and capabilities within
 the UI.
 
 The core classes include:
-- `FormElement`: The base class for all form elements, providing common properties and methods.
+- `FormElement`: The base class for all form elements, providing common properties and
+    methods.
 - `FormButton`: A class for creating buttons with customizable actions and data.
-- `FormField`: A class for creating input fields with various types and validation requirements.
-- `FormTextBlock`: A class for creating text blocks to display information or instructions.
+- `FormField`: A class for creating input fields with various types and validation
+    requirements.
+- `FormTextBlock`: A class for creating text blocks to display information or
+    instructions.
 
-Additionally, the module provides a `RegistryBase` metaclass for creating registries that manage the instantiation and
-registration of form elements, facilitating their reuse and customization across different parts of the UI.
+Additionally, the module provides a `RegistryBase` metaclass for creating registries
+that manage the instantiation and registration of form elements, facilitating their
+reuse and customization across different parts of the UI.
 
 Created on 2023-09-05 18:07
 
@@ -23,10 +31,9 @@ Created on 2023-09-05 18:07
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from ast import TypeVar
 from copy import deepcopy
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Self, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
 from ddsurveys import __package__
 from ddsurveys.get_logger import get_logger
@@ -47,18 +54,14 @@ __all__ = [
     "UIRegistry",
     #
     "TRegistryClass",
-    "TRegistry",
     "TUIRegistryClass",
-    "TUIRegistry",
 ]
 
 
 logger: Logger = get_logger(__name__)
 
 TRegistryClass = type["Registry"]
-TRegistry = TypeVar("TRegistry", bound="Registry")
 TUIRegistryClass = type["UIRegistry"]
-TUIRegistry = TypeVar("TUIRegistry", bound="UIRegistry")
 
 
 class FormElement(ABC):

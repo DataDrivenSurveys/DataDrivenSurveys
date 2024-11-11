@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, NewType
 
 from ddsurveys.get_logger import get_logger
 
@@ -397,10 +397,10 @@ class Number(Data):
         """Parses the given numeric value to an integer or float.
 
         Parameters:
-            numeric_value (Union[int, float, str]): The numeric value to be parsed, which can be an integer, float, or string.
+            numeric_value: The numeric value to be parsed, which can be an integer, float, or string.
 
         Returns:
-            Union[int, float]: The parsed numeric value as an integer or float, depending on the input value.
+            The parsed numeric value as an integer or float, depending on the input value.
 
         Note:
             If the input is a string that represents an integer, it will be converted to an integer.
@@ -472,4 +472,4 @@ Data.register(VariableDataType.NUMBER, Number)
 Data.register(VariableDataType.TEXT, Text)
 
 TDataClass = type[Data]
-TData = TypeVar("TData", bound=Data)
+TData = NewType("TData", Data)

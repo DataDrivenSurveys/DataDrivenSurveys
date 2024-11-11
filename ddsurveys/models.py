@@ -32,6 +32,7 @@ import time
 import traceback
 import uuid
 from abc import abstractmethod
+from datetime import datetime
 from enum import Enum as StrEnum
 from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, override
 
@@ -47,13 +48,14 @@ from sqlalchemy import (
     Result,
     String,
     Text,
+    TypeDecorator,
     create_engine,
     func,
 )
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import DeclarativeBase, Mapped, Query, Session, mapped_column, relationship, sessionmaker
 
-from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, FieldsDict, SurveyPlatformFieldsDict
+from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, FieldsDict
 
 try:
     from ddsurveys.get_logger import get_logger
@@ -64,7 +66,6 @@ except ImportError:
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
-    from datetime import datetime
 
     from flask import Flask
 
@@ -83,10 +84,10 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__)
 
-# Global variables
+### Global variables
 sony_flake: SonyFlake = SonyFlake()
 
-# Load environment variables
+### Load environment variables
 handle_env_file()
 
 
@@ -281,7 +282,7 @@ class DBManager:
         return None
 
 
-# Enums
+### Enums
 class SurveyStatus(StrEnum):
     """Enumeration for different survey statuses.
 
@@ -294,6 +295,9 @@ class SurveyStatus(StrEnum):
     Active = "active"
     Inactive = "inactive"
     Unknown = "unknown"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 # the enum entry "name" (ex. Fitbit) is used as name for the data provider
@@ -329,7 +333,39 @@ class DataProviderType(StrEnum):
     frontend = "frontend"
 
 
-# Database models
+class SurveyStatusType(TypeDecorator):
+    """Custom type for storing SurveyStatus enums as strings in JSON."""
+
+    impl = String
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if isinstance(value, SurveyStatus):
+            return value.value  # Store as string
+        msg = f"Unexpected value type: {type(value)}"
+        raise TypeError(msg)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return SurveyStatus(value)  # Convert string back to SurveyStatus
+
+
+### TypedDicts
+class SurveyPlatformFieldsDict(TypedDict):
+    """Dictionary representation of survey platform fields."""
+
+    survey_id: str
+    survey_platform_api_key: str
+    survey_name: str
+    base_url: str
+    survey_status: SurveyStatus
+    mailing_list_id: str
+    directory_id: str
+
+
+### Database models
 class Base(DeclarativeBase):
     """Base class for all database models."""
 

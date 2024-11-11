@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict, cast, override
 
 from ddsurveys.data_providers.variables import BuiltInVariable, CustomVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
@@ -726,10 +726,10 @@ class FormTextBlock(BaseFormTextBlock):
 
 # Declaring type variables for generic type hints
 TDataProviderClass = type[DataProvider]
-TDataProvider = TypeVar("TDataProvider", bound=DataProvider)
+TDataProvider = NewType("TDataProvider", DataProvider)
 
 TFrontendDataProviderClass = type[FrontendDataProvider]
-TFrontendDataProvider = TypeVar("TFrontendDataProvider", bound=FrontendDataProvider)
+TFrontendDataProvider = NewType("TFrontendDataProvider", FrontendDataProvider)
 
 TOAuthDataProviderClass = type[OAuthDataProvider]
-TOAuthDataProvider = TypeVar("TOAuthDataProvider", bound=OAuthDataProvider)
+TOAuthDataProvider = NewType("TOAuthDataProvider", OAuthDataProvider)

@@ -3,45 +3,39 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 from __future__ import annotations
 
 from collections import OrderedDict
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, MutableMapping, ValuesView
 from copy import deepcopy
-from typing import ClassVar, TypeVar, overload
+from typing import Any, ClassVar, NewType, overload
 
 from ddsurveys.get_logger import get_logger
 
 logger = get_logger(__name__)
 
-# Taken from typing module:
-T = TypeVar("T")  # Any type.
-KT = TypeVar("KT")  # Key type.
-VT = TypeVar("VT")  # Value type.
-T_co = TypeVar("T_co", covariant=True)  # Any type covariant containers.
-V_co = TypeVar("V_co", covariant=True)  # Any type covariant containers.
-VT_co = TypeVar("VT_co", covariant=True)  # Value type covariant containers.
 
-TEmbeddedData = TypeVar("TEmbeddedData", bound="EmbeddedData")
-TEmbeddedDataLike = Mapping[KT, VT] | TEmbeddedData
+TEmbeddedData = NewType("TEmbeddedData", "EmbeddedData")
+type TEmbeddedDataLike = Mapping[str, Any] | TEmbeddedData
 
-TEmbeddedDataBlock = TypeVar("TEmbeddedDataBlock", bound="EmbeddedDataBlock")
-TEmbeddedDataBlockLike = dict[str, TEmbeddedDataLike] | dict[str, dict] | TEmbeddedDataBlock
+TEmbeddedDataBlock = NewType("TEmbeddedDataBlock", "EmbeddedDataBlock")
+type TEmbeddedDataBlockLike = dict[str, TEmbeddedDataLike] | dict[str, dict] | TEmbeddedDataBlock
 
 
 class EmbeddedData:
-    """Class used to easily create and manipulate single EmbeddedData variables."""
+    """Class used to create and manipulate single EmbeddedData variables."""
 
-    __slots__ = [
+    __slots__: tuple[str, ...] = (
         "variable_name",
         "data_source_type",
         "variable_type",
         "analyze_text",
         "value",
         "data_visibility",
-    ]
+    )
 
-    field_type: ClassVar[dict[str, str]] = {
+    field_type: ClassVar[dict[str, str | dict[str, str]]] = {
         "Description": "str",  # Description to be shown to users in Qualtrics
         "Type": "str",
         "Field": "str",  # The name of the variable goes here, e.g., fitbit.steps.average
@@ -136,7 +130,7 @@ class EmbeddedData:
         data_visibility: dict | None = None,
         analyze_text: bool = False,
         value: str = "",
-    ):
+    ) -> None:
         """An object that wraps EmbeddedData flow blocks.
 
         Args:
@@ -204,7 +198,7 @@ class EmbeddedData:
         )
 
     @classmethod
-    def translate_data_type(cls, data_type):
+    def translate_data_type(cls, data_type) -> str:
         return cls._qualtrics_types_to_values.get(data_type, "String")
 
     @classmethod
@@ -258,18 +252,13 @@ class EmbeddedData:
         """
         if dict_type == "Qualtrics":
             out_dict = {k: self[k] for k in self.qualtrics_to_attributes_map}
-            out_dict["Value"] = str(
-                out_dict["Value"]
-            )  # Convert value to string to avoid API errors.
+            out_dict["Value"] = str(out_dict["Value"])  # Convert value to string to avoid API errors.
             return out_dict
         if dict_type == "variable":
             out_dict = {k: self[k] for k in self.qualtrics_to_attributes_map}
             return self.embedded_data_to_custom_variable(out_dict)
 
-        msg = (
-            f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: "
-            f"'Qualtrics' and 'variable'."
-        )
+        msg = f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: " f"'Qualtrics' and 'variable'."
         raise ValueError(msg)
 
     @classmethod
@@ -291,21 +280,19 @@ class EmbeddedData:
         return repr(self)
 
 
-VariablesList = list[dict[str, str | dict]] | list[EmbeddedData]
+type VariablesList = list[dict[str, str | dict]] | list[EmbeddedData]
 
 
 class EmbeddedDataBlock(MutableMapping):
     """Class used to easily create and manage EmbeddedData survey flow blocks."""
 
     @overload
-    def __init__(self, ed_block: dict):
-        ...
+    def __init__(self, ed_block: dict): ...
 
     @overload
-    def __init__(self, flow_id: str = "FL_2", variables_list: VariablesList = None):
-        ...
+    def __init__(self, flow_id: str = "FL_2", variables_list: VariablesList | None = None): ...
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         # TODO: Use better variable names
 
         self._data: OrderedDict[str, EmbeddedData]
@@ -314,9 +301,7 @@ class EmbeddedDataBlock(MutableMapping):
         if len(args) == 1 or kwargs.get("ed_block") is not None:
             block = kwargs.get("ed_block") or args[0]
             self.flow_id = block["FlowID"]
-            self._data = OrderedDict(
-                [(d["Field"], EmbeddedData.from_dict(d)) for d in block["EmbeddedData"]]
-            )
+            self._data = OrderedDict([(d["Field"], EmbeddedData.from_dict(d)) for d in block["EmbeddedData"]])
         elif len(args) + len(kwargs) == 2:
             if len(args) == 2:
                 self.flow_id = args[0]
@@ -332,16 +317,9 @@ class EmbeddedDataBlock(MutableMapping):
                 self._data = OrderedDict()
             elif isinstance(variables_list[0], EmbeddedData):
                 variables_list: list[EmbeddedData]
-                self._data = OrderedDict(
-                    [(ed.variable_name, ed) for ed in variables_list]
-                )
+                self._data = OrderedDict([(ed.variable_name, ed) for ed in variables_list])
             else:
-                self._data = OrderedDict(
-                    [
-                        (d["Field"], EmbeddedData.from_dict(d))
-                        for d in variables_list
-                    ]
-                )
+                self._data = OrderedDict([(d["Field"], EmbeddedData.from_dict(d)) for d in variables_list])
         else:
             self.flow_id = "FL_2"
             self._data = OrderedDict()
@@ -393,25 +371,25 @@ class EmbeddedDataBlock(MutableMapping):
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_dict()!r})"
 
-    def __setitem__(self, key: KT, value: VT) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
         if isinstance(value, dict):
             self._data[key] = EmbeddedData.from_dict(value)
         else:
             self._data[key] = value
 
-    def __delitem__(self, key: KT) -> None:
+    def __delitem__(self, key: str) -> None:
         del self._data[key]
 
-    def __getitem__(self, key: KT) -> VT_co:
+    def __getitem__(self, key: str) -> Any:
         return self._data[key]
 
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self) -> Iterator[T_co]:
+    def __iter__(self) -> Iterator[Any]:
         return iter(self._data)
 
-    def __contains__(self, key: KT) -> bool:
+    def __contains__(self, key: str) -> bool:
         return key in self._data
 
     def __eq__(self, other):
@@ -427,22 +405,22 @@ class EmbeddedDataBlock(MutableMapping):
             item = EmbeddedData.from_dict(item)
         self[item.variable_name] = item
 
-    def keys(self) -> KeysView[KT]:
+    def keys(self) -> KeysView[str]:
         return self._data.keys()
 
-    def items(self) -> ItemsView[KT, VT_co]:
+    def items(self) -> ItemsView[str, Any]:
         return self._data.items()
 
-    def values(self) -> ValuesView[VT_co]:
+    def values(self) -> ValuesView[Any]:
         return self._data.values()
 
-    def get(self, key: KT, default=None) -> VT_co | None:
+    def get(self, key: str, default=None) -> Any | None:
         return self._data.get(key, default)
 
-    def pop(self, key: KT) -> VT:
+    def pop(self, key: str) -> Any:
         return self._data.pop(key)
 
-    def popitem(self, last=True) -> tuple[KT, VT]:
+    def popitem(self, last=True) -> tuple[str, Any]:
         return self._data.popitem(last)
 
     def clear(self) -> None:
@@ -450,8 +428,8 @@ class EmbeddedDataBlock(MutableMapping):
 
     def update(
         self,
-        __m: Mapping[KT, VT] | EmbeddedData | EmbeddedDataBlock,
-        **kwargs: VT,
+        __m: Mapping[str, Any] | EmbeddedData | EmbeddedDataBlock,
+        **kwargs: Any,
     ) -> None:
         if isinstance(__m, dict):
             self._data.update(__m, **kwargs)
@@ -461,13 +439,11 @@ class EmbeddedDataBlock(MutableMapping):
         elif __m.__class__.__name__ == "EmbeddedDataBlock":
             self._data.update(__m.data)
 
-    def setdefault(self, key: KT) -> T | None:
+    def setdefault(self, key: str) -> Any | None:
         return self._data.setdefault(key)
 
     @staticmethod
-    def create_exists_variable(
-        ref_variable: TEmbeddedDataLike, *, value: bool
-    ) -> EmbeddedData:
+    def create_exists_variable(ref_variable: TEmbeddedDataLike, *, value: bool) -> EmbeddedData:
         ref_variable = deepcopy(ref_variable)
 
         if isinstance(ref_variable, EmbeddedData):
@@ -497,17 +473,13 @@ class EmbeddedDataBlock(MutableMapping):
                 variables that should be added to the EmbeddedDataBlock after
                 removing the already existing variables.
         """
-        current_variables: dict[str, EmbeddedData] = {
-            k: v for k, v in self._data.items() if not k.startswith("dds.")
-        }
+        current_variables: dict[str, EmbeddedData] = {k: v for k, v in self._data.items() if not k.startswith("dds.")}
 
         if isinstance(new_variables, dict):
             if isinstance(next(iter(new_variables.values())), EmbeddedDataBlock):
                 current_variables.update(new_variables)
             else:
-                current_variables.update(
-                    {k: EmbeddedData.from_variable(v) for k, v in new_variables.items()}
-                )
+                current_variables.update({k: EmbeddedData.from_variable(v) for k, v in new_variables.items()})
         elif isinstance(new_variables, EmbeddedDataBlock):
             current_variables.update(new_variables._data)
         else:
@@ -537,7 +509,7 @@ if __name__ == "__main__":
             "description": "Date of account creation",
             "enabled": True,
             "info": "This will be the date that the respondent's Fitbit account was created. It will be in YYYY-MM-DD "
-                    "format.",
+            "format.",
             "name": "dds.fitbit.account.creation_date",
             "test_value_placeholder": "2020-01-01",
             "type": "Builtin",
@@ -551,7 +523,7 @@ if __name__ == "__main__":
             "description": "Most frequent activity name",
             "enabled": False,
             "info": "This will be the name of the most frequent activity that a user does. Otherwise it will be empty "
-                    "text. Tip: use display logic and question logic to decide if it's shown as an option.",
+            "text. Tip: use display logic and question logic to decide if it's shown as an option.",
             "name": "dds.fitbit.activities_by_frequency[0]",
             "test_value_placeholder": "Walking",
             "type": "Builtin",

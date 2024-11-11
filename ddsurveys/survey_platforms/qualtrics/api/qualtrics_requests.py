@@ -8,6 +8,7 @@ import os
 import re
 from datetime import datetime
 from http import HTTPStatus
+from typing import ClassVar
 
 import requests
 
@@ -31,7 +32,7 @@ class QualtricsDataCenter:
     `API Documentation <https://api.qualtrics.com/60d24f6897737-qualtrics-survey-api>`_
     """
 
-    data_centers = {
+    data_centers: ClassVar[dict[str, str]] = {
         "Canadian Data Center": "https://yul1.qualtrics.com/API/v3",
         "Washington, DC Area Data Center": "https://iad1.qualtrics.com/API/v3",
         "San Jose, California Data Center": "https://sjc1.qualtrics.com/API/v3",
@@ -44,7 +45,7 @@ class QualtricsDataCenter:
         "Mock Server": "https://stoplight.io/mocks/qualtricsv2/publicapidocs/60936",
     }
 
-    extra_keys = {
+    extra_keys: ClassVar[dict[str, list[str]]] = {
         "Canadian Data Center": ["CA", "Canada"],
         "Washington, DC Area Data Center": ["Washington", "DC", "US East"],
         "San Jose, California Data Center": ["San Jose", "California", "US West"],

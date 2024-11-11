@@ -142,11 +142,11 @@ class Projects(APIResponseEnum):
     NOT_FOUND = ("api.projects.not_found", "Project not found", HTTPStatus.NOT_FOUND)
 
 
-class APIResponses(Enum):
+class APIResponses:#(Enum):
     """DDSurveys API responses."""
 
-    def __get__(self, instance, owner):
-        return self.value
+    # def __get__(self, instance, owner):
+    #     return self.value
 
     AUTHORIZATION = Authorization
     CUSTOM_VARIABLES = CustomVariables

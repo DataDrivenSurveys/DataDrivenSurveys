@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, NewType, TypedDict
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,7 +18,7 @@ __all__ = [
     # Variable specification class exports
     "Variable",
     "VariableFunction",
-    # Type and TypeVar exports
+    # Type and type exports
     "TVariable",
     "TVariableFunction",
     "TVariableValue",
@@ -96,8 +96,7 @@ class VariableFunction(ABC):
             **kwargs: Arbitrary keyword arguments.
 
         Returns:
-            TVariableValue: The calculated value of the variable. This can be of type Union[str, float, int, bool,
-            None].
+            The calculated value of the variable.
         """
         ...
 
@@ -148,7 +147,7 @@ class Variable(ABC):
         self,
         data_provider: str = "",
         category: str = "",
-        type_: Literal["Builtin", "Custom"] = "",
+        type_: Literal["Builtin", "Custom"] = "Builtin",
         name: str = "",
         description: str = "",
         data_type: str = "",
@@ -235,7 +234,7 @@ class Variable(ABC):
 
 # Class types (used for type hinting that something is that class object)
 
-# TypeVars (used for type hinting that something is an instance of that class)
-TVariableValue = str | float | int | bool | None
-TVariableFunction = TypeVar("TVariableFunction", bound=VariableFunction)
-TVariable = TypeVar("TVariable", bound=Variable)
+# Types (used for type hinting that something is an instance of that class)
+type TVariableValue = str | float | int | bool | None
+TVariableFunction = NewType("TVariableFunction", VariableFunction)
+TVariable = NewType("TVariable", Variable)
