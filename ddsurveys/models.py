@@ -16,7 +16,7 @@ Key Features:
     integrity.
 - Relationships between tables to model complex data structures and associations.
 - Utility functions for initializing database connections and sessions within a Flask
-    application context.
+    app context.
 
 Authors:
 - Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -32,9 +32,8 @@ import time
 import traceback
 import uuid
 from abc import abstractmethod
-from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, ClassVar, TypedDict, override
+from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -64,6 +63,9 @@ except ImportError:
     from utils import handle_env_file
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from datetime import datetime
+
     from flask import Flask
 
     from ddsurveys.typings.models import (
@@ -331,7 +333,7 @@ class DataProviderType(StrEnum):
 class Base(DeclarativeBase):
     """Base class for all database models."""
 
-    type_annotation_map: ClassVar[type, JSON] = {
+    type_annotation_map: ClassVar[dict[type, type[JSON]]] = {
         FieldsDict: JSON,
         SurveyPlatformFieldsDict: JSON,
         list[BuiltinVariableDict]: JSON,
@@ -339,10 +341,10 @@ class Base(DeclarativeBase):
     }
 
     @abstractmethod
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Mapping[str, Any]:
         """Creates a dictionary representation of a database row."""
 
-    def to_public_dict(self) -> dict:
+    def to_public_dict(self) -> Mapping[str, Any]:
         """Creates a non-sensitive dictionary representation of a database row."""
         msg = "Subclasses must implement this method."
         raise NotImplementedError(msg)
