@@ -34,7 +34,7 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum as StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, TypedDict, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypedDict, override
 
 from sonyflake import SonyFlake
 from sqlalchemy import (
@@ -296,9 +296,6 @@ class SurveyStatus(StrEnum):
     Inactive = "inactive"
     Unknown = "unknown"
 
-    def __str__(self) -> str:
-        return self.value
-
 
 # the enum entry "name" (ex. Fitbit) is used as name for the data provider
 class DataProviderName(StrEnum):
@@ -333,25 +330,6 @@ class DataProviderType(StrEnum):
     frontend = "frontend"
 
 
-class SurveyStatusType(TypeDecorator):
-    """Custom type for storing SurveyStatus enums as strings in JSON."""
-
-    impl = String
-
-    def process_bind_param(self, value, dialect):
-        if value is None:
-            return None
-        if isinstance(value, SurveyStatus):
-            return value.value  # Store as string
-        msg = f"Unexpected value type: {type(value)}"
-        raise TypeError(msg)
-
-    def process_result_value(self, value, dialect):
-        if value is None:
-            return None
-        return SurveyStatus(value)  # Convert string back to SurveyStatus
-
-
 ### TypedDicts
 class SurveyPlatformFieldsDict(TypedDict):
     """Dictionary representation of survey platform fields."""
@@ -360,7 +338,7 @@ class SurveyPlatformFieldsDict(TypedDict):
     survey_platform_api_key: str
     survey_name: str
     base_url: str
-    survey_status: SurveyStatus
+    survey_status: SurveyStatus | Literal["active", "inactive", "unknown"]
     mailing_list_id: str
     directory_id: str
 

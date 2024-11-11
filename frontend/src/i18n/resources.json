@@ -105,6 +105,11 @@
           "updated": "Data provider updated successfully"
         },
         "ddsurveys": {
+          "backend": {
+            "database": {
+              "commit_error": "Failed to commit changes to the database"
+            }
+          },
           "data_providers": {
             "fitbit": {
               "client_id.helper_text": "Copy paste the value in the 'OAuth 2.0 Client ID' field after opening your app in the Fitbit dev portal.",

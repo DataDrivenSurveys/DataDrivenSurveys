@@ -11,6 +11,7 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, cast
 
+import sqlalchemy
 from flask import Blueprint, g, jsonify, request, send_file
 from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -25,7 +26,16 @@ from ddsurveys.blueprints.data_providers import data_providers
 from ddsurveys.blueprints.respondent import respondent
 from ddsurveys.data_providers.bases import CustomVariable
 from ddsurveys.get_logger import get_logger
-from ddsurveys.models import Collaboration, DataConnection, DBManager, Project, Researcher, Respondent, SurveyPlatformFieldsDict
+from ddsurveys.models import (
+    Collaboration,
+    DataConnection,
+    DBManager,
+    Project,
+    Researcher,
+    Respondent,
+    SurveyPlatformFieldsDict,
+    SurveyStatus,
+)
 from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
 
 if TYPE_CHECKING:
@@ -570,26 +580,43 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             project.survey_platform_fields = cast(SurveyPlatformFieldsDict, {})
 
         # Set the survey_status
-        project.survey_platform_fields["survey_status"] = survey_platform_info.get("survey_status")
+        project.survey_platform_fields["survey_status"] = survey_platform_info.get(
+            "survey_status", SurveyStatus.Unknown
+        ).value
+        project.survey_status = project.survey_platform_fields.get("survey_status", SurveyStatus.Unknown)
 
         # Check for the existence of the survey in the survey platform info
         if survey_platform_info.get("exists"):
             # If the survey name from the survey platform info doesn't match the current
             # survey name in project.survey_platform_fields, update it
             if survey_platform_info.get("survey_name") != project.survey_platform_fields.get("survey_name"):
-                project.survey_platform_fields["survey_name"] = survey_platform_info.get("survey_name")
+                project.survey_platform_fields["survey_name"] = survey_platform_info.get("survey_name", "")
         else:
             # If the survey doesn't exist in the survey platform info, set the
-            # survey_name in project.survey_platform_fields to None
-            project.survey_platform_fields["survey_name"] = None
+            # survey_name in project.survey_platform_fields to an empty string
+            project.survey_platform_fields["survey_name"] = ""
 
         # Commit the changes to the database
         flag_modified(project, "survey_platform_fields")
-        db.commit()
-
-        survey_platform_info["id"] = message_id
-        logger.debug("Survey platform info: %s", survey_platform_info)
-        return jsonify(survey_platform_info), status
+        try:
+            db.commit()
+        except Exception:
+            logger.exception("Failed to update project with id: %s", id_)
+            return jsonify(
+                {
+                    "message": {
+                        "id": "api.ddsurveys.database.commit_error",
+                        "text": "Failed to commit changes to the database",
+                    }
+                }
+            ), HTTPStatus.INTERNAL_SERVER_ERROR
+        else:
+            survey_platform_info["id"] = message_id
+            survey_platform_info["survey_status"] = survey_platform_info.get(
+                "survey_status", SurveyStatus.Unknown
+            ).value
+            logger.debug("Survey platform info: %s", survey_platform_info)
+            return jsonify(survey_platform_info), status
 
 
 @projects.route("/<string:id_>/sync_variables", methods=["POST"])

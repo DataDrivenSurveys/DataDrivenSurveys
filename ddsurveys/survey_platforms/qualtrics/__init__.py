@@ -8,12 +8,12 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, ClassVar, TypedDict
+from typing import Any, ClassVar, TypedDict, override
 from urllib.parse import quote_plus
 
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import SurveyStatus
-from ddsurveys.survey_platforms.bases import FormField, SurveyPlatform
+from ddsurveys.survey_platforms.bases import FormField, SurveyPlatform, SurveyPlatformInfoDict
 
 # API related classes
 from ddsurveys.survey_platforms.qualtrics.api import (
@@ -107,10 +107,9 @@ class QualtricsSurveyPlatform(SurveyPlatform):
         self.surveys_api = SurveysAPI(api_token=self.survey_platform_api_key)
         self.distributions_api = DistributionsAPI(api_token=self.survey_platform_api_key)
 
-    def fetch_survey_platform_info(self) -> tuple[int, str | None, dict[str, Any]]:
-        survey_platform_info = self.get_default_survey_status_dict()
-
-        message_id = None
+    @override
+    def fetch_survey_platform_info(self) -> tuple[HTTPStatus, str, SurveyPlatformInfoDict]:
+        survey_platform_info: SurveyPlatformInfoDict = self.get_default_survey_status_dict()
 
         if not self.surveys_api.survey_exists(self.survey_id):
             return (
@@ -129,9 +128,9 @@ class QualtricsSurveyPlatform(SurveyPlatform):
             survey_platform_info["exists"] = True
             survey_platform_info["connected"] = True
         except FailedQualtricsRequest:
-            return HTTPStatus.BAD_REQUEST, None, survey_platform_info
+            return HTTPStatus.BAD_REQUEST, "api.survey_platforms.connection_failed", survey_platform_info
         else:
-            return HTTPStatus.OK, message_id, survey_platform_info
+            return HTTPStatus.OK, "", survey_platform_info
 
     def handle_project_creation(
         self, project_name: str, *, use_existing_survey: bool = False
