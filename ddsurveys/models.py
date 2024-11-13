@@ -27,6 +27,7 @@ Created on 2023-05-23 15:41
 
 from __future__ import annotations
 
+import json
 import os
 import time
 import traceback
@@ -34,6 +35,7 @@ import uuid
 from abc import abstractmethod
 from datetime import datetime
 from enum import Enum as StrEnum
+from enum import IntEnum
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypedDict, override
 
 from sonyflake import SonyFlake
@@ -48,7 +50,6 @@ from sqlalchemy import (
     Result,
     String,
     Text,
-    TypeDecorator,
     create_engine,
     func,
 )
@@ -65,7 +66,7 @@ except ImportError:
     from utils import handle_env_file
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
     from flask import Flask
 
@@ -91,7 +92,20 @@ sony_flake: SonyFlake = SonyFlake()
 handle_env_file()
 
 
+class EnumJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for enum types."""
+
+    @override
+    def default(self, o):
+        if isinstance(o, StrEnum | IntEnum):
+            return o.value
+        logger.debug("Received type '%s' (%s)", type(o), repr(o))
+        return super().default(o)
+
+
 class CreateEngineKwargsDict(TypedDict, total=False):
+    """Keyword arguments for sqlalchemy.create_engine function."""
+
     # connect_args: Dict[Any, Any]
     # convert_unicode: bool
     # creator: _CreatorFnType | _CreatorWRecFnType
@@ -104,8 +118,8 @@ class CreateEngineKwargsDict(TypedDict, total=False):
     # implicit_returning: bool
     # insertmanyvalues_page_size: int
     # isolation_level: IsolationLevel
-    # json_deserializer: (...) -> Any
-    # json_serializer: (...) -> Any
+    json_deserializer: Callable[[Any], Any]
+    json_serializer: Callable[[Any], Any]
     # label_length: int | None
     # logging_name: str
     # max_identifier_length: int | None
@@ -137,6 +151,7 @@ class DBManager:
         "pool_pre_ping": True,  # Check if connection is alive before using it
         "pool_recycle": 1800,  # Recycle connection after 30 minutes to avoid timeouts
         "pool_size": 10,  # Number of connections to maintain in the pool
+        "json_serializer": lambda obj: json.dumps(obj, cls=EnumJSONEncoder, ensure_ascii=False),
     }
 
     @classmethod

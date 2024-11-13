@@ -9,12 +9,18 @@ Created on 2023-05-23 15:41.
 from __future__ import annotations
 
 import datetime
+import json
+from ast import Str
+from collections.abc import Callable
+from enum import Enum, IntEnum, StrEnum
 from functools import wraps
 from http import HTTPStatus
+from typing import Any
 
 # Import installed libraries
 import flask
 from flask import Flask, jsonify
+from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required
 
@@ -25,7 +31,7 @@ from ddsurveys.data_providers.bases import DataProvider
 
 # Import project libraries
 from ddsurveys.get_logger import get_logger, only_log_ddsurveys, set_logger_level
-from ddsurveys.models import DBManager
+from ddsurveys.models import DBManager, EnumJSONEncoder
 from ddsurveys.survey_platforms.bases import SurveyPlatform
 from ddsurveys.utils import handle_env_file
 from ddsurveys.variable_types import Data, VariableDataType
@@ -110,8 +116,24 @@ def jwt_callback_wrapper(func):
     return wrapper
 
 
+def default_json_encoder(o: Any) -> Any:
+    """Default JSON encoder function that can also encode Enums."""
+    if isinstance(o, Enum):
+        return o.value
+    return DefaultJSONProvider.default(o)
+
+
+class JSONProvider(DefaultJSONProvider):
+    """A custom JSON provider that can encode Enums."""
+
+    default: Callable[[Any], Any] = staticmethod(default_json_encoder)
+
+
 # def create_app() -> Flask:
 app: Flask = Flask(__name__)
+
+# Use our custom JSON provider
+app.json = JSONProvider(app=app)
 
 app.config.from_mapping(APP_CONFIG)
 

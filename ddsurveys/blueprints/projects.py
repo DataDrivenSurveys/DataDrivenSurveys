@@ -308,7 +308,7 @@ def update_project(id_: str) -> ResponseReturnValue:
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
 
         # get the project
-        project: Project = (
+        project: Project | None = (
             db.query(Project)
             .join(Collaboration)
             .filter(Collaboration.researcher_id == researcher.id, Project.id == id_)
@@ -580,21 +580,12 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             project.survey_platform_fields = cast(SurveyPlatformFieldsDict, {})
 
         # Set the survey_status
-        project.survey_platform_fields["survey_status"] = survey_platform_info.get(
-            "survey_status", SurveyStatus.Unknown
-        ).value
-        project.survey_status = project.survey_platform_fields.get("survey_status", SurveyStatus.Unknown)
+        survey_status: SurveyStatus = survey_platform_info.get("survey_status", SurveyStatus.Unknown)
+        project.survey_platform_fields["survey_status"] = survey_status
+        project.survey_status = survey_status
 
-        # Check for the existence of the survey in the survey platform info
-        if survey_platform_info.get("exists"):
-            # If the survey name from the survey platform info doesn't match the current
-            # survey name in project.survey_platform_fields, update it
-            if survey_platform_info.get("survey_name") != project.survey_platform_fields.get("survey_name"):
-                project.survey_platform_fields["survey_name"] = survey_platform_info.get("survey_name", "")
-        else:
-            # If the survey doesn't exist in the survey platform info, set the
-            # survey_name in project.survey_platform_fields to an empty string
-            project.survey_platform_fields["survey_name"] = ""
+        # Update the survey_name in project.survey_platform_fields
+        project.survey_platform_fields["survey_name"] = survey_platform_info.get("survey_name", "")
 
         # Commit the changes to the database
         flag_modified(project, "survey_platform_fields")
@@ -612,9 +603,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             ), HTTPStatus.INTERNAL_SERVER_ERROR
         else:
             survey_platform_info["id"] = message_id
-            survey_platform_info["survey_status"] = survey_platform_info.get(
-                "survey_status", SurveyStatus.Unknown
-            ).value
+            survey_platform_info["survey_status"] = survey_status
             logger.debug("Survey platform info: %s", survey_platform_info)
             return jsonify(survey_platform_info), status
 
