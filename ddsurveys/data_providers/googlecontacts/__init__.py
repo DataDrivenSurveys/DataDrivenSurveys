@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import operator
 import traceback
+from collections.abc import Sequence
 from functools import cache, cached_property
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, ClassVar, NamedTuple, override
@@ -24,22 +25,23 @@ from oauthlib.oauth2 import InvalidGrantError
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.googlecontacts.people import People
 from ddsurveys.data_providers.utils.text_structure_analyzer import SpacyTextStructureAnalyzer
-
-# from textblob import TextBlob
 from ddsurveys.get_logger import get_logger
-
-__all__ = ["GoogleContactsDataProvider"]
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from logging import Logger
 
     from googleapiclient.discovery import Resource
 
     from ddsurveys.data_providers.data_categories import DataCategory
     from ddsurveys.data_providers.googlecontacts.api_response_dicts import ContactDict
+    from ddsurveys.shared_bases import FormButton
+    from ddsurveys.typings.shared_bases import FormFieldDict
     from ddsurveys.typings.variable_types import TVariableFunction
 
-logger = get_logger(__name__)
+__all__ = ["GoogleContactsDataProvider"]
+
+logger: Logger = get_logger(__name__)
 
 
 class _MockCredentials(NamedTuple):
@@ -59,17 +61,17 @@ class GoogleContactsDataProvider(OAuthDataProvider):
     all_initial_funcs: ClassVar[dict[str, Callable]] = {}
     factory_funcs: ClassVar[dict[str, Callable]] = {}
     variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[dict[str, Any]]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Update the following attributes:
     app_creation_url: str = "https://console.cloud.google.com/apis/credentials/oauthclient"
     instructions_helper_url: str = "https://developers.google.com/people/quickstart/python"
 
     # Unique class attributes go here
-    _scopes: ClassVar[list[str]] = [
+    _scopes: ClassVar[tuple[str, ...]] = (
         "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/contacts.readonly",
-    ]
+     )
 
     _scopes_names: ClassVar[dict[str, str]] = {
         "https://www.googleapis.com/auth/userinfo.profile": "Profile Information",
@@ -81,17 +83,15 @@ class GoogleContactsDataProvider(OAuthDataProvider):
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
-    form_fields: ClassVar[list[FormField]] = [
+    form_fields: ClassVar[Sequence[FormField | FormButton]] = (
         FormField(name="client_id", type="text", required=True, data={}),
         FormField(name="client_secret", type="text", required=True, data={}),
         FormField(name="project_id", type="text", required=True, data={}),
-    ]
+     )
 
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
-    data_categories: ClassVar[list[DataCategory]] = [
-        People,
-    ]
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (People,)
 
     _person_fields_list: ClassVar[list[str]] = [
         "addresses",

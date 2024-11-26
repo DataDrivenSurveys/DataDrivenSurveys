@@ -21,14 +21,14 @@ from ddsurveys.data_providers.variables import BuiltInVariable
 from ddsurveys.get_logger import get_logger
 from ddsurveys.variable_types import VariableDataType
 
-__all__ = ["InstagramDataProvider"]
-
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from ddsurveys.data_providers.variables import CVAttribute
+    from ddsurveys.typings.shared_bases import FormFieldDict
     from ddsurveys.typings.variable_types import TVariableFunction
+
+__all__ = ["InstagramDataProvider"]
 
 logger = get_logger(__name__)
 
@@ -71,11 +71,10 @@ class InstagramDataProvider(OAuthDataProvider):
     # Class attributes that need be re-declared or redefined in child classes
     # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
-    all_initial_funcs: dict[str, Callable] = {}
-    factory_funcs: dict[str, Callable] = {}
-    variable_funcs: dict[str, TVariableFunction] = {}
-    fields: list[dict[str, Any]] = {}
-    variables: list[dict[str, Any]] = {}
+    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
+    factory_funcs: ClassVar[dict[str, Callable]] = {}
+    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Unique class attributes go here
 
@@ -99,7 +98,7 @@ class InstagramDataProvider(OAuthDataProvider):
         ),
     ]
 
-    data_categories = [Media]
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (Media,)
 
     # Assuming the use of the latest API version (as of September 2021)
     api_version = "v11.0"

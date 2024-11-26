@@ -29,7 +29,7 @@ class FrontendActivity(DataCategory):
             data_type=VariableDataType.TEXT,
             test_value_placeholder="True",
             info="This variable reflects access to the transparency table, set to 'True' if accessed and 'False' "
-                 "otherwise.",
+            "otherwise.",
             extractor_func=lambda variable, data: (
                 bool(variable["qualified_name"] in data and data[variable["qualified_name"]]["count"] > 0)
             ),
@@ -48,4 +48,4 @@ class DDSDataProvider(FrontendDataProvider):
     form_fields: ClassVar[list[FormTextBlock]] = [FormTextBlock(name="information", content="information")]
 
     # DataCategory declarations go here
-    data_categories = [FrontendActivity]
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (FrontendActivity,)

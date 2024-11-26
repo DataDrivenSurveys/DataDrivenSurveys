@@ -23,9 +23,11 @@ from ddsurveys.typings.data_providers.variables import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from logging import Logger
 
     from ddsurveys.data_providers.data_categories import DataCategory
+    from ddsurveys.typings.shared_bases import FormFieldDict
     from ddsurveys.typings.variable_types import TVariableValue
 
 __all__: list[str] = [
@@ -102,11 +104,11 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     # Class attributes that need be re-declared or redefined in child classes
     # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
-    fields: ClassVar[list[dict[str, Any]]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Unique class attributes go here
     # TODO: update variable name generation to take this into account
-    variable_replacement_rules: list[tuple[str, str, int]] = ()
+    variable_replacement_rules: tuple[tuple[str, str, int], ...] = ()
     """Rules for replacing values in variable names.
 
     These rules will be applied when a variable name would be longer than the value
@@ -117,10 +119,10 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     # Child classes should re-declare the form_fields attribute and populate the list
     # with instances of FormField.
     # These instances are used to create the form when adding a data provider in the UI.
-    form_fields: ClassVar[list[FormField | FormButton]] = []
+    form_fields: ClassVar[Sequence[FormField | FormButton]] = ()
 
     # Custom Variable Data Categories
-    data_categories: ClassVar[list[DataCategory]] = []
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = ()
 
     # Standard/builtin class methods go here
     @override
@@ -557,7 +559,7 @@ class OAuthDataProvider(DataProvider):
     # Class attributes that need be re-declared or redefined in child classes
     provider_type: str = "oauth"
 
-    _scopes: ClassVar[list[str]] = []
+    _scopes: ClassVar[tuple[str, ...]] = ()
     _scopes_names: ClassVar[dict[str, str]] = {}
     _categories_scopes: ClassVar[dict[str, str]] = {}
 
@@ -580,8 +582,8 @@ class OAuthDataProvider(DataProvider):
         self._authorize_url: str = ""
         self._required_scopes: list[str] = []
 
-        self.api_client = None
-        self.oauth_client = None
+        self.api_client: Any = None
+        self.oauth_client: Any = None
 
         self.builtin_variables = builtin_variables
         self.custom_variables = custom_variables
@@ -648,14 +650,14 @@ class OAuthDataProvider(DataProvider):
         builtin_variables = self.select_relevant_variables(builtin_variables)
         custom_variables = self.select_relevant_variables(custom_variables)
 
-        required_scopes = {self._categories_scopes[v["category"]] for v in builtin_variables}
+        required_scopes: set[str] = {self._categories_scopes[v["category"]] for v in builtin_variables}
 
         required_scopes.union({self._categories_scopes[v["data_category"]] for v in custom_variables})
 
-        required_scopes = list(required_scopes)
+        required_scopes_list: list[str] = sorted(required_scopes)
 
-        self.required_scopes = required_scopes
-        return required_scopes
+        self.required_scopes = required_scopes_list
+        return required_scopes_list
 
     # Methods that child classes must implement
     @abstractmethod

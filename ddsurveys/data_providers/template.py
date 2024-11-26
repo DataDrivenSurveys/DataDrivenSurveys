@@ -9,7 +9,7 @@ __all__ = ["TemplateDataProvider"]
 
 from collections.abc import Callable
 from functools import cached_property
-from typing import Any
+from typing import Any, ClassVar
 
 from data_providers.data_categories import DataCategory
 
@@ -108,9 +108,9 @@ class TemplateDataProvider(OAuthDataProvider):
 
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
-    data_categories = [
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (
         ExampleDataCategory,
-    ]
+     )
 
     # In the functions below, update the elipses (...) with the correct classes and code.
 

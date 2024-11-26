@@ -3,14 +3,16 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@gmail.com)
 """
 
-from typing import Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
-from data_providers.data_categories import DataCategory
-from typings.data_providers.variables import DataOriginDict
-
+from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
+from ddsurveys.typings.data_providers.variables import DataOriginDict
 from ddsurveys.variable_types import VariableDataType
+
+if TYPE_CHECKING:
+    from ddsurveys.data_providers.template_complex import TemplateComplexDataProvider
 
 # Import the required libraries to make this work
 
@@ -19,7 +21,7 @@ logger = get_logger(__name__)
 
 # This is an example of a data category.
 # In practice, each endpoint can be turned into a data category.
-class ExampleDataCategory(DataCategory):
+class ExampleDataCategory(DataCategory["TemplateComplexDataProvider"]):
 
     data_origin: ClassVar[list[DataOriginDict]] = [
         {

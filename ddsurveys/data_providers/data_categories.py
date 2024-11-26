@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict
 
 from ddsurveys.get_logger import get_logger
@@ -62,7 +63,35 @@ class DataCategoryBase(ABCMeta):
         return super().__new__(cls, name, bases, attrs)
 
 
-class DataCategory(ABC, metaclass=DataCategoryBase):
+class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
+    """Represents a category of data provided by a data provider.
+
+    This abstract base class defines the structure and behavior of a data category
+    within the data-driven survey system. It encapsulates information about
+    built-in variables, custom variables, and data origin for a specific category
+    of data.
+
+    Attributes:
+        data_origin (ClassVar[list[DataOriginDict]]):
+            List of data origins for the fetch_data method.
+        custom_variables_enabled (bool):
+            Flag indicating if custom variables are enabled.
+        label (str): Human-readable label for the data category.
+        value (str): Machine-readable value for the data category.
+        api (DP | None): Instance of the API from the container DataProvider class.
+        cv_attributes (ClassVar[list[CVAttribute]]): List of custom variable attributes.
+        builtin_variables (ClassVar[list[list[BuiltInVariable]]]):
+            List of built-in variables.
+
+    Args:
+        data_provider (DP): The data provider instance associated with this category.
+
+    Raises:
+        ValueError: If a data category or variable is not found when using get methods.
+
+    Note:
+        Subclasses must implement the abstract method `fetch_data()`.
+    """
     data_origin: ClassVar[list[DataOriginDict]] = []
     """Data origin of the fetch_data method"""
 
@@ -74,7 +103,7 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
     label: str = ""
     value: str = ""
 
-    api: ClassVar[DataProvider] | None = None
+    api: DP | None = None
     """Instance of the API from the container DataProvider class."""
 
     # data_provider: ClassVar[DataProvider] = None
@@ -83,8 +112,8 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
     cv_attributes: ClassVar[list[CVAttribute]] = []
     builtin_variables: ClassVar[list[list[BuiltInVariable]]] = []
 
-    def __init__(self, data_provider: DataProvider) -> None:
-        self.data_provider: DataProvider = data_provider
+    def __init__(self, data_provider: DP) -> None:
+        self.data_provider: DP = data_provider
         # self.__class__.data_provider = data_provider
 
     def __str__(self) -> str:
@@ -93,7 +122,7 @@ class DataCategory(ABC, metaclass=DataCategoryBase):
     __repr__ = __str__
 
     @abstractmethod
-    def fetch_data(self) -> list[dict[str, Any]]: ...
+    def fetch_data(self) -> Sequence[dict[str, Any]]: ...
 
     @classmethod
     def get_by_value(cls, value: str) -> TDataCategoryClass:

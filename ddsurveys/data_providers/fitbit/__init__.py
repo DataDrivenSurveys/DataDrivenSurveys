@@ -26,6 +26,7 @@ from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvi
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
 from ddsurveys.data_providers.fitbit.activity_log import Activity, ActivityLog
+from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict, ActivityDict
 from ddsurveys.data_providers.fitbit.daily_time_series import (
     AggregationFunctions,
     GroupingFunctions,
@@ -37,7 +38,8 @@ from ddsurveys.get_logger import get_logger
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Sequence
+    from logging import Logger
 
     from ddsurveys.data_providers.fitbit.api_response_dicts import (
         ActiveZoneMinutesSeriesResponseDict,
@@ -48,11 +50,12 @@ if TYPE_CHECKING:
         FrequentActivityDict,
         UserDict,
     )
+    from ddsurveys.typings.shared_bases import FormFieldDict
     from ddsurveys.typings.variable_types import TVariableFunction
 
 __all__ = ["FitbitDataProvider"]
 
-logger = get_logger(__name__)
+logger: Logger = get_logger(__name__)
 
 
 class DailyStatsMaxDateRange(IntEnum):
@@ -62,7 +65,7 @@ class DailyStatsMaxDateRange(IntEnum):
     OTHER = 1095
 
 
-class Account(DataCategory):
+class Account(DataCategory["FitbitDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         pass
 
@@ -103,7 +106,7 @@ class Account(DataCategory):
     ]
 
 
-class Activities(DataCategory):
+class Activities(DataCategory["FitbitDataProvider"]):
     data_origin: ClassVar = [
         {
             "method": "activities_frequent",
@@ -113,8 +116,7 @@ class Activities(DataCategory):
     ]
 
     def fetch_data(self) -> list[dict[str, Any]]:
-        self.data_provider: FitbitDataProvider
-        data = self.data_provider.activity_logs
+        data: ActivitiesListResponseDict = self.data_provider.activity_logs
         if "activities" in data:
             return data["activities"]
         return []
@@ -195,7 +197,7 @@ class Activities(DataCategory):
     ]
 
 
-class ActiveMinutes(DataCategory):
+class ActiveMinutes(DataCategory["FitbitDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         pass
 
@@ -277,7 +279,7 @@ class ActiveMinutes(DataCategory):
     ]
 
 
-class Daily(DataCategory):
+class Daily(DataCategory["FitbitDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         pass
 
@@ -325,7 +327,7 @@ class Daily(DataCategory):
     ]
 
 
-class Steps(DataCategory):
+class Steps(DataCategory["FitbitDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
@@ -374,7 +376,7 @@ class Steps(DataCategory):
     ]
 
 
-class Badges(DataCategory):
+class Badges(DataCategory["FitbitDataProvider"]):
     data_origin: ClassVar = [
         {
             "method": "user_badges",
@@ -444,10 +446,10 @@ class FitbitDataProvider(OAuthDataProvider):
     all_initial_funcs: ClassVar[dict[str, Callable]] = {}
     factory_funcs: ClassVar[dict[str, Callable]] = {}
     variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[dict[str, Any]]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Unique class attributes go here
-    _scopes = (
+    _scopes: ClassVar[tuple[str, ...]] = (
         "activity",
         "heartrate",
         "location",
@@ -475,7 +477,7 @@ class FitbitDataProvider(OAuthDataProvider):
     }
 
     # Form fields declarations go here
-    form_fields: ClassVar[list[FormField | FormButton]] = [
+    form_fields: ClassVar[Sequence[FormField | FormButton]] = [
         FormField(
             name="client_id",
             type="text",
@@ -495,7 +497,14 @@ class FitbitDataProvider(OAuthDataProvider):
     ]
 
     # DataCategory declarations go here
-    data_categories: ClassVar[list[DataCategory]] = [Activities, Account, ActiveMinutes, Daily, Steps, Badges]
+    data_categories: ClassVar[tuple[type[DataCategory[FitbitDataProvider]], ...]] = (
+        Account,
+        Activities,
+        ActiveMinutes,
+        Daily,
+        Steps,
+        Badges,
+     )
 
     # Standard class methods go here
     @override

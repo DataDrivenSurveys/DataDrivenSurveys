@@ -21,7 +21,7 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, override
 
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.get_logger import get_logger
@@ -49,10 +49,9 @@ if TYPE_CHECKING:
         SelectionStrategyDict,
     )
     from ddsurveys.typings.models import CustomVariableDict as DBCustomVariableDict
-    from ddsurveys.typings.variable_types import TDataClass, TVariableValue
-    from ddsurveys.variable_types import OperatorDict
+    from ddsurveys.typings.variable_types import TVariableValue
+    from ddsurveys.variable_types import OperatorDict, TDataClass
 
-    ExtractorFunction = Callable[[DataProvider], TVariableValue] | Callable[[DataProvider, int], TVariableValue]
 
 __all__ = [
     "Attribute",
@@ -117,7 +116,7 @@ class Attribute(ABC):
         }
 
 
-class BuiltInVariable(Attribute):
+class BuiltInVariable[DP: DataProvider](Attribute):
     def __init__(
         self,
         name: str,
@@ -132,7 +131,7 @@ class BuiltInVariable(Attribute):
         *,
         is_indexed_variable: bool = False,
         index: int | None = None,
-        extractor_func: ExtractorFunction | None = None,
+        extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] | None = None,
     ) -> None:
         if data_origin is None:
             data_origin = []
@@ -151,7 +150,7 @@ class BuiltInVariable(Attribute):
 
         self.is_indexed_variable: bool = is_indexed_variable
         self.index: int = index
-        self.extractor_func: ExtractorFunction = extractor_func
+        self.extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] = extractor_func
 
     @classmethod
     def create_instances(
@@ -169,7 +168,7 @@ class BuiltInVariable(Attribute):
         is_indexed_variable: bool = False,
         index_start: int | None = None,
         index_end: int | None = None,
-        extractor_func: ExtractorFunction | None = None,
+        extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] | None = None,
     ) -> list[BuiltInVariable]:
         if data_origin is None:
             data_origin = []

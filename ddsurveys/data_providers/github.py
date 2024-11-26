@@ -4,19 +4,22 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 import traceback
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar, override
 
-from github import ApplicationOAuth, Auth, Github
+from github import Auth, Github
+from github.ApplicationOAuth import ApplicationOAuth
 from github.GithubException import BadCredentialsException, GithubException
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
+from ddsurveys.typings.shared_bases import FormFieldDict
 from ddsurveys.variable_types import VariableDataType
 
 __all__ = ["GitHubDataProvider"]
@@ -32,7 +35,6 @@ logger = get_logger(__name__)
 
 
 class Account(DataCategory):
-
     data_origin = [
         {
             "method": "get_user",
@@ -91,7 +93,6 @@ class Account(DataCategory):
 
 
 class Repositories(DataCategory):
-
     data_origin = [
         {
             "method": "get_user_repositories",
@@ -188,10 +189,10 @@ class GitHubDataProvider(OAuthDataProvider):
     # Class attributes that need be re-declared or redefined in child classes
     # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
-    all_initial_funcs: dict[str, Callable] = {}
-    factory_funcs: dict[str, Callable] = {}
-    variable_funcs: dict[str, TVariableFunction] = {}
-    fields: list[dict[str, Any]] = {}
+    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
+    factory_funcs: ClassVar[dict[str, Callable]] = {}
+    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     token: AccessToken = None
 
@@ -199,7 +200,7 @@ class GitHubDataProvider(OAuthDataProvider):
     # instructions_helper_url: str = "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
 
     # Unique class attributes go here
-    _scopes = []
+    _scopes = ()
 
     _categories_scopes = {
         "Account": "read_user",
@@ -227,8 +228,9 @@ class GitHubDataProvider(OAuthDataProvider):
         ),
     ]
 
-    data_categories = [Account, Repositories]
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (Account, Repositories)
 
+    @override
     def __init__(self, **kwargs):
         """Initialization function.
 
@@ -262,20 +264,16 @@ class GitHubDataProvider(OAuthDataProvider):
 
         auth = Auth.Token(access_token)
 
-        self.api_client: Github = Github(auth=auth)
+        self.api_client = Github(auth=auth)
 
     def init_oauth_client(self, *args, **kwargs) -> None:
         g = Github()
 
-        app = g.get_oauth_application(
-            client_id=self.client_id, client_secret=self.client_secret
-        )
+        app: ApplicationOAuth = g.get_oauth_application(client_id=self.client_id, client_secret=self.client_secret)
 
-        self.oauth_client: ApplicationOAuth = app
+        self.oauth_client = app
 
-    def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
-    ) -> str:
+    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] | None = None) -> str:
         # required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
         #
         # if len(required_scopes) == 0:
@@ -301,12 +299,9 @@ class GitHubDataProvider(OAuthDataProvider):
             }
 
         try:
-
             g = Github()
 
-            app = g.get_oauth_application(
-                client_id=self.client_id, client_secret=self.client_secret
-            )
+            app = g.get_oauth_application(client_id=self.client_id, client_secret=self.client_secret)
 
             token = app.get_access_token(code)
 

@@ -4,18 +4,24 @@ Created on 2024-05-12 20:52
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
-__all__ = ["TemplateComplexDataProvider"]
+from __future__ import annotations
 
-from collections.abc import Callable
 from functools import cached_property
-from typing import Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 
 # Import the required libraries to make this work
-from ddsurveys.data_providers.template_complex.data_category import ExampleDataCategory
 from ddsurveys.get_logger import get_logger
-from ddsurveys.typings.variable_types import TVariableFunction
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from ddsurveys.data_providers.template_complex.data_category import ExampleDataCategory
+    from ddsurveys.typings.shared_bases import FormFieldDict
+    from ddsurveys.typings.variable_types import TVariableFunction
+
+__all__ = ["TemplateComplexDataProvider"]
 
 logger = get_logger(__name__)
 
@@ -25,17 +31,17 @@ class TemplateComplexDataProvider(OAuthDataProvider):
     # The following attributes need to be re-declared in child classes.
     # You can just copy and paste them into the child class body.
     # When copying a template file, leave them unchanged.
-    all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    factory_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    variable_funcs: dict[str, TVariableFunction] = {}  # Leave unchanged.
-    fields: list[dict[str, Any]] = {}  # Leave unchanged.
+    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
+    factory_funcs: ClassVar[dict[str, Callable]] = {}
+    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
+    fields: ClassVar[list[FormFieldDict]] = []
 
     # Update the following attributes:
     app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
     instructions_helper_url: str = ...  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
 
     # Unique class attributes go here
-    _scopes = []
+    _scopes = ()
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them
     _categories_scopes = {}
@@ -49,9 +55,9 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # List all the data categories that this data provider supports.
     # Enter the names of the classes.
-    data_categories = [
+    data_categories: ClassVar[tuple[type[DataCategory[TemplateComplexDataProvider]], ...]](
         ExampleDataCategory,
-    ]
+    )
 
     # In the functions below, update the elipses (...) with the correct classes and code.
     def __init__(self, **kwargs):

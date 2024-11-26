@@ -31,6 +31,7 @@ Created on 2023-09-05 18:07
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, override
@@ -1022,7 +1023,7 @@ class UIRegistry[T: TUIRegistryClass](Registry[T]):
     # Child classes should redeclare the form_fields attribute and populate the list
     # with instances of FormField.
     # These instances are used to create the form when adding a data provider in the UI.
-    form_fields: ClassVar[list[FormField | FormButton]] = []
+    form_fields: ClassVar[Sequence[FormField | FormButton]] = ()
 
     @classmethod
     def register(cls) -> None:
