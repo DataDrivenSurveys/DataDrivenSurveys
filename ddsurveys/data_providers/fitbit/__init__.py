@@ -22,7 +22,7 @@ from fitbit.api import Fitbit, FitbitOauth2Client
 from fitbit.exceptions import HTTPForbidden
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
-from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
+from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
 from ddsurveys.data_providers.fitbit.activity_log import Activity, ActivityLog
@@ -475,7 +475,7 @@ class FitbitDataProvider(OAuthDataProvider):
     }
 
     # Form fields declarations go here
-    form_fields: ClassVar[list[FormField]] = [
+    form_fields: ClassVar[list[FormField | FormButton]] = [
         FormField(
             name="client_id",
             type="text",
@@ -543,7 +543,7 @@ class FitbitDataProvider(OAuthDataProvider):
             self.access_token = access_token
         if refresh_token is not None:
             self.refresh_token = refresh_token
-        self.api_client: Fitbit = Fitbit(
+        self.api_client = Fitbit(
             client_id=self.client_id,
             client_secret=self.client_secret,
             access_token=self.access_token,
