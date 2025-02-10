@@ -41,6 +41,7 @@ services:
       - dds-dev-net
     environment:
       - DDS_ENV=development
+  
   db:
     image: mariadb:latest
     volumes:
