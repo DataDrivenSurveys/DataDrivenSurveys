@@ -19,6 +19,7 @@ services:
       - NODE_ENV=development
 
   backend:
+    platform: linux/amd64
     build: .
     working_dir: /app
     ports:
@@ -37,13 +38,11 @@ services:
           path: ./pyproject.toml
     depends_on:
       db:
-    platform: linux/amd64
         condition: service_healthy
     networks:
       - dds-dev-net
     environment:
       - DDS_ENV=development
-
   db:
     platform: linux/amd64
     image: mariadb:latest
@@ -64,3 +63,4 @@ services:
 networks:
   dds-dev-net:
     name: dds-dev-net
+    
