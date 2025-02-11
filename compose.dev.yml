@@ -1,6 +1,7 @@
 name: dds-dev
 services:
   frontend:
+    platform: linux/amd64
     image: node:20
     working_dir: /app
     command: bash -c "npm install && npm run dev"
@@ -18,6 +19,7 @@ services:
       - NODE_ENV=development
 
   backend:
+    platform: linux/amd64
     build: .
     working_dir: /app
     ports:
@@ -43,6 +45,7 @@ services:
       - DDS_ENV=development
   
   db:
+    platform: linux/amd64
     image: mariadb:latest
     volumes:
       - ./volumes/db:/var/lib/mysql
