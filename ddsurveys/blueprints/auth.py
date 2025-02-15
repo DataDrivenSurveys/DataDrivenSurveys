@@ -174,7 +174,7 @@ def signin() -> ResponseReturnValue:
         return jsonify({"token": token}), HTTPStatus.OK
 
 
-@auth.route("/me", methods=["GET"])
+@auth.route("/auth/me", methods=["GET"])
 @jwt_required()
 def session() -> ResponseReturnValue:
     current_user = get_jwt_identity()
