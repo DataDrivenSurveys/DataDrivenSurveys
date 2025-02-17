@@ -31,7 +31,6 @@ Created on 2023-09-05 18:07
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from copy import deepcopy
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, override
@@ -40,6 +39,7 @@ from ddsurveys import __package__
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable, Sequence
     from logging import Logger
 
     from typings.shared_bases import FormFieldDict
@@ -61,30 +61,35 @@ __all__ = [
 
 logger: Logger = get_logger(__name__)
 
-TRegistryClass = type["Registry"]
-TUIRegistryClass = type["UIRegistry"]
+type TRegistryClass = type["Registry"]
+type TUIRegistryClass = type["UIRegistry"]
 
 
 class FormElement(ABC):
-    """The base class for all form elements within the UI framework, providing a foundation for creating interactive and
-    dynamic form components. This class encapsulates common properties and functionalities shared across different types
-    of form elements, such as buttons, fields, and text blocks. It includes mechanisms for setting labels, helper texts,
-    visibility conditions, and interaction effects, allowing for a highly customizable user interface experience.
+    """The base class for all form elements within the UI framework.
+
+    It provides a foundation for creating interactive and dynamic form components.
+    This class encapsulates common properties and functionalities shared across
+    different types of form elements, such as buttons, fields, and text blocks.
+    It includes mechanisms for setting labels, helper texts,
+    visibility conditions, and interaction effects, allowing for
+    a highly customizable user interface experience.
+
+    The class also provides utility methods for prefixing text with a shared prefix
+    and generating qualified names for form elements,
+    facilitating consistency and namespace management within the UI framework.
 
     Attributes:
-        name (str): The unique identifier for the form element.
-        label (Optional[str]): The display label for the form element, used for UI presentation.
-        helper_text (Optional[str]): Additional information or guidance provided to the user regarding the form element.
-        data (Optional[dict[str, Any]]): Arbitrary data associated with the form element, for use in custom behaviors
-        or callbacks.
-        visibility_conditions (Optional[dict[str, Any]]): Conditions that determine when the form element is visible
-        to the user.
-        interaction_effects (Optional[dict[str, Any]]): Effects or actions triggered by user interaction with the
-        form element.
-
-    The class also provides utility methods for prefixing text with a shared prefix and generating qualified names
-    for form elements,
-    facilitating consistency and namespace management within the UI framework.
+        name: The unique identifier for the form element.
+        label: The display label for the form element, used for UI presentation.
+        helper_text: Additional information or guidance provided to the user regarding
+            the form element.
+        data: Arbitrary data associated with the form element, for use in custom
+            behaviors or callbacks.
+        visibility_conditions: Conditions that determine when the form element is
+            visible to the user.
+        interaction_effects: Effects or actions triggered by user interaction with the
+            form element.
     """
 
     _package: str
@@ -105,14 +110,14 @@ class FormElement(ABC):
         """Initialize a new instance of FormElement.
 
         Args:
-            name (str): The name of the form element.
-            label (Optional[str]): The label of the form element. Defaults to None.
-            helper_text (Optional[str]): The helper text for the form element. Defaults to None.
-            data (Optional[dict[str, Any]]): Additional data associated with the form element. Defaults to None.
-            visibility_conditions (Optional[dict[str, Any]]): Conditions under which the form element is visible.
-            Defaults to None.
-            interaction_effects (Optional[dict[str, Any]]): Effects triggered by interaction with the form element.
-            Defaults to None.
+            name: The name of the form element.
+            label: The label of the form element. Defaults to None.
+            helper_text: The helper text for the form element. Defaults to None.
+            data: Additional data associated with the form element. Defaults to None.
+            visibility_conditions: Conditions under which the form element is visible.
+                Defaults to None.
+            interaction_effects: Effects triggered by interaction with the form element.
+                Defaults to None.
         """
         self.name: str = name
         self.label: str = label or f"{name}.label"
@@ -152,7 +157,9 @@ class FormElement(ABC):
         return label
 
     def get_qualified_name(self, class_: type) -> str:
-        """Generates a fully qualified name for the form element based on its name and the class it is associated with.
+        """Generates a fully qualified name for the form element.
+
+        The name is generated based on its name and the class it is associated with.
 
         Args:
             class_ (type): The class associated with the form element.
@@ -194,39 +201,42 @@ class FormElement(ABC):
 
 
 class FormButton(FormElement):
-    """A class for creating button elements within a UI framework, designed to be filled by data providers upon
-    addition to the UI.
+    """A class for creating button elements within a UI framework.
 
-    This class extends `FormElement` to include functionality specific to buttons, such as handling click events and
-    passing additional data to the frontend. It allows for the customization of button labels, helper texts,
-    and the actions performed on click events, facilitating interactive and dynamic UI components.
+    The class is designed to be filled by data providers upon addition to the UI.
+
+    This class extends `FormElement` to include functionality specific to buttons,
+    such as handling click events and passing additional data to the frontend.
+    It allows for the customization of button labels, helper texts,
+    and the actions performed on click events,
+    facilitating interactive and dynamic UI components.
 
     Attributes:
-        name (str): The unique identifier for the button.
-        label (str): The display label for the button, used for UI presentation. If not provided, it is generated
-        based on the button's name.
-        helper_text (str): Additional information or guidance provided to the user regarding the button. If not
-        provided, it is generated based on the button's name.
-        data (dict): Arbitrary data associated with the button, sent to the frontend when the button is clicked.
-        on_click (dict): A dictionary specifying the action to be performed when the button is clicked, including the
-        action type and arguments for the action handler.
+        name: The unique identifier for the button.
+        label: The display label for the button, used for UI presentation.
+            If not provided, it is generated based on the button's name.
+        helper_text: Additional information or guidance provided to the user regarding
+            the button.
+            If not provided, it is generated based on the button's name.
+        data: Arbitrary data associated with the button,
+            sent to the frontend when the button is clicked.
+        on_click: A dictionary specifying the action to be performed when the button
+            is clicked, including the action type and arguments for the action handler.
 
     The `on_click` dictionary should contain:
         - "action" (str): The action to be performed on click.
         - "args" (dict): Arguments to be passed to the action handler.
     """
 
-    def __init__(self, on_click: dict[str, Any] | None = None, **kwargs) -> None:
+    def __init__(self, on_click: dict[str, Any] | None = None, **kwargs: dict[Hashable, Any]) -> None:
         """Initializes a new instance of the FormButton class.
 
         Args:
-            on_click (Optional[dict[str, Any]]): A dictionary specifying the onClick event for the button. Defaults
-            to None.
-                                                 It should specify the action to be performed when the button is
-                                                 clicked and any arguments that should be passed to the action handler.
+            on_click: A dictionary specifying the onClick event for the button.
+                Defaults to None.
+                It should specify the action to be performed when the button is
+                clicked and any arguments that should be passed to the action handler.
             **kwargs: Arbitrary keyword arguments passed to the base class initializer.
-
-
         """
         super().__init__(**kwargs)
         self.on_click: dict[str, Any] | None = on_click
@@ -235,18 +245,22 @@ class FormButton(FormElement):
 
     @override
     def register_field(self, cls: type) -> type:
-        """Registers the button as a field within a given class, allowing it to be dynamically managed and reused
+        """Registers the button as a field within a given class.
+
+        This allows it to be dynamically managed and reused
         across different parts of the UI.
 
-        This method prefixes the button's label and helper text with a shared prefix and the module of the provided
-        class to ensure uniqueness and consistency. It then adds the button to the registry of form fields associated
-        with the class, making it available for instantiation and rendering in the UI.
+        This method prefixes the button's label and helper text with a shared prefix
+        and the module of the provided class to ensure uniqueness and consistency.
+        It then adds the button to the registry of form fields associated with the
+        class, making it available for instantiation and rendering in the UI.
 
         Args:
-            cls (type): The class with which this button is to be registered.
+            cls: The class with which this button is to be registered.
 
         Returns:
-            type: The class passed as an argument, allowing for method chaining or further modifications.
+            The class passed as an argument, allowing for method chaining or further
+            modifications.
         """
         class_name = cls.__name__
 
@@ -263,17 +277,15 @@ class FormButton(FormElement):
         if class_name not in self.registry_class.cls_form_fields:
             self.registry_class.cls_form_fields[class_name] = []
 
-        self.registry_class.cls_form_fields[class_name].append(
-            {
-                "name": self.name,
-                "label": self.label,
-                "helper_text": self.helper_text,
-                "type": self.type,
-                "visibility_conditions": self.visibility_conditions,
-                "onClick": self.on_click,
-                "data": self.data,
-            }
-        )
+        self.registry_class.cls_form_fields[class_name].append({
+            "name": self.name,
+            "label": self.label,
+            "helper_text": self.helper_text,
+            "type": self.type,
+            "visibility_conditions": self.visibility_conditions,
+            "onClick": self.on_click,
+            "data": self.data,
+        })
         return cls
 
 
@@ -360,26 +372,24 @@ class FormField(FormElement):
         if class_name not in self.registry_class.cls_form_fields:
             self.registry_class.cls_form_fields[class_name] = []
 
-        self.registry_class.cls_form_fields[class_name].append(
-            {
-                "name": self.name,
-                "label": self.label,
-                "value": self.value,
-                "type": self.type,
-                "disabled": self.disabled,
-                "required": self.required,
-                "helper_text": self.helper_text,
-                "visibility_conditions": self.visibility_conditions,
-                "interaction_effects": self.interaction_effects,
-                "data": self.data,
-            }
-        )
+        self.registry_class.cls_form_fields[class_name].append({
+            "name": self.name,
+            "label": self.label,
+            "value": self.value,
+            "type": self.type,
+            "disabled": self.disabled,
+            "required": self.required,
+            "helper_text": self.helper_text,
+            "visibility_conditions": self.visibility_conditions,
+            "interaction_effects": self.interaction_effects,
+            "data": self.data,
+        })
         return cls
 
     @classmethod
     def check_input_fields(
         cls,
-        fields: list[dict],
+        fields: list[dict[Hashable, Any]],
         form_fields: list[FormField | FormButton],
         override_required_fields: list[str] | None = None,
         class_: type | None = None,
@@ -387,15 +397,17 @@ class FormField(FormElement):
         """Checks if all required fields are present and not empty in the input fields.
 
         Args:
-            fields (list[dict]): A list of dictionaries representing input fields with their values.
-            form_fields (list[FormField | FormButton]): A list of FormField or FormButton instances to check against.
-            override_required_fields (list[str], optional): A list of field names that are not required,
+            fields: A list of dictionaries representing input fields with their values.
+            form_fields: A list of FormField or FormButton instances to check against.
+            override_required_fields: A list of field names that are not required,
             even if marked as such.
-            class_ (type, optional): The class in which the FormField instance is contained. Defaults to None.
+            class_: The class in which the FormField instance is contained.
+                Defaults to None.
 
         Returns:
-            tuple[bool, Optional[str]]: A tuple containing a boolean indicating success (True if all required fields
-            are present) and an optional string representing the full name key of a missing field if any.
+            A tuple containing a boolean indicating success (True if all required fields
+            are present) and an optional string representing the full name key of a
+            missing field if any.
         """
         if override_required_fields is None:
             override_required_fields = []
@@ -505,14 +517,12 @@ class FormTextBlock(FormElement):
             self.registry_class.cls_form_fields[class_name] = []
 
         # Adding the text block to the registry with its content.
-        self.registry_class.cls_form_fields[class_name].append(
-            {
-                "name": self.name,
-                "content": self.content,
-                "type": self.type,
-                "visibility_conditions": self.visibility_conditions,
-            }
-        )
+        self.registry_class.cls_form_fields[class_name].append({
+            "name": self.name,
+            "content": self.content,
+            "type": self.type,
+            "visibility_conditions": self.visibility_conditions,
+        })
         return cls
 
 

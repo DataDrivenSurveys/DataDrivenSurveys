@@ -17,6 +17,7 @@ from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import FormTextBlock as BaseFormTextBlock
 from ddsurveys.typings.data_providers.variables import (
     BuiltinVariableDict,
+    CustomVariableDict,
     CVAttributeDict,
     DataOriginDict,
     QualifiedBuiltInVariableDict,
@@ -198,8 +199,8 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     def calculate_variables(
         self,
-        project_builtin_variables: list[dict] | None = None,
-        project_custom_variables: list[dict] | None = None,
+        project_builtin_variables: list[BuiltinVariableDict] | None = None,
+        project_custom_variables: list[CustomVariableDict] | None = None,
     ) -> dict[str, TVariableValue]:
         """Calculates the values of passed variables.
 

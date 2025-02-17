@@ -7,12 +7,13 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict
 
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from ddsurveys.data_providers.bases import DataProvider
     from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
     from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CVAttributeDict, DataOriginDict
@@ -29,6 +30,8 @@ logger = get_logger(__name__)
 
 
 class DataCategoryDict(TypedDict):
+    """Dictionary representing a data category."""
+
     label: str
     value: str
     custom_variables_enabled: bool
@@ -39,7 +42,6 @@ class DataCategoryDict(TypedDict):
 
 class DataCategoryBase(ABCMeta):
     def __new__(cls, name: str, bases: tuple[type], attrs: dict[str, Any]):
-        # Code partially based on django.db.models.base.ModelBase
         super_new = super().__new__
 
         # Also ensure initialization is only performed for subclasses of Model
@@ -92,6 +94,7 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
     Note:
         Subclasses must implement the abstract method `fetch_data()`.
     """
+
     data_origin: ClassVar[list[DataOriginDict]] = []
     """Data origin of the fetch_data method"""
 
@@ -110,7 +113,7 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
     # """Instance of the DataProvider class."""
 
     cv_attributes: ClassVar[list[CVAttribute]] = []
-    builtin_variables: ClassVar[list[list[BuiltInVariable]]] = []
+    builtin_variables: list[list[BuiltInVariable[DP]]] = []
 
     def __init__(self, data_provider: DP) -> None:
         self.data_provider: DP = data_provider
@@ -125,7 +128,8 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
     def fetch_data(self) -> Sequence[dict[str, Any]]: ...
 
     @classmethod
-    def get_by_value(cls, value: str) -> TDataCategoryClass:
+    def get_by_value(cls, value: str) -> type[DataCategory[DP]]:
+        """Returns the DataCategory subclass with the given value."""
         for subclass in cls.__subclasses__():
             if subclass.value == value:
                 return subclass
@@ -173,7 +177,7 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
         raise ValueError(msg)
 
     @classmethod
-    def get_builtin_variable_by_name(cls, name: str) -> BuiltInVariable:
+    def get_builtin_variable_by_name(cls, name: str) -> BuiltInVariable[DP]:
         # Check in builtin attributes
         for var_list in cls.builtin_variables:
             for var in var_list:

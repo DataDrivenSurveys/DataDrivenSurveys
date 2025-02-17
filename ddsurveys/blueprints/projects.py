@@ -11,7 +11,6 @@ from http import HTTPStatus
 from io import BytesIO
 from typing import TYPE_CHECKING, Any, cast
 
-import sqlalchemy
 from flask import Blueprint, g, jsonify, request, send_file
 from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -19,12 +18,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
-from ddsurveys.api_responses import APIResponses
+from ddsurveys.api_responses import APIResponses, APIResponseValue
 from ddsurveys.blueprints._common import abbreviate_variable_name, get_researcher, insert_exists_variables
 from ddsurveys.blueprints.custom_variables import custom_variables
 from ddsurveys.blueprints.data_providers import data_providers
 from ddsurveys.blueprints.respondent import respondent
-from ddsurveys.data_providers.bases import CustomVariable
+from ddsurveys.data_providers.variables import CustomVariable
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import (
     Collaboration,
@@ -36,9 +35,10 @@ from ddsurveys.models import (
     SurveyPlatformFieldsDict,
     SurveyStatus,
 )
-from ddsurveys.survey_platforms.qualtrics import SurveyPlatform
+from ddsurveys.survey_platforms.bases import SurveyPlatform
 
 if TYPE_CHECKING:
+    from flask import Response
     from flask.typing import ResponseReturnValue
 
     from ddsurveys.survey_platforms.bases import SurveyPlatformInfoDict, TSurveyPlatform, TSurveyPlatformClass
@@ -53,13 +53,13 @@ projects.register_blueprint(blueprint=custom_variables, url_prefix="/<string:pro
 
 
 @projects.url_value_preprocessor
-def get_project_id(endpoint, values):
+def get_project_id(endpoint: str, values: dict[str, Any] | None) -> None:
     if values is not None and "project_id" in values:
         g.project_id = values.pop("project_id")
 
 
 @projects.url_value_preprocessor
-def get_project_short_id(endpoint, values):
+def get_project_short_id(endpoint: str, values: dict[str, Any] | None) -> None:
     if values is not None and "project_short_id" in values:
         g.project_short_id = values.pop("project_short_id")
 
@@ -67,7 +67,7 @@ def get_project_short_id(endpoint, values):
 # List
 @projects.route("/", methods=["GET"])
 @jwt_required()
-def list_projects() -> ResponseReturnValue:
+def list_projects() -> ResponseReturnValue | tuple[Researcher | Response, HTTPStatus]:
     logger.debug("Listing projects")
 
     with DBManager.get_db() as db:
@@ -106,14 +106,12 @@ def create_project() -> ResponseReturnValue:
         if not use_existing_survey and (project_name is None or project_name == ""):
             logger.error("No project name specified")
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.name_is_required",
-                            "text": "Project name is required",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.name_is_required",
+                        "text": "Project name is required",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -122,39 +120,37 @@ def create_project() -> ResponseReturnValue:
         # survey_id becomes required if use_existing_survey is True
         override_required = ["survey_id"] if use_existing_survey else []
 
-        platform_class: TSurveyPlatformClass = SurveyPlatform.get_class_by_value(survey_platform_name)
+        platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(survey_platform_name)
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", survey_platform_name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.survey.platform_not_supported",
-                            "text": "Unknown Survey Platform",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.survey.platform_not_supported",
+                        "text": "Unknown Survey Platform",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
         # Validate fields using check_inputs method
         are_fields_valid, missing_field_key = platform_class.check_input_fields(
-            fields, override_required, SurveyPlatform
+            fields=fields,
+            override_required_fields=override_required,
+            class_=SurveyPlatform,
         )
 
         if not are_fields_valid:
             logger.error("Missing required field: %s", missing_field_key)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": f"{missing_field_key}.missing",
-                            # Append .missing to the full name key for the error id
-                            "text": f"Field '{missing_field_key}' is required",
-                        }
+                jsonify({
+                    "message": {
+                        "id": f"{missing_field_key}.missing",
+                        # Append .missing to the full name key for the error id
+                        "text": f"Field '{missing_field_key}' is required",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -196,29 +192,25 @@ def create_project() -> ResponseReturnValue:
         try:
             db.commit()
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_created_successfully",
-                            "text": "Project created successfully",
-                        },
-                        "entity": new_project.to_dict(),
-                    }
-                ),
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_created_successfully",
+                        "text": "Project created successfully",
+                    },
+                    "entity": new_project.to_dict(),
+                }),
                 HTTPStatus.CREATED,
             )
         except SQLAlchemyError:
             logger.exception("An error occurred while creating the project. Rolling back changes.")
             db.rollback()
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.failed_to_create_project",
-                            "text": "Failed to create project",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.failed_to_create_project",
+                        "text": "Failed to create project",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -265,14 +257,12 @@ def get_project(id_: str) -> ResponseReturnValue:
 
         if not project:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -331,26 +321,22 @@ def update_project(id_: str) -> ResponseReturnValue:
                     setattr(project, key, value)
             db.commit()
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.updated_successfully",
-                            "text": "Project updated successfully",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.updated_successfully",
+                        "text": "Project updated successfully",
                     }
-                ),
+                }),
                 HTTPStatus.OK,
             )
 
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.projects.project_not_found",
-                        "text": "Project not found",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.projects.project_not_found",
+                    "text": "Project not found",
                 }
-            ),
+            }),
             HTTPStatus.NOT_FOUND,
         )
 
@@ -392,26 +378,22 @@ def delete_project(id_: str) -> ResponseReturnValue:
             db.delete(project)
             db.commit()
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_and_collaboration_deleted_successfully",
-                            "text": "Project and collaboration deleted successfully",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_and_collaboration_deleted_successfully",
+                        "text": "Project and collaboration deleted successfully",
                     }
-                ),
+                }),
                 HTTPStatus.OK,
             )
 
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.projects.project_and_collaboration_not_found",
-                        "text": "Project and collaboration not found",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.projects.project_and_collaboration_not_found",
+                    "text": "Project and collaboration not found",
                 }
-            ),
+            }),
             HTTPStatus.NOT_FOUND,
         )
 
@@ -454,14 +436,12 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         if not project:
             logger.warning("Project not found with id: %s", id_)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -481,14 +461,12 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         db.commit()
 
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.projects.respondents.deleted_successfully",
-                        "text": "All project respondents deleted",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.projects.respondents.deleted_successfully",
+                    "text": "All project respondents deleted",
                 }
-            ),
+            }),
             HTTPStatus.OK,
         )
 
@@ -548,14 +526,12 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
 
         if project is None:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
         status: int
@@ -565,14 +541,12 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
 
         if status != HTTPStatus.OK:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": message_id,
-                            "text": "Failed to check survey platform connection",
-                        }
+                jsonify({
+                    "message": {
+                        "id": message_id,
+                        "text": "Failed to check survey platform connection",
                     }
-                ),
+                }),
                 status,
             )
 
@@ -593,14 +567,12 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             db.commit()
         except Exception:
             logger.exception("Failed to update project with id: %s", id_)
-            return jsonify(
-                {
-                    "message": {
-                        "id": "api.ddsurveys.database.commit_error",
-                        "text": "Failed to commit changes to the database",
-                    }
+            return jsonify({
+                "message": {
+                    "id": "api.ddsurveys.database.commit_error",
+                    "text": "Failed to commit changes to the database",
                 }
-            ), HTTPStatus.INTERNAL_SERVER_ERROR
+            }), HTTPStatus.INTERNAL_SERVER_ERROR
         else:
             survey_platform_info["id"] = message_id
             survey_platform_info["survey_status"] = survey_status
@@ -641,14 +613,12 @@ def sync_variables(id_: str) -> ResponseReturnValue:
 
         if project is None:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -656,9 +626,9 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         if project.variables:
             enabled_variables = [variable for variable in project.variables if variable["enabled"]]
         if project.custom_variables:
-            enabled_custom_variables = CustomVariable.custom_variables_as_list(
-                [variable for variable in project.custom_variables if variable.get("enabled", False)]
-            )
+            enabled_custom_variables = CustomVariable.custom_variables_as_list([
+                variable for variable in project.custom_variables if variable.get("enabled", False)
+            ])
             logger.info("Stored custom variables: %s", project.custom_variables)
             logger.info("Upload custom variables: %s", enabled_custom_variables)
             enabled_variables.extend(enabled_custom_variables)
@@ -668,14 +638,12 @@ def sync_variables(id_: str) -> ResponseReturnValue:
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.survey.platform_not_supported",
-                            "text": "Survey platform not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.survey.platform_not_supported",
+                        "text": "Survey platform not supported",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -743,14 +711,12 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
         if not project:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -759,14 +725,12 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.survey.platform_not_supported",
-                            "text": "Survey platform not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.survey.platform_not_supported",
+                        "text": "Survey platform not supported",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -800,14 +764,12 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
 
         # If there is no content for some reason, return an appropriate message
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.survey.export_failed",
-                        "text": "Failed to export survey responses",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.survey.export_failed",
+                    "text": "Failed to export survey responses",
                 }
-            ),
+            }),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
@@ -848,14 +810,12 @@ def preview_survey(id_: str) -> ResponseReturnValue:
 
         if not project:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.project_not_found",
-                            "text": "Project not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.project_not_found",
+                        "text": "Project not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -864,14 +824,12 @@ def preview_survey(id_: str) -> ResponseReturnValue:
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.survey.platform_not_supported",
-                            "text": "Survey platform not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.survey.platform_not_supported",
+                        "text": "Survey platform not supported",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -879,9 +837,9 @@ def preview_survey(id_: str) -> ResponseReturnValue:
         if project.variables:
             enabled_variables = [variable for variable in project.variables if variable["enabled"]]
         if project.custom_variables:
-            enabled_custom_variables = CustomVariable.custom_variables_as_list(
-                [variable for variable in project.custom_variables if variable.get("enabled", False)]
-            )
+            enabled_custom_variables = CustomVariable.custom_variables_as_list([
+                variable for variable in project.custom_variables if variable.get("enabled", False)
+            ])
             enabled_variables.extend(enabled_custom_variables)
 
         survey_platform_fields = project.survey_platform_fields

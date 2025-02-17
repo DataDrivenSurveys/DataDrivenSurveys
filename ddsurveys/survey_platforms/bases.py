@@ -19,6 +19,7 @@ from ddsurveys.shared_bases import FormField as BaseFormField
 from ddsurveys.shared_bases import UIRegistry
 
 if TYPE_CHECKING:
+    from collections.abc import Hashable
     from http import HTTPStatus
 
 __all__ = [
@@ -40,16 +41,16 @@ __all__ = [
 logger = get_logger(__name__)
 
 
-TSurveyPlatformClass = type["SurveyPlatform"]
+type TSurveyPlatformClass = type["SurveyPlatform"]
 TSurveyPlatform = NewType("TSurveyPlatform", "SurveyPlatform")
 
-TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
+type TOAuthSurveyPlatformClass = type["OAuthSurveyPlatform"]
 TOAuthSurveyPlatform = NewType("TOAuthSurveyPlatform", "OAuthSurveyPlatform")
 
-TSurveyPlatformFormFieldClass = type["FormField"]
+type TSurveyPlatformFormFieldClass = type["FormField"]
 TSurveyPlatformFormField = NewType("TSurveyPlatformFormField", "FormField")
 
-TSurveyPlatformFormButtonClass = type["FormButton"]
+type TSurveyPlatformFormButtonClass = type["FormButton"]
 TSurveyPlatformFormButton = NewType("TSurveyPlatformFormButton", "FormButton")
 
 
@@ -73,7 +74,7 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
     registry_exclude: ClassVar[list[str]] = ["SurveyPlatform", "OAuthSurveyPlatform"]
 
     # mainly used to generate the full qualified name for message ids
-    _package = __package__
+    _package: str = __package__ or "SurveyPlatform"
 
     # The following attributes (normally) do not need to be re-declared in child classes
     name: str = ""
@@ -97,7 +98,7 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
     """
 
     # TODO: update variable name generation to take this into account
-    variable_replacement_rules: list[tuple[str, str, int]] = ()
+    variable_replacement_rules: list[tuple[str, str, int]] = []
     """Rules for replacing values in variable names.
 
     The rules coming from SurveyPlatforms should be used for replacing illegal
@@ -110,13 +111,13 @@ class SurveyPlatform(UIRegistry[TSurveyPlatformClass]):
     # These instances are used to create the form when adding a data provider in the UI.
     form_fields: ClassVar[list[FormField | FormButton]] = []
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: list[Any], **kwargs: dict[Hashable, Any]) -> None:
         super().__init__()
 
     @classmethod
     def check_input_fields(
         cls,
-        fields: list[dict],
+        fields: list[dict[Hashable, Any]],
         override_required_fields: list[str] | None = None,
         class_: type | None = None,
     ) -> tuple[bool, str | None]:

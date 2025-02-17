@@ -504,7 +504,7 @@ class FitbitDataProvider(OAuthDataProvider):
         Daily,
         Steps,
         Badges,
-     )
+    )
 
     # Standard class methods go here
     @override
@@ -680,7 +680,7 @@ class FitbitDataProvider(OAuthDataProvider):
         }
 
     @override
-    def revoke_token(self, token: str) -> bool:
+    def revoke_token(self, token: str | None = None) -> bool:
         """Revoke a token using Fitbit's OAuth 2.0 revoke endpoint.
 
         The Fitbit SDK do not provide a method for revoking tokens.
@@ -691,7 +691,6 @@ class FitbitDataProvider(OAuthDataProvider):
 
         Returns:
             True if the token was revoked successfully, False otherwise.
-
         """
         authorization_header = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode("utf-8")
 
@@ -780,16 +779,24 @@ class FitbitDataProvider(OAuthDataProvider):
     # Cached API responses
     @cached_property
     def user_profile(self) -> UserDict:
-        url = "https://api.fitbit.com/1/user/-/profile.json"
-        return self.api_client.make_request(url)["user"]
+        data = self.api_client.make_request("https://api.fitbit.com/1/user/-/profile.json")
+        if isinstance(data, dict):
+            return data.get("user", {})
+        return {}
 
     @cached_property
     def activities_favorite(self) -> list[FavoriteActivityDict]:
-        return self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/favorite.json")
+        data = self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/favorite.json")
+        if isinstance(data, list):
+            return data
+        return []
 
     @cached_property
     def activities_frequent(self) -> list[FrequentActivityDict]:
-        return self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/frequent.json")
+        data = self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/frequent.json")
+        if isinstance(data, list):
+            return data
+        return []
 
     @cached_property
     def activities_recent(self):
@@ -982,7 +989,7 @@ class FitbitDataProvider(OAuthDataProvider):
               }
             }
         """
-        url = "{}/{}/user/{}/activities.json".format(*self.api_client._get_common_args())
+        url = "https://api.fitbit.com/1/user/-/activities.json"
         return self.api_client.make_request(url)
 
     @cache

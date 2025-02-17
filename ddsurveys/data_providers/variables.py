@@ -21,7 +21,7 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, cast, override
 
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.get_logger import get_logger
