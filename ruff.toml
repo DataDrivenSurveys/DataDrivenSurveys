@@ -30,28 +30,28 @@
 # ]
 
 extend-exclude = [
-    # "!/ddsurveys",
-    # "!ddsurveys/**.py",
-    # "!/tests",
-    # "!tests/**.py",
-    # "!/scripts",
-    # "!scripts/**.py",
-    # ".py",  # Exclude files in root
-    "**/__pycache__",
-    "**/docs/_build",
-    "**/node_modules",
-    # "**/.env*",
-    # "**.ini",
-    # "**.sh",
-    # "**.mako",
-    # "**.md",
+  # "!/ddsurveys",
+  # "!ddsurveys/**.py",
+  # "!/tests",
+  # "!tests/**.py",
+  # "!/scripts",
+  # "!scripts/**.py",
+  # ".py",  # Exclude files in root
+  "**/__pycache__",
+  "**/docs/_build",
+  "**/node_modules",
+  # "**/.env*",
+  # "**.ini",
+  # "**.sh",
+  # "**.mako",
+  # "**.md",
 ]
 
 extend-include = [
-    "ddusrveys",
-    "ddsurveys/**.py",
-    "tests/**.py",
-    "scripts/**.py"
+  "ddusrveys",
+  "ddsurveys/**.py",
+  "tests/**.py",
+  "scripts/**.py",
 ]
 
 line-length = 120
@@ -77,6 +77,7 @@ line-ending = "auto"
 docstring-code-format = true
 docstring-code-line-length = 88
 
+preview = true
 
 [lint]
 select = [
@@ -525,12 +526,12 @@ select = [
   "T100",
   "T201",
   "T203",
-  "TCH001",
-  "TCH002",
-  "TCH003",
-  "TCH004",
-  "TCH005",
-  "TCH010",
+  "TC001",
+  "TC002",
+  "TC003",
+  "TC004",
+  "TC004",
+  "TC010",
   "TD004",
   "TD005",
   "TD006",
@@ -542,9 +543,9 @@ select = [
   "TRY003",
   "TRY004",
   "TRY201",
+  "TRY203",
   "TRY300",
   "TRY301",
-  "TRY302",
   "TRY400",
   "TRY401",
   "UP001",
@@ -611,9 +612,7 @@ preview = true
 #fixable = ["ALL"]
 unfixable = ["F401"]
 
-typing-modules = [
-  "ddsurveys.typings"
-]
+typing-modules = ["ddsurveys.typings"]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -621,17 +620,8 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/{tests,docs,tools}/*" = ["E402"]
-"**/scripts/*" = [
-  "INP001",
-  "T201",
-]
-"**/tests/**/*" = [
-  "PLC1901",
-  "PLR2004",
-  "PLR6301",
-  "S",
-  "TID252",
-]
+"**/scripts/*" = ["INP001", "T201"]
+"**/tests/**/*" = ["PLC1901", "PLR2004", "PLR6301", "S", "TID252"]
 
 [lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -652,4 +642,3 @@ convention = "google"
 
 [lint.pylint]
 allow-dunder-method-names = ["__tablename__", "__table_args__"]
-

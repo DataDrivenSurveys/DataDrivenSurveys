@@ -167,6 +167,20 @@ es-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/do
 sv-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/sv_core_news_sm-3.8.0/sv_core_news_sm-3.8.0-py3-none-any.whl" }
 uk-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/uk_core_news_sm-3.8.0/uk_core_news_sm-3.8.0-py3-none-any.whl" }
 
+[tool.pyright]
+strict = ["ddsurveys"]
+strictListInference = true
+strictDictionaryInference = true
+strictSetInference = true
+analyzeUnannotatedFunctions = true
+strictParameterNoneValue = true
+deprecateTypingAliases = true
+enableExperimentalFeatures = true
+disableBytesTypePromotions = true
+strictGenericNarrowing = true
+
+typeCheckingMode = "recommended"
+
 [tool.ruff]
 extend = "ruff.toml"
 
