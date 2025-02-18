@@ -4,22 +4,25 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 import traceback
+from http import HTTPStatus
 from keyword import iskeyword
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from flask import Blueprint, jsonify, request
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from sqlalchemy.orm.attributes import flag_modified
 
-from ddsurveys.blueprints._common import get_project
+from ddsurveys.blueprints._common import JWTUserDict, get_project
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import DBManager, Project
 
 if TYPE_CHECKING:
-    from flask.typing import ResponseReturnValue
+    pass
 
 logger = get_logger(__name__)
 
@@ -34,22 +37,24 @@ custom_variables = Blueprint("custom-variabls", __name__)
 def get_project_custom_variables() -> ResponseReturnValue:
     logger.debug("Getting project custom variables")
     with DBManager.get_db() as db:
+        user: JWTUserDict = get_jwt_identity()
 
-        user = get_jwt_identity()
-
+        project: Project | ResponseReturnValue
         project, status = get_project(db, user)
         if status is not None:
-            project: ResponseReturnValue
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return cast(ResponseReturnValue, (project, status))
+
+        project = cast(Project, project)
 
         return jsonify(project.custom_variables), HTTPStatus.OK
 
 
 def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
     """Validate if the given variable name adheres to Python naming conventions.
-    Returns a triple (is_valid, message_id, text).
+
+    Returns:
+        A triple (is_valid, message_id, text).
     """
     # Shortcut for valid variable names
     if variable_name.isidentifier():
@@ -88,12 +93,12 @@ def is_valid_variable_name(variable_name: str) -> tuple[bool, str, str]:
 
 def check_custom_variable_data(data):
     """Check if the custom variable data is valid.
-    Returns a triple (is_valid, message_id, text).
+
+    Returns:
+        A triple (is_valid, message_id, text).
     """
     # Check if variable name is valid
-    is_valid, message_id, validation_msg = is_valid_variable_name(
-        data.get("variable_name")
-    )
+    is_valid, message_id, validation_msg = is_valid_variable_name(data.get("variable_name"))
     if not is_valid:
         return False, message_id, validation_msg
 
@@ -176,15 +181,15 @@ def check_custom_variable_data(data):
 def add_custom_variable_to_project() -> ResponseReturnValue:
     logger.debug("Adding custom variable")
     with DBManager.get_db() as db:
+        user: JWTUserDict = get_jwt_identity()
 
-        user = get_jwt_identity()
-
+        project: Project | ResponseReturnValue
         project, status = get_project(db, user)
         if status is not None:
-            project: ResponseReturnValue
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return cast(ResponseReturnValue, (project, status))
+
+        project = cast(Project, project)
 
         data = request.get_json()
 
@@ -192,13 +197,13 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
         is_valid, message_id, validation_msg = check_custom_variable_data(data)
         if not is_valid:
             logger.error("Failed to add custom variable: %s", validation_msg)
-            return jsonify({"message": {"id": message_id, "text": validation_msg}}), HTTPStatus.BAD_REQUEST
+            return jsonify({
+                "message": {"id": message_id, "text": validation_msg}
+            }), HTTPStatus.BAD_REQUEST
 
         # Check if variable name already exists
         current_custom_variables = project.custom_variables or []
-        existing_variable_names = [
-            var["variable_name"] for var in current_custom_variables
-        ]
+        existing_variable_names = [var["variable_name"] for var in current_custom_variables]
 
         # Check if a new variable has an assigned ID, if not, assign a non-conflicting ID
         if data.get("id", -1) == -1:
@@ -218,14 +223,12 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
         if variable_name in existing_variable_names:
             logger.debug("Variable name '%s' already exists.", variable_name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.custom_variables.variable_exists",
-                            "text": f"Variable name '{variable_name}' already exists. Use a different name.",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.custom_variables.variable_exists",
+                        "text": f"Variable name '{variable_name}' already exists. Use a different name.",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -241,14 +244,12 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
             logger.critical("This error should be excepted correctly: %s", e)
             logger.exception("Failed to add custom variable:\n%s\n", traceback.format_exc())
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.custom_variables.failed_to_add",
-                            "text": "Failed to add custom variable",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.custom_variables.failed_to_add",
+                        "text": "Failed to add custom variable",
                     }
-                ),
+                }),
                 HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -259,34 +260,27 @@ def add_custom_variable_to_project() -> ResponseReturnValue:
 @jwt_required()
 def get_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     with DBManager.get_db() as db:
-
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
         project, status = get_project(db, user)
         if status is not None:
-            project: ResponseReturnValue
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return cast(ResponseReturnValue, (project, status))
+
+        project = cast(Project, project)
 
         variable = next(
-            (
-                var
-                for var in project.custom_variables
-                if var.get("id", -1) == variable_id
-            ),
+            (var for var in project.custom_variables if var.get("id", -1) == variable_id),
             None,
         )
         if not variable:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.custom_variables.not_found",
-                            "text": "Custom variable not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.custom_variables.not_found",
+                        "text": "Custom variable not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -297,47 +291,40 @@ def get_project_custom_variable(variable_id: int) -> ResponseReturnValue:
 @jwt_required()
 def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
+        project: Project | ResponseReturnValue
         project, status = get_project(db, user)
         if status is not None:
-            project: ResponseReturnValue
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return cast(ResponseReturnValue, (project, status))
+
+        project = cast(Project, project)
 
         variable = next(
-            (
-                var
-                for var in project.custom_variables
-                if var.get("id", -1) == variable_id
-            ),
+            (var for var in project.custom_variables if var.get("id", -1) == variable_id),
             None,
         )
         if not variable:
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.custom_variables.not_found",
-                            "text": "Custom variable not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.custom_variables.not_found",
+                        "text": "Custom variable not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
         new_variable_data = request.get_json()
 
         # Validate variable name using the new function
-        is_valid, message_id, validation_msg = check_custom_variable_data(
-            new_variable_data
-        )
+        is_valid, message_id, validation_msg = check_custom_variable_data(new_variable_data)
         if not is_valid:
-            logger.error(
-                "Failed to update custom variable: %s: %s", message_id, validation_msg
-            )
-            return jsonify({"message": {"id": message_id, "text": validation_msg}}), HTTPStatus.BAD_REQUEST
+            logger.error("Failed to update custom variable: %s: %s", message_id, validation_msg)
+            return jsonify({
+                "message": {"id": message_id, "text": validation_msg}
+            }), HTTPStatus.BAD_REQUEST
 
         new_variable_data["id"] = variable["id"]
         new_variable_data["enabled"] = variable.get("enabled", False)
@@ -372,34 +359,28 @@ def update_project_custom_variable(variable_id: int) -> ResponseReturnValue:
 def delete_project_custom_variable(variable_id: int) -> ResponseReturnValue:
     logger.debug("Deleting custom variable: %s", variable_id)
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
         project, status = get_project(db, user)
         if status is not None:
-            project: ResponseReturnValue
             # Case where the user or project could not be found
-            return project, status
-        project: Project
+            return cast(ResponseReturnValue, (project, status))
+
+        project = cast(Project, project)
 
         variable = next(
-            (
-                var
-                for var in project.custom_variables
-                if var.get("id", -1) == variable_id
-            ),
+            (var for var in project.custom_variables if var.get("id", -1) == variable_id),
             None,
         )
         if not variable:
             logger.error("Variable not found: %s", variable_id)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.projects.custom_variables.not_found",
-                            "text": "Custom variable not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.projects.custom_variables.not_found",
+                        "text": "Custom variable not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
