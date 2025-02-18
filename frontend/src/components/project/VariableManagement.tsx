@@ -22,13 +22,13 @@ interface RowProps {
   row: Row;
 }
 
-function capitalizeFirstLetter(string: string): string {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
 interface FieldLayoutProps {
   children: JSX.Element | JSX.Element[];
   isCustomVariable?: boolean;
+}
+
+function capitalizeFirstLetter(string: string): string {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 const FieldLayout = ({ children, isCustomVariable = false }: FieldLayoutProps): JSX.Element => {
@@ -61,6 +61,8 @@ const FieldCategory = ({ row }: RowProps): JSX.Element => {
     )
   );
 };
+
+// checked to here
 
 interface FieldActionsProps extends RowProps {
   onEditClick: (id: number) => void;
@@ -98,6 +100,9 @@ const FieldActions = ({ row, onEditClick, onDeleteClick, showLabels = true }: Fi
   );
 };
 
+// checked to here
+
+
 interface FieldVariableNameProps extends RowProps {
   onSelect: (index: number, checked: boolean) => void;
 }
@@ -123,6 +128,7 @@ const FieldVariableName = ({ row, onSelect }: FieldVariableNameProps): JSX.Eleme
             checked={attr.enabled}
             onChange={event => {
               const checked = event.target.checked;
+              // onSelect && onSelect(index, checked);
               onSelect(index, checked);
             }}
           />
@@ -523,7 +529,9 @@ const VariableManagement = ({
 
   const gridVariables = useMemo(
     () =>
-      [...builtinVariables, ...customVariables].map(v => ({
+      [...builtinVariables, ...customVariables].map((v, index) => ({
+        // @ts-ignore
+        id: index,
         ...v,
       })) as Row[],
     [builtinVariables, customVariables]
