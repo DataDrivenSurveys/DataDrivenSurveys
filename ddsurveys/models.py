@@ -54,7 +54,15 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.orm import DeclarativeBase, Mapped, Query, Session, mapped_column, relationship, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    Query,
+    Session,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
 
 from ddsurveys.typings.models import BuiltinVariableDict, CustomVariableDict, FieldsDict
 
@@ -155,7 +163,9 @@ class DBManager:
     }
 
     @classmethod
-    def get_engine(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> Engine:
+    def get_engine(
+        cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False
+    ) -> Engine:
         """Retrieves or initializes the SQLAlchemy engine for database connections.
 
         This function checks if the global `ENGINE` variable is already initialized.
@@ -182,15 +192,23 @@ class DBManager:
                 cls.ENGINE = create_engine(url=database_url, **cls.create_engine_kwargs)
             elif app is not None:
                 try:
-                    cls.ENGINE = create_engine(url=app.config["DATABASE_URL"], **cls.create_engine_kwargs)
+                    cls.ENGINE = create_engine(
+                        url=app.config["DATABASE_URL"], **cls.create_engine_kwargs
+                    )
                 except (AttributeError, KeyError):
-                    cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs)
+                    cls.ENGINE = create_engine(
+                        url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs
+                    )
             else:
-                cls.ENGINE = create_engine(url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs)
+                cls.ENGINE = create_engine(
+                    url=os.getenv("DATABASE_URL"), **cls.create_engine_kwargs
+                )
         return cls.ENGINE
 
     @classmethod
-    def init_session(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> None:
+    def init_session(
+        cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False
+    ) -> None:
         """Initializes the database session creator for the application.
 
         This function sets up the global SESSION_MAKER instance, which is used to create
@@ -214,11 +232,15 @@ class DBManager:
             None
         """
         cls.SESSION_MAKER = sessionmaker(
-            autocommit=False, autoflush=False, bind=cls.get_engine(app, database_url, force_new=force_new)
+            autocommit=False,
+            autoflush=False,
+            bind=cls.get_engine(app, database_url, force_new=force_new),
         )
 
     @classmethod
-    def get_db(cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False) -> Session:
+    def get_db(
+        cls, app: Flask | None = None, database_url: str = "", *, force_new: bool = False
+    ) -> Session:
         """Provides a sqlalchemy.orm.session.Session instance for database operations.
 
         This function returns the global SessionLocal instance, which is configured
@@ -391,7 +413,7 @@ class Researcher(Base):
         collaborations (relationship): A relationship to the Collaboration table.
     """
 
-    __tablename__ = "researcher"
+    __tablename__: str = "researcher"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -400,7 +422,9 @@ class Researcher(Base):
     email: Mapped[str] = mapped_column(String(255))
     password: Mapped[str] = mapped_column(String(512))  # Scrypt hashed password
 
-    collaborations: Mapped[list[Collaboration]] = relationship("Collaboration", back_populates="researcher")
+    collaborations: Mapped[list[Collaboration]] = relationship(
+        "Collaboration", back_populates="researcher"
+    )
 
     @override
     def to_dict(self) -> ResearcherDict:
@@ -422,7 +446,7 @@ class Researcher(Base):
 class Collaboration(Base):
     """Collaboration between a researcher and a project."""
 
-    __tablename__ = "collaboration"
+    __tablename__: str = "collaboration"
 
     project_id: Mapped[str] = mapped_column(
         ForeignKey("project.id", ondelete="CASCADE"),
@@ -459,8 +483,10 @@ class DataProvider(Base):
             table.
     """
 
-    __tablename__ = "data_provider"
-    data_provider_name: Mapped[DataProviderName] = mapped_column(Enum(DataProviderName), primary_key=True)
+    __tablename__: str = "data_provider"
+    data_provider_name: Mapped[DataProviderName] = mapped_column(
+        Enum(DataProviderName), primary_key=True
+    )
 
     data_provider_type: Mapped[DataProviderType] = mapped_column(
         Enum(DataProviderType), default=DataProviderType.generic
@@ -504,7 +530,7 @@ class DataConnection(Base):
         project (relationship): A relationship to the Project table.
     """
 
-    __tablename__ = "data_connection"
+    __tablename__: str = "data_connection"
 
     project_id: Mapped[str] = mapped_column(
         String(36),
@@ -519,7 +545,9 @@ class DataConnection(Base):
 
     fields: Mapped[FieldsDict] = mapped_column(JSON)
 
-    data_provider: Mapped[DataProvider] = relationship("DataProvider", back_populates="data_connections")
+    data_provider: Mapped[DataProvider] = relationship(
+        "DataProvider", back_populates="data_connections"
+    )
     project: Mapped[Project] = relationship("Project", back_populates="data_connections")
 
     @override
@@ -553,7 +581,7 @@ class DataConnection(Base):
 class Project(Base):
     """Project model."""
 
-    __tablename__ = "project"
+    __tablename__: str = "project"
 
     # TODO: change the project to use integer ids instead of uuid
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -566,7 +594,9 @@ class Project(Base):
     survey_platform_name: Mapped[str] = mapped_column(String(255))
     survey_platform_fields: Mapped[SurveyPlatformFieldsDict] = mapped_column(JSON)
     creation_date: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    last_modified: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())
+    last_modified: Mapped[datetime] = mapped_column(
+        DateTime, default=func.now(), onupdate=func.now()
+    )
     last_synced: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     variables: Mapped[list[BuiltinVariableDict]] = mapped_column(JSON, default=[])
     custom_variables: Mapped[list[CustomVariableDict]] = mapped_column(JSON, default=[])
@@ -617,7 +647,9 @@ class Project(Base):
             "short_id": str(self.short_id),
             "name": self.name,
             "survey_name": (
-                self.survey_platform_fields.get("survey_name", "") if self.survey_platform_fields is not None else ""
+                self.survey_platform_fields.get("survey_name", "")
+                if self.survey_platform_fields is not None
+                else ""
             ),
             "data_connections": [dc.to_public_dict() for dc in self.data_connections],
         }
@@ -626,12 +658,14 @@ class Project(Base):
 class Distribution(Base):
     """Distribution model."""
 
-    __tablename__ = "distribution"
+    __tablename__: str = "distribution"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     url: Mapped[str] = mapped_column(String(255))
 
-    respondent: Mapped[Respondent] = relationship("Respondent", back_populates="distribution", uselist=False)
+    respondent: Mapped[Respondent] = relationship(
+        "Respondent", back_populates="distribution", uselist=False
+    )
 
     @override
     def to_dict(self) -> DistributionDict:
@@ -641,11 +675,15 @@ class Distribution(Base):
 class Respondent(Base):
     """Respondent model."""
 
-    __tablename__ = "respondent"
+    __tablename__: str = "respondent"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("project.id", ondelete="CASCADE"))
-    distribution_id: Mapped[int] = mapped_column(Integer, ForeignKey("distribution.id", ondelete="CASCADE"))
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("project.id", ondelete="CASCADE")
+    )
+    distribution_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("distribution.id", ondelete="CASCADE")
+    )
 
     distribution: Mapped[Distribution] = relationship(
         "Distribution",
@@ -672,7 +710,7 @@ class Respondent(Base):
 class DataProviderAccess(Base):
     """DataProviderAccess model."""
 
-    __tablename__ = "data_provider_access"
+    __tablename__: str = "data_provider_access"
 
     data_provider_name: Mapped[DataProviderName] = mapped_column(
         Enum(DataProviderName),
@@ -680,7 +718,9 @@ class DataProviderAccess(Base):
         primary_key=True,
     )
     user_id: Mapped[str] = mapped_column(String(255), nullable=False, primary_key=True)
-    project_id: Mapped[str] = mapped_column(String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True)
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("project.id", ondelete="CASCADE"), primary_key=True
+    )
     respondent_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("respondent.id", ondelete="CASCADE"), primary_key=True
     )
@@ -688,8 +728,12 @@ class DataProviderAccess(Base):
     access_token: Mapped[str] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str] = mapped_column(Text, nullable=True)
 
-    respondent: Mapped[Respondent] = relationship("Respondent", back_populates="data_provider_accesses")
-    data_provider: Mapped[DataProvider] = relationship("DataProvider", back_populates="data_provider_accesses")
+    respondent: Mapped[Respondent] = relationship(
+        "Respondent", back_populates="data_provider_accesses"
+    )
+    data_provider: Mapped[DataProvider] = relationship(
+        "DataProvider", back_populates="data_provider_accesses"
+    )
     project: Mapped[Project] = relationship("Project", back_populates="data_provider_accesses")
 
     @override

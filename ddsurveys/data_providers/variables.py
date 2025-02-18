@@ -393,9 +393,14 @@ class CVSelection:
 
 
 class CVFilter:
-    __slots__ = ("attribute", "operator", "value")
+    __slots__: tuple[str, ...] = ("attribute", "operator", "value")
 
-    def __init__(self, attribute: CVAttribute, operator: str, value: str) -> None:
+    def __init__(
+        self,
+        attribute: CVAttribute | None,
+        operator: str | None,
+        value: str | None,
+    ) -> None:
         if attribute is None or operator is None or value is None:
             msg = "Attribute, operator, and value must be provided."
             raise ValueError(msg)
@@ -441,7 +446,7 @@ class CVFilter:
 
 
 class CustomVariableRow:
-    __slots__ = (
+    __slots__: tuple[str, ...] = (
         "variable_name",
         "data_category",
         "filters",
@@ -595,7 +600,8 @@ class CustomVariable:
         return output_data
 
     def to_data(self) -> ComputedVariableDict:
-        """Used to transform the custom variable data into the embedded data block format
+        """Used to transform the custom variable data into the embedded data block format.
+
         Each attribute of the custom variable is transformed into a separate variable for the survey platform.
         """
         data_provider_name = self.data_provider.name_lower

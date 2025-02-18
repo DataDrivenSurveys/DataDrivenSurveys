@@ -162,7 +162,7 @@ class ProjectDict(TypedDict):
     name: str
     survey_status: str
     survey_platform_name: str
-    survey_platform_fields: SurveyPlatformFieldsDict | JSON
+    survey_platform_fields: SurveyPlatformFieldsDict
     last_modified: datetime
     creation_date: datetime
     last_synced: datetime

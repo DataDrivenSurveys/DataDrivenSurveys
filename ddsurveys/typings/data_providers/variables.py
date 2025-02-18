@@ -78,6 +78,7 @@ class CustomVariableDict(TypedDict):
     qualified_name: str
     data_category: DataCategoryDict
     attributes: list[CVAttributeDict]
+    cv_attributes: list[CVAttributeDict]
     filters: list[CVFilterDict]
     selection: CVSelectionDict
 
