@@ -49,6 +49,7 @@ from ddsurveys.get_logger import get_logger
 from ddsurveys.models import Collaboration, DataConnection, Project, Researcher
 
 if TYPE_CHECKING:
+    import logging
     from collections.abc import Callable
     from http import HTTPStatus
 
@@ -65,11 +66,18 @@ __all__ = [
     "insert_exists_variables",
 ]
 
-logger = get_logger(__name__)
+logger: logging.Logger = get_logger(__name__)
+
+
+class JWTUserDict(TypedDict):
+    id: int
+    firstname: str
+    lastname: str
+    email: str
+
 
 # TODO: move the replacement rules to the DP classes
-
-StrReplaceRule = tuple[str, str, int]
+type StrReplaceRule = tuple[str, str, int]
 
 
 class TReplacementRules(TypedDict):
@@ -136,7 +144,7 @@ REPLACEMENT_RULES: TReplacementRules = {
 }
 
 
-def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None] | APIResponseValue:
+def get_researcher(db: Session, user: JWTUserDict) -> tuple[Researcher, None] | APIResponseValue:
     """Get the researcher from the database.
 
     Args:
@@ -156,7 +164,7 @@ def get_researcher(db: Session, user: dict[str, str]) -> tuple[Researcher, None]
     return researcher, None
 
 
-def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | APIResponseValue:
+def get_project(db: Session, user: JWTUserDict) -> tuple[Project, None] | APIResponseValue:
     researcher: Researcher | FlaskResponse | None
     status: HTTPStatus | None
     researcher, status = get_researcher(db, user)
@@ -185,7 +193,7 @@ def get_project(db: Session, user: dict[str, str]) -> tuple[Project, None] | API
 
 def get_project_data_connection(
     db: Session,
-    user: dict[str, str],
+    user: JWTUserDict,
     data_provider_name: str,
     # ) -> tuple[Project, DataConnection, None] | tuple[None, ResponseReturnValue, int]:
 ) -> tuple[Project, DataConnection] | APIResponseValue:
@@ -200,20 +208,30 @@ def get_project_data_connection(
     project = cast(Project, project)
 
     # get the data connection
-    data_connection: Query[DataConnection] = db.query(DataConnection).filter_by(
+    data_connection: Query[DataConnection] | None = db.query(DataConnection).filter_by(
         project_id=project.id,
         data_provider_name=data_provider_name,
     )
 
     if not data_connection:
-        logger.error("Data connection for %s not found in project %s", data_provider_name, project.id)
+        logger.error(
+            "Data connection for %s not found in project %s",
+            data_provider_name,
+            project.id,
+        )
         return APIResponses.DATA_PROVIDER.CONNECTION_NOT_FOUND.response
 
     return project, cast(DataConnection, data_connection.first())
 
 
-def _apply_abbreviation_rules(name: str, ruleset: str, condition: Callable[[str, int], bool], max_length: int) -> str:
+def _apply_abbreviation_rules(
+    name: str,
+    ruleset: str,
+    condition: Callable[[str, int], bool],
+    max_length: int,
+) -> str:
     for rule in REPLACEMENT_RULES[ruleset]:
+        rule: StrReplaceRule
         name = name.replace(*rule)
         if condition(name, max_length):
             return name
@@ -241,6 +259,7 @@ def abbreviate_variable_name(
 
         def condition(name: str, max_length: int) -> bool:
             return False
+
     else:
 
         def condition(name: str, max_length: int) -> bool:

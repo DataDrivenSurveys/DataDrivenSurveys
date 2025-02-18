@@ -16,6 +16,7 @@ Authors:
 from __future__ import annotations
 
 import re
+import logging
 from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, NewType
@@ -42,7 +43,10 @@ __all__: list[str] = [
 ]
 
 
-logger = get_logger(__name__)
+logger: logging.Logger = get_logger(__name__)
+
+type TDataClass = type[Data]
+TData = NewType("TData", "Data")
 
 
 class Operator(Enum):
@@ -112,14 +116,16 @@ class VariableDataType(Enum):
 
 # TODO: make Data inherit from Registry
 class Data:
-    """Base class for data types in the system. It provides a registry for data type classes,
-    methods to register and retrieve data type classes, and abstract methods for subclasses to implement
-    specific behaviors.
+    """Base class for data types in the system.
+
+    It provides a registry for data type classes, methods to register and retrieve
+    data type classes, and abstract methods for subclasses to implement specific
+    behaviors.
 
     Attributes:
-        _registry (dict[str, type]): A class-level dictionary that maps `VariableDataType` enum values to
+        _registry: A class-level dictionary that maps `VariableDataType` enum values to
             corresponding data type classes.
-        operators (OperatorsDict): A class-level dictionary that stores operators
+        operators: A class-level dictionary that stores operators
             and their metadata or functions for filtering and comparison.
     """
 
@@ -128,20 +134,25 @@ class Data:
 
     @staticmethod
     def register(data_type: VariableDataType, class_: TDataClass) -> None:
-        """Registers a data type class to the `_registry` using its `VariableDataType` enum as the key.
+        """Registers a data type class to the `_registry`.
+
+        Data type classes are registered using their `VariableDataType` enum member as
+        the key.
 
         Parameters:
-            data_type (VariableDataType): The enum value representing the data type.
-            class_ (type): The class to be registered for the specified data type.
+            data_type: The enum value representing the data type.
+            class_: The class to be registered for the specified data type.
         """
         Data._registry[data_type] = class_
 
     @staticmethod
     def get_class_by_type(data_type: VariableDataType) -> Any:
-        """Retrieves a registered data type class from the `_registry` based on the `VariableDataType` enum.
+        """Retrieves a registered data type class from the `_registry`.
+
+        It uses based on the `VariableDataType` enum.
 
         Parameters:
-            data_type (VariableDataType): The enum value representing the data type.
+            data_type: The enum value representing the data type.
 
         Returns:
             Any: The class registered under the specified `VariableDataType` enum.
@@ -150,14 +161,15 @@ class Data:
 
     @classmethod
     def get_filter_operators(cls, operator: str = "") -> list[dict[str, Any]]:
-        """Converts the operators dictionary to a list format suitable for filtering operations.
+        """Converts the operators dictionary to a format suitable for filtering.
 
         Parameters:
-            operator (Optional[str]): An optional operator string to filter the operators list by. If not provided,
-                                      all operators are returned.
+            operator: An optional operator string to filter the operators list by.
+                If not provided, all operators are returned.
 
         Returns:
-            list[dict[str, Any]]: A list of dictionaries, each representing an operator with its label and value.
+            list[dict[str, Any]]: A list of dictionaries, each representing an operator
+            with its label and value.
         """
         if operator != "":
             return [
@@ -166,7 +178,10 @@ class Data:
                 if op_key == operator
             ]
         # Convert the operators dictionary to the desired list format
-        return [{"label": op_info["label"], "value": op_key} for op_key, op_info in cls.operators.items()]
+        return [
+            {"label": op_info["label"], "value": op_key}
+            for op_key, op_info in cls.operators.items()
+        ]
 
     @classmethod
     def is_this_data_type(cls, data: Any) -> bool:
@@ -182,7 +197,9 @@ class Data:
 
     @staticmethod
     def determine_type(value: Any) -> type[list | dict] | TDataClass:
-        """Determines the data type class for the given value based on its type or content.
+        """Determines the data type class for the given value.
+
+        Uses the value's type or content to determine the appropriate data type class.
 
         Parameters:
             value: The value whose data type class is to be determined.
@@ -210,7 +227,8 @@ class Data:
         """Retrieves all filter operators for each registered data type class.
 
         Returns:
-            dict[Any, Any]: A dictionary mapping data type names to their respective filter operators.
+            dict[Any, Any]: A dictionary mapping data type names to their respective
+            filter operators.
         """
         result = {}
         for data_type, class_ in cls._registry.items():
@@ -470,6 +488,3 @@ class Text(Data):
 Data.register(VariableDataType.DATE, Date)
 Data.register(VariableDataType.NUMBER, Number)
 Data.register(VariableDataType.TEXT, Text)
-
-TDataClass = type[Data]
-TData = NewType("TData", Data)

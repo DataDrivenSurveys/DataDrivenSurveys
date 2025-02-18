@@ -19,7 +19,12 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
 from ddsurveys.api_responses import APIResponses, APIResponseValue
-from ddsurveys.blueprints._common import abbreviate_variable_name, get_researcher, insert_exists_variables
+from ddsurveys.blueprints._common import (
+    JWTUserDict,
+    abbreviate_variable_name,
+    get_researcher,
+    insert_exists_variables,
+)
 from ddsurveys.blueprints.custom_variables import custom_variables
 from ddsurveys.blueprints.data_providers import data_providers
 from ddsurveys.blueprints.respondent import respondent
@@ -42,7 +47,10 @@ if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
 
     from ddsurveys.survey_platforms.bases import SurveyPlatformInfoDict, TSurveyPlatformClass
-    from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CustomVariableUploadDict
+    from ddsurveys.typings.data_providers.variables import (
+        BuiltinVariableDict,
+        CustomVariableUploadDict,
+    )
 
 logger = get_logger(__name__)
 
@@ -54,17 +62,16 @@ class ProjectCreationDict(TypedDict):
     use_existing_survey: bool
 
 
-class JWTUserDict(TypedDict):
-    id: int
-    firstname: str
-    lastname: str
-    email: str
-
-
 projects = Blueprint("projects", __name__)
-projects.register_blueprint(blueprint=data_providers, url_prefix="/<string:project_id>/data-providers")
-projects.register_blueprint(blueprint=respondent, url_prefix="/<string:project_short_id>/respondent")
-projects.register_blueprint(blueprint=custom_variables, url_prefix="/<string:project_id>/custom-variables")
+projects.register_blueprint(
+    blueprint=data_providers, url_prefix="/<string:project_id>/data-providers"
+)
+projects.register_blueprint(
+    blueprint=respondent, url_prefix="/<string:project_short_id>/respondent"
+)
+projects.register_blueprint(
+    blueprint=custom_variables, url_prefix="/<string:project_id>/custom-variables"
+)
 
 
 @projects.url_value_preprocessor
@@ -86,7 +93,7 @@ def list_projects() -> ResponseReturnValue | tuple[Researcher | Response, HTTPSt
     logger.debug("Listing projects")
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
         researcher: ResponseReturnValue | Researcher
         researcher, status = get_researcher(db, user)
@@ -98,7 +105,10 @@ def list_projects() -> ResponseReturnValue | tuple[Researcher | Response, HTTPSt
 
         # get the projects
         projects: list[Project] = (
-            db.query(Project).join(Collaboration).filter(Collaboration.researcher_id == researcher.id).all()
+            db.query(Project)
+            .join(Collaboration)
+            .filter(Collaboration.researcher_id == researcher.id)
+            .all()
         )
 
         return jsonify([project.to_dict() for project in projects]), HTTPStatus.OK
@@ -136,7 +146,9 @@ def create_project() -> ResponseReturnValue:
         # survey_id becomes required if use_existing_survey is True
         override_required = ["survey_id"] if use_existing_survey else []
 
-        platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(survey_platform_name)
+        platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(
+            survey_platform_name
+        )
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", survey_platform_name)
@@ -183,7 +195,9 @@ def create_project() -> ResponseReturnValue:
 
         # Handle the project creation
         status, message_id, text_message, project_name, survey_platform_fields = (
-            survey_platform.handle_project_creation(project_name, use_existing_survey=use_existing_survey)
+            survey_platform.handle_project_creation(
+                project_name, use_existing_survey=use_existing_survey
+            )
         )
 
         # Check if an error occurred
@@ -249,7 +263,7 @@ def get_project(id_: str) -> ResponseReturnValue:
     logger.debug("Getting project with id: %s", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
         # get the researcher
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
@@ -304,7 +318,7 @@ def update_project(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         data = request.get_json()
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             # return (
@@ -376,7 +390,7 @@ def delete_project(id_: str) -> ResponseReturnValue:
 
     with DBManager.get_db() as db:
         # Get the current researcher's identity
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             # return (
@@ -387,7 +401,9 @@ def delete_project(id_: str) -> ResponseReturnValue:
 
         # Get the project and collaboration
         project: Project | None = db.query(Project).get(id_)
-        collaboration = db.query(Collaboration).filter_by(project_id=id_, researcher_id=researcher.id).first()
+        collaboration = (
+            db.query(Collaboration).filter_by(project_id=id_, researcher_id=researcher.id).first()
+        )
 
         if project and collaboration:
             db.delete(collaboration)
@@ -432,7 +448,7 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
     logger.debug("Received delete respondents request for project with id: '%s'", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
 
         if not researcher:
@@ -487,18 +503,24 @@ def delete_respondents(id_: str) -> ResponseReturnValue:
         )
 
 
-def get_survey_platform_connection(project: Project) -> tuple[HTTPStatus, str, SurveyPlatformInfoDict]:
+def get_survey_platform_connection(
+    project: Project,
+) -> tuple[HTTPStatus, str, SurveyPlatformInfoDict]:
     survey_platform_info: SurveyPlatformInfoDict = SurveyPlatform.get_default_survey_status_dict()
     survey_platform_info["survey_platform_name"] = project.survey_platform_name
 
-    platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+    platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(
+        project.survey_platform_name
+    )
 
     if platform_class is None:
         survey_platform_info["id"] = "api.survey.platform_not_supported"
         return HTTPStatus.BAD_REQUEST, "api.survey.platform_not_supported", survey_platform_info
 
     try:
-        platform: TSurveyPlatform = cast(TSurveyPlatform, platform_class(**project.survey_platform_fields))
+        platform: TSurveyPlatform = cast(
+            TSurveyPlatform, platform_class(**project.survey_platform_fields)
+        )
         return platform.fetch_survey_platform_info()
     except Exception:
         logger.exception("Failed to check connection with survey platform")
@@ -524,7 +546,7 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
     logger.debug("Checking survey platform connection for project with id: %s", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if researcher is None:
             # return (
@@ -570,7 +592,9 @@ def check_survey_platform_connection(id_: str) -> ResponseReturnValue:
             project.survey_platform_fields = cast(SurveyPlatformFieldsDict, {})
 
         # Set the survey_status
-        survey_status: SurveyStatus = survey_platform_info.get("survey_status", SurveyStatus.Unknown)
+        survey_status: SurveyStatus = survey_platform_info.get(
+            "survey_status", SurveyStatus.Unknown
+        )
         project.survey_platform_fields["survey_status"] = survey_status
         project.survey_status = survey_status
 
@@ -615,7 +639,7 @@ def sync_variables(id_: str) -> ResponseReturnValue:
     logger.debug("Syncing variables for project with id: %s", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             return APIResponses.AUTHORIZATION.UNAUTHORIZED.response
@@ -649,7 +673,9 @@ def sync_variables(id_: str) -> ResponseReturnValue:
             logger.info("Upload custom variables: %s", enabled_custom_variables)
             enabled_variables.extend(enabled_custom_variables)
 
-        platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(project.survey_platform_name)
+        platform_class: TSurveyPlatformClass | None = SurveyPlatform.get_class_by_value(
+            project.survey_platform_name
+        )
 
         if not platform_class:
             logger.error("Unknown Survey Platform: %s", project.survey_platform_name)
@@ -709,7 +735,7 @@ def export_survey_responses(id_: str) -> ResponseReturnValue:
     logger.debug("Exporting survey responses for project with id: %s", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             # return (
@@ -808,7 +834,7 @@ def preview_survey(id_: str) -> ResponseReturnValue:
     logger.debug("Previewing survey for project with id: %s", id_)
 
     with DBManager.get_db() as db:
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
         researcher: Researcher | None = db.query(Researcher).filter_by(email=user["email"]).first()
         if not researcher:
             # return (
@@ -860,7 +886,9 @@ def preview_survey(id_: str) -> ResponseReturnValue:
 
         survey_platform_fields = project.survey_platform_fields
 
-        status, message_id, message, link = platform_class.get_preview_link(survey_platform_fields, enabled_variables)
+        status, message_id, message, link = platform_class.get_preview_link(
+            survey_platform_fields, enabled_variables
+        )
 
         if status != HTTPStatus.OK:
             logger.error("Error during survey preview: %s", link)

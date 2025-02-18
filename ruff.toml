@@ -54,7 +54,7 @@ extend-include = [
   "scripts/**.py",
 ]
 
-line-length = 120
+line-length = 100
 indent-width = 4
 target-version = "py312"
 #unsafe-fixes = true

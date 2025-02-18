@@ -103,6 +103,19 @@ class Attribute(ABC):
         return f"{self.__class__.__name__}({attrs})"
 
     def to_dict(self) -> AttributeDict:
+        """Converts the object to a dictionary.
+
+        Converts the object to a dictionary for use in backend responses and database
+        storage.
+
+        Returns:
+            AttributeDict: A dictionary containing the object's attributes.
+
+        Example:
+            # Converting and instance to a dictionary
+            attr = Attribute("age", "Age", VariableDataType.INTEGER, "Age in years")
+            attr.to_dict()
+        """
         return {
             "name": self.name,
             "label": self.label,
@@ -131,7 +144,9 @@ class BuiltInVariable[DP: DataProvider](Attribute):
         *,
         is_indexed_variable: bool = False,
         index: int | None = None,
-        extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] | None = None,
+        extractor_func: Callable[[DP], TVariableValue]
+        | Callable[[DP, int], TVariableValue]
+        | None = None,
     ) -> None:
         if data_origin is None:
             data_origin = []
@@ -149,8 +164,10 @@ class BuiltInVariable[DP: DataProvider](Attribute):
         )
 
         self.is_indexed_variable: bool = is_indexed_variable
-        self.index: int = index
-        self.extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] = extractor_func
+        self.index: int | None = index
+        self.extractor_func: (
+            Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] | None
+        ) = extractor_func
 
     @classmethod
     def create_instances(
@@ -168,12 +185,14 @@ class BuiltInVariable[DP: DataProvider](Attribute):
         is_indexed_variable: bool = False,
         index_start: int | None = None,
         index_end: int | None = None,
-        extractor_func: Callable[[DP], TVariableValue] | Callable[[DP, int], TVariableValue] | None = None,
-    ) -> list[BuiltInVariable]:
+        extractor_func: Callable[[DP], TVariableValue]
+        | Callable[[DP, int], TVariableValue]
+        | None = None,
+    ) -> list[BuiltInVariable[DP]]:
         if data_origin is None:
             data_origin = []
 
-        instances: list[BuiltInVariable] = []
+        instances: list[BuiltInVariable[DP]] = []
 
         if is_indexed_variable:
             if index_end is None or index_start is None:
@@ -220,6 +239,7 @@ class BuiltInVariable[DP: DataProvider](Attribute):
         # If not an indexed variable, just create a single instance
         return instances
 
+    @override
     def to_dict(self) -> BuiltinVariableDict:
         dct = super().to_dict()
         dct = cast(BuiltinVariableDict, dct)
@@ -256,6 +276,7 @@ class CVAttribute(Attribute):
         self.attribute: str = attribute
         self.enabled: bool = enabled
 
+    @override
     def to_dict(self) -> CVAttributeDict:
         dct = super().to_dict()
         dct = cast(CVAttributeDict, dct)
@@ -331,7 +352,9 @@ class CVSelection:
             logger.warning("Unknown selection operator: %s", self.operator)
             return {}
 
-        strategy_method: Callable[[list[CustomVariableRow]], DataDict] | None = getattr(self, strategy, None)
+        strategy_method: Callable[[list[CustomVariableRow]], DataDict] | None = getattr(
+            self, strategy, None
+        )
 
         if strategy_method is None:
             logger.error("Strategy method %s not found for operator: %s", strategy, self.operator)
@@ -346,7 +369,9 @@ class CVSelection:
         try:
             return max(rows, key=lambda row: row.data[self.attribute.attribute]).data  # type: ignore
         except (KeyError, TypeError) as e:
-            logger.exception("Failed to perform max selection with attribute: %s", self.attribute.attribute)
+            logger.exception(
+                "Failed to perform max selection with attribute: %s", self.attribute.attribute
+            )
             if isinstance(e, KeyError):
                 logger.exception("Key was not found in data: %s")
             else:
@@ -357,7 +382,9 @@ class CVSelection:
         try:
             return min(rows, key=lambda row: row.data[self.attribute.attribute]).data  # type: ignore
         except (KeyError, TypeError) as e:
-            logger.exception("Failed to perform min selection with attribute: %s", self.attribute.attribute)
+            logger.exception(
+                "Failed to perform min selection with attribute: %s", self.attribute.attribute
+            )
             if isinstance(e, KeyError):
                 logger.exception("Key was not found in data: %s")
             else:
@@ -459,7 +486,9 @@ class CustomVariable:
         self.data_provider = data_provider
         self.data_provider_name = custom_variable.get("data_provider", "")
 
-        self.data_category: TDataCategoryClass = DataCategory.get_by_value(custom_variable["data_category"])
+        self.data_category: TDataCategoryClass = DataCategory.get_by_value(
+            custom_variable["data_category"]
+        )
 
         if self.data_provider is not None:
             data_category_instance: DataCategory = self.data_category(data_provider=data_provider)
@@ -495,7 +524,9 @@ class CustomVariable:
             for filter_ in custom_variable["filters"]
         ]
 
-        self.selection: CVSelection = CVSelection(selection=custom_variable["selection"], attributes=self.attributes)
+        self.selection: CVSelection = CVSelection(
+            selection=custom_variable["selection"], attributes=self.attributes
+        )
 
         self.selected_row = None
 
@@ -514,7 +545,9 @@ class CustomVariable:
         }
 
     def get_qualified_name(self) -> str:
-        return f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
+        return (
+            f"dds.{self.data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
+        )
 
     # def get_qualified_attributes(self) -> list[dict[str, Any]]:
     #     return [
@@ -570,7 +603,9 @@ class CustomVariable:
         if not self.attributes or len(self.attributes) == 0:
             return {}
 
-        custom_var_name = f"dds.{data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
+        custom_var_name = (
+            f"dds.{data_provider_name}.custom.{self.data_category.value}.{self.variable_name}"
+        )
 
         output_data: ComputedVariableDict = {
             f"{custom_var_name}.exists": bool(self.selected_row) and self.selected_row != {}

@@ -33,7 +33,7 @@ class AttributeDict(TypedDict):
 
 class BuiltinVariableDict(AttributeDict):
     is_indexed_variable: bool
-    index: int
+    index: int | None
     category: str
 
 
