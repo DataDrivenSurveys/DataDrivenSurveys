@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """This module provides blueprints for handling custom variables.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)

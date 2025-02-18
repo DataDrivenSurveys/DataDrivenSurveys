@@ -14,7 +14,7 @@ from flask import Blueprint, g, jsonify, request
 from flask import Response as FlaskResponse
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from ddsurveys.blueprints._common import get_project, get_project_data_connection
+from ddsurveys.blueprints._common import JWTUserDict, get_project, get_project_data_connection
 from ddsurveys.data_providers import DataProvider
 from ddsurveys.get_logger import get_logger
 from ddsurveys.models import DataConnection, DataProviderName, DBManager, Project
@@ -52,9 +52,9 @@ def add_data_provider_to_project() -> ResponseReturnValue:
     logger.debug("Adding data provider to project")
 
     with DBManager.get_db() as db:
-        project_id = g.get("project_id")
+        project_id: str = g.get("project_id")
 
-        user = get_jwt_identity()
+        user: JWTUserDict = get_jwt_identity()
 
         project: Project | FlaskResponse
         project, status_code = get_project(db, user)
@@ -66,19 +66,17 @@ def add_data_provider_to_project() -> ResponseReturnValue:
 
         data = request.get_json()
 
-        selected_data_provider = data.get("selected_data_provider")
+        selected_data_provider: str = data.get("selected_data_provider")
 
         if not selected_data_provider:
             logger.error("No data provider selected")
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.is_required",
-                            "text": "Data provider is required",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.is_required",
+                        "text": "Data provider is required",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -87,14 +85,12 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         if not provider_class:
             logger.error("Data provider %s not found", selected_data_provider["value"])
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.not_supported",
+                        "text": "Data provider is not supported",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -107,7 +103,12 @@ def add_data_provider_to_project() -> ResponseReturnValue:
 
         # check if the data provider already exists
         logger.debug("%s", selected_data_provider)
-        logger.debug("%s, %s, %s", provider_class.name, provider_class.label, provider_class.provider_type)
+        logger.debug(
+            "%s, %s, %s",
+            provider_class.name,
+            provider_class.label,
+            provider_class.provider_type,
+        )
         data_provider = (
             db.query(DataProviderModel)
             .filter_by(
@@ -137,16 +138,18 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         )
 
         if data_connection:
-            logger.info("Data connection with %s already exists for project %s", data_provider.name, project_id)
+            logger.info(
+                "Data connection with %s already exists for project %s",
+                data_provider.name,
+                project_id,
+            )
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.connection_already_exists",
-                            "text": "Data connection already exists",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.connection_already_exists",
+                        "text": "Data connection already exists",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -155,14 +158,12 @@ def add_data_provider_to_project() -> ResponseReturnValue:
         if not provider_class:
             logger.error("Data provider %s not found", data_provider.name)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.not_supported",
+                        "text": "Data provider is not supported",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -235,14 +236,12 @@ def update_data_provider(data_provider_name: str) -> APIResponseValue:
         if not selected_data_provider:
             logger.error("No data provider selected")
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.is_required",
-                            "text": "Data provider is required",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.is_required",
+                        "text": "Data provider is required",
                     }
-                ),
+                }),
                 HTTPStatus.BAD_REQUEST,
             )
 
@@ -251,14 +250,12 @@ def update_data_provider(data_provider_name: str) -> APIResponseValue:
         if not provider_class:
             logger.error("Data provider %s not found", selected_data_provider["label"])
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_supported",
-                            "text": "Data provider is not supported",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.not_supported",
+                        "text": "Data provider is not supported",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -287,14 +284,12 @@ def update_data_provider(data_provider_name: str) -> APIResponseValue:
         if not data_provider:
             logger.error("Data provider '%s' does not exist", selected_data_provider["value"])
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.data_provider.not_found",
-                            "text": "Data provider not found",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.data_provider.not_found",
+                        "text": "Data provider not found",
                     }
-                ),
+                }),
                 HTTPStatus.NOT_FOUND,
             )
 
@@ -304,14 +299,12 @@ def update_data_provider(data_provider_name: str) -> APIResponseValue:
         db.commit()
 
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.data_provider.updated",
-                        "text": "Data provider updated",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.data_provider.updated",
+                    "text": "Data provider updated",
                 }
-            ),
+            }),
             HTTPStatus.OK,
         )
 
@@ -358,15 +351,19 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
             project.variables = [
                 variable
                 for variable in project.variables
-                if variable["data_provider"] != data_connection.data_provider.data_provider_name.value
+                if variable["data_provider"]
+                != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the custom variables related to the data connection
-        if project.custom_variables is not None and isinstance(project.custom_variables, list | tuple):
+        if project.custom_variables is not None and isinstance(
+            project.custom_variables, list | tuple
+        ):
             project.custom_variables = [
                 variable
                 for variable in project.custom_variables
-                if variable["data_provider"] != data_connection.data_provider.data_provider_name.value
+                if variable["data_provider"]
+                != data_connection.data_provider.data_provider_name.value
             ]
 
         # delete the data connection and update the project variables
@@ -374,14 +371,12 @@ def delete_data_provider(data_provider_name: str) -> ResponseReturnValue:
         db.commit()
 
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.data_provider.connection_deleted",
-                        "text": "Data connection deleted successfully",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.data_provider.connection_deleted",
+                    "text": "Data connection deleted successfully",
                 }
-            ),
+            }),
             HTTPStatus.OK,
         )
 
@@ -431,11 +426,9 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
         success = provider_instance.test_connection()
 
         db.commit()
-        return jsonify(
-            {
-                "message": {
-                    "id": "api.data_provider.connection_status",
-                    "text": "Data connection status",
-                }
+        return jsonify({
+            "message": {
+                "id": "api.data_provider.connection_status",
+                "text": "Data connection status",
             }
-        ), (HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST)
+        }), (HTTPStatus.OK if success else HTTPStatus.BAD_REQUEST)
