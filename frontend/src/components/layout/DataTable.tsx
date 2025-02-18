@@ -156,7 +156,7 @@ const DataTable = ({
               {columns.map((column, index) => (
                 <TableCell key={index} style={{ ...column.sxTableHeaderCell }}>
                   {(Object.hasOwnProperty.call(column, 'sortable') && column.sortable) ||
-                  !Object.hasOwnProperty.call(column, 'sortable') ? (
+                    !Object.hasOwnProperty.call(column, 'sortable') ? (
                     <TableSortLabel
                       active={sortField === column.field}
                       direction={sortDirection === 1 ? 'asc' : 'desc'}
