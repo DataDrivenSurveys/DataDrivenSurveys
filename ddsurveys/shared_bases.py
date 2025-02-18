@@ -148,7 +148,8 @@ class FormElement(ABC):
                 package_parts = class_.package.split(".")
                 module_parts = class_.__module__.split(".")
                 overlap_index = next(
-                    (i for i, part in enumerate(module_parts) if part in package_parts), len(module_parts)
+                    (i for i, part in enumerate(module_parts) if part in package_parts),
+                    len(module_parts),
                 )
                 overlap_parts = ".".join(package_parts + module_parts[overlap_index + 1 :])
                 label = f"{cls.shared_prefix_text}.{overlap_parts}.{text}"
@@ -228,7 +229,9 @@ class FormButton(FormElement):
         - "args" (dict): Arguments to be passed to the action handler.
     """
 
-    def __init__(self, on_click: dict[str, Any] | None = None, **kwargs: dict[Hashable, Any]) -> None:
+    def __init__(
+        self, on_click: dict[str, Any] | None = None, **kwargs: dict[Hashable, Any]
+    ) -> None:
         """Initializes a new instance of the FormButton class.
 
         Args:
@@ -457,7 +460,7 @@ class FormTextBlock(FormElement):
             This is the actual text that will be displayed in the UI.
     """
 
-    def __init__(self, content: str, **kwargs) -> None:
+    def __init__(self, content: str, **kwargs: dict[str, Any]) -> None:
         """Initializes a new instance of the FormTextBlock class.
 
         This constructor sets up a text block element with the specified content.
@@ -480,7 +483,9 @@ class FormTextBlock(FormElement):
         """
         super().__init__(**kwargs)
         self.content: str = content
-        self.type = "text_block"  # This type is used to render the element appropriately in the frontend.
+        self.type = (
+            "text_block"  # This type is used to render the element appropriately in the frontend.
+        )
 
     @override
     def register_field(self, cls: type) -> type:
@@ -725,8 +730,12 @@ class RegistryBase(type):
         attrs_to_unwrangle = deepcopy(attrs.get("attrs_to_unwrangle", []))
         to_dict_attrs = deepcopy(attrs.get("to_dict_attrs", []))
 
-        attrs_to_bind_to_base.extend(cls.get_first_defined_from_parents(new_class, "attrs_to_bind_to_base"))
-        attrs_to_unwrangle.extend(cls.get_first_defined_from_parents(new_class, "attrs_to_unwrangle"))
+        attrs_to_bind_to_base.extend(
+            cls.get_first_defined_from_parents(new_class, "attrs_to_bind_to_base")
+        )
+        attrs_to_unwrangle.extend(
+            cls.get_first_defined_from_parents(new_class, "attrs_to_unwrangle")
+        )
         to_dict_attrs.extend(cls.get_first_defined_from_parents(new_class, "to_dict_attrs", []))
 
         new_class.attrs_to_bind_to_base = attrs_to_bind_to_base
@@ -736,7 +745,9 @@ class RegistryBase(type):
         registration_base: Registry | None = None
         direct_base_name = ""
 
-        base_name_list = [p.base_name for p in parents if hasattr(p, "base_name") and p.base_name != ""]
+        base_name_list = [
+            p.base_name for p in parents if hasattr(p, "base_name") and p.base_name != ""
+        ]
         if len(base_name_list) > 0 and "base_name" not in attrs:
             direct_base_name = base_name_list[-1]
 
@@ -1264,7 +1275,9 @@ class OAuthBase:
         ...
 
     @abstractmethod
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] | None = None) -> str:
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+    ) -> str:
         """Generates the authorization URL that clients will use to initiate the OAuth authorization flow.
 
         This method constructs the URL required for the user to grant authorization to the application. It may include
