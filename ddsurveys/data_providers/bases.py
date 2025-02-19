@@ -29,10 +29,11 @@ if TYPE_CHECKING:
 
     from ddsurveys.data_providers.data_categories import DataCategory
     from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.typings.variable_types import TVariableValue
+    from ddsurveys.variable_types import TVariableValue
 
 __all__: list[str] = [
     "FormField",
+    "FormButton",
     "DataProvider",
     "OAuthDataProvider",
     #
@@ -174,7 +175,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         data_categories = cls.get_data_categories()
         # Include the provider_type in each builtin variable dictionary
         return [
-            {**item, "provider_type": cls.provider_type} for cat in data_categories for item in cat["builtin_variables"]
+            {**item, "provider_type": cls.provider_type}
+            for cat in data_categories
+            for item in cat["builtin_variables"]
         ]
 
     # Instance properties
@@ -380,7 +383,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         return dct
 
     @classmethod
-    def get_qualified_custom_variable_dict(cls, custom_variable: CVAttribute, data_category: DataCategory) -> dict:
+    def get_qualified_custom_variable_dict(
+        cls, custom_variable: CVAttribute, data_category: DataCategory
+    ) -> dict:
         dct = custom_variable.to_dict()
         dct["category"] = data_category.label
         return dct
@@ -405,7 +410,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
                 "value": data_category.value,
                 "custom_variables_enabled": data_category.custom_variables_enabled,
                 "builtin_variables": [
-                    cls.get_qualified_builtin_variable_dict(builtin_variable, data_category, "Builtin")
+                    cls.get_qualified_builtin_variable_dict(
+                        builtin_variable, data_category, "Builtin"
+                    )
                     for builtin_variables_list in data_category.builtin_variables
                     for builtin_variable in builtin_variables_list
                 ],
@@ -423,7 +430,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     @classmethod
     def get_all_data_categories(cls) -> list[DataProviderDataCategoryDict]:
         categories: list[DataProviderDataCategoryDict] = [
-            item for subclass in cls.registry["DataProvider"].values() for item in subclass.get_data_categories()
+            item
+            for subclass in cls.registry["DataProvider"].values()
+            for item in subclass.get_data_categories()
         ]
         return sorted(categories, key=lambda dp: (dp["data_provider_name"], dp["label"]))
 
@@ -638,7 +647,9 @@ class OAuthDataProvider(DataProvider):
 
     # Instance methods
     def get_required_scopes(
-        self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
+        self,
+        builtin_variables: list[dict] | None = None,
+        custom_variables: list[dict] | None = None,
     ) -> list[str]:
         if len(self.required_scopes) > 0:
             return self.required_scopes
@@ -651,9 +662,13 @@ class OAuthDataProvider(DataProvider):
         builtin_variables = self.select_relevant_variables(builtin_variables)
         custom_variables = self.select_relevant_variables(custom_variables)
 
-        required_scopes: set[str] = {self._categories_scopes[v["category"]] for v in builtin_variables}
+        required_scopes: set[str] = {
+            self._categories_scopes[v["category"]] for v in builtin_variables
+        }
 
-        required_scopes.union({self._categories_scopes[v["data_category"]] for v in custom_variables})
+        required_scopes.union({
+            self._categories_scopes[v["data_category"]] for v in custom_variables
+        })
 
         required_scopes_list: list[str] = sorted(required_scopes)
 
@@ -668,7 +683,9 @@ class OAuthDataProvider(DataProvider):
     def init_oauth_client(self, *args, **kwargs) -> None: ...
 
     @abstractmethod
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] | None = None) -> str: ...
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+    ) -> str: ...
 
     @abstractmethod
     def get_client_id(self) -> str: ...

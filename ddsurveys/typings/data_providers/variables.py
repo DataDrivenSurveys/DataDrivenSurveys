@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NotRequired, TypedDict
 
-from ddsurveys.typings.variable_types import TVariableValue
+from ddsurveys.variable_types import TVariableValue
 
 if TYPE_CHECKING:
     from ddsurveys.data_providers.data_categories import DataCategoryDict

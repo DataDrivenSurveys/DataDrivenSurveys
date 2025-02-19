@@ -29,12 +29,12 @@ if TYPE_CHECKING:
 
     from github.AccessToken import AccessToken
 
-    from ddsurveys.typings.variable_types import TVariableFunction
+    from ddsurveys.variable_types import TVariableFunction
 
 logger = get_logger(__name__)
 
 
-class Account(DataCategory):
+class Account(DataCategory["GitHubDataProvider"]):
     data_origin = [
         {
             "method": "get_user",
@@ -92,7 +92,7 @@ class Account(DataCategory):
     ]
 
 
-class Repositories(DataCategory):
+class Repositories(DataCategory["GitHubDataProvider"]):
     data_origin = [
         {
             "method": "get_user_repositories",
@@ -228,7 +228,10 @@ class GitHubDataProvider(OAuthDataProvider):
         ),
     ]
 
-    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (Account, Repositories)
+    data_categories: ClassVar[tuple[type[DataCategory[GitHubDataProvider]], ...]] = (
+        Account,
+        Repositories,
+    )
 
     @override
     def __init__(self, **kwargs):
@@ -253,7 +256,10 @@ class GitHubDataProvider(OAuthDataProvider):
 
     # OAuthBase methods
     def init_api_client(
-        self, access_token: str | None = None, refresh_token: str | None = None, code: str | None = None
+        self,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        code: str | None = None,
     ) -> None:
         if access_token is not None:
             self.access_token = access_token
@@ -269,11 +275,15 @@ class GitHubDataProvider(OAuthDataProvider):
     def init_oauth_client(self, *args, **kwargs) -> None:
         g = Github()
 
-        app: ApplicationOAuth = g.get_oauth_application(client_id=self.client_id, client_secret=self.client_secret)
+        app: ApplicationOAuth = g.get_oauth_application(
+            client_id=self.client_id, client_secret=self.client_secret
+        )
 
         self.oauth_client = app
 
-    def get_authorize_url(self, builtin_variables: list[dict], custom_variables: list[dict] | None = None) -> str:
+    def get_authorize_url(
+        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+    ) -> str:
         # required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
         #
         # if len(required_scopes) == 0:
@@ -301,7 +311,9 @@ class GitHubDataProvider(OAuthDataProvider):
         try:
             g = Github()
 
-            app = g.get_oauth_application(client_id=self.client_id, client_secret=self.client_secret)
+            app = g.get_oauth_application(
+                client_id=self.client_id, client_secret=self.client_secret
+            )
 
             token = app.get_access_token(code)
 
@@ -335,7 +347,9 @@ class GitHubDataProvider(OAuthDataProvider):
         return self.test_connection()
 
     def test_connection(self) -> bool:
-        """We try to send a wrong code to get_access_token and check if we get a BadCredentialsException.
+        """Test if the data provider can be connected to.
+
+        We try to send a wrong code to get_access_token and check if we get a BadCredentialsException.
         If the request fails for bad_verification_code then the connection is valid.
         If the request fails for any other reason, then the connection is not valid.
 

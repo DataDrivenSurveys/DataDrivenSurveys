@@ -26,7 +26,9 @@ from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvi
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
 from ddsurveys.data_providers.fitbit.activity_log import Activity, ActivityLog
-from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict, ActivityDict
+from ddsurveys.data_providers.fitbit.api_response_dicts import (
+    ActivitiesListResponseDict,
+)
 from ddsurveys.data_providers.fitbit.daily_time_series import (
     AggregationFunctions,
     GroupingFunctions,
@@ -51,7 +53,7 @@ if TYPE_CHECKING:
         UserDict,
     )
     from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.typings.variable_types import TVariableFunction
+    from ddsurveys.variable_types import TVariableFunction
 
 __all__ = ["FitbitDataProvider"]
 
@@ -313,7 +315,9 @@ class Daily(DataCategory["FitbitDataProvider"]):
             test_value_placeholder="2020-01-01",
             unit="date",
             info="Date of highest daily step count in last 6 months.",
-            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[0].strftime("%Y-%m-%d"),
+            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[
+                0
+            ].strftime("%Y-%m-%d"),
             data_origin=[
                 {
                     "method": "",
@@ -427,7 +431,9 @@ class FitbitDataProvider(OAuthDataProvider):
     token_url: str = "https://api.fitbit.com/oauth2/token"
     revoke_url: str = "https://api.fitbit.com/oauth2/revoke"
 
-    instructions_helper_url: str = "https://dev.fitbit.com/build/reference/web-api/developer-guide/getting-started/"
+    instructions_helper_url: str = (
+        "https://dev.fitbit.com/build/reference/web-api/developer-guide/getting-started/"
+    )
 
     app_creation_url: str = (
         "https://dev.fitbit.com/apps/new?name={project_name}"
@@ -581,7 +587,9 @@ class FitbitDataProvider(OAuthDataProvider):
         # Profile is always required for the verifications done in other methods.
         if "profile" not in required_scopes:
             required_scopes.append("profile")
-        return self.oauth_client.authorize_token_url(scope=required_scopes, redirect_uri=self.redirect_uri)[0]
+        return self.oauth_client.authorize_token_url(
+            scope=required_scopes, redirect_uri=self.redirect_uri
+        )[0]
 
     @override
     def get_client_id(self) -> str:
@@ -692,7 +700,9 @@ class FitbitDataProvider(OAuthDataProvider):
         Returns:
             True if the token was revoked successfully, False otherwise.
         """
-        authorization_header = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode("utf-8")
+        authorization_header = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode("utf-8")
 
         headers = {
             "Authorization": f"Basic {authorization_header}",
@@ -724,7 +734,9 @@ class FitbitDataProvider(OAuthDataProvider):
     def test_connection(self) -> bool:
         # using client credentials flow to check if the client id and secret are valid
 
-        authorization_header = base64.b64encode(f"{self.client_id}:{self.client_secret}".encode()).decode("utf-8")
+        authorization_header = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode("utf-8")
 
         headers = {
             "Authorization": f"Basic {authorization_header}",
@@ -772,7 +784,12 @@ class FitbitDataProvider(OAuthDataProvider):
     @cached_property
     def highest_lifetime_steps(self) -> int | None:
         try:
-            return self.lifetime_stats.get("best", {}).get("tracker", {}).get("steps", {}).get("value", None)
+            return (
+                self.lifetime_stats.get("best", {})
+                .get("tracker", {})
+                .get("steps", {})
+                .get("value", None)
+            )
         except AttributeError:
             return None
 
@@ -786,14 +803,18 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def activities_favorite(self) -> list[FavoriteActivityDict]:
-        data = self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/favorite.json")
+        data = self.api_client.make_request(
+            "https://api.fitbit.com/1/user/-/activities/favorite.json"
+        )
         if isinstance(data, list):
             return data
         return []
 
     @cached_property
     def activities_frequent(self) -> list[FrequentActivityDict]:
-        data = self.api_client.make_request("https://api.fitbit.com/1/user/-/activities/frequent.json")
+        data = self.api_client.make_request(
+            "https://api.fitbit.com/1/user/-/activities/frequent.json"
+        )
         if isinstance(data, list):
             return data
         return []
@@ -816,7 +837,9 @@ class FitbitDataProvider(OAuthDataProvider):
 
         # Construct the URL with all required query parameters
         params = {"beforeDate": before_date, "sort": sort_order, "limit": limit, "offset": offset}
-        url = f"https://api.fitbit.com/1/user/-/activities/list.json?{urllib.parse.urlencode(params)}"
+        url = (
+            f"https://api.fitbit.com/1/user/-/activities/list.json?{urllib.parse.urlencode(params)}"
+        )
         return self.api_client.make_request(url)
 
     @cache
@@ -842,7 +865,9 @@ class FitbitDataProvider(OAuthDataProvider):
         elif after_date is not None:
             params["afterDate"] = after_date.strftime("%Y-%m-%d")
 
-        url = f"https://api.fitbit.com/1/user/-/activities/list.json?{urllib.parse.urlencode(params)}"
+        url = (
+            f"https://api.fitbit.com/1/user/-/activities/list.json?{urllib.parse.urlencode(params)}"
+        )
         return self.api_client.make_request(url)
 
     @cached_property
@@ -889,7 +914,11 @@ class FitbitDataProvider(OAuthDataProvider):
         has_more = True
         while has_more:
             data = self.get_activity_logs(
-                before_date=before_date, after_date=after_date, limit=limit, offset=offset, sort=sort
+                before_date=before_date,
+                after_date=after_date,
+                limit=limit,
+                offset=offset,
+                sort=sort,
             )
             # self.activity_log.integrate_activities_list(data["activities"], continuous=True)
 
@@ -1072,9 +1101,7 @@ class FitbitDataProvider(OAuthDataProvider):
             msg = f"Maximum range for {activity} is 1095 days. Received {(end_date - start_date).days} days."
             raise ValueError(msg)
 
-        url = (
-            f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date:%Y-%m-%d}/{end_date:%Y-%m-%d}.json"
-        )
+        url = f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date:%Y-%m-%d}/{end_date:%Y-%m-%d}.json"
         return self.api_client.make_request(url)
 
     # Variable calculation functions/properties
@@ -1086,7 +1113,9 @@ class FitbitDataProvider(OAuthDataProvider):
         return self.daily_stats("steps", start_date, end_date)
 
     @cached_property
-    def highest_daily_steps_last_6_months_date_steps(self) -> tuple[datetime, int] | tuple[None, None]:
+    def highest_daily_steps_last_6_months_date_steps(
+        self,
+    ) -> tuple[datetime, int] | tuple[None, None]:
         steps: list[dict[str, str]]
         if "activities-tracker-steps" in self.daily_step_counts_last_6_months:
             steps = self.daily_step_counts_last_6_months["activities-tracker-steps"]
@@ -1107,7 +1136,8 @@ class FitbitDataProvider(OAuthDataProvider):
         data = {
             key: [value["activeZoneMinutes"] for value in values]
             for key, values in group_time_series(
-                self.daily_stats("active-zone-minutes", start_date, end_date), GroupingFunctions.by_calendar_week
+                self.daily_stats("active-zone-minutes", start_date, end_date),
+                GroupingFunctions.by_calendar_week,
             ).items()
         }
 
@@ -1125,14 +1155,13 @@ class FitbitDataProvider(OAuthDataProvider):
             "tracker/minutesFairlyActive",
             "tracker/minutesVeryActive",
         ]
-        data = merge_time_series(
-            [
-                group_time_series(
-                    self.daily_stats(activity_type, start_date, end_date), GroupingFunctions.by_calendar_week
-                )
-                for activity_type in activity_types
-            ]
-        )
+        data = merge_time_series([
+            group_time_series(
+                self.daily_stats(activity_type, start_date, end_date),
+                GroupingFunctions.by_calendar_week,
+            )
+            for activity_type in activity_types
+        ])
 
         average = sum(AggregationFunctions.sum(data).values()) / 26
         if average > 0:
@@ -1148,15 +1177,13 @@ class FitbitDataProvider(OAuthDataProvider):
             "minutesFairlyActive",
             "minutesVeryActive",
         ]
-        data = merge_time_series(
-            [
-                group_time_series(
-                    self.daily_stats(activity=activity_type, start_date=start_date, end_date=end_date),
-                    GroupingFunctions.by_calendar_week,
-                )
-                for activity_type in activity_types
-            ]
-        )
+        data = merge_time_series([
+            group_time_series(
+                self.daily_stats(activity=activity_type, start_date=start_date, end_date=end_date),
+                GroupingFunctions.by_calendar_week,
+            )
+            for activity_type in activity_types
+        ])
 
         average = sum(AggregationFunctions.sum(data).values()) / 26
         if average > 0:

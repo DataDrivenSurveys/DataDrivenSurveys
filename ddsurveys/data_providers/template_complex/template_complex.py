@@ -4,6 +4,7 @@ Created on 2024-05-12 20:52
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from __future__ import annotations
 
 from functools import cached_property
@@ -19,7 +20,7 @@ if TYPE_CHECKING:
 
     from ddsurveys.data_providers.template_complex.data_category import ExampleDataCategory
     from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.typings.variable_types import TVariableFunction
+    from ddsurveys.variable_types import TVariableFunction
 
 __all__ = ["TemplateComplexDataProvider"]
 
@@ -38,7 +39,9 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # Update the following attributes:
     app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
-    instructions_helper_url: str = ...  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
+    instructions_helper_url: str = (
+        ...
+    )  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
 
     # Unique class attributes go here
     _scopes = ()
@@ -83,13 +86,14 @@ class TemplateComplexDataProvider(OAuthDataProvider):
 
     # OAuthBase methods
     def init_api_client(
-        self, access_token: str | None = None, refresh_token: str | None = None, code: str | None = None
+        self,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        code: str | None = None,
     ) -> None:
-
         self.api_client = ...
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-
         self.oauth_client = ...
 
     def get_authorize_url(

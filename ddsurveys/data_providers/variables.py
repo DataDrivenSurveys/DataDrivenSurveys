@@ -49,8 +49,7 @@ if TYPE_CHECKING:
         SelectionStrategyDict,
     )
     from ddsurveys.typings.models import CustomVariableDict as DBCustomVariableDict
-    from ddsurveys.typings.variable_types import TVariableValue
-    from ddsurveys.variable_types import OperatorDict, TDataClass
+    from ddsurveys.variable_types import OperatorDict, TDataClass, TVariableValue
 
 
 __all__ = [

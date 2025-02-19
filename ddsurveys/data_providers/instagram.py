@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module provides the InstagramDataProvider class.
 
 Created on 2023-08-31 16:59.
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
 
     from ddsurveys.data_providers.variables import CVAttribute
     from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.typings.variable_types import TVariableFunction
+    from ddsurveys.variable_types import TVariableFunction
 
 __all__ = ["InstagramDataProvider"]
 
@@ -130,7 +129,9 @@ class InstagramDataProvider(OAuthDataProvider):
         pass
 
     def get_authorize_url(
-        self, builtin_variables: list[dict] | None = None, custom_variables: list[dict] | None = None
+        self,
+        builtin_variables: list[dict] | None = None,
+        custom_variables: list[dict] | None = None,
     ) -> str:
         """Returns the authorize url.
 
@@ -201,7 +202,9 @@ class InstagramDataProvider(OAuthDataProvider):
 
             # At this point, for Instagram, we know the user has accepted the full scope.
             # Fetch user_name using Basic Display API
-            profile_url = f"https://graph.instagram.com/me?fields=username&access_token={access_token}"
+            profile_url = (
+                f"https://graph.instagram.com/me?fields=username&access_token={access_token}"
+            )
             profile_response = requests.get(profile_url)
             profile_response.raise_for_status()
 
@@ -225,7 +228,8 @@ class InstagramDataProvider(OAuthDataProvider):
 
         except requests.HTTPError:
             logger.exception(
-                "HTTP error when exchanging Instagram code for token. Status code: %s", response.status_code
+                "HTTP error when exchanging Instagram code for token. Status code: %s",
+                response.status_code,
             )
             return {
                 "success": False,
@@ -246,7 +250,9 @@ class InstagramDataProvider(OAuthDataProvider):
     def test_connection_before_extraction(self) -> bool:
         try:
             # Use the access token to fetch the user's profile information
-            profile_url = f"https://graph.instagram.com/me?fields=username&access_token={self.access_token}"
+            profile_url = (
+                f"https://graph.instagram.com/me?fields=username&access_token={self.access_token}"
+            )
             profile_response = requests.get(profile_url)
             profile_response.raise_for_status()
 
@@ -275,7 +281,9 @@ class InstagramDataProvider(OAuthDataProvider):
             "code": "<test-code>",  # replace with a test code
         }
         try:
-            response: requests.Response = requests.post(self.token_url, headers=headers, data=data, timeout=5)
+            response: requests.Response = requests.post(
+                self.token_url, headers=headers, data=data, timeout=5
+            )
             success: bool = response.status_code == HTTPStatus.OK
             if response.status_code != HTTPStatus.OK:
                 error = response.json().get("error_message")

@@ -1,10 +1,15 @@
-"""This module contains classes that are specs for important types and data standards, type declarations,
-and Data types used for variables.
+"""This module provides the specifications for variables provided by data providers.
 
-The module is designed to provide a structured way to define and interact with variables within a data processing
-and analysis context. It includes abstract base classes and concrete implementations for handling different types
-of variables, such as numeric, textual, and date variables. Additionally, it defines enums and type hints to
-facilitate clear and consistent type declarations throughout the codebase.
+It contains classes that are specs for important types and data standards, type
+declarations, and Data types used for variables.
+
+The module is designed to provide a structured way to define and interact with variables
+within a data processing and analysis context.
+It includes abstract base classes and concrete implementations for handling different
+types
+of variables, such as numeric, textual, and date variables.
+Additionally, it defines enums and type hints to facilitate clear and consistent
+type declarations throughout the codebase.
 
 Created on 2023-08-31 16:54
 
@@ -16,15 +21,16 @@ Authors:
 from __future__ import annotations
 
 import re
-import logging
+from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, NewType
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict
 
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
-    from ddsurveys.typings.variable_types import OperatorDict, OperatorsDict
+    import logging
+    from collections.abc import Callable, Hashable
 
 
 __all__: list[str] = [
@@ -37,16 +43,238 @@ __all__: list[str] = [
     "Date",
     "Number",
     "Text",
-    #
+    # Types
     "TDataClass",
     "TData",
+    #
+    "TVariableValue",
+    "TVariableFunction",
+    "TVariable",
+    "OperatorDict",
+    "VariableFunction",
+    "Variable",
 ]
 
 
 logger: logging.Logger = get_logger(__name__)
 
+# Type declarations
 type TDataClass = type[Data]
 TData = NewType("TData", "Data")
+
+# Types (used for type hinting that something is an instance of that class)
+type TVariableValue = str | float | int | bool | None
+TVariableFunction = NewType("TVariableFunction", "VariableFunction")
+TVariable = NewType("TVariable", "Variable")
+
+
+class OperatorDict(TypedDict):
+    """Dictionary describing a custom variable operator."""
+
+    label: str
+    func: Callable[[TVariableValue, TVariableValue], bool]
+
+
+type OperatorsDict = dict[str, OperatorDict]
+
+
+class VariableFunction(ABC):
+    """This class is used for type hinting only and should not be used directly.
+
+    Functions that calculate variable values have additional attributes that this class
+    describes.
+
+    Attributes:
+        variable_name (str): The name of the variable that gets calculated.
+        is_indexed_variable (bool): Whether the variable is indexed or not.
+        index_start (int): The start index of the variable.
+        index_end (int): The end index of the variable.
+        fully_indexed (bool): Whether all indexed references of the variable have been
+            added to a `DataProvider`'s variable_funcs dictionary.
+    """
+
+    def __init__(
+        self,
+        variable_name: str = "",
+        index_start: int | None = None,
+        index_end: int | None = None,
+        *,
+        is_indexed_variable: bool = False,
+        fully_indexed: bool = False,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes a new instance of the VariableFunction class.
+
+        Parameters:
+            variable_name (str): The name of the variable to be calculated.
+                Defaults to an empty string.
+            is_indexed_variable (bool): Flag indicating whether the variable
+                is indexed.
+                Defaults to None.
+            index_start (int): The starting index for indexed variables.
+                Defaults to None.
+            index_end (int): The ending index for indexed variables.
+                Defaults to None.
+            fully_indexed (bool): Flag indicating whether all indexed references of the
+                variable have been fully added.
+                Defaults to False.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
+        super().__init__(**kwargs)
+        self.variable_name: str = variable_name
+        self.is_indexed_variable: bool = is_indexed_variable
+        self.index_start: int | None = index_start
+        self.index_end: int | None = index_end
+        self.fully_indexed: bool = fully_indexed
+
+    @abstractmethod
+    def __call__(self, *args: Any, **kwargs: Any) -> TVariableValue:
+        """Method that should calculate and return the value of the variable.
+
+        This method must be overridden by subclasses to provide the specific logic for
+        calculating the variable's value.
+
+        Parameters:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            The calculated value of the variable.
+        """
+        ...
+
+
+class Variable(ABC):
+    """A class to define the structure and behavior of variables used by data providers.
+
+    This class is designed to encapsulate the attributes and functionalities of
+    variables that are used in data processing and analysis.
+    It allows for the standardized handling of variables, including their definition,
+    categorization, and value computation.
+    Variables can be either built-in or custom-defined, and they may also be indexed
+    to represent a series of values rather than a single value.
+
+    Attributes:
+        data_provider (str): Identifier for the data provider to which the variable
+            belongs.
+        category (str): A classification or grouping for the variable, aiding in its
+            organization.
+        type_ (Literal): Specifies whether the variable is 'Builtin' or 'Custom',
+            indicating its origin.
+        name (str): The unique name of the variable, used for identification.
+        description (str): A brief description of the variable,
+            explaining its purpose or usage.
+        data_type (str): The type of data the variable represents
+            (e.g., 'Number', 'Text', 'Date').
+        test_value_placeholder (str): A placeholder value used for testing or in
+            documentation, which may include an index for indexed variables.
+        info (str): Additional information about the variable, typically displayed in a
+            UI element like an info bubble.
+        is_indexed_variable (bool): Indicates whether the variable is indexed, meaning
+            it can represent multiple values based on an index range.
+        index_start (int): The starting index for indexed variables.
+            Default value is 0.
+        index_end (int): The ending index for indexed variables.
+            Default value is None.
+        value (TVariableValue): The computed or assigned value of the variable,
+            which can be of various types including string, float, int, bool, or None.
+
+    Methods:
+        __init__: Initializes a new instance of the Variable class with specified
+            attributes.
+        to_dict: Converts the variable's attributes into a dictionary format.
+        __call__: An abstract method that must be implemented by subclasses to define
+            how the variable's value is computed or retrieved.
+    """
+
+    def __init__(
+        self,
+        data_provider: str = "",
+        category: str = "",
+        type_: Literal["Builtin", "Custom"] = "Builtin",
+        name: str = "",
+        description: str = "",
+        data_type: str = "",
+        value: TVariableValue | None = None,
+        test_value_placeholder: str = "",
+        info: str = "",
+        *,
+        is_indexed_variable: bool = False,
+        index_start: int | None = 0,
+        index_end: int | None = 5,
+    ) -> None:
+        """Initializes a new instance of the Variable class.
+
+        Parameters:
+            data_provider: The identifier for the data provider.
+            category: The category or group to which the variable belongs.
+            type_: Indicates if the variable is 'Builtin' or 'Custom'.
+            name: The name of the variable.
+            description: A brief description of the variable.
+            data_type: The type of data (e.g., 'Number', 'Text', 'Date').
+            test_value_placeholder: A placeholder for the variable's test value.
+            info: Additional information about the variable.
+            is_indexed_variable: Flag indicating if the variable is indexed.
+            index_start: The starting index for indexed variables.
+            index_end: The ending index for indexed variables.
+            value: The value of the variable.
+
+        Returns:
+            None
+        """
+        self.data_provider: str = data_provider
+        self.category: str = category
+        self.type_: str = type_
+        self.name: str = name
+        self.description: str = description
+        self.data_type: str = data_type
+        self.value: TVariableValue | None = value
+        self.test_value_placeholder: str = test_value_placeholder
+        self.info: str = info
+        self.is_indexed_variable: bool = is_indexed_variable
+        self.index_start: int | None = index_start
+        self.index_end: int | None = index_end
+
+    def to_dict(self) -> dict[str, Any]:
+        """Converts the variable's attributes into a dictionary.
+
+        This method facilitates the serialization of the variable's attributes,
+        making it easier to store or transmit the variable's definition.
+
+        Returns:
+            A dictionary containing the variable's attributes as key-value pairs.
+        """
+        return {
+            "data_provider": self.data_provider,
+            "category": self.category,
+            "type": self.type_,
+            "name": self.name,
+            "description": self.description,
+            "data_type": self.data_type,
+            "test_value_placeholder": self.test_value_placeholder,
+            "info": self.info,
+            "is_indexed_variable": self.is_indexed_variable,
+            "index_start": self.index_start,
+            "index_end": self.index_end,
+            "value": self.value,
+        }
+
+    @abstractmethod
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """An abstract method that computes or retrieves the variable's value.
+
+        This method must be overridden in subclasses to provide the specific logic for
+        calculating or retrieving the variable's value based on the given arguments.
+
+        Parameters:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            The computed or retrieved value of the variable.
+        """
+        ...
 
 
 class Operator(Enum):
@@ -196,7 +424,9 @@ class Data:
         return isinstance(data, cls)
 
     @staticmethod
-    def determine_type(value: Any) -> type[list | dict] | TDataClass:
+    def determine_type(
+        value: Data | Date | Number | Text | str | list[Any] | dict[Hashable, Any],
+    ) -> type[list[Any] | dict[Hashable, Any]] | TDataClass:
         """Determines the data type class for the given value.
 
         Uses the value's type or content to determine the appropriate data type class.

@@ -104,7 +104,8 @@ class EmbeddedData:
             "value": self.value
         }
     """
-    # TODO: finish implementing the translation of TVariable conforming dicts to EmbeddedData objects.
+    # TODO: finish implementing the translation of TVariable conforming dicts to
+    # EmbeddedData objects.
     _variable_to_attributes_map: ClassVar[dict[str, str]] = {
         "name": "variable_name",
         "data_type": "variable_type",
@@ -116,7 +117,9 @@ class EmbeddedData:
         "Date": "Date",
     }
 
-    _qualtrics_types_to_values: ClassVar[dict[str, str]] = {v: k for k, v in _values_to_qualtrics_types.items()}
+    _qualtrics_types_to_values: ClassVar[dict[str, str]] = {
+        v: k for k, v in _values_to_qualtrics_types.items()
+    }
 
     _to_custom_variable_map: ClassVar[dict[str, str]] = {
         "Field": "name",
@@ -252,13 +255,18 @@ class EmbeddedData:
         """
         if dict_type == "Qualtrics":
             out_dict = {k: self[k] for k in self.qualtrics_to_attributes_map}
-            out_dict["Value"] = str(out_dict["Value"])  # Convert value to string to avoid API errors.
+            out_dict["Value"] = str(
+                out_dict["Value"]
+            )  # Convert value to string to avoid API errors.
             return out_dict
         if dict_type == "variable":
             out_dict = {k: self[k] for k in self.qualtrics_to_attributes_map}
             return self.embedded_data_to_custom_variable(out_dict)
 
-        msg = f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: " f"'Qualtrics' and 'variable'."
+        msg = (
+            f"Passed dict_type '{dict_type}' is not allowed. Allowed values are: "
+            f"'Qualtrics' and 'variable'."
+        )
         raise ValueError(msg)
 
     @classmethod
@@ -301,7 +309,9 @@ class EmbeddedDataBlock(MutableMapping):
         if len(args) == 1 or kwargs.get("ed_block") is not None:
             block = kwargs.get("ed_block") or args[0]
             self.flow_id = block["FlowID"]
-            self._data = OrderedDict([(d["Field"], EmbeddedData.from_dict(d)) for d in block["EmbeddedData"]])
+            self._data = OrderedDict([
+                (d["Field"], EmbeddedData.from_dict(d)) for d in block["EmbeddedData"]
+            ])
         elif len(args) + len(kwargs) == 2:
             if len(args) == 2:
                 self.flow_id = args[0]
@@ -319,7 +329,9 @@ class EmbeddedDataBlock(MutableMapping):
                 variables_list: list[EmbeddedData]
                 self._data = OrderedDict([(ed.variable_name, ed) for ed in variables_list])
             else:
-                self._data = OrderedDict([(d["Field"], EmbeddedData.from_dict(d)) for d in variables_list])
+                self._data = OrderedDict([
+                    (d["Field"], EmbeddedData.from_dict(d)) for d in variables_list
+                ])
         else:
             self.flow_id = "FL_2"
             self._data = OrderedDict()
@@ -351,7 +363,11 @@ class EmbeddedDataBlock(MutableMapping):
         exists_variables = {
             f"{k}.exists": self.create_exists_variable(v, value=default_exists_value)
             for k, v in self._data.items()
-            if not (k.endswith((".exists", ".e")) or f"{k}.exists" in self._data or f"{k}.e" in self._data)
+            if not (
+                k.endswith((".exists", ".e"))
+                or f"{k}.exists" in self._data
+                or f"{k}.e" in self._data
+            )
         }
 
         self._data.update(exists_variables)
@@ -453,13 +469,11 @@ class EmbeddedDataBlock(MutableMapping):
             return ref_variable
 
         if isinstance(ref_variable, dict):
-            ref_variable.update(
-                {
-                    ref_variable["name"]: f"{ref_variable['name']}.exists",
-                    "VariableType": "String",
-                    "Value": str(value),
-                }
-            )
+            ref_variable.update({
+                ref_variable["name"]: f"{ref_variable['name']}.exists",
+                "VariableType": "String",
+                "Value": str(value),
+            })
 
         return EmbeddedData.from_dict(ref_variable)
 
@@ -473,13 +487,17 @@ class EmbeddedDataBlock(MutableMapping):
                 variables that should be added to the EmbeddedDataBlock after
                 removing the already existing variables.
         """
-        current_variables: dict[str, EmbeddedData] = {k: v for k, v in self._data.items() if not k.startswith("dds.")}
+        current_variables: dict[str, EmbeddedData] = {
+            k: v for k, v in self._data.items() if not k.startswith("dds.")
+        }
 
         if isinstance(new_variables, dict):
             if isinstance(next(iter(new_variables.values())), EmbeddedDataBlock):
                 current_variables.update(new_variables)
             else:
-                current_variables.update({k: EmbeddedData.from_variable(v) for k, v in new_variables.items()})
+                current_variables.update({
+                    k: EmbeddedData.from_variable(v) for k, v in new_variables.items()
+                })
         elif isinstance(new_variables, EmbeddedDataBlock):
             current_variables.update(new_variables._data)
         else:
