@@ -16,13 +16,48 @@ Created on 2023-09-05 17:52
 """
 
 import logging
+from typing import Literal
 
 import coloredlogs
 
-coloredlogs.install()
+# coloredlogs.install()
 
 # In the event that we decide to replace the default logger with a custom one, backup the old one.
 old_logger = logging.getLogger
+
+
+# class ProjectLoggerLevelsInt(IntEnum):
+#     NOTSET = 0
+#     DEBUG = 10
+#     INFO = 20
+#     WARN = 30
+#     WARNING = 30
+#     ERROR = 40
+#     CRITICAL = 50
+#     FATAL = 50
+
+
+# class ProjectLoggerLevelsStr(StrEnum):
+#     NOTSET = "NOTSET"
+#     DEBUG = "DEBUG"
+#     INFO = "INFO"
+#     WARN = "WARN"
+#     WARNING = "WARNING"
+#     ERROR = "ERROR"
+#     CRITICAL = "CRITICAL"
+#     FATAL = "FATAL"
+
+
+type ProjectLoggerLevels = Literal[
+    "NOTSET",
+    "DEBUG",
+    "INFO",
+    "WARN",
+    "WARNING",
+    "ERROR",
+    "CRITICAL",
+    "FATAL",
+]
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -145,7 +180,8 @@ def set_logger_level(
     loggers = [
         l
         for l in logger.manager.loggerDict.values()
-        if (hasattr(l, "parent") and l.parent == logger) or (hasattr(l, "name") and logger.name in l.name)
+        if (hasattr(l, "parent") and l.parent == logger)
+        or (hasattr(l, "name") and logger.name in l.name)
     ]
 
     for l in loggers:
@@ -183,4 +219,6 @@ def match_app_logger_level(only_log_ddsurveys_: bool = False) -> None:
         if only_log_ddsurveys_:
             only_log_ddsurveys()
     except RuntimeError:
-        module_logger.warning("Tried to call match_app_logger_level while not in a flask app context.")
+        module_logger.warning(
+            "Tried to call match_app_logger_level while not in a flask app context."
+        )

@@ -4,6 +4,7 @@
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch).
 """
+
 from __future__ import annotations
 
 import traceback
@@ -19,6 +20,8 @@ from ddsurveys.models import DBManager, Researcher
 
 if TYPE_CHECKING:
     from flask.typing import ResponseReturnValue
+
+    from ddsurveys.blueprints._common import JWTUserDict
 
 logger = get_logger(__name__)
 
@@ -36,14 +39,12 @@ def signup() -> ResponseReturnValue:
             user = db.query(Researcher).filter_by(email=data["email"]).first()
             if user:
                 return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.auth.user_already_exists",
-                                "text": "User already exists",
-                            }
+                    jsonify({
+                        "message": {
+                            "id": "api.auth.user_already_exists",
+                            "text": "User already exists",
                         }
-                    ),
+                    }),
                     HTTPStatus.CONFLICT,
                 )
 
@@ -53,56 +54,48 @@ def signup() -> ResponseReturnValue:
             if not firstname or firstname == "":
                 logger.debug("Failed to register: no firstname")
                 return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.auth.firstname_required",
-                                "text": "First name is required",
-                            }
+                    jsonify({
+                        "message": {
+                            "id": "api.auth.firstname_required",
+                            "text": "First name is required",
                         }
-                    ),
+                    }),
                     HTTPStatus.BAD_REQUEST,
                 )
 
             if not lastname or lastname == "":
                 logger.debug("Failed to register: no lastname")
                 return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.auth.lastname_required",
-                                "text": "Last name is required",
-                            }
+                    jsonify({
+                        "message": {
+                            "id": "api.auth.lastname_required",
+                            "text": "Last name is required",
                         }
-                    ),
+                    }),
                     HTTPStatus.BAD_REQUEST,
                 )
 
             if not data["email"] or data["email"] == "":
                 logger.debug("Failed to register: no email")
                 return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.auth.email_required",
-                                "text": "Email is required",
-                            }
+                    jsonify({
+                        "message": {
+                            "id": "api.auth.email_required",
+                            "text": "Email is required",
                         }
-                    ),
+                    }),
                     HTTPStatus.BAD_REQUEST,
                 )
 
             if not data["password"] or data["password"] == "":
                 logger.debug("Failed to register: no password")
                 return (
-                    jsonify(
-                        {
-                            "message": {
-                                "id": "api.auth.password_required",
-                                "text": "Password is required",
-                            }
+                    jsonify({
+                        "message": {
+                            "id": "api.auth.password_required",
+                            "text": "Password is required",
                         }
-                    ),
+                    }),
                     HTTPStatus.BAD_REQUEST,
                 )
 
@@ -118,28 +111,24 @@ def signup() -> ResponseReturnValue:
             db.commit()
             logger.info("Successfully registered: %s", new_researcher.email)
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.auth.registered_successfully",
-                            "text": "Registered successfully",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.auth.registered_successfully",
+                        "text": "Registered successfully",
                     }
-                ),
+                }),
                 HTTPStatus.OK,
             )
     except Exception as e:
         logger.critical("This error should be excepted correctly: %s", e)
         logger.exception("Failed to register: %s", traceback.format_exc())
         return (
-            jsonify(
-                {
-                    "message": {
-                        "id": "api.auth.registration_failed",
-                        "text": "Failed to register",
-                    }
+            jsonify({
+                "message": {
+                    "id": "api.auth.registration_failed",
+                    "text": "Failed to register",
                 }
-            ),
+            }),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
@@ -152,14 +141,12 @@ def signin() -> ResponseReturnValue:
         if not user or not check_password_hash(user.password, data["password"]):
             logger.info("Failed to sign in: %s", data["email"])
             return (
-                jsonify(
-                    {
-                        "message": {
-                            "id": "api.auth.invalid_username_or_password",
-                            "text": "Invalid username or password",
-                        }
+                jsonify({
+                    "message": {
+                        "id": "api.auth.invalid_username_or_password",
+                        "text": "Invalid username or password",
                     }
-                ),
+                }),
                 HTTPStatus.UNAUTHORIZED,
             )
         token = create_access_token(
@@ -177,5 +164,5 @@ def signin() -> ResponseReturnValue:
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def session() -> ResponseReturnValue:
-    current_user = get_jwt_identity()
+    current_user: JWTUserDict = get_jwt_identity()
     return jsonify(logged_in_as=current_user), HTTPStatus.OK

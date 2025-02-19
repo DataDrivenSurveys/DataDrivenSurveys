@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 
-custom_variables = Blueprint("custom-variabls", __name__)
+custom_variables = Blueprint("custom-variables", __name__)
 """location: /projects/<project_id>/custom-variables
 """
 
