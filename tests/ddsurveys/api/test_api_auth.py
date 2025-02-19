@@ -4,7 +4,7 @@ import json
 from http import HTTPStatus
 from typing import TYPE_CHECKING
 
-from .utils.auth import get_user, me_endpoint, signin_endpoint, signup_endpoint
+from tests.ddsurveys.api.utils.auth import get_user, me_endpoint, signin_endpoint, signup_endpoint
 
 if TYPE_CHECKING:
     from flask.testing import FlaskClient
@@ -26,26 +26,38 @@ def test_auth_signup(client: FlaskClient):
     # Arrange
     jane_doe = get_user("jane_doe")
     # Act: Sign up with the test data
-    response = client.post(signup_endpoint, data=json.dumps(jane_doe), content_type="application/json")
+    response = client.post(
+        signup_endpoint,
+        data=json.dumps(jane_doe),
+        content_type="application/json",
+    )
 
     # Assert
     assert response.status_code == HTTPStatus.OK
     assert json.loads(response.data)["message"]["id"] == "api.auth.registered_successfully"
 
     # Try signing up again with the same email
-    response = client.post(signup_endpoint, data=json.dumps(jane_doe), content_type="application/json")
+    response = client.post(
+        signup_endpoint,
+        data=json.dumps(jane_doe),
+        content_type="application/json",
+    )
     assert response.status_code == HTTPStatus.CONFLICT
     assert json.loads(response.data)["message"]["id"] == "api.auth.user_already_exists"
 
 
-def test_auth_signin(client):
+def test_auth_signin(client: FlaskClient) -> None:
     # Sign up first
     jane_doe = get_user("jane_doe")
 
     client.post(signup_endpoint, data=json.dumps(jane_doe), content_type="application/json")
 
     # Act: Sign in with the test data
-    response = client.post(signin_endpoint, data=json.dumps(jane_doe), content_type="application/json")
+    response = client.post(
+        signin_endpoint,
+        data=json.dumps(jane_doe),
+        content_type="application/json",
+    )
 
     # Assert
     assert response.status_code == HTTPStatus.OK
@@ -55,12 +67,16 @@ def test_auth_signin(client):
     # copy the dict so we don't modify the original
     jane_doe = get_user("jane_doe")
     jane_doe["password"] = "wrongPassword123"
-    response = client.post(signin_endpoint, data=json.dumps(jane_doe), content_type="application/json")
+    response = client.post(
+        signin_endpoint,
+        data=json.dumps(jane_doe),
+        content_type="application/json",
+    )
     assert response.status_code == HTTPStatus.UNAUTHORIZED
     assert json.loads(response.data)["message"]["id"] == "api.auth.invalid_username_or_password"
 
 
-def test_auth_me(client: FlaskClient):
+def test_auth_me(client: FlaskClient) -> None:
     """Test the /me endpoint of the authentication system.
 
     This function tests the following scenarios:
@@ -77,7 +93,11 @@ def test_auth_me(client: FlaskClient):
     alice_smith = get_user("alice_smith")
 
     client.post(signup_endpoint, data=json.dumps(alice_smith), content_type="application/json")
-    signin_response = client.post(signin_endpoint, data=json.dumps(alice_smith), content_type="application/json")
+    signin_response = client.post(
+        signin_endpoint,
+        data=json.dumps(alice_smith),
+        content_type="application/json",
+    )
     token = json.loads(signin_response.data)["token"]
 
     headers = {"Authorization": f"Bearer {token}"}

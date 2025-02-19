@@ -9,11 +9,11 @@ from ddsurveys.models import Base, DBManager
 if TYPE_CHECKING:
     from collections.abc import Generator
 
-    from flask import Flask
+    from flask.testing import FlaskClient
 
 
 @pytest.fixture
-def client() -> Generator[Flask, None, None]:
+def client() -> Generator[FlaskClient, None, None]:
     from ddsurveys.app import app
 
     # Create the database schema
