@@ -115,7 +115,7 @@ path = "ddsurveys/__init__.py"
 [tool.uv]
 dev-dependencies = [
   # Project management
-  "uv>=0.4.21",
+  #"uv>=0.4.21",
   # Linting and type checking
   "ruff>=0.6.9",
   "mypy>=1.12.0",
