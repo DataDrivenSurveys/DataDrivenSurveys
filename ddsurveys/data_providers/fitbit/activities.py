@@ -11,6 +11,21 @@ if TYPE_CHECKING:
     from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict
 
 
+_most_frequent_activities: list[str] = [
+    "Walk",
+    "Sport",
+    "Run",
+    "Bike",
+    "Aerobic Workout",
+    "Weights",
+    "Swim",
+    "Mountain Bike",
+    "Workout",
+    "Interval Workout",
+    "Elliptical",
+]
+
+
 class Activities(DataCategory["FitbitDataProvider"]):
     data_origin: ClassVar = [
         {
@@ -78,12 +93,14 @@ class Activities(DataCategory["FitbitDataProvider"]):
     ]
 
     builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="by_frequency",
             label="Activities by Frequency",
-            description="Activities sorted from most frequent to least frequent. Index 1 "
-            "is  the most frequent activity, index 2 is the second most frequent activity, "
-            "and so on.",
+            description=(
+                "Activities sorted from most frequent to least frequent. Index 1 "
+                "is  the most frequent activity, index 2 is the second most frequent activity, "
+                "and so on."
+            ),
             test_value_placeholder="Walk",
             data_type=VariableDataType.TEXT,
             info="Activities sorted from most frequent to least frequent. Index 1 is  the most frequent activity, ",
@@ -98,5 +115,90 @@ class Activities(DataCategory["FitbitDataProvider"]):
                     "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-frequent-activities/",
                 }
             ],
-        )
+        ),
+        BuiltInVariable["FitbitDataProvider"].create_instances(
+            name="last_whole_month_total",
+            label="Total number of activities done over the last whole month.",
+            description="Total number of activities done over the last whole month.",
+            data_type=VariableDataType.NUMBER,
+            test_value_placeholder="10",
+            info="Total number of activities done over the last whole month.",
+            extractor_func=lambda self: self.has_activities_last_whole_month,
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com /1/user/[user-id]/activities/list.json ",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-activity-log-list/",
+                }
+            ],
+        ),
+        BuiltInVariable["FitbitDataProvider"].create_instances(
+            name="has_activities_last_whole_month",
+            label="Has Activities During Last Whole Month",
+            description="Has Activities During Last Whole Month.",
+            data_type=VariableDataType.TEXT,
+            test_value_placeholder="True",
+            info="This will be 'True' if the the account has activities over the last whole month, otherwise 'False'.",
+            extractor_func=lambda self: self.has_activities_last_whole_month,
+            data_origin=[
+                {
+                    "method": "",
+                    "endpoint": "https://api.fitbit.com /1/user/[user-id]/activities/list.json ",
+                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-activity-log-list/",
+                }
+            ],
+        ),
+        *[
+            BuiltInVariable["FitbitDataProvider"].create_instances(
+                name=f"last_whole_month_{act.lower().replace(' ', '_')}",
+                label=f"Last Whole Month {act}",
+                description=f"The number of times that {act} was done over the previous month.",
+                test_value_placeholder="1",
+                data_type=VariableDataType.NUMBER,
+                info=f"The number of times that {act} was done over the previous month.",
+                is_indexed_variable=False,
+                extractor_func=lambda self: self.activities_last_whole_month_counts[act],
+                data_origin=[
+                    {
+                        "method": "",
+                        "endpoint": "https://api.fitbit.com /1/user/[user-id]/activities/list.json ",
+                        "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-activity-log-list/",
+                    }
+                ],
+            )
+            for act in _most_frequent_activities
+        ],
+        BuiltInVariable["FitbitDataProvider"].create_instances(
+            name="last_whole_month_walk_distance",
+            label="Average distance walked in miles during walk activities ovr the last month.",
+            description="Average distance walked during walk activities ovr the last month.",
+            test_value_placeholder="3",
+            data_type=VariableDataType.NUMBER,
+            info="Average distance walked during walk activities ovr the last month.",
+            is_indexed_variable=False,
+            extractor_func=lambda self: self.activities_last_whole_month_walk_distance,
+            data_origin=data_origin,
+        ),
+        BuiltInVariable["FitbitDataProvider"].create_instances(
+            name="last_whole_month_run_gps",
+            label="Number of runs over the last whole month with a GPS trace.",
+            description="Number of runs over the last whole month with a GPS trace.",
+            test_value_placeholder="100",
+            data_type=VariableDataType.NUMBER,
+            info="Number of runs over the last whole month with a GPS trace.",
+            is_indexed_variable=False,
+            extractor_func=lambda self: self.activities_last_whole_month_run_gps,
+            data_origin=data_origin,
+        ),
+        BuiltInVariable["FitbitDataProvider"].create_instances(
+            name="last_whole_month_workout_duration",
+            label="Average duration of workouts done over the last whole month.",
+            description="Average duration of workouts done over the last whole month.",
+            test_value_placeholder="100",
+            data_type=VariableDataType.NUMBER,
+            info="Average duration of workouts done over the last whole month.",
+            is_indexed_variable=False,
+            extractor_func=lambda self: self.activities_last_whole_month_workout_duration,
+            data_origin=data_origin,
+        ),
     ]

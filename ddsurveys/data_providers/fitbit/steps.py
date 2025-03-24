@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from ddsurveys.data_providers.data_categories import DataCategory
-from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.variables import BuiltInVariable
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
     from ddsurveys.data_providers.fitbit import FitbitDataProvider
-    from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict
 
 
 class Steps(DataCategory["FitbitDataProvider"]):
@@ -16,7 +15,7 @@ class Steps(DataCategory["FitbitDataProvider"]):
         return []
 
     builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="average",
             label="Average Lifetime Steps",
             description="Average lifetime steps. If steps on only active days is not available, this will calculate "
@@ -39,7 +38,7 @@ class Steps(DataCategory["FitbitDataProvider"]):
                 },
             ],
         ),
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="highest",
             label="Highest Lifetime Steps",
             description="Highest step count achieved on a single day. This includes wearable activity tracker data "

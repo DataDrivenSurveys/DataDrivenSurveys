@@ -420,7 +420,7 @@ class FitbitDataProvider(OAuthDataProvider):
     # Instance methods
 
     # Extractor functions
-    def activities_by_frequency(self, idx) -> str | None:
+    def activities_by_frequency(self, idx: int) -> str | None:
         if len(self.activities_frequent) > idx - 1:
             return self.activities_frequent[idx - 1]["name"]
         return None
@@ -891,3 +891,66 @@ class FitbitDataProvider(OAuthDataProvider):
         user = self.user_profile
         creation_date = datetime.strptime(user["memberSince"], "%Y-%m-%d").date()
         return creation_date <= date.today() - relativedelta(months=6)
+
+    @cached_property
+    def has_activities_last_whole_month(self) -> bool:
+        return len(self.activities_last_whole_month_counts) > 0
+
+    @cached_property
+    def activities_last_whole_month_counts(self) -> dict[str, int]:
+        """The number of times each activity was done over the last entire month."""
+        activity_counts: dict[str, int] = {}
+        for activity in self.activities_last_whole_month:
+            name: str = activity.activityName or ""
+            if name in activity_counts:
+                activity_counts[name] += 1
+            else:
+                activity_counts[name] = 1
+
+        return activity_counts
+
+    @cached_property
+    def activities_last_whole_month_total(self) -> int | None:
+        total = sum(self.activities_last_whole_month_counts.values())
+        if total > 0:
+            return total
+        return None
+
+    @cached_property
+    def activities_last_whole_month_walk_distance(self) -> float | None:
+        walks = [
+            act.distance or 0.0
+            for act in self.activities_last_whole_month
+            if (name := act.activityName or "") and "walk" in name.casefold()
+        ]
+        distance: float = sum(walks)
+        if distance > 0:
+            return round(distance, 1)
+        return None
+
+    @cached_property
+    def activities_last_whole_month_run_gps(self) -> int | None:
+        runs = [
+            act
+            for act in self.activities_last_whole_month
+            if (name := act.activityName or "")
+            and "run" in name.casefold()
+            and act.tcxLink is not None
+            and act.tcxLink != ""
+        ]
+        num_runs: float = len(runs)
+        if num_runs > 0:
+            return num_runs
+        return None
+
+    @cached_property
+    def activities_last_whole_month_workout_duration(self) -> float | None:
+        workout_durations = [
+            act.duration or 0.0
+            for act in self.activities_last_whole_month
+            if (name := act.activityName or "") and "workout" == name.casefold()
+        ]
+        num_workouts: float = len(workout_durations)
+        if num_workouts > 0:
+            return round(sum(workout_durations) / num_workouts / 60_000, 1)
+        return None

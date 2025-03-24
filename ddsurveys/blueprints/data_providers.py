@@ -264,7 +264,7 @@ def update_data_provider(data_provider_name: str) -> APIResponseValue:
         status: bool = provider_instance.test_connection()
 
         # check if status is successful
-        if HTTPStatus(status).is_success:
+        if (type(status) is bool and status) or HTTPStatus(status).is_success:
             data_connection.connected = True
             db.commit()
         else:

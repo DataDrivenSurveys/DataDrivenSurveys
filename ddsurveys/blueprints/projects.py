@@ -700,6 +700,8 @@ def sync_variables(id_: str) -> ResponseReturnValue:
                 max_length=survey_platform.max_variable_name_length,
             )
 
+        logger.debug(enabled_variables)
+
         status, message_id, text_message = survey_platform.handle_variable_sync(enabled_variables)
 
         # Check if an error occurred

@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from ddsurveys.data_providers.data_categories import DataCategory
-from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.variables import BuiltInVariable
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
     from ddsurveys.data_providers.fitbit import FitbitDataProvider
-    from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict
 
 
 class Daily(DataCategory["FitbitDataProvider"]):
@@ -16,7 +15,7 @@ class Daily(DataCategory["FitbitDataProvider"]):
         pass
 
     builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="highest_steps_last_6_months_steps",
             label="Highest Daily Step Count in Last 6 Months",
             description="Highest step count achieved on a single day within the last 6 months. This includes wearable "
@@ -36,7 +35,7 @@ class Daily(DataCategory["FitbitDataProvider"]):
                 }
             ],
         ),
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="highest_steps_last_6_months_date",
             label="Date of Highest Daily Step Count in Last 6 Months",
             description="Date of step count achieved on a single day within the last 6 months. This includes wearable "

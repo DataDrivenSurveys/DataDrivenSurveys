@@ -15,7 +15,7 @@ class Account(DataCategory["FitbitDataProvider"]):
         pass
 
     builtin_variables: ClassVar[list[list[BuiltInVariable[FitbitDataProvider]]]] = [
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="creation_date",
             label="Account Creation Date",
             description="Date of account creation.",
@@ -32,7 +32,7 @@ It will be in YYYY-MM-DD format.""",
                 }
             ],
         ),
-        BuiltInVariable.create_instances(
+        BuiltInVariable["FitbitDataProvider"].create_instances(
             name="account_created_at_least_6_months_ago",
             label="Account Created at Least 6 Months Ago",
             description="Account Created at Least 6 Months Ago.",

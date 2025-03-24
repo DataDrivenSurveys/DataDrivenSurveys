@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from ddsurveys.data_providers.data_categories import DataCategory
-from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
+from ddsurveys.data_providers.variables import CVAttribute
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
     from ddsurveys.data_providers.fitbit import FitbitDataProvider
-    from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict
 
 
 class Badges(DataCategory["FitbitDataProvider"]):
