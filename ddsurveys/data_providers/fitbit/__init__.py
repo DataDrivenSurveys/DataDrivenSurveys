@@ -842,7 +842,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_weekly_active_time_all_sources_last_6_months(self) -> float | None:
-        end_date: datetime = datetime.now()
+        end_date: datetime = date.today()
         start_date: datetime = end_date - relativedelta(months=6)
         activity_types = [
             "minutesLightlyActive",
@@ -864,7 +864,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_weekly_activity_time_last_6_months(self) -> float | None:
-        end_date: datetime = datetime.now()
+        end_date: datetime = date.today()
         start_date: datetime = end_date - relativedelta(months=6)
 
         activities: list[Activity] = self.get_activities_date_range(start_date, end_date)
