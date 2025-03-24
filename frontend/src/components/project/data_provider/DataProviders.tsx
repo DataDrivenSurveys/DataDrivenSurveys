@@ -38,8 +38,6 @@ interface DataProvidersProps {
 }
 
 const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): JSX.Element => {
-  // console.log("DataProviders: project", project)
-
   const { t } = useTranslation();
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
@@ -154,9 +152,9 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
                       dataProviders.map(dp =>
                         dp.id === params.row.id
                           ? {
-                              ...dp,
-                              connected: undefined,
-                            }
+                            ...dp,
+                            connected: undefined,
+                          }
                           : dp
                       )
                     );
@@ -170,9 +168,9 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
                         dataProviders.map(dp =>
                           dp.id === params.row.id
                             ? {
-                                ...dp,
-                                connected: connected,
-                              }
+                              ...dp,
+                              connected: connected,
+                            }
                             : dp
                         )
                       );
@@ -201,8 +199,6 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
       },
     },
   ];
-
-  // console.log("DataProviders: dataProviders", dataProviders);
 
   return (
     <Stack spacing={2} alignItems={'flex-start'}>

@@ -10,6 +10,7 @@ import HelperText from '../../HelperText';
 import CopyClipboard from '../../input/CopyClipboard';
 import FormFields, { Field } from '../../input/FormFields';
 import { getFrontendBaseURL } from '../../utils/getURL';
+import { LoadingAnimation } from '../../feedback/Loading';
 
 interface EditDataProviderProps {
   projectId: string;
@@ -24,13 +25,17 @@ const EditDataProviderDialog = ({ projectId, data, open, onClose, onEdit }: Edit
 
   const { showBottomCenter: showSnackbar } = useSnackbar();
   const [dataProviders, setDataProviders] = useState<API.Projects.DataProvider[]>([]);
-  const [selected, setSelected] = useState<API.Projects.DataProvider>({} as API.Projects.DataProvider);
+  const [selected, setSelected] = useState<API.Projects.DataProvider | null>(null);
   const [fields, setFields] = useState<Field[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!data) return;
+
+    setIsLoading(true);
     (async (): Promise<void> => {
       const response = await GET('/data-providers');
+
 
       response.on('2xx', (status: number, dataProviders: API.Projects.DataProvider[]) => {
         setDataProviders(dataProviders);
@@ -43,9 +48,12 @@ const EditDataProviderDialog = ({ projectId, data, open, onClose, onEdit }: Edit
         }));
 
         setFields(mergedFields as unknown as Field[]);
+        setIsLoading(false);
       });
     })();
   }, [data]);
+
+
 
   const handleConfirm = useCallback(() => {
     if (fields.some(f => f.required && !f.value)) {
@@ -82,14 +90,15 @@ const EditDataProviderDialog = ({ projectId, data, open, onClose, onEdit }: Edit
       <ConfirmationDialog
         open={open}
         title={t('ui.project.data_providers.edit.title')}
-        titleLogo={{ logoName: selected.value, logoSize: 18, label: selected.label }}
+        titleLogo={selected ? { logoName: selected.value, logoSize: 18, label: selected.label } : undefined}
         disableConfirm={!checkInputs()}
         content={
-          <Stack spacing={2}>
+          isLoading ? (<LoadingAnimation />) : (<Stack spacing={2}>
             {selected && selected.app_required && <AppRelatedInstructions selected={selected} />}
 
             <FormFields fields={fields as unknown as Field[]} onChange={setFields} />
           </Stack>
+          )
         }
         onClose={onClose}
         onConfirm={handleConfirm}
