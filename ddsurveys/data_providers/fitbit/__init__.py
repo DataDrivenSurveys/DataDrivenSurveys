@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2023-08-31 16:59.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -25,16 +24,22 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
+from ddsurveys.data_providers.fitbit.account import Account
+from ddsurveys.data_providers.fitbit.active_minutes import ActiveMinutes
+from ddsurveys.data_providers.fitbit.activities import Activities
 from ddsurveys.data_providers.fitbit.activity_log import Activity
 from ddsurveys.data_providers.fitbit.api_response_dicts import (
     ActivitiesListResponseDict,
 )
+from ddsurveys.data_providers.fitbit.badges import Badges
+from ddsurveys.data_providers.fitbit.daily import Daily
 from ddsurveys.data_providers.fitbit.daily_time_series import (
     AggregationFunctions,
     GroupingFunctions,
     group_time_series,
     merge_time_series,
 )
+from ddsurveys.data_providers.fitbit.steps import Steps
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
 from ddsurveys.variable_types import VariableDataType
@@ -65,356 +70,6 @@ class DailyStatsMaxDateRange(IntEnum):
 
     activityCalories = 30
     OTHER = 1095
-
-
-class Account(DataCategory["FitbitDataProvider"]):
-    def fetch_data(self) -> list[dict[str, Any]]:
-        pass
-
-    builtin_variables: ClassVar[list[list[BuiltInVariable["FitbitDataProvider"]]]] = [
-        BuiltInVariable.create_instances(
-            name="creation_date",
-            label="Account Creation Date",
-            description="Date of account creation.",
-            data_type=VariableDataType.DATE,
-            test_value_placeholder="2020-01-01",
-            info="""This will be the date that the respondent's Fitbit account was created. \
-It will be in YYYY-MM-DD format.""",
-            extractor_func=lambda self: self.user_profile["memberSince"],
-            data_origin=[
-                {
-                    "method": "user_profile",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/profile.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-profile/",
-                }
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="account_created_at_least_6_months_ago",
-            label="Account Created at Least 6 Months Ago",
-            description="Account Created at Least 6 Months Ago.",
-            data_type=VariableDataType.TEXT,
-            test_value_placeholder="True",
-            info="This will be 'True' if the account was created at least 6 months ago, otherwise 'False'.",
-            extractor_func=lambda self: self.account_created_at_least_6_months_ago,
-            data_origin=[
-                {
-                    "method": "user_profile",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/profile.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-profile/",
-                },
-            ],
-        ),
-    ]
-
-
-class Activities(DataCategory["FitbitDataProvider"]):
-    data_origin: ClassVar = [
-        {
-            "method": "activities_frequent",
-            "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/frequent.json",
-            "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-frequent-activities/",
-        }
-    ]
-
-    def fetch_data(self) -> list[dict[str, Any]]:
-        data: ActivitiesListResponseDict = self.data_provider.activity_logs
-        if "activities" in data:
-            return data["activities"]
-        return []
-
-    cv_attributes: ClassVar = [
-        CVAttribute(
-            name="duration",
-            label="Activity Duration",
-            description="The duration of the activity in seconds.",
-            attribute="duration",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="100",
-            info="The duration of the activity in seconds",
-            unit="seconds",
-        ),
-        CVAttribute(
-            name="calories",
-            label="Calories Burned",
-            description="The number of calories burned during the activity in kcal.",
-            attribute="calories",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="100",
-            info="The number of calories burned during the activity",
-            unit="kcal",
-        ),
-        CVAttribute(
-            label="Date",
-            description="The date of the activity.",
-            attribute="originalStartTime",
-            name="date",
-            data_type=VariableDataType.DATE,
-            test_value_placeholder="2023-01-10T12:00:00.000+02:00",
-            info="The date of the activity",
-        ),
-        CVAttribute(
-            label="Distance",
-            name="distance",
-            description="The distance traveled during the activity in meters.",
-            attribute="distance",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="100",
-            info="The distance traveled during the activity",
-            unit="meters",
-        ),
-        CVAttribute(
-            label="Activity Type",
-            description="The type of the activity.",
-            attribute="activityName",
-            name="type",
-            data_type=VariableDataType.TEXT,
-            test_value_placeholder="Walk",
-            info="The type of activity",
-        ),
-    ]
-
-    builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
-            name="by_frequency",
-            label="Activities by Frequency",
-            description="Activities sorted from most frequent to least frequent. Index 1 "
-            "is  the most frequent activity, index 2 is the second most frequent activity, "
-            "and so on.",
-            test_value_placeholder="Walk",
-            data_type=VariableDataType.TEXT,
-            info="Activities sorted from most frequent to least frequent. Index 1 is  the most frequent activity, ",
-            is_indexed_variable=True,
-            index_start=1,
-            index_end=5,
-            extractor_func=lambda self, idx: self.activities_by_frequency(idx),
-            data_origin=[
-                {
-                    "method": "activities_frequent",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/frequent.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-frequent-activities/",
-                }
-            ],
-        )
-    ]
-
-
-class ActiveMinutes(DataCategory["FitbitDataProvider"]):
-    def fetch_data(self) -> list[dict[str, Any]]:
-        pass
-
-    builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
-            name="average_weekly_heart_zone_time_last_6_months",
-            label="Average Weekly Heart Zone Minutes Last 6 Months",
-            description="Average weekly heart zone minutes",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="120",
-            unit="minutes",
-            info="Average weekly heart zone minutes over the last 6 months.",
-            extractor_func=lambda self: self.average_weekly_heart_zone_time_last_6_months,
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/active-zone-minutes/date/["
-                    "start-date]/[end-date].json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/active-zone-minutes-timeseries"
-                    "/get-azm-timeseries-by-interval/",
-                }
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="average_weekly_active_time_last_6_months",
-            label="Average Weekly Active Minutes Only From A Tracker Last 6 Months",
-            description="Average weekly active minutes only from a tracker",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="120",
-            unit="minutes",
-            info="Average weekly active minutes only from a tracker over the last 6 months.",
-            extractor_func=lambda self: self.average_weekly_active_time_last_6_months,
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/[activityType]/date/["
-                    "start-date]/[end-date].json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity"
-                    "-timeseries-by-date-range/",
-                }
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="average_weekly_active_time_all_sources_last_6_months",
-            label="Average Weekly Active Minutes From All sources Last 6 Months",
-            description="Average weekly active minutes from all sources (tracker and manual entry)",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="120",
-            unit="minutes",
-            info="Average weekly active minutes from all sources (tracker and manual entry) over the last 6 months.",
-            extractor_func=lambda self: self.average_weekly_active_time_all_sources_last_6_months,
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/[activityType]/date/["
-                    "start-date]/[end-date].json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity"
-                    "-timeseries-by-date-range/",
-                }
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="average_weekly_activity_time_last_6_months",
-            label="Average Weekly Activity Time Last 6 Months",
-            description="Average weekly minutes spend doing activities",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="120",
-            unit="minutes",
-            info="Average weekly minutes spend doing activities over the last 6 months.",
-            extractor_func=lambda self: self.average_weekly_activity_time_last_6_months,
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com /1/user/[user-id]/activities/list.json ",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/get-activity-log-list/",
-                }
-            ],
-        ),
-    ]
-
-
-class Daily(DataCategory["FitbitDataProvider"]):
-    def fetch_data(self) -> list[dict[str, Any]]:
-        pass
-
-    builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
-            name="highest_steps_last_6_months_steps",
-            label="Highest Daily Step Count in Last 6 Months",
-            description="Highest step count achieved on a single day within the last 6 months. This includes wearable "
-            "activity tracker data only.",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="20000",
-            unit="steps",
-            info="Highest daily step count in last 6 months.",
-            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[1],
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/tracker/steps/date/[start-date]/["
-                    "end-date].json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity"
-                    "-timeseries-by-date-range/",
-                }
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="highest_steps_last_6_months_date",
-            label="Date of Highest Daily Step Count in Last 6 Months",
-            description="Date of step count achieved on a single day within the last 6 months. This includes wearable "
-            "activity tracker data only.",
-            data_type=VariableDataType.DATE,
-            test_value_placeholder="2020-01-01",
-            unit="date",
-            info="Date of highest daily step count in last 6 months.",
-            extractor_func=lambda self: self.highest_daily_steps_last_6_months_date_steps[
-                0
-            ].strftime("%Y-%m-%d"),
-            data_origin=[
-                {
-                    "method": "",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities/tracker/steps/date/[start-date]/["
-                    "end-date].json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity-timeseries/get-activity"
-                    "-timeseries-by-date-range/",
-                }
-            ],
-        ),
-    ]
-
-
-class Steps(DataCategory["FitbitDataProvider"]):
-    def fetch_data(self) -> list[dict[str, Any]]:
-        return []
-
-    builtin_variables: ClassVar = [
-        BuiltInVariable.create_instances(
-            name="average",
-            label="Average Lifetime Steps",
-            description="Average lifetime steps. If steps on only active days is not available, this will calculate "
-            "the average step count using the account creation date and total lifetime steps.",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="10000",
-            unit="steps",
-            info="Average lifetime steps. ",
-            extractor_func=lambda self: self.average_lifetime_steps,
-            data_origin=[
-                {
-                    "method": "activities_frequent",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/profile.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-profile/",
-                },
-                {
-                    "method": "lifetime_stats",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/create-activity-log/",
-                },
-            ],
-        ),
-        BuiltInVariable.create_instances(
-            name="highest",
-            label="Highest Lifetime Steps",
-            description="Highest step count achieved on a single day. This includes wearable activity tracker data "
-            "only.",
-            data_type=VariableDataType.NUMBER,
-            test_value_placeholder="20000",
-            unit="steps",
-            info="Highest step count achieved on a single day. ",
-            extractor_func=lambda self: self.highest_lifetime_steps,
-            data_origin=[
-                {
-                    "method": "lifetime_stats",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/activities.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/activity/create-activity-log/",
-                }
-            ],
-        ),
-    ]
-
-
-class Badges(DataCategory["FitbitDataProvider"]):
-    data_origin: ClassVar = [
-        {
-            "method": "user_badges",
-            "endpoint": "https://api.fitbit.com/1/user/[user-id]/badges.json",
-            "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-badges/",
-        }
-    ]
-
-    cv_attributes: ClassVar = [
-        CVAttribute(
-            label="Date",
-            description="The date the badge was earned.",
-            attribute="dateTime",
-            name="date",
-            data_type=VariableDataType.DATE,
-            test_value_placeholder="2023-01-10T12:00:00.000",
-            info="The date the badge was earned",
-        ),
-        CVAttribute(
-            label="Badge Name",
-            description="The name of the badge.",
-            attribute="badgeName",
-            name="name",
-            data_type=VariableDataType.TEXT,
-            test_value_placeholder="Walk",
-            info="The name of the badge",
-        ),
-    ]
-
-    builtin_variables: ClassVar = []
-
-    def fetch_data(self) -> list[dict[str, Any]]:
-        data = self.data_provider.user_badges
-        return data or []
 
 
 class FitbitDataProvider(OAuthDataProvider):
@@ -505,11 +160,11 @@ class FitbitDataProvider(OAuthDataProvider):
     # DataCategory declarations go here
     data_categories: ClassVar[tuple[type[DataCategory[FitbitDataProvider]], ...]] = (
         Account,
-        Activities,
         ActiveMinutes,
+        Activities,
+        Badges,
         Daily,
         Steps,
-        Badges,
     )
 
     # Standard class methods go here
