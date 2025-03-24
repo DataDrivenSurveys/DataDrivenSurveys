@@ -30,7 +30,7 @@ class People(DataCategory["GoogleContactsDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         return self.data_provider.contacts
 
-    cv_attributes = []
+    # cv_attributes = []
 
     builtin_variables: ClassVar[list[list[BuiltInVariable["GoogleContactsDataProvider"]]]] = [
         BuiltInVariable["GoogleContactsDataProvider"].create_instances(
@@ -39,8 +39,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The total number of contacts that a respondent has.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The total number of contacts that a respondent has. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The total number of contacts that a respondent has. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_contacts,
             data_origin=data_origin,
@@ -51,8 +53,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with a first name.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a first name. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with a first name. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_first_name,
             data_origin=data_origin,
@@ -63,8 +67,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with a last name.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a last name. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with a last name. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_last_name,
             data_origin=data_origin,
@@ -75,8 +81,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with a nickname.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a nickname. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with a nickname. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_nickname,
             data_origin=data_origin,
@@ -87,8 +95,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with an organization.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with an organization. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with an organization. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_organization,
             data_origin=data_origin,
@@ -99,8 +109,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with company name or job title.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a company name or job title. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with a company name or job title. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_company_or_title,
             data_origin=data_origin,
@@ -111,8 +123,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with related persons.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with related persons. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with related persons. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_relations,
             data_origin=data_origin,
@@ -123,8 +137,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with email address(es).",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with email address(es). "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with email address(es). "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_email_addresses,
             data_origin=data_origin,
@@ -135,8 +151,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with phone number(s).",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with phone number(s). "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with phone number(s). "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_phone_numbers,
             data_origin=data_origin,
@@ -147,8 +165,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with photo(s).",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with photo(s). "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with photo(s). "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_photos,
             data_origin=data_origin,
@@ -159,8 +179,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with a birthday (year optional).",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with a birthday (year optional). "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with a birthday (year optional). "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_birthday,
             data_origin=data_origin,
@@ -171,8 +193,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with addresses.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with addresses. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with addresses. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_addresses,
             data_origin=data_origin,
@@ -183,8 +207,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with notes/biographies.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with notes/biographies. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with notes/biographies. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies,
             data_origin=data_origin,
@@ -195,8 +221,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with no phone numbers.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with no phone numbers. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with no phone numbers. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_0_phone_numbers,
             data_origin=data_origin,
@@ -207,8 +235,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with one phone number.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with one phone number. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with one phone number. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_1_phone_numbers,
             data_origin=data_origin,
@@ -219,8 +249,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with two phone numbers.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with two phone numbers. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with two phone numbers. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_2_phone_numbers,
             data_origin=data_origin,
@@ -231,8 +263,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with three or more phone numbers.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with three or more phone numbers. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with three or more phone numbers. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_3_or_more_phone_numbers,
             data_origin=data_origin,
@@ -243,8 +277,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with birthdays that also include the year.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with birthdays that also include the year. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with birthdays that also include the year. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_birthday_year,
             data_origin=data_origin,
@@ -255,8 +291,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with notes a few words long.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with notes a few words long. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with notes a few words long. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_words,
             data_origin=data_origin,
@@ -267,8 +305,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with notes a few sentences long.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with notes a few sentences long. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with notes a few sentences long. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_sentences,
             data_origin=data_origin,
@@ -279,8 +319,10 @@ class People(DataCategory["GoogleContactsDataProvider"]):
             description="The number of contacts that a respondent has with notes a few paragraphs long.",
             test_value_placeholder="100",
             data_type=VariableDataType.NUMBER,
-            info="The number of contacts that a respondent has with notes a few paragraphs long. "
-            "It will always be a whole number greater or equal to 0.",
+            info=(
+                "The number of contacts that a respondent has with notes a few paragraphs long. "
+                "It will always be a whole number greater or equal to 0."
+            ),
             is_indexed_variable=False,
             extractor_func=lambda self: self.num_with_biographies_few_paragraphs,
             data_origin=data_origin,
