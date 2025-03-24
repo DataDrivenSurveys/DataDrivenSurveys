@@ -71,15 +71,15 @@ class Account(DataCategory["FitbitDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         pass
 
-    builtin_variables: ClassVar = [
+    builtin_variables: ClassVar[list[list[BuiltInVariable["FitbitDataProvider"]]]] = [
         BuiltInVariable.create_instances(
             name="creation_date",
             label="Account Creation Date",
             description="Date of account creation.",
             data_type=VariableDataType.DATE,
             test_value_placeholder="2020-01-01",
-            info="This will be the date that the respondent's Fitbit account was created. It will be in YYYY-MM-DD "
-            "format.",
+            info="""This will be the date that the respondent's Fitbit account was created. \
+It will be in YYYY-MM-DD format.""",
             extractor_func=lambda self: self.user_profile["memberSince"],
             data_origin=[
                 {
@@ -940,8 +940,8 @@ class FitbitDataProvider(OAuthDataProvider):
     @cache
     def get_activities_date_range(self, start_date: datetime, end_date: datetime) -> list[Activity]:
         """Fetches activities within a specified date range."""
-        start_date = ensure_date(start_date)
-        end_date = ensure_date(end_date)
+        # start_date: date = ensure_date(start_date)
+        # end_date: date = ensure_date(end_date)
 
         activities_logs: list[Activity] = []
 
@@ -1104,6 +1104,23 @@ class FitbitDataProvider(OAuthDataProvider):
         url = f"https://api.fitbit.com/1/user/-/activities/{activity}/date/{start_date:%Y-%m-%d}/{end_date:%Y-%m-%d}.json"
         return self.api_client.make_request(url)
 
+    @cached_property
+    def activities_last_whole_month(self) -> list[Activity]:
+        """Returns the list of activity records from the last whole month."""
+        today: date = date.today()
+        first_day_of_current_month: datetime = datetime(
+            year=today.year,
+            month=today.month,
+            day=1,
+            hour=12,
+            minute=0,
+            second=0,
+        )
+        start_date: datetime = first_day_of_current_month - relativedelta(months=1)
+        end_date: datetime = first_day_of_current_month - relativedelta(days=1)
+
+        return self.get_activities_date_range(start_date, end_date)
+
     # Variable calculation functions/properties
     @cached_property
     def daily_step_counts_last_6_months(self) -> dict[str, list[dict[str, str]]]:
@@ -1170,7 +1187,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_weekly_active_time_all_sources_last_6_months(self) -> float | None:
-        end_date: datetime = date.today()
+        end_date: datetime = datetime.now()
         start_date: datetime = end_date - relativedelta(months=6)
         activity_types = [
             "minutesLightlyActive",
@@ -1192,7 +1209,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cached_property
     def average_weekly_activity_time_last_6_months(self) -> float | None:
-        end_date: datetime = date.today()
+        end_date: datetime = datetime.now()
         start_date: datetime = end_date - relativedelta(months=6)
 
         activities: list[Activity] = self.get_activities_date_range(start_date, end_date)
