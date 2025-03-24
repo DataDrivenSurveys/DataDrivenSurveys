@@ -20,7 +20,11 @@ from ..utils.functions import (
     generate_custom_variables,
     validate_url,
 )
-from ..utils.mock_data import fitbit_mock_functions, fitbit_mock_properties, instagram_mock_properties
+from ..utils.mock_data import (
+    fitbit_mock_functions,
+    fitbit_mock_properties,
+    instagram_mock_properties,
+)
 
 if TYPE_CHECKING:
     from ddsurveys.typings.models import BuiltinVariableDict_, CustomVariableDict
@@ -41,7 +45,8 @@ def test_get_redirect_uri(provider_name, monkeypatch):
     # Check if the provider class is a subclass of OAuthDataProvider
     if issubclass(provider_class, OAuthDataProvider):
         assert (
-            provider_class.get_redirect_uri() == "http://testurl.com/dist/redirect/" + provider_name.lower()
+            provider_class.get_redirect_uri()
+            == "http://testurl.com/dist/redirect/" + provider_name.lower()
         ), f"The redirect URI for {provider_name} is incorrect."
 
 
@@ -61,7 +66,9 @@ EXPECTED_RESULTS = {
 }
 
 PARAMETERIZED_PROVIDERS = [
-    (provider, EXPECTED_RESULTS[provider]) for provider in REGISTERED_DATAPROVIDERS if provider in EXPECTED_RESULTS
+    (provider, EXPECTED_RESULTS[provider])
+    for provider in REGISTERED_DATAPROVIDERS
+    if provider in EXPECTED_RESULTS
 ]
 
 
@@ -72,7 +79,9 @@ def test_select_relevant_variables(provider_name, expected_result):
     data_provider = DataProvider.get_class_by_value(provider_name.lower())()
 
     result = data_provider.select_relevant_variables(VARIABLES)
-    assert result == expected_result, f"The {provider_name} DataProvider should return the expected variables."
+    assert result == expected_result, (
+        f"The {provider_name} DataProvider should return the expected variables."
+    )
 
 
 """
@@ -95,46 +104,54 @@ def test_get_all_form_fields():
         provider_name = provider_form["value"].lower()
 
         for key in main_keys:
-            assert key in provider_form, f"Key {key} missing in provider {provider_form.get('label', 'Unknown')}."
+            assert key in provider_form, (
+                f"Key {key} missing in provider {provider_form.get('label', 'Unknown')}."
+            )
             if not isinstance(provider_form[key], bool):
                 assert provider_form[key] is not None, f"Key '{key}' has None value."
-                assert (
-                    provider_form[key] != ""
-                ), f"Key {key} in provider {provider_form.get('label', 'Unknown')} has empty or None value."
+                assert provider_form[key] != "", (
+                    f"Key {key} in provider {provider_form.get('label', 'Unknown')} has empty or None value."
+                )
 
         # Check if 'instructions' follow the expected pattern
-        expected_instruction_pattern = f"api.ddsurveys.data_providers.{provider_name}.instructions.text"
-        assert (
-            provider_form["instructions"] == expected_instruction_pattern
-        ), f"Instructions pattern mismatch for provider {provider_name}. Expected: {expected_instruction_pattern}, Got: {provider_form['instructions']}."
+        expected_instruction_pattern = (
+            f"api.ddsurveys.data_providers.{provider_name}.instructions.text"
+        )
+        assert provider_form["instructions"] == expected_instruction_pattern, (
+            f"Instructions pattern mismatch for provider {provider_name}. Expected: {expected_instruction_pattern}, Got: {provider_form['instructions']}."
+        )
 
         if provider_form["app_required"]:
             # Check fields
             for field in provider_form["fields"]:
                 for f_key in field_keys:
-                    assert (
-                        f_key in field
-                    ), f"Key {f_key} missing in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
-                    assert field[
-                        f_key
-                    ], f"Key {f_key} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')} has empty or None value."
+                    assert f_key in field, (
+                        f"Key {f_key} missing in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
+                    )
+                    assert field[f_key], (
+                        f"Key {f_key} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')} has empty or None value."
+                    )
 
                 # Check if type is one of the known types, e.g., "text". Add more if needed.
-                assert (
-                    field["type"] in ["text"]
-                ), f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
+                assert field["type"] in ["text"], (
+                    f"Unknown field type {field['type']} in field {field.get('name', 'Unknown')} of provider {provider_form.get('label', 'Unknown')}."
+                )
 
                 # Check if 'label' and 'helper_text' follow the expected pattern
-                expected_label_pattern = f"api.ddsurveys.data_providers.{provider_name}.{field['name']}.label"
-                expected_helper_pattern = f"api.ddsurveys.data_providers.{provider_name}.{field['name']}.helper_text"
+                expected_label_pattern = (
+                    f"api.ddsurveys.data_providers.{provider_name}.{field['name']}.label"
+                )
+                expected_helper_pattern = (
+                    f"api.ddsurveys.data_providers.{provider_name}.{field['name']}.helper_text"
+                )
 
-                assert (
-                    field["label"] == expected_label_pattern
-                ), f"Label pattern mismatch in field {field['name']} of provider {provider_name}. Expected: {expected_label_pattern}, Got: {field['label']}."
+                assert field["label"] == expected_label_pattern, (
+                    f"Label pattern mismatch in field {field['name']} of provider {provider_name}. Expected: {expected_label_pattern}, Got: {field['label']}."
+                )
 
-                assert (
-                    field["helper_text"] == expected_helper_pattern
-                ), f"Helper text pattern mismatch in field {field['name']} of provider {provider_name}. Expected: {expected_helper_pattern}, Got: {field['helper_text']}."
+                assert field["helper_text"] == expected_helper_pattern, (
+                    f"Helper text pattern mismatch in field {field['name']} of provider {provider_name}. Expected: {expected_helper_pattern}, Got: {field['helper_text']}."
+                )
 
 
 """
@@ -171,16 +188,22 @@ def test_data_provider_required_fields(provider_name):
     field_structure_keys = ["helper_text", "label", "name", "required", "type"]
 
     for required_field in REQUIRED_FIELDS.get(provider_name, []):
-        assert required_field in provided_field_names, f"Missing required field {required_field} for {provider_name}."
+        assert required_field in provided_field_names, (
+            f"Missing required field {required_field} for {provider_name}."
+        )
 
         # Check if the field is well-defined (i.e., has a non-empty or non-None value)
-        field_data = next((field for field in provider_data["fields"] if field["name"] == required_field), None)
+        field_data = next(
+            (field for field in provider_data["fields"] if field["name"] == required_field), None
+        )
         assert field_data, f"Field {required_field} for {provider_name} is not well-defined."
         for key in field_structure_keys:
-            assert key in field_data, f"Key {key} missing in field {required_field} of provider {provider_name}."
-            assert field_data[
-                key
-            ], f"Key {key} in field {required_field} of provider {provider_name} has empty or None value."
+            assert key in field_data, (
+                f"Key {key} missing in field {required_field} of provider {provider_name}."
+            )
+            assert field_data[key], (
+                f"Key {key} in field {required_field} of provider {provider_name} has empty or None value."
+            )
 
 
 # Only need the provider_name from the registry for this test
@@ -208,20 +231,24 @@ def test_builtin_variables(provider_name):
     ]
 
     for variable in builtin_variables:
-        var_name = variable.get("name", "Unknown variable")  # Default to 'Unknown variable' if 'name' isn't present
+        var_name = variable.get(
+            "name", "Unknown variable"
+        )  # Default to 'Unknown variable' if 'name' isn't present
         for field in required_fields:
-            assert field in variable, f"Provider: {provider_name}, Variable: {var_name}, missing key: {field}."
-            assert variable[
-                field
-            ], f"Provider: {provider_name}, Variable: {var_name}, key: {field} has empty or None value."
+            assert field in variable, (
+                f"Provider: {provider_name}, Variable: {var_name}, missing key: {field}."
+            )
+            assert variable[field], (
+                f"Provider: {provider_name}, Variable: {var_name}, key: {field} has empty or None value."
+            )
 
         assert variable["type"] == "Builtin", "The type of the builtin variables should be builtin."
-        assert variable["qualified_name"] == builtin_variable_to_qualname(
-            variable
-        ), "The qualified name should be the data provider name concatenated with the variable name."
-        assert (
-            variable["data_provider"] == provider_name.lower()
-        ), f"The data provider of the builtin variables should be {provider_name.lower()}."
+        assert variable["qualified_name"] == builtin_variable_to_qualname(variable), (
+            "The qualified name should be the data provider name concatenated with the variable name."
+        )
+        assert variable["data_provider"] == provider_name.lower(), (
+            f"The data provider of the builtin variables should be {provider_name.lower()}."
+        )
 
 
 @pytest.mark.parametrize(
@@ -246,8 +273,8 @@ def test_builtin_variables(provider_name):
                 # Account
                 "dds.fitbit.builtin.account.creation_date.exists": True,
                 "dds.fitbit.builtin.account.creation_date": "2018-05-05",
-                "dds.fitbit.builtin.account.account_created_at_least_1_year_ago.exists": True,
-                "dds.fitbit.builtin.account.account_created_at_least_1_year_ago": True,
+                "dds.fitbit.builtin.account.account_created_at_least_6_months_ago.exists": True,
+                "dds.fitbit.builtin.account.account_created_at_least_6_months_ago": True,
                 # ActiveMinutes
                 "dds.fitbit.builtin.activeminutes.average_weekly_active_time_all_sources_last_6_months.exists": True,
                 "dds.fitbit.builtin.activeminutes.average_weekly_active_time_all_sources_last_6_months": 29.5,
@@ -292,12 +319,16 @@ def test_data_extraction_builtin_variables(
     ctx = app.app_context()
     ctx.push()
 
-    data_provider_class = DataProvider.get_class_by_name(data_provider_class.__name__.replace("DataProvider", ""))
+    data_provider_class = DataProvider.get_class_by_name(
+        data_provider_class.__name__.replace("DataProvider", "")
+    )
 
     # Mock the properties
     for prop, value in mock_properties.items():
         # Patch each property with a PropertyMock to return the desired value
-        mocker.patch.object(data_provider_class, prop, new_callable=lambda: mocker.PropertyMock(return_value=value))
+        mocker.patch.object(
+            data_provider_class, prop, new_callable=lambda: mocker.PropertyMock(return_value=value)
+        )
 
     # Mock the functions specified in daily_stats_params_responses
     for function_name, params_list in mock_functions.items():
@@ -330,39 +361,41 @@ def test_data_extraction_builtin_variables(
     custom_data_to_upload = {k: v for k, v in data_to_upload.items() if ".custom" in k}
 
     # count the number of attributes for each custom variable (2 times the number of attributes + the global .exists for the custom variable)
-    custom_variables_attributes_count = sum([len(cv["cv_attributes"] * 2) for cv in custom_variables]) + len(
-        custom_variables
-    )
+    custom_variables_attributes_count = sum([
+        len(cv["cv_attributes"] * 2) for cv in custom_variables
+    ]) + len(custom_variables)
 
-    assert (
-        len(builtin_data_to_upload) == len(builtin_variables) * 2
-    ), f"Check the total number of builtin variables to upload for {data_provider_name}, including .exists."
-    assert (
-        len(custom_data_to_upload) == custom_variables_attributes_count
-    ), f"Check the total number of custom variables to upload for {data_provider_name}, including .exists."
+    assert len(builtin_data_to_upload) == len(builtin_variables) * 2, (
+        f"Check the total number of builtin variables to upload for {data_provider_name}, including .exists."
+    )
+    assert len(custom_data_to_upload) == custom_variables_attributes_count, (
+        f"Check the total number of custom variables to upload for {data_provider_name}, including .exists."
+    )
 
     for variable in builtin_variables:
         qual_name: str = builtin_variable_to_qualname(variable)
-        assert (
-            qual_name in data_to_upload
-        ), f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
-        assert (
-            f"{qual_name}.exists" in data_to_upload
-        ), f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
+        assert qual_name in data_to_upload, (
+            f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
+        )
+        assert f"{qual_name}.exists" in data_to_upload, (
+            f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
+        )
 
     for variable in custom_variables:
         for attribute in variable["cv_attributes"]:
             qual_name = custom_variable_to_qualname(variable, attribute)
-            assert (
-                qual_name in data_to_upload
-            ), f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
-            assert (
-                f"{qual_name}.exists" in data_to_upload
-            ), f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
+            assert qual_name in data_to_upload, (
+                f"Check that the variable {qual_name} is in the data to upload for {data_provider_name}."
+            )
+            assert f"{qual_name}.exists" in data_to_upload, (
+                f"Check that the variable {qual_name}.exists is in the data to upload for {data_provider_name}."
+            )
 
     # Asserting the data_to_upload values
     for key, expected_value in expected_upload_data.items():
-        assert data_to_upload.get(key) == expected_value, f"For {data_provider_name}, {key} should be {expected_value}."
+        assert data_to_upload.get(key) == expected_value, (
+            f"For {data_provider_name}, {key} should be {expected_value}."
+        )
 
     ctx.pop()
 
@@ -377,7 +410,8 @@ def test_get_used_variables(provider_name):
     project_custom_variables = generate_custom_variables(provider_name.lower())
 
     used_variables = DataProvider.get_used_variables(
-        project_builtin_variables=project_buitin_variables, project_custom_variables=project_custom_variables
+        project_builtin_variables=project_buitin_variables,
+        project_custom_variables=project_custom_variables,
     )
 
     for used_variable in used_variables:
@@ -385,46 +419,59 @@ def test_get_used_variables(provider_name):
 
         if used_variable.get("type") == "Builtin":
             variable = next(
-                (v for v in project_buitin_variables if v.get("qualified_name") == used_variable.get("variable_name")),
+                (
+                    v
+                    for v in project_buitin_variables
+                    if v.get("qualified_name") == used_variable.get("variable_name")
+                ),
                 None,
             )
-            assert variable, f"Could not find the builtin variable {used_variable['variable_name']}."
+            assert variable, (
+                f"Could not find the builtin variable {used_variable['variable_name']}."
+            )
 
-            assert (
-                used_variable["data_provider"] == provider_name.lower()
-            ), f"The data provider of the used variables should be {provider_name}."
+            assert used_variable["data_provider"] == provider_name.lower(), (
+                f"The data provider of the used variables should be {provider_name}."
+            )
 
             qual_name = builtin_variable_to_qualname(variable)
 
-            assert (
-                used_variable["variable_name"] == qual_name
-            ), f"Wrong qualified name for the used variable {used_variable['variable_name']}."
+            assert used_variable["variable_name"] == qual_name, (
+                f"Wrong qualified name for the used variable {used_variable['variable_name']}."
+            )
 
-            assert len(used_variable["description"]) > 0, "The description of the used variables should not be empty."
+            assert len(used_variable["description"]) > 0, (
+                "The description of the used variables should not be empty."
+            )
 
         if used_variable.get("type") == "Custom":
             # the last part of the qual name
             variable_name = used_variable.get("variable_name").split(".")[-1]
-            variable = next((v for v in project_custom_variables if v.get("variable_name") == variable_name), None)
+            variable = next(
+                (v for v in project_custom_variables if v.get("variable_name") == variable_name),
+                None,
+            )
 
             assert variable, f"Could not find the custom variable {used_variable['variable_name']}."
 
-            assert (
-                used_variable["data_provider"] == provider_name.lower()
-            ), f"The data provider of the used variables should be {provider_name}."
+            assert used_variable["data_provider"] == provider_name.lower(), (
+                f"The data provider of the used variables should be {provider_name}."
+            )
 
-            assert used_variable["data"] is not None, "The data of the used variables should not be None."
+            assert used_variable["data"] is not None, (
+                "The data of the used variables should not be None."
+            )
 
         # must have "data_origin" that is an array of at least one element
-        assert (
-            variable["data_origin"] and len(variable["data_origin"]) > 0
-        ), f"Missing data origin for the used variable {used_variable['variable_name']}."
+        assert variable["data_origin"] and len(variable["data_origin"]) > 0, (
+            f"Missing data origin for the used variable {used_variable['variable_name']}."
+        )
 
         # each data origin must have an "enpoint" and "documentation" specified and each must be a valid url
         for data_origin in variable["data_origin"]:
-            assert data_origin[
-                "documentation"
-            ], f"Missing documentation for the used variable {used_variable['variable_name']}."
+            assert data_origin["documentation"], (
+                f"Missing documentation for the used variable {used_variable['variable_name']}."
+            )
 
 
 # def test_get_the_github_token_from_refresh_token():

@@ -25,7 +25,7 @@ from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
-from ddsurveys.data_providers.fitbit.activity_log import Activity, ActivityLog
+from ddsurveys.data_providers.fitbit.activity_log import Activity
 from ddsurveys.data_providers.fitbit.api_response_dicts import (
     ActivitiesListResponseDict,
 )
@@ -90,13 +90,13 @@ It will be in YYYY-MM-DD format.""",
             ],
         ),
         BuiltInVariable.create_instances(
-            name="account_created_at_least_1_year_ago",
-            label="Account Created at Least 1 Year Ago",
-            description="Account Created at Least 1 Year Ago.",
+            name="account_created_at_least_6_months_ago",
+            label="Account Created at Least 6 Months Ago",
+            description="Account Created at Least 6 Months Ago.",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="True",
-            info="This will be 'True' if the account was created at least 1 year ago, otherwise 'False'.",
-            extractor_func=lambda self: self.account_created_at_least_1_year_ago,
+            info="This will be 'True' if the account was created at least 6 months ago, otherwise 'False'.",
+            extractor_func=lambda self: self.account_created_at_least_6_months_ago,
             data_origin=[
                 {
                     "method": "user_profile",
@@ -540,7 +540,7 @@ class FitbitDataProvider(OAuthDataProvider):
         self.oauth_client: FitbitOauth2Client
         self.redirect_uri = self.get_redirect_uri()
 
-        self.activity_log: ActivityLog = ActivityLog()
+        # self.activity_log: ActivityLog = ActivityLog()
 
         if self.client_id is not None or self.client_secret is not None:
             self.init_oauth_client()
@@ -954,7 +954,7 @@ class FitbitDataProvider(OAuthDataProvider):
         # If activities are not in the activity log, fetch activities from Fitbit API
         for activity in self.get_activity_log_generator(before_date=end_date):
             # activity_date = datetime.fromisoformat(activity.start_date)
-            if activity.start_date < start_date:
+            if activity.start_date < ensure_date(start_date):
                 break
             activities_logs.append(activity)
 
@@ -1119,7 +1119,7 @@ class FitbitDataProvider(OAuthDataProvider):
         start_date: datetime = first_day_of_current_month - relativedelta(months=1)
         end_date: datetime = first_day_of_current_month - relativedelta(days=1)
 
-        return self.get_activities_date_range(start_date, end_date)
+        return self.get_activities_date_range(start_date.date(), end_date.date())
 
     # Variable calculation functions/properties
     @cached_property
@@ -1232,8 +1232,7 @@ class FitbitDataProvider(OAuthDataProvider):
         return self.api_client.make_request(url)
 
     @cached_property
-    def account_created_at_least_1_year_ago(self) -> bool:
-        # TODO: rename this method to be 6 months ago
+    def account_created_at_least_6_months_ago(self) -> bool:
         user = self.user_profile
         creation_date = datetime.strptime(user["memberSince"], "%Y-%m-%d").date()
         return creation_date <= date.today() - relativedelta(months=6)

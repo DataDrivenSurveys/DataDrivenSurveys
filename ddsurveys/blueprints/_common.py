@@ -118,7 +118,7 @@ REPLACEMENT_RULES: TReplacementRules = {
         (".activeminutes.", ".actvmin.", -1),
         (".daily.", ".dly.", -1),
         # Variable names
-        (".account_created_at_least_1_year_ago", ".created_at_least_1_year_ago", -1),
+        (".account_created_at_least_6_months_ago", ".created_at_least_6_months_ago", -1),
         ("_weekly_heart_zone_time_last_6_months", "_wkl_hrt_zn_6_mnths", -1),
         ("_weekly_active_time_last_6_months", "_wkl_actv_6_mnths", -1),
         ("_weekly_active_time_all_sources_last_6_months", "_wkl_actv_all_6_mnths", -1),
@@ -293,11 +293,18 @@ def insert_exists_variables(variables: list[dict]) -> list[dict]:
     # for i, var_ in enumerate(variables_):
     #     exists_variables.append(create_exists_variable(var_, start_id + i))
     # variables_.extend(exists_variables)
-    variables_.extend([create_exists_variable(var_, start_id + i) for i, var_ in enumerate(variables)])
+    variables_.extend([
+        create_exists_variable(var_, start_id + i) for i, var_ in enumerate(variables)
+    ])
     variables_.sort(key=lambda x: x["qualified_name"])
     return variables_
 
 
 def create_exists_variable(variable: dict, id_: int) -> dict:
     """Create a .exists variable."""
-    return {**variable, "id": id_, "data_type": "Text", "qualified_name": f"{variable['qualified_name']}.exists"}
+    return {
+        **variable,
+        "id": id_,
+        "data_type": "Text",
+        "qualified_name": f"{variable['qualified_name']}.exists",
+    }

@@ -3,6 +3,7 @@
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from bisect import bisect_left, bisect_right
 from collections.abc import Generator
 from datetime import date, datetime, timedelta
@@ -18,12 +19,16 @@ class DateRanges:
     def __str__(self):
         num_ranges = len(self._start_dates)
         total_days = sum(
-            (end_date - start_date).days + 1 for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False))
+            (end_date - start_date).days + 1
+            for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False)
+        )
         return f"{self.__class__.__name__} with {num_ranges} ranges covering a total of {total_days} days"
 
     def __repr__(self):
         ranges = ", ".join(
-            f"({start_date}, {end_date})" for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False))
+            f"({start_date}, {end_date})"
+            for start_date, end_date in zip(self._start_dates, self._end_dates, strict=False)
+        )
         return f"{self.__class__.__name__}([{ranges}])"
 
     def add_date_range(self, start_date: date, end_date: date) -> None:
@@ -70,7 +75,7 @@ class DateRanges:
 
 
 def ensure_date(date_: datetime | date) -> date:
-    if isinstance(date_, date):
+    if type(date_) is date:
         return date_
     return date_.date()
 

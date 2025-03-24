@@ -190,11 +190,45 @@ class Activity:
     def __lt__(self, other: Activity | date | datetime) -> bool:
         if isinstance(other, Activity):
             return self.start_datetime < other.start_datetime
-        if isinstance(other, date):
-            return self.start_date < other
         if isinstance(other, datetime):
             return self.start_datetime < other
+        if type(other) is date:
+            return self.start_date < other
         return NotImplemented
+
+    # def to_dict(self) -> ActivityDict:
+    #     return {
+    #         "activeDuration": self.activeDuration,
+    #         "activeZoneMinutes": self.activeZoneMinutes,
+    #         "activityLevel": self.activityLevel,
+    #         "activityName": self.activityName,
+    #         "activityTypeId": self.activityTypeId,
+    #         "averageHeartRate": self.averageHeartRate,
+    #         "calories": self.calories,
+    #         "caloriesLink": self.caloriesLink,
+    #         "detailsLink": self.detailsLink,
+    #         "distance": self.distance,
+    #         "distanceUnit": self.distanceUnit,
+    #         "duration": self.duration,
+    #         "elevationGain": self.elevationGain,
+    #         "hasActiveZoneMinutes": self.hasActiveZoneMinutes,
+    #         "heartRateLink": self.heartRateLink,
+    #         "heartRateZones": self.heartRateZones,
+    #         "inProgress": self.inProgress,
+    #         "intervalWorkoutData": self.intervalWorkoutData,
+    #         "lastModified": self.lastModified,
+    #         "logId": self.logId,
+    #         "logType": self.logType,
+    #         "manualValuesSpecified": self.manualValuesSpecified,
+    #         "originalDuration": self.originalDuration,
+    #         "originalStartTime": self.originalStartTime,
+    #         "pace": self.pace,
+    #         "source": self.source,
+    #         "speed": self.speed,
+    #         "startTime": self.startTime,
+    #         "steps": self.steps,
+    #         "tcxLink": self.tcxLink,
+    #     }
 
 
 class ActivityLog:
@@ -264,7 +298,9 @@ class ActivityLog:
         if isinstance(item, date):
             return self.date_activities[item]
         if isinstance(item, slice):
-            if not isinstance(item.start, date | datetime) or not isinstance(item.stop, date | datetime):
+            if not isinstance(item.start, date | datetime) or not isinstance(
+                item.stop, date | datetime
+            ):
                 msg = "Slicing is only supported for date or datetime objects."
                 raise TypeError(msg)
             start, end, step = ensure_date(item.start), ensure_date(item.stop), item.step
@@ -290,9 +326,15 @@ class ActivityLog:
         raise TypeError(msg)
 
     def describe(self) -> str:
-        dates_details = pformat({date: len(activities) for date, activities in self.date_activities.items()})
-        types_details = pformat({type_: len(activities) for type_, activities in self.type_activities.items()})
-        names_details = pformat({name: len(activities) for name, activities in self.name_activities.items()})
+        dates_details = pformat({
+            date: len(activities) for date, activities in self.date_activities.items()
+        })
+        types_details = pformat({
+            type_: len(activities) for type_, activities in self.type_activities.items()
+        })
+        names_details = pformat({
+            name: len(activities) for name, activities in self.name_activities.items()
+        })
         return (
             f"{self.__class__.__name__} with {len(self.id_activities)} activities.\nActivities by date:\n"
             f"{dates_details}\nActivities by types:\n{types_details}\nActivities by names:\n{names_details}"
@@ -316,7 +358,10 @@ class ActivityLog:
                 datetime.fromisoformat(data[-1]["startTime"]),
             )
             end_date = datetime.fromisoformat(data[-1]["startTime"]).date()
-            if self._integration_last_end_date is None or end_date > self._integration_last_end_date:
+            if (
+                self._integration_last_end_date is None
+                or end_date > self._integration_last_end_date
+            ):
                 self._integration_last_end_date = end_date
             start_date = end_date
             for activity_data in data:
@@ -325,10 +370,16 @@ class ActivityLog:
                 if act_start_date < start_date:
                     start_date = act_start_date
 
-            if self._integration_last_start_date is None or start_date < self._integration_last_start_date:
+            if (
+                self._integration_last_start_date is None
+                or start_date < self._integration_last_start_date
+            ):
                 self._integration_last_start_date = start_date
 
-            if self._integration_last_start_date + timedelta(days=1) < self._integration_last_end_date:
+            if (
+                self._integration_last_start_date + timedelta(days=1)
+                < self._integration_last_end_date
+            ):
                 self.date_ranges.add_date_range(start_date, end_date)
                 self._integration_last_start_date = None
                 self._integration_last_end_date = None
@@ -339,7 +390,9 @@ class ActivityLog:
     def get_by_date(self, date: datetime) -> list[Activity]:
         return self.date_activities.get(date.date(), [])
 
-    def get_by_type(self, activity_type: Literal["auto_detected", "manual", "mobile_run", "tracker"]) -> list[Activity]:
+    def get_by_type(
+        self, activity_type: Literal["auto_detected", "manual", "mobile_run", "tracker"]
+    ) -> list[Activity]:
         return self.type_activities.get(activity_type, [])
 
     def get_by_name(self, activity_name: str) -> list[Activity]:
