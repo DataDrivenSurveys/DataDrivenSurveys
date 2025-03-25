@@ -5,17 +5,19 @@ You will need to replace the elipses (...) with the correct classes and code.
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 @author: Stefan Teofanovic (stefan.teofanovic@heig-vd.ch)
 """
+
 __all__ = ["TemplateDataProvider"]
 
 from collections.abc import Callable
 from functools import cached_property
-from typing import Any, ClassVar
+from typing import Any, ClassVar, final
 
 from data_providers.data_categories import DataCategory
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
+from ddsurveys.typings.data_providers.variables import DataOriginDict
 from ddsurveys.variable_types import TVariableFunction, VariableDataType
 
 # Import the required libraries to make this work
@@ -26,14 +28,14 @@ logger = get_logger(__name__)
 # This is an example of a data category.
 # In practice, each endpoint can be turned into a data category.
 # 'self' in extractor functions will be an instance of the data provider class.
-class ExampleDataCategory(DataCategory):
-
-    data_origin = [
+@final
+class ExampleDataCategory(DataCategory["TemplateDataProvider"]):
+    data_origin: ClassVar[list[DataOriginDict]] = [
         {
             "method": "get_user",
             "endpoint": "https://api.dataprovider.com/account",
             "documentation": "https://docs.dataprovider.com/en/rest/reference/account",
-        }
+        },
     ]
 
     custom_variables_enabled = False
@@ -43,7 +45,7 @@ class ExampleDataCategory(DataCategory):
     def fetch_data(self) -> list[dict[str, Any]]:
         return self.api.get_user()
 
-    cv_attributes = [
+    cv_attributes: ClassVar[list[CVAttribute]] = [
         CVAttribute(
             name="name",
             label="Users Name",
@@ -64,8 +66,8 @@ class ExampleDataCategory(DataCategory):
         ),
     ]
 
-    builtin_variables = [
-        BuiltInVariable.create_instances(
+    builtin_variables: ClassVar[list[list[BuiltInVariable["TemplateDataProvider"]]]] = [
+        BuiltInVariable["TemplateDataProvider"].create_instances(
             name="creation_date",
             label="Account creation date",
             description="The date the user created their account.",
@@ -79,19 +81,13 @@ class ExampleDataCategory(DataCategory):
     ]
 
 
+@final
 class TemplateDataProvider(OAuthDataProvider):
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can copy and paste them into the child class body.
-    # When copying a template file, leave them unchanged.
-    all_initial_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    factory_funcs: dict[str, Callable] = {}  # Leave unchanged.
-    variable_funcs: dict[str, TVariableFunction] = {}  # Leave unchanged.
-    fields: list[dict[str, Any]] = {}  # Leave unchanged.
-
     # Update the following attributes:
     app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
-    instructions_helper_url: str = ...  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
+    instructions_helper_url: str = (
+        ...
+    )  # e.g., "https://docs.dataprovider.com/en/apps/creating-dataprovider-apps/"
 
     # Unique class attributes go here
     _scopes = []
@@ -108,9 +104,7 @@ class TemplateDataProvider(OAuthDataProvider):
 
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
-    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (
-        ExampleDataCategory,
-     )
+    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (ExampleDataCategory,)
 
     # In the functions below, update the elipses (...) with the correct classes and code.
 
@@ -136,13 +130,14 @@ class TemplateDataProvider(OAuthDataProvider):
 
     # OAuthBase methods
     def init_api_client(
-        self, access_token: str | None = None, refresh_token: str | None = None, code: str | None = None
+        self,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        code: str | None = None,
     ) -> None:
-
         self.api_client = ...
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-
         self.oauth_client = ...
 
     def get_authorize_url(

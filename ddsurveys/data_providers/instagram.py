@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from functools import cached_property
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, final, override
 
 import requests
 
@@ -32,13 +32,13 @@ __all__ = ["InstagramDataProvider"]
 logger = get_logger(__name__)
 
 
-class Media(DataCategory):
+class Media(DataCategory["InstagramDataProvider"]):
     def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
     cv_attributes: ClassVar[list[CVAttribute]] = []
-    builtin_variables: ClassVar[list[list[BuiltInVariable]]] = [
-        BuiltInVariable.create_instances(
+    builtin_variables: ClassVar[list[list[BuiltInVariable["InstagramDataProvider"]]]] = [
+        BuiltInVariable["InstagramDataProvider"].create_instances(
             name="media_count",
             label="Media Count",
             description="Number of media posts.",
@@ -57,6 +57,7 @@ class Media(DataCategory):
     ]
 
 
+@final
 class InstagramDataProvider(OAuthDataProvider):
     # General class attributes
 
@@ -64,16 +65,8 @@ class InstagramDataProvider(OAuthDataProvider):
     app_creation_url: str = "https://developers.facebook.com/apps/creation/"
     dds_app_creation_instructions: str = ""
 
-    token_url = "https://api.instagram.com/oauth/access_token"
+    token_url = "https://api.instagram.com/oauth/access_token"  # noqa: S105
     base_authorize_url = "https://api.instagram.com/oauth/authorize"
-
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can just copy and paste them into the child class body.
-    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
-    factory_funcs: ClassVar[dict[str, Callable]] = {}
-    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[FormFieldDict]] = []
 
     # Unique class attributes go here
 
@@ -97,7 +90,7 @@ class InstagramDataProvider(OAuthDataProvider):
         ),
     ]
 
-    data_categories: ClassVar[tuple[type[DataCategory], ...]] = (Media,)
+    data_categories: ClassVar[tuple[type[DataCategory["InstagramDataProvider"]], ...]] = (Media,)
 
     # Assuming the use of the latest API version (as of September 2021)
     api_version = "v11.0"

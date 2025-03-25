@@ -28,15 +28,6 @@ logger = get_logger(__name__)
 
 
 class TemplateComplexDataProvider(OAuthDataProvider):
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can just copy and paste them into the child class body.
-    # When copying a template file, leave them unchanged.
-    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
-    factory_funcs: ClassVar[dict[str, Callable]] = {}
-    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[FormFieldDict]] = []
-
     # Update the following attributes:
     app_creation_url: str = ...  # e.g., "https://dataprovider.com/settings/apps/new"
     instructions_helper_url: str = (

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """This module provides the GithubDataProvider class.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -12,45 +11,42 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, override
 
 from github import Auth, Github
-from github.ApplicationOAuth import ApplicationOAuth
 from github.GithubException import BadCredentialsException, GithubException
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
 from ddsurveys.data_providers.data_categories import DataCategory
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
-from ddsurveys.typings.shared_bases import FormFieldDict
 from ddsurveys.variable_types import VariableDataType
 
-__all__ = ["GitHubDataProvider"]
-
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from github.AccessToken import AccessToken
+    from github.ApplicationOAuth import ApplicationOAuth
 
-    from ddsurveys.variable_types import TVariableFunction
+    from ddsurveys.typings.data_providers.variables import DataOriginDict
+
+__all__ = ["GitHubDataProvider"]
 
 logger = get_logger(__name__)
 
 
 class Account(DataCategory["GitHubDataProvider"]):
-    data_origin = [
+    data_origin: ClassVar[list[DataOriginDict]] = [
         {
             "method": "get_user",
             "endpoint": "https://api.github.com/user",
             "documentation": "https://docs.github.com/en/rest/reference/users",
-        }
+        },
     ]
 
-    custom_variables_enabled = False
+    custom_variables_enabled: bool = False
 
-    api: Github = None
+    # api: Github = None
 
     def fetch_data(self) -> list[dict[str, Any]]:
         return self.api.get_user()
 
-    cv_attributes = [
+    cv_attributes: ClassVar[list[CVAttribute]] = [
         CVAttribute(
             name="name",
             label="Users Name",
@@ -71,8 +67,8 @@ class Account(DataCategory["GitHubDataProvider"]):
         ),
     ]
 
-    builtin_variables = [
-        BuiltInVariable.create_instances(
+    builtin_variables: ClassVar[list[list[BuiltInVariable["GitHubDataProvider"]]]] = [
+        BuiltInVariable["GitHubDataProvider"].create_instances(
             name="creation_date",
             label="Account creation date",
             description="The date the user created their account.",
@@ -86,25 +82,25 @@ class Account(DataCategory["GitHubDataProvider"]):
                     "method": "get_user_repositories",
                     "endpoint": "https://api.github.com/users/[username]/repos",
                     "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
-                }
+                },
             ],
-        )
+        ),
     ]
 
 
 class Repositories(DataCategory["GitHubDataProvider"]):
-    data_origin = [
+    data_origin: ClassVar[list[DataOriginDict]] = [
         {
             "method": "get_user_repositories",
             "endpoint": "https://api.github.com/users/[username]/repos",
             "documentation": "https://docs.github.com/en/rest/reference/repos#list-repositories-for-a-user",
-        }
+        },
     ]
 
     def fetch_data(self) -> list[dict[str, Any]]:
         return self.data_provider.get_user_repositories
 
-    cv_attributes = [
+    cv_attributes: ClassVar[list[CVAttribute]] = [
         CVAttribute(
             name="name",
             label="Repository Name",
@@ -163,7 +159,7 @@ class Repositories(DataCategory["GitHubDataProvider"]):
         ),
     ]
 
-    builtin_variables = [
+    builtin_variables: ClassVar[list[list[BuiltInVariable["GitHubDataProvider"]]]] = [
         # BuiltInVariable.create_instances(
         #     name="by_stars",
         #     label="Repositories by Stars",
@@ -186,15 +182,7 @@ class Repositories(DataCategory["GitHubDataProvider"]):
 
 
 class GitHubDataProvider(OAuthDataProvider):
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can just copy and paste them into the child class body.
-    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
-    factory_funcs: ClassVar[dict[str, Callable]] = {}
-    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[FormFieldDict]] = []
-
-    token: AccessToken = None
+    token: AccessToken | None = None
 
     app_creation_url: str = "https://github.com/settings/apps/new"
     # instructions_helper_url: str = "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
@@ -202,14 +190,14 @@ class GitHubDataProvider(OAuthDataProvider):
     # Unique class attributes go here
     _scopes = ()
 
-    _categories_scopes = {
+    _categories_scopes: ClassVar[dict[str, str]] = {
         "Account": "read_user",
         "account": "read_user",
         "Repositories": "repo",
         "repositories": "repo",
     }
 
-    form_fields = [
+    form_fields: ClassVar[list[FormField]] = [
         FormField(
             name="client_id",
             type="text",

@@ -53,15 +53,6 @@ class _MockCredentials(NamedTuple):
 
 
 class GoogleContactsDataProvider(OAuthDataProvider):
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can copy and paste them into the child class body.
-    # When copying a template file, leave them unchanged.
-    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
-    factory_funcs: ClassVar[dict[str, Callable]] = {}
-    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[FormFieldDict]] = []
-
     # Update the following attributes:
     app_creation_url: str = "https://console.cloud.google.com/apis/credentials/oauthclient"
     instructions_helper_url: str = "https://developers.google.com/people/quickstart/python"
