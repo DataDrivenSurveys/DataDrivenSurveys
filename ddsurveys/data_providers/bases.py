@@ -183,7 +183,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     # Instance properties
 
     # Methods used for extracting data
-    def select_relevant_variables(self, variables: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def select_relevant_variables[
+        VT: list[QualifiedBuiltInVariableDict] | list[CustomVariableDict]
+    ](self, variables: VT) -> VT:
         """Selects only enabled and relevant variables for this data provider.
 
         Args:
@@ -202,7 +204,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     def calculate_variables(
         self,
-        project_builtin_variables: list[BuiltinVariableDict] | None = None,
+        project_builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
         project_custom_variables: list[CustomVariableDict] | None = None,
     ) -> dict[str, TVariableValue]:
         """Calculates the values of passed variables.
@@ -223,10 +225,10 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         if project_custom_variables is None:
             project_custom_variables = []
 
-        calculated_variables = {}
+        calculated_variables: dict[str, TVariableValue] = {}
 
         for variable in self.select_relevant_variables(project_builtin_variables):
-            value = None
+            value: TVariableValue = None
             try:
                 value = self.get_variable_value(**variable)
                 exists = value is not None
@@ -257,7 +259,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
         *,
         is_indexed_variable: bool = False,
         index: int = 0,
-        **kwargs,
+        **kwargs: dict[str, Any],
     ) -> TVariableValue:
         if qualified_name in self._variable_values:
             return self._variable_values[qualified_name]

@@ -16,7 +16,11 @@ if TYPE_CHECKING:
 
     from ddsurveys.data_providers.bases import DataProvider
     from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
-    from ddsurveys.typings.data_providers.variables import BuiltinVariableDict, CVAttributeDict, DataOriginDict
+    from ddsurveys.typings.data_providers.variables import (
+        BuiltinVariableDict,
+        CVAttributeDict,
+        DataOriginDict,
+    )
 
 __all__ = [
     "DataCategory",
@@ -55,7 +59,7 @@ class DataCategoryBase(ABCMeta):
 
         # Set custom_variables_enabled based on cv_attributes attribute.
         if "cv_attributes" in attrs:
-            if attrs.get("custom_variables_enabled", False):
+            if attrs.get("custom_variables_enabled"):
                 attrs["custom_variables_enabled"] = len(attrs["cv_attributes"]) > 0
             else:
                 attrs["custom_variables_enabled"] = len(attrs["cv_attributes"]) > 0
@@ -113,7 +117,7 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
     # """Instance of the DataProvider class."""
 
     cv_attributes: ClassVar[list[CVAttribute]] = []
-    builtin_variables: list[list[BuiltInVariable[DP]]] = []
+    builtin_variables: ClassVar[list[list[BuiltInVariable]]] = []
 
     def __init__(self, data_provider: DP) -> None:
         self.data_provider: DP = data_provider
@@ -156,7 +160,9 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
         }
 
     @staticmethod
-    def _include_builtin_variable_category(d_: BuiltinVariableDict, category: str) -> BuiltinVariableDict:
+    def _include_builtin_variable_category(
+        d_: BuiltinVariableDict, category: str
+    ) -> BuiltinVariableDict:
         d_["category"] = category
         return d_
 
