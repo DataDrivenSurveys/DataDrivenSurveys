@@ -29,7 +29,7 @@ _most_frequent_activities: list[str] = [
 def _factory_activity_last_whole_month(act: str) -> list[BuiltInVariable[FitbitDataProvider]]:
     return BuiltInVariable["FitbitDataProvider"].create_instances(
         name=f"last_whole_month_{act.lower().replace(' ', '_')}",
-        label=f"Last Whole Month {act}",
+        label=f"Number of {act} activities last month.",
         description=f"The number of times that {act} was done over the previous month.",
         test_value_placeholder="1",
         data_type=VariableDataType.NUMBER,
@@ -139,11 +139,11 @@ class Activities(DataCategory["FitbitDataProvider"]):
         ),
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="last_whole_month_total",
-            label="Total number of activities done over the last whole month.",
-            description="Total number of activities done over the last whole month.",
+            label="Total number of activities done over the last month.",
+            description="Total number of activities done over the last month.",
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="10",
-            info="Total number of activities done over the last whole month.",
+            info="Total number of activities done over the last month.",
             extractor_func=lambda self: sum(self.activities_last_whole_month_counts.values()),
             data_origin=[
                 {
@@ -155,11 +155,14 @@ class Activities(DataCategory["FitbitDataProvider"]):
         ),
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="has_activities_last_whole_month",
-            label="Has Activities During Last Whole Month",
-            description="Has Activities During Last Whole Month.",
+            label="Has activities during last month",
+            description="Has activities during last month",
             data_type=VariableDataType.TEXT,
             test_value_placeholder="True",
-            info="This will be 'True' if the the account has activities over the last whole month, otherwise 'False'.",
+            info=(
+                "This will be 'True' if the the account has activities over the last month, "
+                "otherwise 'False'."
+            ),
             extractor_func=lambda self: self.has_activities_last_whole_month,
             data_origin=[
                 {

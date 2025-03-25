@@ -13,7 +13,7 @@ from datetime import date, datetime
 from enum import IntEnum
 from functools import cache, cached_property
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast, final, override
 
 import requests
 from dateutil.relativedelta import relativedelta
@@ -22,8 +22,7 @@ from fitbit.exceptions import HTTPForbidden
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError
 
 from ddsurveys.data_providers.bases import FormButton, FormField, OAuthDataProvider
-from ddsurveys.data_providers.data_categories import DataCategory
-from ddsurveys.data_providers.date_ranges import ensure_date, get_isoweek
+from ddsurveys.data_providers.date_ranges import get_isoweek
 from ddsurveys.data_providers.fitbit.account import Account
 from ddsurveys.data_providers.fitbit.active_minutes import ActiveMinutes
 from ddsurveys.data_providers.fitbit.activities import Activities
@@ -40,14 +39,19 @@ from ddsurveys.data_providers.fitbit.daily_time_series import (
     merge_time_series,
 )
 from ddsurveys.data_providers.fitbit.steps import Steps
-from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
-from ddsurveys.variable_types import VariableDataType
+from ddsurveys.typings.data_providers.variables import (
+    BuiltinVariableDict,
+    CustomVariableDict,
+    CustomVariableUploadDict,
+    QualifiedBuiltInVariableDict,
+)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Sequence
+    from collections.abc import Generator, Sequence
     from logging import Logger
 
+    from ddsurveys.data_providers.data_categories import DataCategory
     from ddsurveys.data_providers.fitbit.api_response_dicts import (
         ActiveZoneMinutesSeriesResponseDict,
         ActivitiesListResponseDict,
@@ -57,8 +61,6 @@ if TYPE_CHECKING:
         FrequentActivityDict,
         UserDict,
     )
-    from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.variable_types import TVariableFunction
 
 __all__ = ["FitbitDataProvider"]
 
@@ -72,6 +74,7 @@ class DailyStatsMaxDateRange(IntEnum):
     OTHER = 1095
 
 
+@final
 class FitbitDataProvider(OAuthDataProvider):
     """FitbitDataProvider integrates with the Fitbit API.
 
@@ -83,7 +86,7 @@ class FitbitDataProvider(OAuthDataProvider):
     """
 
     # These attributes need to be overridden
-    token_url: str = "https://api.fitbit.com/oauth2/token"
+    token_url: str = "https://api.fitbit.com/oauth2/token"  # noqa: S105
     revoke_url: str = "https://api.fitbit.com/oauth2/revoke"
 
     instructions_helper_url: str = (
@@ -100,14 +103,6 @@ class FitbitDataProvider(OAuthDataProvider):
         "&privacyPolicy={dds_privacy_policy_url}"
         "&callback={callback_url}"
     )
-
-    # Class attributes that need be re-declared or redefined in child classes
-    # The following attributes need to be re-declared in child classes.
-    # You can just copy and paste them into the child class body.
-    all_initial_funcs: ClassVar[dict[str, Callable]] = {}
-    factory_funcs: ClassVar[dict[str, Callable]] = {}
-    variable_funcs: ClassVar[dict[str, TVariableFunction]] = {}
-    fields: ClassVar[list[FormFieldDict]] = []
 
     # Unique class attributes go here
     _scopes: ClassVar[tuple[str, ...]] = (
@@ -169,7 +164,16 @@ class FitbitDataProvider(OAuthDataProvider):
 
     # Standard class methods go here
     @override
-    def __init__(self, **kwargs):
+    def __init__(
+        self,
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
+        custom_variables: list[CustomVariableUploadDict] | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
         """Initialize the FitbitDataProvider.
 
         This constructor sets up the FitbitDataProvider with the necessary clients and
@@ -184,13 +188,23 @@ class FitbitDataProvider(OAuthDataProvider):
                 requests.
             refresh_token (str, optional): The OAuth2 refresh token to obtain a new
                 access token when it expires.
+            builtin_variables:
+            custom_variables:
             **kwargs: Additional keyword arguments passed to the parent class
                 constructor.
 
         Returns:
             None
         """
-        super().__init__(**kwargs)
+        super().__init__(
+            client_id=client_id,
+            client_secret=client_secret,
+            access_token=access_token,
+            refresh_token=refresh_token,
+            builtin_variables=builtin_variables,
+            custom_variables=custom_variables,
+            **kwargs,
+        )
         self.api_client: Fitbit
         self.oauth_client: FitbitOauth2Client
         self.redirect_uri = self.get_redirect_uri()
@@ -222,7 +236,7 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @override
     def init_oauth_client(self) -> None:
-        self.oauth_client: FitbitOauth2Client = FitbitOauth2Client(
+        self.oauth_client = FitbitOauth2Client(
             client_id=self.client_id,
             client_secret=self.client_secret,
         )
@@ -230,14 +244,14 @@ class FitbitDataProvider(OAuthDataProvider):
     @override
     def get_authorize_url(
         self,
-        builtin_variables: list[dict] | None = None,
-        custom_variables: list[dict] | None = None,
+        builtin_variables: list[BuiltinVariableDict] | None = None,
+        custom_variables: list[CustomVariableDict] | None = None,
     ) -> str:
-        required_scopes = self.get_required_scopes(builtin_variables, custom_variables)
+        required_scopes: list[str] = self.get_required_scopes(builtin_variables, custom_variables)
         logger.debug("Fitbit redirect_uri: %s", self.redirect_uri)
 
         if len(required_scopes) == 0:
-            required_scopes = self.__class__._scopes
+            required_scopes = list(self.__class__._scopes)
 
         # Profile is always required for the verifications done in other methods.
         if "profile" not in required_scopes:
@@ -618,22 +632,18 @@ class FitbitDataProvider(OAuthDataProvider):
                 has_more = False
 
     @cache
-    def get_activities_date_range(self, start_date: datetime, end_date: datetime) -> list[Activity]:
+    def get_activities_date_range(
+        self, start_date: datetime, end_date: datetime, min_duration: float = 15_000.0
+    ) -> list[Activity]:
         """Fetches activities within a specified date range."""
-        # start_date: date = ensure_date(start_date)
-        # end_date: date = ensure_date(end_date)
-
         activities_logs: list[Activity] = []
-
-        # If the dates are already in the activity log, return all activities within the range
-        # if self.activity_log.date_ranges.range_in_ranges(start_date, end_date):
-        #     for date_ in range_date(start_date, end_date + timedelta(days=1)):
-        #         activities_logs.extend(self.activity_log.date_ranges.activities_in_range(date_))
-        #     return activities_logs
 
         # If activities are not in the activity log, fetch activities from Fitbit API
         for activity in self.get_activity_log_generator(before_date=end_date):
             # activity_date = datetime.fromisoformat(activity.start_date)
+            duration: int | None = activity.duration or activity.originalDuration
+            if duration and duration < min_duration:
+                continue
             if activity.start_date < start_date:
                 break
             activities_logs.append(activity)

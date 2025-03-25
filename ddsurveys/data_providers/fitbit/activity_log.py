@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pprint import pformat
-from typing import TYPE_CHECKING, Literal, overload
+from typing import TYPE_CHECKING, Literal, overload, override
 
 from ddsurveys.data_providers.date_ranges import DateRanges, ensure_date, range_date
 
@@ -28,51 +28,6 @@ if TYPE_CHECKING:
 @dataclass(slots=True)
 class Activity:
     """Class representing a Fitbit activity based on the Fitbit API response."""
-
-    # Parameter 'activityName' unfilled
-    # Parameter 'activityTypeId' unfilled
-    # Parameter 'calories' unfilled
-    # Parameter 'duration' unfilled
-    # Parameter 'lastModified' unfilled
-    # Parameter 'logId' unfilled
-    # Parameter 'logType' unfilled
-    # Parameter 'manualValuesSpecified' unfilled
-    # Parameter 'originalDuration' unfilled
-    # Parameter 'originalStartTime' unfilled
-    # Parameter 'startTime' unfilled
-
-    # __slots__ = (
-    #     "activeDuration",
-    #     "activeZoneMinutes",
-    #     "activityLevel",
-    #     "activityName",
-    #     "activityTypeId",
-    #     "averageHeartRate",
-    #     "calories",
-    #     "caloriesLink",
-    #     "detailsLink",
-    #     "distance",
-    #     "distanceUnit",
-    #     "duration",
-    #     "elevationGain",
-    #     "hasActiveZoneMinutes",
-    #     "heartRateLink",
-    #     "heartRateZones",
-    #     "lastModified",
-    #     "logId",
-    #     "logType",
-    #     "manualValuesSpecified",
-    #     "originalDuration",
-    #     "originalStartTime",
-    #     "pace",
-    #     "source",
-    #     "speed",
-    #     "startTime",
-    #     "steps",
-    #     "tcxLink",
-    #     "start_datetime",
-    #     "start_date",
-    # )
 
     # Values occurring in basic manual activity
     logId: int | None = None
@@ -113,78 +68,15 @@ class Activity:
     start_datetime: datetime = field(init=False)
     start_date: date = field(init=False)
 
-    # def __init__(
-    #     self,
-    #     activeDuration: int,
-    #     activityLevel: list[ActivityLevelDict],
-    #     activityName: str,
-    #     activityTypeId: int,
-    #     calories: int,
-    #     duration: int,
-    #     lastModified: str,
-    #     logId: int,
-    #     logType: Literal["auto_detected", "manual", "mobile_run", "tracker"],
-    #     manualValuesSpecified: ManualValuesSpecifiedDict,
-    #     originalDuration: int,
-    #     originalStartTime: str,
-    #     startTime: str,
-    #     averageHeartRate: int | None = None,
-    #     activeZoneMinutes: ActiveZoneMinutesDict | None = None,
-    #     caloriesLink: str | None = None,
-    #     detailsLink: str | None = None,
-    #     distance: float | None = None,
-    #     distanceUnit: str | None = None,
-    #     elevationGain: float | None = None,
-    #     hasActiveZoneMinutes: bool | None = None,
-    #     heartRateLink: str | None = None,
-    #     heartRateZones: HeartRateZoneDict | None = None,
-    #     pace: float | None = None,
-    #     source: SourceDict | None = None,
-    #     speed: float | None = None,
-    #     steps: int | None = None,
-    #     tcxLink: str | None = None,
-    # ) -> None:
-    #     # Values read from the Fitbit API
-    #     self.activeDuration = activeDuration
-    #     self.activeZoneMinutes = activeZoneMinutes
-    #     self.activityLevel = activityLevel
-    #     self.activityName = activityName
-    #     self.activityTypeId = activityTypeId
-    #     self.averageHeartRate = averageHeartRate
-    #     self.calories = calories
-    #     self.caloriesLink = caloriesLink
-    #     self.detailsLink = detailsLink
-    #     self.distance = distance
-    #     self.distanceUnit = distanceUnit
-    #     self.duration = duration
-    #     self.elevationGain = elevationGain
-    #     self.hasActiveZoneMinutes = hasActiveZoneMinutes
-    #     self.heartRateLink = heartRateLink
-    #     self.heartRateZones = heartRateZones
-    #     self.lastModified = lastModified
-    #     self.logId = logId
-    #     self.logType = logType
-    #     self.manualValuesSpecified = manualValuesSpecified
-    #     self.originalDuration = originalDuration
-    #     self.originalStartTime = originalStartTime
-    #     self.pace = pace
-    #     self.source = source
-    #     self.speed = speed
-    #     self.startTime = startTime
-    #     self.steps = steps
-    #     self.tcxLink = tcxLink
-    #
-    #     # Computed values
-    #     self.start_datetime = datetime.fromisoformat(self.startTime)
-    #     self.start_date = self.start_datetime.date()
-
     def __post_init__(self):
         self.start_datetime = datetime.fromisoformat(self.startTime)
         self.start_date = self.start_datetime.date()
 
+    @override
     def __hash__(self) -> int:
         return hash(self.logId)
 
+    @override
     def __eq__(self, other: Activity) -> bool:
         return self.logId == other.logId
 
@@ -196,40 +88,6 @@ class Activity:
         if type(other) is date:
             return self.start_date < other
         return NotImplemented
-
-    # def to_dict(self) -> ActivityDict:
-    #     return {
-    #         "activeDuration": self.activeDuration,
-    #         "activeZoneMinutes": self.activeZoneMinutes,
-    #         "activityLevel": self.activityLevel,
-    #         "activityName": self.activityName,
-    #         "activityTypeId": self.activityTypeId,
-    #         "averageHeartRate": self.averageHeartRate,
-    #         "calories": self.calories,
-    #         "caloriesLink": self.caloriesLink,
-    #         "detailsLink": self.detailsLink,
-    #         "distance": self.distance,
-    #         "distanceUnit": self.distanceUnit,
-    #         "duration": self.duration,
-    #         "elevationGain": self.elevationGain,
-    #         "hasActiveZoneMinutes": self.hasActiveZoneMinutes,
-    #         "heartRateLink": self.heartRateLink,
-    #         "heartRateZones": self.heartRateZones,
-    #         "inProgress": self.inProgress,
-    #         "intervalWorkoutData": self.intervalWorkoutData,
-    #         "lastModified": self.lastModified,
-    #         "logId": self.logId,
-    #         "logType": self.logType,
-    #         "manualValuesSpecified": self.manualValuesSpecified,
-    #         "originalDuration": self.originalDuration,
-    #         "originalStartTime": self.originalStartTime,
-    #         "pace": self.pace,
-    #         "source": self.source,
-    #         "speed": self.speed,
-    #         "startTime": self.startTime,
-    #         "steps": self.steps,
-    #         "tcxLink": self.tcxLink,
-    #     }
 
 
 class ActivityLog:
