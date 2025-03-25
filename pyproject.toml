@@ -95,6 +95,7 @@ dependencies = [
   "es-core-news-sm",
   "sv-core-news-sm",
   "uk-core-news-sm",
+  "ruff>=0.11.2",
 ]
 
 [project.urls]
@@ -117,7 +118,7 @@ dev-dependencies = [
   # Project management
   #"uv>=0.4.21",
   # Linting and type checking
-  "ruff>=0.6.9",
+  "ruff>=0.11.2",
   "mypy>=1.12.0",
   "mypy-extensions>=1.0.0",
   # Coverage
@@ -139,6 +140,8 @@ dev-dependencies = [
   "types-flask-cors>=5.0.0.20240902",
   "ipython>=8.29.0",
   "types-requests>=2.32.0.20241016",
+  "types-oauthlib>=3.2.0.20240806",
+  "types-python-dateutil>=2.9.0.20241206",
 ]
 
 [tool.uv.sources]
