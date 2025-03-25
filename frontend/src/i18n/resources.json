@@ -247,7 +247,8 @@
           "fitbit": "Your fitness activity and health data (average steps, weekly active minutes, etc.) to tailor survey questions related to health and wellness.",
           "instagram": "Your Instagram activity (number of posts made, etc.) enables customizing surveys for instagram users. For example, by avoiding having to ask about basic information about your social media profiles.",
           "github": " Information from your Github profile (number of starred repositories, etc.) allows us to customize surveys for developers or tech professionals.",
-          "googlecontacts": "Your Google Contacts data allows calculating various statistics related to how you use Google Contacts. For example, the total number of contacts you have and how many of your contacts have a phone number."
+          "googlecontacts": "Your Google Contacts data allows calculating various statistics related to how you use Google Contacts. For example, the total number of contacts you have and how many of your contacts have a phone number.",
+          "spotify": "Your Spotify data allows computing your music preferences and Spotify usage habits. For example, the playlists you have saved."
         },
         "how_we_use_your_data": {
           "title": "How We Use Your Data",
