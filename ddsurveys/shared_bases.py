@@ -42,20 +42,19 @@ if TYPE_CHECKING:
     from collections.abc import Hashable, Sequence
     from logging import Logger
 
-    from typings.shared_bases import FormFieldDict
+    from ddsurveys.typings.shared_bases import FormFieldDict
 
 
 __all__ = [
-    "FormElement",
     "FormButton",
+    "FormElement",
     "FormField",
     "FormTextBlock",
-    "RegistryBase",
     "Registry",
-    "UIRegistry",
-    #
+    "RegistryBase",
     "TRegistryClass",
     "TUIRegistryClass",
+    "UIRegistry",
 ]
 
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from abc import abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, Self, TypedDict, cast, override
 
 from ddsurveys.data_providers.variables import BuiltInVariable, CustomVariable, CVAttribute
 from ddsurveys.get_logger import get_logger
@@ -18,6 +18,7 @@ from ddsurveys.shared_bases import FormTextBlock as BaseFormTextBlock
 from ddsurveys.typings.data_providers.variables import (
     BuiltinVariableDict,
     CustomVariableDict,
+    CustomVariableUploadDict,
     CVAttributeDict,
     DataOriginDict,
     QualifiedBuiltInVariableDict,
@@ -32,17 +33,17 @@ if TYPE_CHECKING:
     from ddsurveys.variable_types import TVariableValue
 
 __all__: list[str] = [
-    "FormField",
-    "FormButton",
     "DataProvider",
+    "FormButton",
+    "FormField",
     "OAuthDataProvider",
+    "TDataProvider",
     #
     "TDataProviderClass",
-    "TDataProvider",
-    "TFrontendDataProviderClass",
     "TFrontendDataProvider",
-    "TOAuthDataProviderClass",
+    "TFrontendDataProviderClass",
     "TOAuthDataProvider",
+    "TOAuthDataProviderClass",
 ]
 
 logger: Logger = get_logger(__name__)
@@ -184,7 +185,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     # Methods used for extracting data
     def select_relevant_variables[
-        VT: list[QualifiedBuiltInVariableDict] | list[CustomVariableDict]
+        VT: (list[QualifiedBuiltInVariableDict], list[CustomVariableUploadDict])
     ](self, variables: VT) -> VT:
         """Selects only enabled and relevant variables for this data provider.
 
@@ -196,16 +197,19 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             A list of dicts where each dict contains key/value pairs conforming to the
             Variable class.
         """
-        return [
-            variable
-            for variable in variables
-            if variable.get("enabled", False) and (variable["data_provider"] == self.name_lower)
-        ]
+        return cast(
+            "VT",
+            [
+                variable
+                for variable in variables
+                if variable.get("enabled", False) and (variable["data_provider"] == self.name_lower)
+            ],
+        )
 
     def calculate_variables(
         self,
         project_builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
-        project_custom_variables: list[CustomVariableDict] | None = None,
+        project_custom_variables: list[CustomVariableUploadDict] | None = None,
     ) -> dict[str, TVariableValue]:
         """Calculates the values of passed variables.
 
@@ -231,7 +235,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             value: TVariableValue = None
             try:
                 value = self.get_variable_value(**variable)
-                exists = value is not None
+                exists: bool = value is not None
             except Exception:
                 logger.exception(
                     "Variable %s could not be calculated with the following error:",
@@ -243,9 +247,11 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             calculated_variables[f"{variable['qualified_name']}.exists"] = exists
 
         for variable in self.select_relevant_variables(project_custom_variables):
-            custom_var_manager = CustomVariable(data_provider=self, custom_variable=variable)
+            custom_var_manager: CustomVariable = CustomVariable(
+                data_provider=self, custom_variable=variable
+            )
 
-            custom_vars = custom_var_manager.calculate_custom_variables()
+            custom_vars: dict[str, TVariableValue] = custom_var_manager.calculate_custom_variables()
 
             calculated_variables.update(custom_vars)
 
@@ -286,9 +292,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     @staticmethod
     def get_used_variables(
-        project_builtin_variables: list | None = None,
-        project_custom_variables: list | None = None,
-    ) -> list:
+        project_builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
+        project_custom_variables: list[CustomVariableUploadDict] | None = None,
+    ) -> list[QualifiedBuiltInVariableDict | CustomVariableUploadDict]:
         """Get a list of variables used by the project.
 
         Args:
@@ -314,10 +320,6 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             if variable.get("enabled", False)
         ]
 
-        # for variable in project_builtin_variables or []:
-        #     if variable.get("enabled", False):
-        #         used_variables.append()
-
         custom_variables = [
             {
                 "data_provider": variable.get("data_provider", ""),
@@ -331,26 +333,13 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             and (cv_dict := CustomVariable(data_provider=None, custom_variable=variable).to_dict())
         ]
 
-        # for variable in project_custom_variables or []:
-        #     if variable.get("enabled", False):
-        #         custom_variable = CustomVariable(data_provider=None, custom_variable=variable)
-        #         cv_dict = custom_variable.to_dict()
-        #         used_variables.append(
-        #             {
-        #                 "data_provider": variable.get("data_provider", ""),
-        #                 "variable_name": cv_dict.get("qualified_name", ""),
-        #                 "data": cv_dict,
-        #                 "data_origin": cv_dict.get("data_category", {}).get("data_origin", []),
-        #                 "type": "Custom",
-        #             }
-        #         )
         used_variables.extend(custom_variables)
 
         # order by data provider type
         return sorted(used_variables, key=lambda v: v["data_provider"])
 
     @classmethod
-    def get_data_category(cls, data_category_name: str) -> DataCategory:
+    def get_data_category(cls, data_category_name: str) -> DataCategory[Self]:
         """Get a specific data category by its name.
 
         Args:
@@ -366,10 +355,13 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     @classmethod
     def get_qualified_builtin_variable_dict(
-        cls, builtin_variable: BuiltInVariable, data_category: DataCategory, type_: str
+        cls,
+        builtin_variable: BuiltInVariable[Self],
+        data_category: DataCategory[Self],
+        type_: str,
     ) -> QualifiedBuiltInVariableDict:
         dct: BuiltinVariableDict = builtin_variable.to_dict()
-        dct = cast(QualifiedBuiltInVariableDict, dct)
+        dct = cast("QualifiedBuiltInVariableDict", dct)
         dct["data_provider"] = cls.name_lower
         dct["category"] = data_category.label
         if builtin_variable.is_indexed_variable:
@@ -386,8 +378,10 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
     @classmethod
     def get_qualified_custom_variable_dict(
-        cls, custom_variable: CVAttribute, data_category: DataCategory
-    ) -> dict:
+        cls,
+        custom_variable: CVAttribute,
+        data_category: DataCategory[Self],
+    ) -> CVAttributeDict:
         dct = custom_variable.to_dict()
         dct["category"] = data_category.label
         return dct
@@ -404,7 +398,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
                 represents a data category and its associated data provider, along with
                 a list of built-in variables.
         """
-        data_category: DataCategory
+        data_category: DataCategory[Self]
         dp_data_categories_dicts: list[DataProviderDataCategoryDict] = []
         for data_category in cls.data_categories:
             dp_data_category_dict: DataProviderDataCategoryDict = {
@@ -582,9 +576,9 @@ class OAuthDataProvider(DataProvider):
         client_secret: str | None = None,
         access_token: str | None = None,
         refresh_token: str | None = None,
-        builtin_variables: list[dict] | None = None,
-        custom_variables: list[dict] | None = None,
-        **kwargs,
+        builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
+        custom_variables: list[CustomVariableUploadDict] | None = None,
+        **kwargs: dict[str, Any],
     ):
         super().__init__()
         self.client_id: str = client_id
@@ -597,11 +591,11 @@ class OAuthDataProvider(DataProvider):
         self.api_client: Any = None
         self.oauth_client: Any = None
 
-        self.builtin_variables = builtin_variables
-        self.custom_variables = custom_variables
+        self.builtin_variables: QualifiedBuiltInVariableDict = builtin_variables
+        self.custom_variables: CustomVariableUploadDict = custom_variables
 
     @override
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}(client_id={self.client_id!r}, client_secret={self.client_secret!r}, "
             f"access_token={self.access_token!r}, refresh_token={self.refresh_token!r}, "
@@ -618,7 +612,7 @@ class OAuthDataProvider(DataProvider):
         return f"{frontend_url}/dist/redirect/{cls.name_lower}"
 
     @override
-    def to_public_dict(self) -> dict:
+    def to_public_dict(self) -> dict[str, Any]:
         # Now requires context data to generate the authorize_url
         authorize_url = self.get_authorize_url(
             builtin_variables=self.builtin_variables,
@@ -650,8 +644,8 @@ class OAuthDataProvider(DataProvider):
     # Instance methods
     def get_required_scopes(
         self,
-        builtin_variables: list[dict] | None = None,
-        custom_variables: list[dict] | None = None,
+        builtin_variables: list[BuiltinVariableDict] | None = None,
+        custom_variables: list[CustomVariableDict] | None = None,
     ) -> list[str]:
         if len(self.required_scopes) > 0:
             return self.required_scopes
@@ -661,7 +655,9 @@ class OAuthDataProvider(DataProvider):
         if custom_variables is None:
             custom_variables = []
 
-        builtin_variables = self.select_relevant_variables(builtin_variables)
+        builtin_variables = self.select_relevant_variables[QualifiedBuiltInVariableDict](
+            builtin_variables
+        )
         custom_variables = self.select_relevant_variables(custom_variables)
 
         required_scopes: set[str] = {
@@ -686,7 +682,9 @@ class OAuthDataProvider(DataProvider):
 
     @abstractmethod
     def get_authorize_url(
-        self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
+        self,
+        builtin_variables: list[QualifiedBuiltInVariableDict],
+        custom_variables: list[CustomVariableUploadDict] | None = None,
     ) -> str: ...
 
     @abstractmethod
