@@ -13,7 +13,7 @@ from datetime import date, datetime
 from enum import IntEnum
 from functools import cache, cached_property
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast, final, override
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, final, override
 
 import requests
 from dateutil.relativedelta import relativedelta
@@ -40,12 +40,6 @@ from ddsurveys.data_providers.fitbit.daily_time_series import (
 )
 from ddsurveys.data_providers.fitbit.steps import Steps
 from ddsurveys.get_logger import get_logger
-from ddsurveys.typings.data_providers.variables import (
-    BuiltinVariableDict,
-    CustomVariableDict,
-    CustomVariableUploadDict,
-    QualifiedBuiltInVariableDict,
-)
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
@@ -60,6 +54,12 @@ if TYPE_CHECKING:
         FavoriteActivityDict,
         FrequentActivityDict,
         UserDict,
+    )
+    from ddsurveys.typings.data_providers.variables import (
+        BuiltinVariableDict,
+        CustomVariableDict,
+        CustomVariableUploadDict,
+        QualifiedBuiltInVariableDict,
     )
 
 __all__ = ["FitbitDataProvider"]
@@ -633,7 +633,10 @@ class FitbitDataProvider(OAuthDataProvider):
 
     @cache
     def get_activities_date_range(
-        self, start_date: datetime, end_date: datetime, min_duration: float = 15_000.0
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        min_duration: float = 15_000.0,
     ) -> list[Activity]:
         """Fetches activities within a specified date range."""
         activities_logs: list[Activity] = []
