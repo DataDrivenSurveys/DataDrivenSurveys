@@ -107,6 +107,7 @@ class Activity:
     heartRateLink: str | None = None
     source: SourceDict | None = None
     tcxLink: str | None = None
+    hasGps: bool | None = None
 
     # Computed values
     start_datetime: datetime = field(init=False)
@@ -299,7 +300,8 @@ class ActivityLog:
             return self.date_activities[item]
         if isinstance(item, slice):
             if not isinstance(item.start, date | datetime) or not isinstance(
-                item.stop, date | datetime
+                item.stop,
+                date | datetime,
             ):
                 msg = "Slicing is only supported for date or datetime objects."
                 raise TypeError(msg)
@@ -391,7 +393,8 @@ class ActivityLog:
         return self.date_activities.get(date.date(), [])
 
     def get_by_type(
-        self, activity_type: Literal["auto_detected", "manual", "mobile_run", "tracker"]
+        self,
+        activity_type: Literal["auto_detected", "manual", "mobile_run", "tracker"],
     ) -> list[Activity]:
         return self.type_activities.get(activity_type, [])
 

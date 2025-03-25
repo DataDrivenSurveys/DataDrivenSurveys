@@ -243,7 +243,8 @@ class FitbitDataProvider(OAuthDataProvider):
         if "profile" not in required_scopes:
             required_scopes.append("profile")
         return self.oauth_client.authorize_token_url(
-            scope=required_scopes, redirect_uri=self.redirect_uri
+            scope=required_scopes,
+            redirect_uri=self.redirect_uri,
         )[0]
 
     @override
@@ -356,7 +357,7 @@ class FitbitDataProvider(OAuthDataProvider):
             True if the token was revoked successfully, False otherwise.
         """
         authorization_header = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
+            f"{self.client_id}:{self.client_secret}".encode(),
         ).decode("utf-8")
 
         headers = {
@@ -390,7 +391,7 @@ class FitbitDataProvider(OAuthDataProvider):
         # using client credentials flow to check if the client id and secret are valid
 
         authorization_header = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
+            f"{self.client_id}:{self.client_secret}".encode(),
         ).decode("utf-8")
 
         headers = {
@@ -459,7 +460,7 @@ class FitbitDataProvider(OAuthDataProvider):
     @cached_property
     def activities_favorite(self) -> list[FavoriteActivityDict]:
         data = self.api_client.make_request(
-            "https://api.fitbit.com/1/user/-/activities/favorite.json"
+            "https://api.fitbit.com/1/user/-/activities/favorite.json",
         )
         if isinstance(data, list):
             return data
@@ -468,7 +469,7 @@ class FitbitDataProvider(OAuthDataProvider):
     @cached_property
     def activities_frequent(self) -> list[FrequentActivityDict]:
         data = self.api_client.make_request(
-            "https://api.fitbit.com/1/user/-/activities/frequent.json"
+            "https://api.fitbit.com/1/user/-/activities/frequent.json",
         )
         if isinstance(data, list):
             return data
@@ -506,6 +507,29 @@ class FitbitDataProvider(OAuthDataProvider):
         offset: int = 0,
         sort: Literal["asc", "desc"] = "desc",
     ) -> ActivitiesListResponseDict:
+        """Fetches acitivy logs from the Fitbit API.
+
+        Args:
+            before_date:
+                The date before which activities should be returned.
+                This date is exclusive.
+            after_date:
+                The date after which activities should be returned.
+                This date is inclusive.
+            limit:
+                The number of activities to return. Maximum 100.
+            offset:
+                The offset for returning large numbers of activities.
+            sort:
+                How to sort activities based on time.
+
+        Returns:
+            A list of API responses.
+        """
+        limit = int(limit)
+        if not 0 < limit <= 100:
+            msg = f"The limit must be between 0 and 100. Received: {limit}"
+            raise ValueError(msg)
         if before_date is None and after_date is None:
             msg = "Either before_date or after_date must be provided."
             raise ValueError(msg)
@@ -549,22 +573,23 @@ class FitbitDataProvider(OAuthDataProvider):
         It handles pagination automatically, fetching additional data as needed.
 
         Args:
-            before_date (datetime | None, optional): The date to retrieve data before.
+            before_date: The date to retrieve data before.
                 Defaults to None.
-            after_date (datetime | None, optional): The date to retrieve data after.
+            after_date: The date to retrieve data after.
                 Defaults to None.
-            limit (int, optional): The number of records to retrieve per request.
+            limit: The number of records to retrieve per request.
                 Defaults to 100.
-            offset (int, optional): The offset to start retrieving records from.
+            offset: The offset to start retrieving records from.
                 Defaults to 0.
-            sort (Literal["asc", "desc"], optional): The sort order for the activities.
+            sort: The sort order for the activities.
                 Defaults to 'desc'.
 
         Yields:
             Activity: An Activity object representing a single activity log entry.
 
         Note:
-            This generator will continue to yield activities until all available data has been retrieved.
+            This generator will continue to yield activities until all available data
+            has been retrieved.
         """
         has_more = True
         while has_more:
@@ -609,7 +634,7 @@ class FitbitDataProvider(OAuthDataProvider):
         # If activities are not in the activity log, fetch activities from Fitbit API
         for activity in self.get_activity_log_generator(before_date=end_date):
             # activity_date = datetime.fromisoformat(activity.start_date)
-            if activity.start_date < ensure_date(start_date):
+            if activity.start_date < start_date:
                 break
             activities_logs.append(activity)
 
@@ -745,9 +770,8 @@ class FitbitDataProvider(OAuthDataProvider):
         """
         #  /1/user/[user-id]/activities/[resource-path]/date/[start-date]/[end-date].json
         #  GET https://api.fitbit.com/1/user/-/activities/steps/date/2019-01-01/2019-01-07.json
-        if (
-            activity == "activityCalories"
-            or activity == "tracker/activityCalories"
+        if activity == "activityCalories" or (
+            activity == "tracker/activityCalories"
             and (end_date - start_date).days > DailyStatsMaxDateRange.activityCalories
         ):
             msg = f"Maximum range for {activity} is 30 days. Received {(end_date - start_date).days} days."
@@ -772,7 +796,7 @@ class FitbitDataProvider(OAuthDataProvider):
             second=0,
         )
         start_date: datetime = first_day_of_current_month - relativedelta(months=1)
-        end_date: datetime = first_day_of_current_month - relativedelta(days=1)
+        end_date: datetime = first_day_of_current_month
 
         return self.get_activities_date_range(start_date.date(), end_date.date())
 
@@ -923,9 +947,8 @@ class FitbitDataProvider(OAuthDataProvider):
             for act in self.activities_last_whole_month
             if (name := act.activityName or "") and "walk" in name.casefold()
         ]
-        distance: float = sum(walks)
-        if distance > 0:
-            return round(distance, 1)
+        if len(walks) > 0:
+            return round(sum(walks) / len(walks), 1)
         return None
 
     @cached_property
@@ -938,7 +961,7 @@ class FitbitDataProvider(OAuthDataProvider):
             and act.tcxLink is not None
             and act.tcxLink != ""
         ]
-        num_runs: float = len(runs)
+        num_runs: int = len(runs)
         if num_runs > 0:
             return num_runs
         return None
@@ -948,9 +971,9 @@ class FitbitDataProvider(OAuthDataProvider):
         workout_durations = [
             act.duration or 0.0
             for act in self.activities_last_whole_month
-            if (name := act.activityName or "") and "workout" == name.casefold()
+            if (name := act.activityName or "") and name.casefold() == "workout"
         ]
-        num_workouts: float = len(workout_durations)
+        num_workouts: int = len(workout_durations)
         if num_workouts > 0:
             return round(sum(workout_durations) / num_workouts / 60_000, 1)
         return None
