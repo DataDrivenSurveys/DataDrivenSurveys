@@ -367,7 +367,7 @@ class DataProviderType(StrEnum):
     frontend = "frontend"
 
 
-### TypedDicts
+# TypedDicts
 class SurveyPlatformFieldsDict(TypedDict):
     """Dictionary representation of survey platform fields."""
 
@@ -380,7 +380,7 @@ class SurveyPlatformFieldsDict(TypedDict):
     directory_id: str
 
 
-### Database models
+# Database models
 class Base(DeclarativeBase):
     """Base class for all database models."""
 
