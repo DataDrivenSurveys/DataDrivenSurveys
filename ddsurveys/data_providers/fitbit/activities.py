@@ -29,11 +29,11 @@ _most_frequent_activities: list[str] = [
 def _factory_activity_last_whole_month(act: str) -> list[BuiltInVariable["FitbitDataProvider"]]:
     return BuiltInVariable["FitbitDataProvider"].create_instances(
         name=f"last_whole_month_{act.lower().replace(' ', '_')}",
-        label=f"Number of {act} activities over the last month.",
-        description=f"The number of times that {act} was done over the last whole month.",
+        label=f"Number of {act} activities done over the last month.",
+        description=f"Number of {act} activities done over the last month.",
         test_value_placeholder="1",
         data_type=VariableDataType.NUMBER,
-        info=f"The number of times that {act} was done over the last whole month.",
+        info=f"Number of {act} activities done over the last month.",
         is_indexed_variable=False,
         extractor_func=lambda self: self.activities_last_whole_month_counts.get(act, None),
         # extractor_func=lambda self: get_last_whole_month_counts(self, act),
@@ -182,7 +182,7 @@ class Activities(DataCategory["FitbitDataProvider"]):
             description="Average distance walked during Walk activities over the last month.",
             test_value_placeholder="3",
             data_type=VariableDataType.NUMBER,
-            info="Average distance walked during Walk activities over the last month.",
+            info="Average distance walked during Walk activities done over the last month.",
             is_indexed_variable=False,
             extractor_func=lambda self: self.activities_last_whole_month_walk_distance,
             data_origin=data_origin,

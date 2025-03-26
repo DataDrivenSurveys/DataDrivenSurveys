@@ -94,7 +94,7 @@ class ActiveMinutes(DataCategory["FitbitDataProvider"]):
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="average_weekly_activity_time_last_6_months",
             label="Average Weekly Activity Time Last 6 Months",
-            description="Average weekly minutes spend doing activities",
+            description="Average weekly minutes spent doing activities",
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="120",
             unit="minutes",
