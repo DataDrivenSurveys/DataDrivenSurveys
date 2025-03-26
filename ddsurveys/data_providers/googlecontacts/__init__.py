@@ -416,7 +416,6 @@ class GoogleContactsDataProvider(OAuthDataProvider):
             logger.exception(
                 "An unexpected error occurred when verifying the client credentials.\n"
             )
-            logger.debug(traceback.format_exc())
             return False
 
     @staticmethod
