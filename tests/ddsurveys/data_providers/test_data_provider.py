@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from flask import Flask
@@ -206,12 +206,45 @@ def test_data_provider_required_fields(provider_name):
             )
 
 
+@pytest.mark.parametrize("provider_name", REGISTERED_DATAPROVIDERS)
+def test_get_required_scopes_all(provider_name):
+    """Testing getting required scopes for OAuthDataProvider subclasses."""
+    provider_class = DataProvider.get_class_by_value(provider_name.lower())
+
+    assert provider_class is not None, f"Failed to find {provider_name}"
+
+    # This test is only relevant for OAuthDataProvider subclasses
+    if not issubclass(provider_class, OAuthDataProvider):
+        return
+
+    data_provider = provider_class()
+
+    builtin_variables = data_provider.get_builtin_variables()
+
+    if len(builtin_variables) == 0:
+        return
+
+    for bv in builtin_variables:
+        bv["enabled"] = True
+
+    required_scopes = set(data_provider.get_required_scopes(builtin_variables))
+    all_scopes = set(data_provider.scopes)
+    assert len(required_scopes) > 0, f"No scopes were required for {provider_name}"
+    assert all_scopes.issuperset(required_scopes), (
+        f"Selected scopes that are not declared for {provider_name}"
+    )
+
+
 # Only need the provider_name from the registry for this test
 @pytest.mark.parametrize("provider_name", REGISTERED_DATAPROVIDERS)
 def test_builtin_variables(provider_name):
     """Testing the builtin variables of each registered data provider."""
     provider_class = DataProvider.get_class_by_value(provider_name.lower())
-    data_provider = provider_class()  # Assuming you instantiate the class here
+
+    assert provider_class is not None
+
+    # Assuming you instantiate the class here
+    data_provider = provider_class()
 
     builtin_variables: list[BuiltinVariableDict_] = data_provider.get_builtin_variables()
 

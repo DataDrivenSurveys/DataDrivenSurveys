@@ -1,3 +1,4 @@
+# pyright: reportImportCycles=false
 """Created on 2023-05-23 14:01.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -23,6 +24,7 @@ from ddsurveys.typings.data_providers.variables import (
     DataOriginDict,
     QualifiedBuiltInVariableDict,
 )
+from ddsurveys.typings.models import BuiltinVariableDict as ModelsBuiltinVariableDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -89,7 +91,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     # Do not override the following attributes
     # __registry: dict[str, TDataProviderClass] = {}
     # _cls_form_fields: dict[str, list[dict[str, Any]]] = {}
-    _all_data_categories: ClassVar[dict[str, dict[str, DataCategory]]] = {}
+    _all_data_categories: ClassVar[dict[str, dict[str, DataCategory[Self]]]] = {}
 
     # The following are placeholder properties for convenient access to the name wrangled dicts
     # registry: dict[str, TDataProviderClass] = None
@@ -125,11 +127,11 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     form_fields: ClassVar[Sequence[FormField | FormButton]] = ()
 
     # Custom Variable Data Categories
-    data_categories: ClassVar[tuple[type[DataCategory], ...]] = ()
+    data_categories: ClassVar[tuple[type[DataCategory[Self]], ...]] = ()
 
     # Standard/builtin class methods go here
     @override
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]) -> None:
         self._variable_values: dict[str, Any] = {}
 
     @override
@@ -172,20 +174,30 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
     # **data_connection.fields)
 
     @classmethod
-    def get_builtin_variables(cls) -> list[dict[str, str]]:
+    def get_builtin_variables(
+        cls,
+    ) -> list[ModelsBuiltinVariableDict]:
         data_categories = cls.get_data_categories()
         # Include the provider_type in each builtin variable dictionary
-        return [
-            {**item, "provider_type": cls.provider_type}
-            for cat in data_categories
-            for item in cat["builtin_variables"]
-        ]
+        return cast(
+            list[ModelsBuiltinVariableDict],
+            [
+                {**item, "provider_type": cls.provider_type}
+                for cat in data_categories
+                for item in cat["builtin_variables"]
+            ],
+        )
 
     # Instance properties
 
     # Methods used for extracting data
     def select_relevant_variables[
-        VT: (list[QualifiedBuiltInVariableDict], list[CustomVariableUploadDict])
+        VT: (
+            list[BuiltinVariableDict],
+            list[CustomVariableDict],
+            list[QualifiedBuiltInVariableDict],
+            list[CustomVariableUploadDict],
+        )
     ](self, variables: VT) -> VT:
         """Selects only enabled and relevant variables for this data provider.
 
@@ -198,7 +210,7 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
             Variable class.
         """
         return cast(
-            "VT",
+            VT,
             [
                 variable
                 for variable in variables
@@ -248,7 +260,8 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
 
         for variable in self.select_relevant_variables(project_custom_variables):
             custom_var_manager: CustomVariable = CustomVariable(
-                data_provider=self, custom_variable=variable
+                data_provider=self,
+                custom_variable=variable,
             )
 
             custom_vars: dict[str, TVariableValue] = custom_var_manager.calculate_custom_variables()
@@ -407,7 +420,9 @@ class DataProvider(UIRegistry["TDataProviderClass"]):
                 "custom_variables_enabled": data_category.custom_variables_enabled,
                 "builtin_variables": [
                     cls.get_qualified_builtin_variable_dict(
-                        builtin_variable, data_category, "Builtin"
+                        builtin_variable,
+                        data_category,
+                        "Builtin",
                     )
                     for builtin_variables_list in data_category.builtin_variables
                     for builtin_variable in builtin_variables_list
@@ -626,7 +641,7 @@ class OAuthDataProvider(DataProvider):
 
     # Instance properties
     @property
-    def scopes(self) -> list[str]:
+    def scopes(self) -> tuple[str, ...]:
         return self.__class__._scopes
 
     @property
@@ -644,7 +659,7 @@ class OAuthDataProvider(DataProvider):
     # Instance methods
     def get_required_scopes(
         self,
-        builtin_variables: list[BuiltinVariableDict] | None = None,
+        builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
         custom_variables: list[CustomVariableDict] | None = None,
     ) -> list[str]:
         if len(self.required_scopes) > 0:
@@ -655,16 +670,15 @@ class OAuthDataProvider(DataProvider):
         if custom_variables is None:
             custom_variables = []
 
-        builtin_variables = self.select_relevant_variables[QualifiedBuiltInVariableDict](
-            builtin_variables
-        )
+        builtin_variables = self.select_relevant_variables(builtin_variables)
+
         custom_variables = self.select_relevant_variables(custom_variables)
 
         required_scopes: set[str] = {
             self._categories_scopes[v["category"]] for v in builtin_variables
         }
 
-        required_scopes.union({
+        required_scopes = required_scopes.union({
             self._categories_scopes[v["data_category"]] for v in custom_variables
         })
 
