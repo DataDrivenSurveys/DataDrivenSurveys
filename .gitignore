@@ -9,6 +9,11 @@ volumes/certbot/www
 # Ignore vscode directory
 .vscode/
 
+# Ignore files in the project root directory
+/*.*
+/TODO
+/temp
+
 #
 # Python ignore files
 #
