@@ -21,18 +21,22 @@ from ddsurveys.get_logger import get_logger
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from ddsurveys.data_providers.variables import CVAttribute
-    from ddsurveys.typings.shared_bases import FormFieldDict
-    from ddsurveys.variable_types import TVariableFunction
+    from ddsurveys.typings.data_providers.variables import (
+        CustomVariableUploadDict,
+        QualifiedBuiltInVariableDict,
+    )
 
 __all__ = ["InstagramDataProvider"]
 
 logger = get_logger(__name__)
 
 
+@final
 class Media(DataCategory["InstagramDataProvider"]):
+    scopes: tuple[str, ...] = ("user_media",)
+
+    @override
     def fetch_data(self) -> list[dict[str, Any]]:
         return []
 
@@ -44,7 +48,10 @@ class Media(DataCategory["InstagramDataProvider"]):
             description="Number of media posts.",
             data_type=VariableDataType.NUMBER,
             test_value_placeholder="2020-01-01",
-            info="This will be the date that the respondent's Instagram account was created. It will be in YYYY-MM-DD format.",
+            info=(
+                "This will be the date that the respondent's Instagram account was created. "
+                "It will be in YYYY-MM-DD format."
+            ),
             extractor_func=lambda self: self.media_count,
             data_origin=[
                 {
@@ -67,6 +74,9 @@ class InstagramDataProvider(OAuthDataProvider):
 
     token_url = "https://api.instagram.com/oauth/access_token"  # noqa: S105
     base_authorize_url = "https://api.instagram.com/oauth/authorize"
+
+    _scopes: ClassVar[tuple[str, ...]] = ("user_media",)
+    _categories_scopes: ClassVar[dict[str, str]] = {"Media": "user_media"}
 
     # Unique class attributes go here
 
@@ -111,7 +121,7 @@ class InstagramDataProvider(OAuthDataProvider):
             return None
 
     # Standard/builtin class methods go here
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: tuple[Any, ...], **kwargs: dict[str, Any]):
         super().__init__(*args, **kwargs)
 
     # Methods that child classes must implement
@@ -123,14 +133,14 @@ class InstagramDataProvider(OAuthDataProvider):
 
     def get_authorize_url(
         self,
-        builtin_variables: list[dict] | None = None,
-        custom_variables: list[dict] | None = None,
+        builtin_variables: list[QualifiedBuiltInVariableDict] | None = None,
+        custom_variables: list[CustomVariableUploadDict] | None = None,
     ) -> str:
         """Returns the authorize url.
 
         Args:
-            builtin_variables (list[dict], optional): A list of builtin variables. Defaults to None.
-            custom_variables (list[dict], optional): A list of custom variables. Defaults to None.
+            builtin_variables: A list of builtin variables. Defaults to None.
+            custom_variables: A list of custom variables. Defaults to None.
 
         Returns:
             str: The authorize url.

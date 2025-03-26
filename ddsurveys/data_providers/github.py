@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import traceback
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, final, override
 
 from github import Auth, Github
 from github.GithubException import BadCredentialsException, GithubException
@@ -181,6 +181,7 @@ class Repositories(DataCategory["GitHubDataProvider"]):
     ]
 
 
+@final
 class GitHubDataProvider(OAuthDataProvider):
     token: AccessToken | None = None
 
@@ -188,7 +189,10 @@ class GitHubDataProvider(OAuthDataProvider):
     # instructions_helper_url: str = "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app"
 
     # Unique class attributes go here
-    _scopes = ()
+    _scopes: ClassVar[tuple[str, ...]] = (
+        "read_user",
+        "repo",
+    )
 
     _categories_scopes: ClassVar[dict[str, str]] = {
         "Account": "read_user",
