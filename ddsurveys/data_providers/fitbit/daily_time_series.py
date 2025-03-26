@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 """Created on 2024-07-08 16:18.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
 """
+
 from collections.abc import Callable, Hashable
 from datetime import datetime
 from typing import Any
@@ -22,8 +22,7 @@ ConvertedTimeSeriesData = dict[Hashable, int | float]
 
 
 def group_time_series(
-    data: ActivityTimeSeriesResponseDict,
-    grouping_function: Callable[[str], Hashable]
+    data: ActivityTimeSeriesResponseDict, grouping_function: Callable[[str], Hashable]
 ) -> GroupedTimeSeriesData:
     grouped_stats = {}
     for time_series in data.values():
@@ -35,7 +34,9 @@ def group_time_series(
     return grouped_stats
 
 
-def merge_time_series(data: GroupedTimeSeriesData | list[GroupedTimeSeriesData]) -> GroupedTimeSeriesData:
+def merge_time_series(
+    data: GroupedTimeSeriesData | list[GroupedTimeSeriesData],
+) -> GroupedTimeSeriesData:
     if isinstance(data, dict):
         return data
 
@@ -56,24 +57,18 @@ def merge_group_time_series(
 
 
 class AggregationFunctions:
-
     @staticmethod
-    def sum(data: GroupedTimeSeriesData, convert: bool = True, to_type: Callable = int) -> ConvertedTimeSeriesData:
+    def sum(
+        data: GroupedTimeSeriesData, convert: bool = True, to_type: Callable = int
+    ) -> ConvertedTimeSeriesData:
         if convert:
             return {
                 key: sum(values)
                 for key, values in {
-                    key: [to_type(value) for value in values]
-                    for key, values in data.items()
+                    key: [to_type(value) for value in values] for key, values in data.items()
                 }.items()
             }
-        else:
-            return {
-                key: sum(values)
-                for key, values in {
-                    key: list(values)
-                    for key, values in data.items()
-                }.items()
-            }
-
-
+        return {
+            key: sum(values)
+            for key, values in {key: list(values) for key, values in data.items()}.items()
+        }

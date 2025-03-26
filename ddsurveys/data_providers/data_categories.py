@@ -7,12 +7,12 @@
 from __future__ import annotations
 
 from abc import ABC, ABCMeta, abstractmethod
-from typing import TYPE_CHECKING, Any, ClassVar, NewType, TypedDict
+from typing import TYPE_CHECKING, Any, ClassVar, NewType, Self, TypedDict, override
 
 from ddsurveys.get_logger import get_logger
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from ddsurveys.data_providers.bases import DataProvider
     from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
@@ -23,14 +23,18 @@ if TYPE_CHECKING:
     )
 
 __all__ = [
+    "DC_BuiltinVariables",
+    "DC_CVAttributes",
     "DataCategory",
-    #
     "DataCategoryDict",
-    "TDataCategoryClass",
     "TDataCategory",
+    "TDataCategoryClass",
 ]
 
 logger = get_logger(__name__)
+
+type DC_CVAttributes = list[CVAttribute]
+type DC_BuiltinVariables[DP: DataProvider] = list[list[BuiltInVariable[DP]]]
 
 
 class DataCategoryDict(TypedDict):
@@ -116,17 +120,18 @@ class DataCategory[DP: DataProvider](ABC, metaclass=DataCategoryBase):
     # data_provider: ClassVar[DataProvider] = None
     # """Instance of the DataProvider class."""
 
-    cv_attributes: ClassVar[list[CVAttribute]] = []
-    builtin_variables: ClassVar[list[list[BuiltInVariable]]] = []
+    cv_attributes: ClassVar[DC_CVAttributes] = []
+    builtin_variables: ClassVar[DC_BuiltinVariables[DP]] = []  # pyright: ignore[reportGeneralTypeIssues]
 
     def __init__(self, data_provider: DP) -> None:
         self.data_provider: DP = data_provider
         # self.__class__.data_provider = data_provider
 
+    @override
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(data_provider={self.data_provider})"
 
-    __repr__ = __str__
+    __repr__: Callable[[Self], str] = __str__
 
     @abstractmethod
     def fetch_data(self) -> Sequence[dict[str, Any]]: ...

@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Sequence
     from logging import Logger
 
-    from ddsurveys.data_providers.data_categories import DataCategory
+    from ddsurveys.data_providers.data_categories import DataCategory, DC_BuiltinVariables
     from ddsurveys.data_providers.fitbit.api_response_dicts import (
         ActiveZoneMinutesSeriesResponseDict,
         ActivitiesListResponseDict,
@@ -61,6 +61,8 @@ if TYPE_CHECKING:
         CustomVariableUploadDict,
         QualifiedBuiltInVariableDict,
     )
+
+    type FB_DC_BuiltinVariables = DC_BuiltinVariables["FitbitDataProvider"]
 
 __all__ = ["FitbitDataProvider"]
 

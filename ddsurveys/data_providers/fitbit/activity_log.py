@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Created on 2024-07-09 14:50.
 
 @author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
@@ -30,45 +29,45 @@ class Activity:
     """Class representing a Fitbit activity based on the Fitbit API response."""
 
     # Values occurring in basic manual activity
-    logId: int | None = None
-    activityTypeId: int | None = None
-    startTime: str = None
+    logId: int | None = None  # noqa: N815
+    activityTypeId: int | None = None  # noqa: N815
+    startTime: str | None = None  # noqa: N815
     calories: int | None = None
     distance: float | None = None
     steps: int | None = None
     speed: float | None = None
     pace: float | None = None
     duration: int | None = None
-    activeDuration: int | None = None
-    distanceUnit: str | None = None
-    logType: Literal["auto_detected", "manual", "mobile_run", "tracker"] | None = None
-    manualValuesSpecified: ManualValuesSpecifiedDict | None = None
-    intervalWorkoutData: IntervalWorkoutData | None = None
-    heartRateZones: HeartRateZoneDict | None = None
-    activeZoneMinutes: ActiveZoneMinutesDict | None = None
-    inProgress: bool | None = None
-    caloriesLink: str | None = None
-    lastModified: str | None = None
-    originalStartTime: str | None = None
-    originalDuration: int | None = None
-    elevationGain: float | None = None
-    hasActiveZoneMinutes: bool | None = None
+    activeDuration: int | None = None  # noqa: N815
+    distanceUnit: str | None = None  # noqa: N815
+    logType: Literal["auto_detected", "manual", "mobile_run", "tracker"] | None = None  # noqa: N815
+    manualValuesSpecified: ManualValuesSpecifiedDict | None = None  # noqa: N815
+    intervalWorkoutData: IntervalWorkoutData | None = None  # noqa: N815
+    heartRateZones: HeartRateZoneDict | None = None  # noqa: N815
+    activeZoneMinutes: ActiveZoneMinutesDict | None = None  # noqa: N815
+    inProgress: bool | None = None  # noqa: N815
+    caloriesLink: str | None = None  # noqa: N815
+    lastModified: str | None = None  # noqa: N815
+    originalStartTime: str | None = None  # noqa: N815
+    originalDuration: int | None = None  # noqa: N815
+    elevationGain: float | None = None  # noqa: N815
+    hasActiveZoneMinutes: bool | None = None  # noqa: N815
 
     # Other possible values
-    activityLevel: list[ActivityLevelDict] | None = None
-    activityName: str | None = None
-    averageHeartRate: int | None = None
-    detailsLink: str | None = None
-    heartRateLink: str | None = None
+    activityLevel: list[ActivityLevelDict] | None = None  # noqa: N815
+    activityName: str | None = None  # noqa: N815
+    averageHeartRate: int | None = None  # noqa: N815
+    detailsLink: str | None = None  # noqa: N815
+    heartRateLink: str | None = None  # noqa: N815
     source: SourceDict | None = None
-    tcxLink: str | None = None
-    hasGps: bool | None = None
+    tcxLink: str | None = None  # noqa: N815
+    hasGps: bool | None = None  # noqa: N815
 
     # Computed values
     start_datetime: datetime = field(init=False)
     start_date: date = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.start_datetime = datetime.fromisoformat(self.startTime)
         self.start_date = self.start_datetime.date()
 
@@ -91,18 +90,18 @@ class Activity:
 
 
 class ActivityLog:
-    __slots__ = (
+    __slots__: tuple[str, ...] = (
+        "_integration_last_end_date",
+        "_integration_last_start_date",
+        "date_activities",
         "date_ranges",
         # "activities",
         "id_activities",
-        "date_activities",
-        "type_activities",
         "name_activities",
-        "_integration_last_end_date",
-        "_integration_last_start_date",
+        "type_activities",
     )
 
-    activity_types: tuple[Literal["auto_detected", "manual", "mobile_run", "tracker"]] = (
+    activity_types: tuple[Literal["auto_detected", "manual", "mobile_run", "tracker"], ...] = (
         "auto_detected",
         "manual",
         "mobile_run",

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, final
 
-from ddsurveys.data_providers.data_categories import DataCategory
+from ddsurveys.data_providers.data_categories import DC_CVAttributes, DataCategory
+from ddsurveys.data_providers.fitbit import FB_DC_BuiltinVariables
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.variable_types import VariableDataType
 
@@ -47,7 +48,10 @@ def _factory_activity_last_whole_month(act: str) -> list[BuiltInVariable[FitbitD
     )
 
 
+@final
 class Activities(DataCategory["FitbitDataProvider"]):
+    """Variables related to activities."""
+
     data_origin: ClassVar = [
         {
             "method": "activities_frequent",
@@ -62,7 +66,7 @@ class Activities(DataCategory["FitbitDataProvider"]):
             return data["activities"]
         return []
 
-    cv_attributes: ClassVar = [
+    cv_attributes: ClassVar[DC_CVAttributes] = [
         CVAttribute(
             name="duration",
             label="Activity Duration",
@@ -113,14 +117,14 @@ class Activities(DataCategory["FitbitDataProvider"]):
         ),
     ]
 
-    builtin_variables: ClassVar = [
+    builtin_variables: ClassVar[FB_DC_BuiltinVariables] = [
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="by_frequency",
             label="Activities by Frequency",
             description=(
-                "Activities sorted from most frequent to least frequent. Index 1 "
-                "is  the most frequent activity, index 2 is the second most frequent activity, "
-                "and so on."
+                "Activities sorted from most frequent to least frequent. "
+                "Index 1 is  the most frequent activity, index 2 is the second "
+                "most frequent activity, and so on."
             ),
             test_value_placeholder="Walk",
             data_type=VariableDataType.TEXT,
