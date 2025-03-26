@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, final
 
-from ddsurveys.data_providers.data_categories import DC_CVAttributes, DataCategory
-from ddsurveys.data_providers.fitbit import FB_DC_BuiltinVariables
+from ddsurveys.data_providers.data_categories import DataCategory, DC_CVAttributes
 from ddsurveys.data_providers.variables import BuiltInVariable, CVAttribute
 from ddsurveys.variable_types import VariableDataType
 
 if TYPE_CHECKING:
-    from ddsurveys.data_providers.fitbit import FitbitDataProvider
+    from ddsurveys.data_providers.fitbit import FB_DC_BuiltinVariables, FitbitDataProvider
     from ddsurveys.data_providers.fitbit.api_response_dicts import ActivitiesListResponseDict
 
 
@@ -27,7 +26,7 @@ _most_frequent_activities: list[str] = [
 ]
 
 
-def _factory_activity_last_whole_month(act: str) -> list[BuiltInVariable[FitbitDataProvider]]:
+def _factory_activity_last_whole_month(act: str) -> list[BuiltInVariable["FitbitDataProvider"]]:
     return BuiltInVariable["FitbitDataProvider"].create_instances(
         name=f"last_whole_month_{act.lower().replace(' ', '_')}",
         label=f"Number of {act} activities last month.",

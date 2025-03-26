@@ -1,8 +1,3 @@
-"""Created on 2024-07-08 16:18.
-
-@author: Lev Velykoivanenko (lev.velykoivanenko@unil.ch)
-"""
-
 from collections.abc import Callable, Hashable
 from datetime import datetime
 from typing import Any

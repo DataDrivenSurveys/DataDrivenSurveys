@@ -9,7 +9,7 @@ from ddsurveys.variable_types import VariableDataType
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ddsurveys.data_providers.fitbit import FitbitDataProvider
+    from ddsurveys.data_providers.fitbit import FB_DC_BuiltinVariables, FitbitDataProvider
 
 
 def _get_highest_steps_last_6_months_date(self: "FitbitDataProvider") -> str | None:
@@ -26,7 +26,7 @@ class Daily(DataCategory["FitbitDataProvider"]):
     @override
     def fetch_data(self) -> Sequence[dict[str, Any]]: ...
 
-    builtin_variables: ClassVar = [
+    builtin_variables: ClassVar[FB_DC_BuiltinVariables] = [
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="highest_steps_last_6_months_steps",
             label="Highest Daily Step Count in Last 6 Months",

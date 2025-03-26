@@ -9,7 +9,7 @@ from ddsurveys.variable_types import VariableDataType
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from ddsurveys.data_providers.fitbit import FitbitDataProvider
+    from ddsurveys.data_providers.fitbit import FB_DC_BuiltinVariables, FitbitDataProvider
 
 
 @final
@@ -19,7 +19,7 @@ class Account(DataCategory["FitbitDataProvider"]):
     @override
     def fetch_data(self) -> Sequence[dict[str, Any]]: ...
 
-    builtin_variables: ClassVar[list[list[BuiltInVariable["FitbitDataProvider"]]]] = [
+    builtin_variables: ClassVar[FB_DC_BuiltinVariables] = [
         BuiltInVariable["FitbitDataProvider"].create_instances(
             name="creation_date",
             label="Account Creation Date",
