@@ -127,6 +127,14 @@
               "instructions.helper_url": "https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app",
               "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
             },
+            "spotify": {
+              "client_id.helper_text": "Copy paste the 'Client ID' from the 'Basic Information' tab of your app settings.",
+              "client_id.label": "Client ID",
+              "client_secret.helper_text": "You will need to unhide the client secret in the 'Basic Information' tab.",
+              "client_secret.label": "Client Secret",
+              "instructions.helper_url": "https://developer.spotify.com/documentation/web-api/concepts/apps",
+              "instructions.text": "Instructions for how to configure the OAuth app can be found here:"
+            },
             "googlecontacts": {
               "client_id.helper_text": "Copy paste the value in the 'Client ID' field after opening your app in the Google Cloud Credentials section of your Google Cloud Project.",
               "client_id.label": "Client ID",
@@ -506,6 +514,10 @@
           "github": {
             "alt": "GitHub",
             "label": "GitHub"
+          },
+          "spotify": {
+            "alt": "Spotify",
+            "label": "Spotify"
           },
           "googlecontacts": {
             "alt": "Google Contacts",

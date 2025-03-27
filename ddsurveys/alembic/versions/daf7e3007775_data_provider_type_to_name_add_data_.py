@@ -52,6 +52,7 @@ def upgrade():
                 "GitHub",
                 "DDS",
                 "GoogleContacts",
+                "Spotify",
                 name="dataprovidername",
             ),
             nullable=False,
@@ -63,7 +64,7 @@ def upgrade():
         "data_connection",
         sa.Column(
             "data_provider_name",
-            sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts", name="dataprovidername"),
+            sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts","Spotify", name="dataprovidername"),
             nullable=False,
         ),
     )
@@ -73,7 +74,7 @@ def upgrade():
         "data_provider_access",
         sa.Column(
             "data_provider_name",
-            sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts", name="dataprovidername"),
+            sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts","Spotify", name="dataprovidername"),
             nullable=False,
         ),
     )
@@ -110,7 +111,7 @@ def upgrade():
     op.alter_column(
         "data_provider",
         "data_provider_name",
-        type_=sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts", name="dataprovidertype"),
+        type_=sa.Enum("Fitbit", "Instagram", "GitHub", "DDS", "GoogleContacts", "Spotify", name="dataprovidertype"),
         existing_nullable=True,
     )
     op.alter_column(
