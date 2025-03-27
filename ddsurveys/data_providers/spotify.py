@@ -126,7 +126,7 @@ class SpotifyDataProvider(OAuthDataProvider):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.api_client: spotipy.Spotipy
+        self.api_client: spotipy.Spotify
         self.oauth_client: SpotifyOAuth
         self.redirect_uri = self.get_redirect_uri()
         self.playlists: dict[str, Any] = {}
@@ -147,7 +147,7 @@ class SpotifyDataProvider(OAuthDataProvider):
             self.refresh_token = refresh_token
 
         logger.debug(f"{'Warning: Aceess token is None or Empty' if not self.access_token else 'Yes: Is not None!'} and is {self.access_token}")
-        self.api_client = spotipy.Spotipy(auth=self.access_token) # to get the playlists and so on, we only need to use an access_token
+        self.api_client = spotipy.Spotify(auth=self.access_token) # to get the playlists and so on, we only need to use an access_token
 
     def init_oauth_client(self, *args, **kwargs) -> None:
         self.oauth_client = SpotifyOAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_uri=self.redirect_uri, scope=self.__class__._scopes[0])
