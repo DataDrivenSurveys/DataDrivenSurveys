@@ -402,7 +402,7 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
             - HTTPStatus.BAD_REQUEST: Data connection failed.
             - HTTPStatus.NOT_FOUND: Data provider not found or not supported.
     """
-    logger.debug("Checking data provider connection ***********")
+    logger.debug("Checking data provider connection")
 
     with DBManager.get_db() as db:
         user = get_jwt_identity()
@@ -424,7 +424,6 @@ def check_dataprovider_connection(data_provider_name: str) -> ResponseReturnValu
         provider_class = DataProvider.get_class_by_name(data_provider.name)
         provider_instance: DataProvider = provider_class(**data_connection.fields)
         success = provider_instance.test_connection()
-        logger.debug("Checking data provider connection  success STATE ***********", success)
 
         db.commit()
         return jsonify({

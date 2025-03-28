@@ -61,14 +61,7 @@ class PlaylistCount(DataCategory["SpotifyDataProvider"]):
         )
     ]
 
-"""
- {'data_provider_name': 'spotify', 'url_params': {'code': 'AQA8IBkiGpgICia306qCskG7XJ_nfVGrdRs1ddiM'
- 't9P7mA9SbQQPg6PW16X0Qg2xdfsdsfuidfuf897893qouijijsakhfafahdkKSE45ymZxupRr_CrfiaKD7IDslLawyoy3V1RbnVJnEMF'
- 'dkBDJjk4o8chNYCy3-RJrwQyNvQGmGXhzzgZdIOjcVjYQGMozV879adfy9df98ad7ffadfuadIDIp5pplTBxqv_OaTJxlqAgSwuwr1mk'
- 'KmZAfwVAeUad7a8DuVZdzewR1dafafadfoiuwquiooiewqoitfZDQhWAwOKDR28g0dU69WgkXCB5f9BdafsfdsfdsA92ADsCL4YcCVTP'
- 'xPdeDhjZDRbHMclaRyg7jptWbyoCUrVbKybwL2e_QbKyekOGjXn60se3xUKPdPVjNz-Eh40iuY4njHzwfXbF4hL7uO'
- 'mFbDtwERNpWwwX-4eW7d6HlHKDawDs-IRbSP22uSOi0'}}
- """
+
 class SpotifyDataProvider(OAuthDataProvider):
     # Class attributes that need be re-declared or redefined in child classes
     # The following attributes need to be re-declared in child classes.

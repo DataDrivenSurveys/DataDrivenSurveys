@@ -194,7 +194,6 @@ def list_survey_platforms() -> ResponseReturnValue:
 @app.route("/data-providers", methods=["GET"])
 @jwt_required()
 def list_data_providers() -> ResponseReturnValue:
-    logger.debug(DataProvider.get_all_form_fields())
     return DataProvider.get_all_form_fields(), HTTPStatus.OK
 
 
