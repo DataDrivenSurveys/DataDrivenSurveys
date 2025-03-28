@@ -351,6 +351,7 @@ class DataProviderName(StrEnum):
     GitHub = "github"
     DDS = "dds"
     GoogleContacts = "googlecontacts"
+    Spotify = "spotify"
 
 
 class DataProviderType(StrEnum):

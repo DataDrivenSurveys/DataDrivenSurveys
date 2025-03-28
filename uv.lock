@@ -384,6 +384,8 @@ dependencies = [
     { name = "es-core-news-sm" },
     { name = "fi-core-news-sm" },
     { name = "fitbit" },
+    { name = "redis" },
+    { name = "spotipy" },
     { name = "flask" },
     { name = "flask-cors" },
     { name = "flask-jwt-extended" },
@@ -465,6 +467,8 @@ requires-dist = [
     { name = "es-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fi-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/fi_core_news_sm-3.8.0/fi_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fitbit", specifier = ">=0.3.1" },
+    { name = "spotipy", specifier = ">=2.25.1" },
+    { name = "redis", specifier = ">=5.2.1" },
     { name = "flask", specifier = ">=3.0.3" },
     { name = "flask-cors", specifier = ">=5.0.0" },
     { name = "flask-jwt-extended", specifier = ">=4.6.0" },
@@ -623,6 +627,25 @@ dependencies = [
     { name = "setuptools" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/05/46/47fb03b722f335c30b0d2734537c6932afdc465e22c5045008bfa2c122b1/fitbit-0.3.1.tar.gz", hash = "sha256:ea09dc22bafccf5678c779dae93d6ed393a310847f9c7cb4a885f241312dde9b", size = 19760 }
+
+
+[[package]]
+name = "redis"
+version = "5.2.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [ ]
+sdist = { url = "https://github.com/redis/redis-py/archive/refs/tags/v5.2.1.tar.gz" }
+
+[[package]]
+name = "spotipy"
+version = "2.25.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "redis" },
+    { name = "requests" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://github.com/spotipy-dev/spotipy/archive/refs/tags/2.25.1.tar.gz" }
 
 [[package]]
 name = "flask"

@@ -85,6 +85,8 @@ const DataProviders = ({ project, onChangeDataProviders }: DataProvidersProps): 
     ).then(newData => setDataProviders(newData as unknown as Models.Projects.DataProvider[]));
   }, [project.data_connections, projectId]);
 
+  
+
   const handleDelete = useCallback(() => {
     if (!selected) return;
     (async (): Promise<void> => {

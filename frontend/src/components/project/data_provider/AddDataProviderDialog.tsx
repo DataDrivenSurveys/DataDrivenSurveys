@@ -48,6 +48,7 @@ const AddDataProviderDialog = ({
       const response = await GET('/data-providers');
 
       response.on('2xx', (status: number, data: API.Projects.DataProvider[]) => {
+        console.log(response);
         const remainingProviders: API.Projects.DataProvider[] = data
           .filter(p => !existingProviders.some(ep => ep.data_provider_name === p.value))
           .map(ep => ({ ...ep, icon: <Logo name={ep.value} size={18} /> }));

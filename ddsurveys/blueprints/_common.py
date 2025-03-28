@@ -86,6 +86,7 @@ class TReplacementRules(TypedDict):
     fitbit: list[StrReplaceRule]
     github: list[StrReplaceRule]
     googlecontacts: list[StrReplaceRule]
+    spotify: list[StrReplaceRule]
     instagram: list[StrReplaceRule]
 
 
@@ -105,6 +106,11 @@ REPLACEMENT_RULES: TReplacementRules = {
         (".frontendactivity.", ".frntendact.", -1),
         ("open_", "opn_", -1),
         ("_table", "_tbl", -1),
+    ],
+    "spotify": [
+        (".spotify.", ".spfy.", -1),
+        (".spotify_playlist_count", ".spfy_playlist_count", -1),
+        (".playlistcount", ".pc", -1)
     ],
     "fitbit": [
         # DP name
