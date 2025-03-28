@@ -290,7 +290,7 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
         project && (
           <Stack alignItems="center" direction="row" justifyContent={'center'}>
             <Typography style={{ whiteSpace: 'nowrap' }} variant="h5">
-              <b>{project.survey_name}</b>
+              <b>{project.name}</b>
             </Typography>
           </Stack>
         )
