@@ -117,7 +117,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
             )
             .first()
         )
-        logger.debug("The added fields are ************ ", selected_data_provider["label"], ",", provider_class.provider_type,",",provider_class.name)
+        
         if not data_provider:
             data_provider = DataProviderModel(
                 name=selected_data_provider["label"],

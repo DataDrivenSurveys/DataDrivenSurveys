@@ -44,7 +44,7 @@ class PlaylistCount(DataCategory["SpotifyDataProvider"]):
 
     builtin_variables = [
         BuiltInVariable.create_instances(
-            name="playlist_count",
+            name="spotify_playlist_count",
             label="User's playlist count",
             description="The number of playlists the user has.",
             test_value_placeholder="2020-01-01",
@@ -97,8 +97,8 @@ class SpotifyDataProvider(OAuthDataProvider):
     'user-read-email ',              # Read user's email address
     )
 
-    # See other classes for examples of how to fill these attributes. You may not need to fill them
-    _categories_scopes = {}
+    # See other classes for examples of how to fill these attributes. You may not need to fill them (You definitely need to fill them)
+    _categories_scopes = {'PlaylistCount': _scopes[0]}
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
@@ -146,7 +146,6 @@ class SpotifyDataProvider(OAuthDataProvider):
         if refresh_token is not None:
             self.refresh_token = refresh_token
 
-        logger.debug(f"{'Warning: Aceess token is None or Empty' if not self.access_token else 'Yes: Is not None!'} and is {self.access_token}")
         self.api_client = spotipy.Spotify(auth=self.access_token) # to get the playlists and so on, we only need to use an access_token
 
     def init_oauth_client(self, *args, **kwargs) -> None:
@@ -163,7 +162,6 @@ class SpotifyDataProvider(OAuthDataProvider):
     def request_token(self, data: dict[str, Any]) -> dict[str, Any]: 
         url_params = data["url_params"]
         code: str | None = url_params.get("code", None)
-        logger.debug('The data for requesting a token is (NB, it must contain a code field) ************', data)
 
         if code is None:
             logger.debug('Spotify: code was None')
