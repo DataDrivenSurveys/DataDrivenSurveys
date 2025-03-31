@@ -110,7 +110,13 @@ REPLACEMENT_RULES: TReplacementRules = {
     "spotify": [
         (".spotify.", ".spfy.", -1),
         (".spotify_playlist_count", ".spfy_playlist_count", -1),
-        (".playlistcount", ".pc", -1)
+        (".devices", ".dev", -1),
+        (".tracks", ".tr", -1),
+        (".subscription_level", ".tr", -1),
+        (".follower_count", ".tr", -1),
+        (".email", ".em", -1),
+        (".playlistcount", ".pc", -1),
+        (".account", ".ac", -1),
     ],
     "fitbit": [
         # DP name

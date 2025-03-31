@@ -16,6 +16,9 @@ import requests
 from urllib.parse import urlencode
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from ddsurveys.data_providers.spotify.account import Account
+from ddsurveys.data_providers.spotify.devices import Devices
+from ddsurveys.data_providers.spotify.tracks import Tracks
 from ddsurveys.data_providers.data_categories import DataCategory
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
@@ -47,7 +50,7 @@ class PlaylistCount(DataCategory["SpotifyDataProvider"]):
             name="spotify_playlist_count",
             label="User's playlist count",
             description="The number of playlists the user has.",
-            test_value_placeholder="2020-01-01",
+            test_value_placeholder="2",
             data_type=VariableDataType.NUMBER,
             info="This shows the number of playlists the user has.",
             extractor_func=lambda self: self.playlist_count,
@@ -80,18 +83,23 @@ class SpotifyDataProvider(OAuthDataProvider):
     _scopes: ClassVar[tuple[str,...]] = (
     'playlist-read-private '         # Read private playlists
     'playlist-read-collaborative '   # Read collaborative playlists
-    'playlist-modify-public '        # Create and edit public playlists
-    'playlist-modify-private '       # Create and edit private playlists
+    'user-read-playback-state '      # Read playback state
     'user-library-read '             # Read user's saved tracks and albums
-    'user-library-modify '           # Add/remove tracks to user's library
     'user-read-recently-played '     # Access user's recently played tracks
     'user-top-read '                 # Read user's top artists and tracks
     'user-read-private '             # Read user's private info
     'user-read-email ',              # Read user's email address
     )
 
+    #'playlist-modify-public '        # Create and edit public playlists
+    #'playlist-modify-private '       # Create and edit private playlists
+    #'user-library-modify '           # Add/remove tracks to user's library
+
     # See other classes for examples of how to fill these attributes. You may not need to fill them (You definitely need to fill them)
-    _categories_scopes = {'PlaylistCount': _scopes[0]}
+    _categories_scopes = {'PlaylistCount': _scopes[0], 
+                          'Account': _scopes[0],
+                          'Devices': _scopes[0],
+                          'Tracks': _scopes[0]} #TODO: refine (limit) these scopes
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
@@ -104,6 +112,9 @@ class SpotifyDataProvider(OAuthDataProvider):
     # Just enter the names of the classes.
     data_categories: ClassVar[tuple[type[DataCategory["SpotifyDataProvider"]], ...]] = (
         PlaylistCount,
+        Account,
+        Devices,
+        Tracks,
      )
 
     # In the functions below, update the elipses (...) with the correct classes and code.
@@ -213,11 +224,6 @@ class SpotifyDataProvider(OAuthDataProvider):
 
     def revoke_token(self, token: str) -> bool: 
         return False
-    
-    @cached_property
-    def playlist_count(self):
-        self.playlists = self.api_client.current_user_playlists()
-        return len(self.playlists['items'])
 
     # DataProvider methods
     def test_connection_before_extraction(self) -> bool: 
@@ -240,5 +246,41 @@ class SpotifyDataProvider(OAuthDataProvider):
         response = requests.post(token_url, headers=headers, data=data)
         return response.status_code == HTTPStatus.OK
 
+    # Account related variables 
     @cached_property
-    def account_creation_date(self) -> str: ...
+    def subscription_level(self):
+        user = self.api_client.current_user()
+        return user['product']
+
+    @cached_property
+    def total_follower_count(self):
+        user = self.api_client.current_user()
+        return user['followers']['total']
+    
+    @cached_property
+    def user_profile(self):
+        return self.api_client.current_user()
+    
+    # Device related variables. ONLY currently connected devices are visible
+    def devices(self, idx: int) -> str | None:
+        devices = self.api_client.devices()['devices']
+        if len(devices) > idx - 1:
+            return f"{devices[idx-1]["type"]} ({devices[idx-1]["name"]})"
+        return None
+    
+    @cached_property
+    def playlist_count(self):
+        self.playlists = self.api_client.current_user_playlists()
+        return len(self.playlists['items'])
+    
+    # Saved tracks TODO: test with other saved tracks (not just likes)
+    def tracks(self, idx: int) -> str | None:
+        tracks = self.api_client.current_user_saved_tracks(limit=5)
+        if not tracks:
+            return None
+        tracks = tracks['items']
+        if len(tracks) > idx - 1:
+            artist_list = tracks[idx-1]["track"]["artists"] # several artists are possible for the same song
+            names = ', '.join([artist_list[i]["name"] for i in range(len(artist_list))])
+            return f"{tracks[idx-1]["track"]["name"]} ({names})"
+        return None
