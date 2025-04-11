@@ -227,8 +227,17 @@ def test_get_required_scopes_all(provider_name):
     for bv in builtin_variables:
         bv["enabled"] = True
 
-    required_scopes = set(data_provider.get_required_scopes(builtin_variables))
-    all_scopes = set(data_provider.scopes)
+    # Flatten required scopes if they are space-separated strings
+    raw_required_scopes = data_provider.get_required_scopes(builtin_variables)
+    required_scopes = set()
+    for scope in raw_required_scopes:
+        if isinstance(scope, str):
+            required_scopes.update(s.strip() for s in scope.strip().split())
+        else:
+            required_scopes.add(scope)
+
+    #required_scopes = set(data_provider.get_required_scopes(builtin_variables))
+    all_scopes = set(s.strip() for s in data_provider.scopes)
     assert len(required_scopes) > 0, f"No scopes were required for {provider_name}"
     assert all_scopes.issuperset(required_scopes), (
         f"Selected scopes that are not declared for {provider_name}"
