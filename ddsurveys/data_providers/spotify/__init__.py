@@ -141,9 +141,6 @@ class SpotifyDataProvider(OAuthDataProvider):
         if len(required_scopes) == 0:
             required_scopes = list(self.__class__._scopes)
 
-        # Profile is always required for the verifications done in other methods.
-        if "user-read-private" not in required_scopes:
-            required_scopes.append("user-read-private")
         self.oauth_client = SpotifyOAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_uri=self.redirect_uri, scope=required_scopes, cache_handler=None, cache_path=None)
 
     def get_authorize_url(
