@@ -27,25 +27,6 @@ class Account(DataCategory["SpotifyDataProvider"]):
 
     builtin_variables = [
         BuiltInVariable.create_instances(
-            name="email",
-            label="Account Email",
-            description="Email associated with account.",
-            test_value_placeholder="user@example.com",
-            data_type=VariableDataType.TEXT,
-            info=(
-                "This will be the email that the respondent's Spotify account was created with. "
-            ),
-            extractor_func=lambda self: self.user_profile['email'],
-            data_origin=[
-                {
-                    "method": "user_profile",
-                    "endpoint": "https://api.spotify.com/v1/me/",
-                    "documentation": "https://developer.spotify.com/documentation/web-api/reference/get-current-users-profile",
-                },
-            ],
-        ),
-        
-        BuiltInVariable.create_instances(
             name="follower_count",
             label="Total Follower Count",
             description="Total follower count of the user.",

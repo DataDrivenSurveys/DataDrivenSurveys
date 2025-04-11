@@ -34,7 +34,7 @@ class Devices(DataCategory["SpotifyDataProvider"]):
             data_type=VariableDataType.TEXT,
             is_indexed_variable=True,
             index_start=1,
-            index_end=3,
+            index_end=2,
             info=(
                 "Devices sorted by id."
             ),

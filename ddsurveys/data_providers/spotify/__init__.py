@@ -11,14 +11,20 @@ from collections.abc import Callable
 from functools import cached_property
 from http import HTTPStatus
 from typing import Any, ClassVar
+from collections import Counter
 import base64
 import requests
 from urllib.parse import urlencode
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, final, override
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from ddsurveys.data_providers.spotify.account import Account
 from ddsurveys.data_providers.spotify.devices import Devices
-from ddsurveys.data_providers.spotify.tracks import Tracks
+from ddsurveys.data_providers.spotify.playlist import Playlist
+from ddsurveys.data_providers.spotify.artist import Artist
+from ddsurveys.data_providers.spotify.shows import Shows
+from ddsurveys.data_providers.spotify.genres import Genres
+from ddsurveys.data_providers.spotify.episode import Episode
 from ddsurveys.data_providers.data_categories import DataCategory
 
 from ddsurveys.data_providers.bases import FormField, OAuthDataProvider
@@ -32,37 +38,6 @@ logger = get_logger(__name__)
 
 # In practice, each endpoint can be turned into a data category.
 # 'self' in extractor functions will be an instance of the data provider class.
-class PlaylistCount(DataCategory["SpotifyDataProvider"]):
-
-    data_origin = [
-        {
-            "method": "playlist_count",
-            "endpoint": "https://api.spotify.com/v1/me/playlists",
-            "documentation": "https://developer.spotify.com/documentation/web-api/reference/get-playlist",
-        }
-    ]
-
-    def fetch_data(self) -> list[dict[str, Any]]:
-        pass
-
-    builtin_variables = [
-        BuiltInVariable.create_instances(
-            name="spotify_playlist_count",
-            label="User's playlist count",
-            description="The number of playlists the user has.",
-            test_value_placeholder="2",
-            data_type=VariableDataType.NUMBER,
-            info="This shows the number of playlists the user has.",
-            extractor_func=lambda self: self.playlist_count,
-            data_origin=[
-                {
-                    "method": "playlists",
-                    "endpoint": "https://api.fitbit.com/1/user/[user-id]/profile.json",
-                    "documentation": "https://dev.fitbit.com/build/reference/web-api/user/get-profile/",
-                },
-            ],
-        )
-    ]
 
 
 class SpotifyDataProvider(OAuthDataProvider):
@@ -81,14 +56,13 @@ class SpotifyDataProvider(OAuthDataProvider):
 
     # Unique class attributes go here
     _scopes: ClassVar[tuple[str,...]] = (
-    'playlist-read-private '         # Read private playlists
-    'playlist-read-collaborative '   # Read collaborative playlists
-    'user-read-playback-state '      # Read playback state
-    'user-library-read '             # Read user's saved tracks and albums
-    'user-read-recently-played '     # Access user's recently played tracks
-    'user-top-read '                 # Read user's top artists and tracks
-    'user-read-private '             # Read user's private info
-    'user-read-email ',              # Read user's email address
+    'playlist-read-private ',         # 0 Read private playlists (necessary for playlists hence artists/genres)
+    'playlist-read-collaborative ',   # 1 Read collaborative playlists (necessary for playlists hence artists/genres)
+    'user-read-playback-state ',      # 2 Read playback state (necessary for devices)
+    'user-library-read ',             # 3 Read user's saved tracks and albums (necessary for tracks and episodes and shows)
+    'user-read-recently-played ',     # 4 Access user's recently played tracks (necessary for tracks)
+    'user-top-read ',                 # 5 Read user's top artists and tracks
+    'user-read-private '             #  6 Read user's profile info
     )
 
     #'playlist-modify-public '        # Create and edit public playlists
@@ -96,10 +70,13 @@ class SpotifyDataProvider(OAuthDataProvider):
     #'user-library-modify '           # Add/remove tracks to user's library
 
     # See other classes for examples of how to fill these attributes. You may not need to fill them (You definitely need to fill them)
-    _categories_scopes = {'PlaylistCount': _scopes[0], 
-                          'Account': _scopes[0],
-                          'Devices': _scopes[0],
-                          'Tracks': _scopes[0]} #TODO: refine (limit) these scopes
+    _categories_scopes = {'Playlist': _scopes[0] + _scopes[1], 
+                          'Account': _scopes[2] + _scopes[6],
+                          'Devices': _scopes[2],
+                          'Episode': _scopes[3],
+                          'Artist': _scopes[0] + _scopes[1],
+                          'Shows': _scopes[3],
+                          'Genres': _scopes[0] + _scopes[1],} 
 
     # Form fields that will be displayed in the frontend. Only update them if the data provider uses different
     # terminology for this information.
@@ -111,10 +88,13 @@ class SpotifyDataProvider(OAuthDataProvider):
     # List all the data categories that this data provider supports.
     # Just enter the names of the classes.
     data_categories: ClassVar[tuple[type[DataCategory["SpotifyDataProvider"]], ...]] = (
-        PlaylistCount,
+        Playlist,
         Account,
         Devices,
-        Tracks,
+        Episode,
+        Artist,
+        Shows,
+        Genres,
      )
 
     # In the functions below, update the elipses (...) with the correct classes and code.
@@ -150,10 +130,21 @@ class SpotifyDataProvider(OAuthDataProvider):
         if refresh_token is not None:
             self.refresh_token = refresh_token
 
-        self.api_client = spotipy.Spotify(auth=self.access_token) # to get the playlists and so on, we only need to use an access_token
+        self.api_client = spotipy.Spotify(auth=self.access_token, oauth_manager=self.oauth_client) # to get the playlists and so on, we only need to use an access_token
+        if refresh_token:
+            self.oauth_client.refresh_access_token(refresh_token)
 
     def init_oauth_client(self, *args, **kwargs) -> None:
-        self.oauth_client = SpotifyOAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_uri=self.redirect_uri, scope=self.__class__._scopes[0])
+        required_scopes: list[str] = self.get_required_scopes(self.builtin_variables, self.custom_variables)
+        logger.debug("Required scopes for spotify: ", required_scopes)
+
+        if len(required_scopes) == 0:
+            required_scopes = list(self.__class__._scopes)
+
+        # Profile is always required for the verifications done in other methods.
+        if "user-read-private" not in required_scopes:
+            required_scopes.append("user-read-private")
+        self.oauth_client = SpotifyOAuth(client_id=self.client_id, client_secret=self.client_secret, redirect_uri=self.redirect_uri, scope=required_scopes, cache_handler=None, cache_path=None)
 
     def get_authorize_url(
         self, builtin_variables: list[dict], custom_variables: list[dict] | None = None
@@ -184,18 +175,27 @@ class SpotifyDataProvider(OAuthDataProvider):
 
             return response
         try:
-            token_info = self.oauth_client.get_access_token(code, as_dict=True)
+            token_info = self.oauth_client.get_access_token(code, as_dict=True, check_cache=False)
             access_token = token_info['access_token']
-            self.api_client = spotipy.Spotify(auth=access_token)
+            self.api_client = spotipy.Spotify(auth=access_token, oauth_manager=self.oauth_client)
             user = self.api_client.current_user()
+
+            if not user:
+                logger.exception("Error in Spotify API call. User was null.")
+                return {
+                    "success": False,
+                    "message_id": "api.data_provider.exchange_code_error.general_error",
+                }
+            
             refresh_token = token_info['refresh_token']
+            self.oauth_client.refresh_access_token(refresh_token)
             user_info = {
                 'username': user['display_name'],
                 'user_id': user['id']
             }
 
-            if not user or not user_info['user_id']:
-                logger.exception("Error in Spotify API call. User or userId was null.")
+            if not user_info['user_id']:
+                logger.exception("Error in Spotify API call. UserId was null.")
                 return {
                     "success": False,
                     "message_id": "api.data_provider.exchange_code_error.general_error",
@@ -250,6 +250,7 @@ class SpotifyDataProvider(OAuthDataProvider):
     @cached_property
     def subscription_level(self):
         user = self.api_client.current_user()
+        logger.debug(f"User in subscription level: {user}")
         return user['product']
 
     @cached_property
@@ -273,14 +274,58 @@ class SpotifyDataProvider(OAuthDataProvider):
         self.playlists = self.api_client.current_user_playlists()
         return len(self.playlists['items'])
     
-    # Saved tracks TODO: test with other saved tracks (not just likes)
-    def tracks(self, idx: int) -> str | None:
-        tracks = self.api_client.current_user_saved_tracks(limit=5)
-        if not tracks:
-            return None
-        tracks = tracks['items']
-        if len(tracks) > idx - 1:
-            artist_list = tracks[idx-1]["track"]["artists"] # several artists are possible for the same song
-            names = ', '.join([artist_list[i]["name"] for i in range(len(artist_list))])
-            return f"{tracks[idx-1]["track"]["name"]} ({names})"
-        return None
+    @cached_property
+    def top_artist(self):
+        playlists = self.api_client.current_user_playlists()
+        playlist_items = []
+        artist_names = []
+        # iterate over every playlist p
+        for p in playlists['items']:
+            playlist_items.append(self.api_client.playlist_items(p['id'], additional_types=('track')))
+            tracks_in_playlist = playlist_items[-1]['items']
+            for track in tracks_in_playlist:
+                artists = track['track']['album']['artists']
+                for artist in artists:
+                    #artist_ids.append(artist['id'])
+                    artist_names.append(artist['name'])
+
+        counter = Counter(artist_names)
+        # Find most common artist
+        most_common_element = counter.most_common(1)[0][0]        
+        return most_common_element
+    
+    def genres(self, idx: int): # idx is one or two
+        def get_spotify_artist(artist_id, access_token):
+            url = f"https://api.spotify.com/v1/artists/{artist_id}"
+            headers = {
+                "Authorization": f"Bearer {access_token}"
+            }
+            
+            response = requests.get(url, headers=headers)
+            # list  of genres
+            return response.json()['genres']
+    
+        playlists = self.api_client.current_user_playlists()
+        genres_ = []
+        # iterate over every playlist p
+        for p in playlists['items']:
+            tracks_in_playlist = self.api_client.playlist_items(p['id'], additional_types=('track'))['items']
+            for track in tracks_in_playlist:
+                artists = track['track']['album']['artists']
+                for artist in artists:
+                    genres_ += get_spotify_artist(artist['id'], self.access_token)
+        counter = Counter(genres_)
+
+        # Find most common artist
+        most_common_genre = counter.most_common(2)[idx-1][0]
+        return most_common_genre
+    
+    @cached_property
+    def episode_cnt(self):
+        episodes = self.api_client.current_user_saved_episodes()
+        return len(episodes['items'])
+    
+    @cached_property
+    def shows_cnt(self):
+        episodes = self.api_client.current_user_saved_episodes()
+        return len(episodes['items'])
