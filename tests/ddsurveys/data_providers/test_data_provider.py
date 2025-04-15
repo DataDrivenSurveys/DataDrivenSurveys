@@ -228,9 +228,18 @@ def test_get_required_scopes_all(provider_name):
         bv["enabled"] = True
 
     temp = data_provider.get_required_scopes(builtin_variables)
+    required_scopes = set()
+
     if isinstance(temp, str):
-        temp = temp.split(",")
-    required_scopes = set(temp)
+        required_scopes.update(s.strip() for s in temp.split(","))
+    elif isinstance(temp, list):
+        for entry in temp:
+            if isinstance(entry, str):
+                required_scopes.update(s.strip() for s in entry.split(","))
+            else:
+                required_scopes.add(entry)
+    else:
+        raise TypeError(f"Unexpected return type from get_required_scopes: {type(temp)}")
     all_scopes = set(data_provider.scopes)
     assert len(required_scopes) > 0, f"No scopes were required for {provider_name}"
     assert all_scopes.issuperset(required_scopes), (
