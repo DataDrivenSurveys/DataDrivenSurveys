@@ -227,7 +227,10 @@ def test_get_required_scopes_all(provider_name):
     for bv in builtin_variables:
         bv["enabled"] = True
 
-    required_scopes = set(data_provider.get_required_scopes(builtin_variables))
+    temp = data_provider.get_required_scopes(builtin_variables)
+    if isinstance(temp, str):
+        temp = temp.split(",")
+    required_scopes = set(temp)
     all_scopes = set(data_provider.scopes)
     assert len(required_scopes) > 0, f"No scopes were required for {provider_name}"
     assert all_scopes.issuperset(required_scopes), (
