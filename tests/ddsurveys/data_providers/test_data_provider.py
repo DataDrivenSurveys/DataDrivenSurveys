@@ -232,7 +232,7 @@ def test_get_required_scopes_all(provider_name):
 
     if isinstance(temp, str):
         required_scopes.update(s.strip() for s in temp.split(","))
-    elif isinstance(temp, list):
+    elif isinstance(temp, (list, tuple)):
         for entry in temp:
             if isinstance(entry, str):
                 required_scopes.update(s.strip() for s in entry.split(","))
