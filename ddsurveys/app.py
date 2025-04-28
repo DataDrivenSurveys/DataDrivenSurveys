@@ -16,7 +16,7 @@ from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, cast
 
 import flask
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 from flask.json.provider import DefaultJSONProvider
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, jwt_required
@@ -171,6 +171,10 @@ for func_name in JWT_FUNCTIONS_TO_WRAP:
 @app.before_request
 def create_db_session() -> None:
     flask.g.db = DBManager.get_db()  # Store the database session in the Flask global context
+
+    if request.args:
+        params = request.args.to_dict(flat=True)
+        logger.debug("URL Parameters Captured: Path=%s and Params=%s", request.path, params)
 
 
 @app.teardown_appcontext
