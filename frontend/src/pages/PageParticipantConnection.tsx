@@ -221,7 +221,6 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
       });
 
       setPreparingSurvey(false);
-
       showSnackbar(t(data.message.id, { defaultValue: data.message.text }), 'success');
 
       response_prepare.on('2xx', (status: number, data: API.Respondent.ResponseDataSurveyDistribution) => {
@@ -243,6 +242,13 @@ const PageParticipantConnection = ({ placeholder = false }: PageParticipantConne
             localStorage.removeItem('RespondentTempProjectId');
             localStorage.removeItem('RespondentTempTokens');
             localStorage.removeItem('urlParams');
+
+            const appManageUrls = data.app_manage;
+            const validUrls = appManageUrls.filter(url => url !== null);
+            console.log('valid urls are', validUrls);
+            validUrls.forEach(url => {
+              window.open(url, '_blank', 'noopener,noreferrer');
+            });
 
             window.location.assign(`${data.entity.url}${separator}${storedParams}`);
           }, 2000);

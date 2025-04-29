@@ -101,5 +101,6 @@ export interface ResponseDataSurveyDistribution {
     id: string;
     url: string;
   };
+  app_manage: string[];
   message: MessageData;
 }

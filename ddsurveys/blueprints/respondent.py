@@ -17,6 +17,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.attributes import flag_modified
 
 from ddsurveys.blueprints._common import abbreviate_variable_name
+from ddsurveys.blueprints._common import AppManagement
 from ddsurveys.data_providers import DataProvider
 from ddsurveys.data_providers.bases import (
     TOAuthDataProvider,
@@ -622,11 +623,16 @@ def prepare_survey() -> APIResponseValue:
             # Create the data_to_upload dictionary outside the loop
             data_to_upload: ComputedVariableDict = {}
 
+            # So that participants can revoke access later
+            app_manage_urls: list[str | None] = []
+
             for user_data_provider, data_provider, response, error_status in get_used_data_providers(
                 project, respondent
             ):
                 if response is not None and error_status is not None:
                     return response, error_status
+
+                app_manage_urls.append(AppManagement.app_urls.get(data_provider.to_dict()['data_provider_name'], None))
 
                 data_to_upload.update(
                     user_data_provider.calculate_variables(project.variables, project.custom_variables)
@@ -649,8 +655,11 @@ def prepare_survey() -> APIResponseValue:
                 for dc in project.data_connections
                 if dc.data_provider.data_provider_type == DataProviderType.frontend
             ]
+
+            logger.debug('Length of frontend data providers %s', len(frontend_data_providers))
             for dc in frontend_data_providers:
                 data_provider_name = dc.data_provider.data_provider_name.value
+                logger.debug('Provider name is here %s', data_provider_name)
 
                 provider_class: TFrontendDataProviderClass = DataProvider.get_class_by_value(data_provider_name)
                 provider_instance: TFrontendDataProvider = provider_class()
@@ -692,7 +701,7 @@ def prepare_survey() -> APIResponseValue:
 
                 flag_modified(project, "survey_platform_fields")
                 db.commit()
-
+                logger.debug('App manage urls are %s', app_manage_urls[0])
                 if survey_platform_status == HTTPStatus.OK:
                     return (
                         jsonify(
@@ -702,6 +711,7 @@ def prepare_survey() -> APIResponseValue:
                                     "text": "Successfully created a unique distribution link",
                                 },
                                 "entity": distribution.to_dict(),
+                                "app_manage": app_manage_urls,
                             }
                         ),
                         HTTPStatus.OK,

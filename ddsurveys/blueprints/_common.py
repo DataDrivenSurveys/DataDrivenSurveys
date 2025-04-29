@@ -39,7 +39,7 @@ Created on 2023-09-08 13:52
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Literal, TypedDict, cast, ClassVar
 
 from flask import Response as FlaskResponse
 from flask import g
@@ -79,6 +79,9 @@ class JWTUserDict(TypedDict):
 # TODO: move the replacement rules to the DP classes
 type StrReplaceRule = tuple[str, str, int]
 
+class AppManagement:
+    # Name (key in this dictionary) must correspond to data provider name in the data_provider table in the database
+    app_urls: ClassVar[dict[str, str]] = {'spotify': "https://www.spotify.com/uk/account/apps/"}
 
 class TReplacementRules(TypedDict):
     common: list[StrReplaceRule]
