@@ -39,7 +39,7 @@ Created on 2023-09-08 13:52
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import TYPE_CHECKING, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Literal, TypedDict, cast, ClassVar
 
 from flask import Response as FlaskResponse
 from flask import g
@@ -79,6 +79,9 @@ class JWTUserDict(TypedDict):
 # TODO: move the replacement rules to the DP classes
 type StrReplaceRule = tuple[str, str, int]
 
+class AppManagement:
+    # Name (key in this dictionary) must correspond to data provider name in the data_provider table in the database
+    app_urls: ClassVar[dict[str, str]] = {'spotify': "https://www.spotify.com/uk/account/apps/"}
 
 class TReplacementRules(TypedDict):
     common: list[StrReplaceRule]
@@ -86,6 +89,7 @@ class TReplacementRules(TypedDict):
     fitbit: list[StrReplaceRule]
     github: list[StrReplaceRule]
     googlecontacts: list[StrReplaceRule]
+    spotify: list[StrReplaceRule]
     instagram: list[StrReplaceRule]
 
 
@@ -105,6 +109,21 @@ REPLACEMENT_RULES: TReplacementRules = {
         (".frontendactivity.", ".frntendact.", -1),
         ("open_", "opn_", -1),
         ("_table", "_tbl", -1),
+    ],
+    "spotify": [
+        (".spotify.", ".spfy.", -1),
+        (".spotify_playlist_count", ".spc", -1),
+        (".devices", ".dev", -1),
+        (".tracks", ".tr", -1),
+        (".subscription_level", ".sl", -1),
+        (".follower_count", ".fc", -1),
+        (".email", ".em", -1),
+        (".top_artist", ".ta", -1),
+        (".genres", ".g", -1),
+        (".episode_cnt", ".ec", -1),
+        (".shows_cnt", ".sc", -1),
+        (".playlistcount", ".pc", -1),
+        (".account", ".ac", -1),
     ],
     "fitbit": [
         # DP name

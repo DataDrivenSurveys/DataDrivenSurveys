@@ -117,7 +117,7 @@ def add_data_provider_to_project() -> ResponseReturnValue:
             )
             .first()
         )
-
+        
         if not data_provider:
             data_provider = DataProviderModel(
                 name=selected_data_provider["label"],
