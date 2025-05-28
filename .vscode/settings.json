@@ -1,125 +1,127 @@
 {
-  "debugpy.debugJustMyCode": false,
-  "files.autoSave": "afterDelay",
-  "editor.formatOnSave": false,
-  "editor.linkedEditing": true,
-  "html.format.indentInnerHtml": true,
-  "html.format.templating": true,
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[typescript]": {
-    "editor.formatOnPaste": false,
-    "editor.suggestSelection": "recentlyUsedByPrefix",
-    "editor.tabSize": 2,
-    "editor.insertSpaces": true,
+  "[javascript]": {
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit",
+      "source.fixAll.eslint": "explicit"
     },
     "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.maxTokenizationLineLength": 2500
+  },
+  "[javascriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.maxTokenizationLineLength": 2500
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true
+  },
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.wordBasedSuggestions": "off"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "mtxr.sqltools"
+  },
+  "[typescript]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnPaste": false,
+    "editor.insertSpaces": true,
+    "editor.suggestSelection": "recentlyUsedByPrefix"
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
-  "[javascript]": {
-    "editor.maxTokenizationLineLength": 2500,
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
-    },
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  },
-  "[javascriptreact]": {
-    "editor.maxTokenizationLineLength": 2500,
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "explicit"
-    },
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-  },
+  "debugpy.debugJustMyCode": false,
+  "editor.formatOnSave": false,
+  "editor.indentSize": "tabSize",
+  "editor.linkedEditing": true,
+  "editor.tabSize": 4,
   "eslint.format.enable": true,
   "eslint.lintTask.enable": true,
   "eslint.useFlatConfig": true,
-  "[python]": {
-    "editor.formatOnSave": true,
-    "editor.wordBasedSuggestions": "off",
-    "editor.tabSize": 4,
-    "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit",
-      "source.fixAll": "explicit"
-    }
-  },
-  "python.defaultInterpreterPath": ".venv/bin/python",
+  "evenBetterToml.formatter.alignEntries": true,
+  "evenBetterToml.formatter.allowedBlankLines": 1,
+  "evenBetterToml.formatter.arrayAutoExpand": true,
+  "evenBetterToml.formatter.arrayTrailingComma": true,
+  "evenBetterToml.formatter.columnWidth": 1,
+  "evenBetterToml.formatter.reorderArrays": true,
+  "evenBetterToml.formatter.trailingNewline": true,
+  "evenBetterToml.taplo.configFile.path": "taplo.toml",
+  "files.autoSave": "afterDelay",
+  "html.format.indentInnerHtml": true,
+  "html.format.templating": true,
+  "mypy.configFile": "pyproject.toml",
+  "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
+  "mypy.runUsingActiveInterpreter": true,
+  "mypy.targets": [
+    "./ddsurveys",
+    "./tests"
+  ],
+  "python.analysis.autoFormatStrings": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.enablePytestSupport": true,
   "python.analysis.extraPaths": [
     "${workspaceFolder}"
   ],
+  "python.analysis.importFormat": "absolute",
+  "python.analysis.indexing": true,
+  "python.analysis.inlayHints.callArgumentNames": "all",
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.inlayHints.pytestParameters": true,
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.supportDocstringTemplate": true,
+  "python.analysis.typeCheckingMode": "strict",
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}"
   ],
-  "python.testing.pytestEnabled": true,
-  "python.analysis.enablePytestSupport": true,
-  "python.analysis.supportDocstringTemplate": true,
-  "python.analysis.inlayHints.pytestParameters": true,
-  "python.analysis.autoImportCompletions": true,
-  "python.analysis.inlayHints.callArgumentNames": "all",
-  "python.analysis.inlayHints.functionReturnTypes": true,
-  "python.analysis.inlayHints.variableTypes": true,
-  "python.analysis.autoFormatStrings": true,
-  "python.analysis.typeCheckingMode": "strict",
-  "python.analysis.importFormat": "absolute",
-  "python.analysis.indexing": true,
-  "python.testing.autoTestDiscoverOnSaveEnabled": true,
-  "python.testing.pytestArgs": [
-    "-rs",
-    "tests/"
-  ],
+  "python.defaultInterpreterPath": ".venv/bin/python",
   "python.terminal.executeInFileDir": true,
-  "python.testing.unittestEnabled": false,
   "python.terminal.launchArgs": [
     "-m",
     "IPython",
     "--no-autoindent",
   ],
+  "python.testing.autoTestDiscoverOnSaveEnabled": true,
+  "python.testing.pytestArgs": [
+    "-rs",
+    "tests/"
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
   "ruff.configuration": "ruff.toml",
   "ruff.format.preview": true,
   "ruff.lint.preview": true,
   "ruff.nativeServer": true,
-  "mypy.configFile": "pyproject.toml",
-  "mypy.targets": [
-    "./ddsurveys",
-    "./tests"
-  ],
-  "mypy.runUsingActiveInterpreter": true,
-  "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
-  "[sql]": {
-    "editor.defaultFormatter": "mtxr.sqltools"
-  },
   "sqltools.connections": [
     {
+      "database": "dds",
+      "driver": "MariaDB",
       "mysqlOptions": {
         "authProtocol": "default",
         "enableSsl": "Disabled"
       },
+      "name": "dds-dev",
+      "port": 3306,
       "previewLimit": 50,
       "server": "localhost",
-      "port": 3306,
-      "driver": "MariaDB",
-      "name": "dds-dev",
-      "database": "dds",
       "username": "root"
     }
-  ],
-  "evenBetterToml.formatter.allowedBlankLines": 1,
-  "evenBetterToml.formatter.alignEntries": true,
-  "evenBetterToml.formatter.arrayAutoExpand": true,
-  "evenBetterToml.formatter.arrayTrailingComma": true,
-  "evenBetterToml.formatter.reorderArrays": true,
-  "evenBetterToml.formatter.trailingNewline": true,
-  "evenBetterToml.formatter.columnWidth": 1,
-  "evenBetterToml.taplo.configFile.path": "taplo.toml",
+  ]
 }
