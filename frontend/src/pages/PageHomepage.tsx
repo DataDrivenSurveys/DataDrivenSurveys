@@ -61,7 +61,7 @@ function HomePageContent(): JSX.Element {
 
   const baseUrl = getFrontendBaseURL();
 
-  const dataProviderNames: string[] = ['Fitbit', 'Instagram', 'Github', 'GoogleContacts'];
+  const dataProviderNames: string[] = ['Fitbit', 'Instagram', 'Github', 'GoogleContacts', 'Spotify'];
 
   return (
     <>
