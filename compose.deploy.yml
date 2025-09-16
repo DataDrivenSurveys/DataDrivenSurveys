@@ -48,6 +48,7 @@ services:
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/letsencrypt
       - ./volumes/certbot/certbot-entrypoint.sh:/certbot-entrypoint.sh
+      - ./.env.deploy.local:/.env.deploy.local
     entrypoint: "/certbot-entrypoint.sh"
     networks:
       - net

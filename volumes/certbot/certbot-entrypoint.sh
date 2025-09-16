@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Source deployment variables
+. /.env.deploy.local
+
 # Path to the live certificate
 live_cert="/etc/letsencrypt/live/${DDS_WEBSITE_URL}/fullchain.pem"
 
