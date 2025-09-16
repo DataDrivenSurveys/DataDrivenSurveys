@@ -16,28 +16,28 @@ http {
 
     server {
         listen 80;
-        server_name www.datadrivensurvey.com;
+        server_name ${DDS_WEBSITE_URL};
 
         location /.well-known/acme-challenge/ {
             root /var/www/letsencrypt;
         }
 
         location / {
-            return 301 https://$host$request_uri;
+            return 301 https://${DOLLAR}host${DOLLAR}request_uri;
         }
     }
 
 
     server {
         listen 443 ssl;
-        server_name www.datadrivensurvey.com;
+        server_name ${DDS_WEBSITE_URL};
 
         root /var/www/frontend;
 
         index index.html;
 
-        ssl_certificate /etc/letsencrypt/live/www.datadrivensurvey.com-0002/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/www.datadrivensurvey.com-0002/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/${DDS_WEBSITE_URL}-0002/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${DDS_WEBSITE_URL}-0002/privkey.pem;
 
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_prefer_server_ciphers off;
@@ -50,28 +50,28 @@ http {
 
         # serve the react build
         location / {
-            try_files $uri /index.html;
+            try_files ${DOLLAR}uri /index.html;
         }
 
         # Serve pre-built static pages
         location /privacy-policy {
-            try_files $uri /privacy-policy/index.html;
+            try_files ${DOLLAR}uri /privacy-policy/index.html;
         }
 
         location /terms-of-service {
-            try_files $uri /terms-of-service/index.html;
+            try_files ${DOLLAR}uri /terms-of-service/index.html;
         }
 
         location /signin {
-            try_files $uri /signin/index.html;
+            try_files ${DOLLAR}uri /signin/index.html;
         }
 
         location /signup {
-            try_files $uri /signup/index.html;
+            try_files ${DOLLAR}uri /signup/index.html;
         }
 
         location /dist {
-            try_files $uri /dist/index.html;
+            try_files ${DOLLAR}uri /dist/index.html;
         }
 
         # Cache static assets
@@ -88,12 +88,12 @@ http {
 
 
         location /api {
-            rewrite ^/api(.*) /$1 break;
+            rewrite ^/api(.*) /${DOLLAR}1 break;
             proxy_pass http://ddsurveys:4000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Host ${DOLLAR}host;
+            proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
+            proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto ${DOLLAR}scheme;
         }
     }
 

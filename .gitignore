@@ -2,6 +2,7 @@
 volumes/db
 volumes/certbot/conf
 volumes/certbot/www
+.env.*.local
 
 # Ignore intellij directory
 .idea/

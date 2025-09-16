@@ -18,13 +18,15 @@ services:
       - DDS_ENV=production
 
   nginx:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
     image: nginx:latest
     restart: on-failure
     volumes:
       - ./volumes/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/letsencrypt
-      - ./frontend/build:/var/www/frontend
       - ./volumes/self-signed-ssl:/etc/self-signed-ssl
       - ./volumes/nginx/nginx-entrypoint.sh:/nginx-entrypoint.sh
       - ./.env.deploy.local:/.env.deploy.local
@@ -38,6 +40,7 @@ services:
       - net
     environment:
       - NODE_ENV=production
+      - DDS_ENV=production
 
   certbot:
     image: certbot/certbot
