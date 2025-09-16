@@ -1,4 +1,4 @@
-name: dds
+name: dds-deploy
 services:
   ddsurveys:
     build: .
@@ -17,7 +17,7 @@ services:
     environment:
       - DDS_ENV=production
 
-  nginx:
+  frontend:
     build:
       context: .
       dockerfile: frontend.Dockerfile
