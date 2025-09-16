@@ -57,6 +57,7 @@ select = [
   "BLE",
   "C",
   "COM",
+  "D",
   "DTZ",
   "E",
   "EM",
@@ -98,9 +99,9 @@ select = [
   "W",
   "YTT",
 ]
-ignore = ["TC006"]
+ignore = ["TC006", "C901", "COM812"]
 
-extend-select = ["D"]
+# extend-select = ["D"]
 
 preview = true
 
