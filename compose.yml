@@ -16,6 +16,7 @@ services:
       - net
     environment:
       - DDS_ENV=production
+      - BACKEND_SERVICE_NAME=ddsurveys
 
   nginx:
     image: nginx:latest
@@ -38,6 +39,7 @@ services:
       - net
     environment:
       - NODE_ENV=production
+      - BACKEND_SERVICE_NAME=ddsurveys
 
   certbot:
     image: certbot/certbot

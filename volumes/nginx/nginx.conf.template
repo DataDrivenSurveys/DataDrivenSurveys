@@ -1,3 +1,4 @@
+# vim:filetype=nginx:fileencoding=utf-8
 events {}
 
 http {
@@ -36,8 +37,8 @@ http {
 
         index index.html;
 
-        ssl_certificate /etc/letsencrypt/live/${DDS_WEBSITE_URL}-0002/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/${DDS_WEBSITE_URL}-0002/privkey.pem;
+        ssl_certificate ${SSL_CERTIFICATE};
+        ssl_certificate_key ${SSL_CERTIFICATE_KEY};
 
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_prefer_server_ciphers off;
@@ -89,7 +90,7 @@ http {
 
         location /api {
             rewrite ^/api(.*) /${DOLLAR}1 break;
-            proxy_pass http://ddsurveys:4000;
+            proxy_pass http://${BACKEND_SERVICE_NAME}:4000;
             proxy_set_header Host ${DOLLAR}host;
             proxy_set_header X-Real-IP ${DOLLAR}remote_addr;
             proxy_set_header X-Forwarded-For ${DOLLAR}proxy_add_x_forwarded_for;

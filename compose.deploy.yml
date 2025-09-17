@@ -1,7 +1,8 @@
 name: dds-deploy
 services:
-  ddsurveys:
+  backend:
     build: .
+    image: dds:backend
     restart: on-failure
     volumes:
       - ./ddsurveys:/app/ddsurveys
@@ -16,14 +17,16 @@ services:
       - net
     environment:
       - DDS_ENV=production
+      - BACKEND_SERVICE_NAME=backend
 
   frontend:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    image: nginx:latest
+    image: dds:frontend
     restart: on-failure
     volumes:
+      - ./frontend:/app/
       - ./volumes/nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/letsencrypt
@@ -33,14 +36,17 @@ services:
     ports:
       - "443:443"
       - "80:80"
-    entrypoint: /nginx-entrypoint.sh
+    # entrypoint: "sleep 10m; /nginx-entrypoint.sh"
+    entrypoint: "/nginx-entrypoint.sh"
     depends_on:
-      - ddsurveys
+      - backend
+      - certbot
     networks:
       - net
     environment:
       - NODE_ENV=production
       - DDS_ENV=production
+      - BACKEND_SERVICE_NAME=backend
 
   certbot:
     image: certbot/certbot
@@ -48,6 +54,7 @@ services:
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/letsencrypt
       - ./volumes/certbot/certbot-entrypoint.sh:/certbot-entrypoint.sh
+      - ./volumes/self-signed-ssl:/etc/self-signed-ssl
       - ./.env.deploy.local:/.env.deploy.local
     entrypoint: "/certbot-entrypoint.sh"
     networks:
