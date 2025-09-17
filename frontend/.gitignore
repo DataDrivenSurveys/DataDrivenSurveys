@@ -10,6 +10,8 @@
 
 # production
 /build
+/public/sitemap.xml
+/*.js
 
 # misc
 .DS_Store
