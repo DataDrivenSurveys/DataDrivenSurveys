@@ -2,7 +2,7 @@ name: dds-deploy
 services:
   backend:
     build: .
-    image: dds:backend
+    image: dds/backend:latest
     restart: on-failure
     volumes:
       - ./ddsurveys:/app/ddsurveys
@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: frontend.Dockerfile
-    image: dds:frontend
+    image: dds/frontend:latest
     restart: on-failure
     volumes:
       - ./frontend:/app/

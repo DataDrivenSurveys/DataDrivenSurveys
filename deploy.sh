@@ -135,8 +135,8 @@ EOF
 echo "Pushing new container to remote"
 declare -A docker_images
 docker_images=(
-  ["dds_backend"]="dds:backend"
-  ["dds_frontend"]="dds:frontend"
+  ["dds_backend"]="dds/backend:latest"
+  ["dds_frontend"]="dds/frontend:latest"
   ["dds_certbot"]="certbot/certbot"
   ["dds_mariadb"]="mariadb:latest"
 )
