@@ -90,15 +90,17 @@ cat .ssh/key_name.pub | ssh admin@www.datadrivensurvey.com 'cat >> .ssh/authoriz
 
 Project will be saved on the users home directory on the server: /home/admin/dds
 
-The advantage is that the user, "admin", has permissions to write to this folder. This is necessary to allow the deploy workflow to copy the files to the server without manually creating target folder and setting up special permissions.
+The advantage is that the user, "admin", has permissions to write to this folder.
+This is necessary to allow the deploy workflow to copy the files to the server without manually creating target folder and setting up special permissions.
 
 ## Setup the infrastructure on `localhost`
 
-Can be use full to test the infrastructure on `localhost`. You will have to include the `nginx` server configuration to serve on port 443 using the self signed certificate.
+Can be use full to test the infrastructure on `localhost`.
+You will have to include the `nginx` server configuration to serve on port 443 using the self signed certificate.
 
 This should not be used for development. Hot reloading will not work with this setup.
 
-```
+```conf
 server {
     listen 443 ssl;
     server_name localhost;
