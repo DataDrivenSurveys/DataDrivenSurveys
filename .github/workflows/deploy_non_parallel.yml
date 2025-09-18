@@ -96,6 +96,7 @@ jobs:
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
+          ls -alh "$HOME/.ssh"
           ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
           mkdir -p dds/volumes
           cd dds
