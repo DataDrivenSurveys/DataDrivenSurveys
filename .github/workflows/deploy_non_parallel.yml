@@ -98,37 +98,53 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
-          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
-      #     ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
-      #     mkdir -p dds/volumes
-      #     cd dds
-      #     if [ -f compose.gh-actions.yml ]; then
-      #       sudo docker compose -f compose.gh-actions.yml down
-      #     fi
-      #     cd ..
-      #     mv dds/volumes ./
-      #     sudo rm -rf ./dds
-      #     mkdir dds
-      #     mv ./volumes ./dds/
-      #     EOF
-      #
-      # - name: Copy the project to the server
-      #   run: |
-      #     ls -lah "$HOME/.ssh"
-      #     scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
-      #
-      # - name: Build the static frontend pages
-      #   run: |
-      #     ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
-      #     cd "~/dds/frontend"
-      #     NODE_ENV=production bash -c 'npm run snap'
-      #     EOF
-      #
-      # - name: Run the project on the server
-      #   run: |
-      #     ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
-      #     cd "~/dds"
-      #     sudo docker compose --env-file .env.deployment.local -f compose.gh-actions.yml up --build -d
-      #     sudo docker system prune -a -f
-      #     EOF
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          mkdir -p dds/volumes
+          cd dds
+          if [ -f compose.yml ]; then
+            sudo docker compose down
+          fi
+          if [ -d frontend/node_modules ]; then
+            mv frontend/node_modules ../
+          fi
+          cd ..
+          mv dds/volumes ./
+          sudo rm -rf ./dds
+          mkdir dds
+          mv ./volumes ./dds/
+          EOF
+
+      - name: Copy the project to the server
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+
+          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
+
+      - name: Build frontend
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          if [ -d node_modules ]; then
+            mv node_modules dds/frontend/node_modules
+          fi
+          cd dds
+          . .env.deploy.local
+          cd frontend
+          npm run build-full
+          EOF
+
+      - name: Build and run docker
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          cd dds
+          . .env.deploy.local
+          sudo docker compose --env-file .env.deployment.local up --build -d
+          sudo docker system prune -a -f
+          EOF
