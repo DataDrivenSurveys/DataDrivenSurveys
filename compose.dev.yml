@@ -1,26 +1,10 @@
 name: dds-dev
 services:
-  frontend:
-    platform: linux/amd64
-    image: node:20
-    working_dir: /app
-    command: bash -c "npm install && npm run dev"
-    volumes:
-      - ./frontend:/app
-#      - /app/node_modules
-    ports:
-      - 3000:3000
-    networks:
-      - dds-dev-net
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - FAST_REFRESH=false
-      - NODE_ENV=development
-
   backend:
     platform: linux/amd64
-    build: .
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
     working_dir: /app
     ports:
       - 4000:4000
@@ -43,7 +27,24 @@ services:
       - dds-dev-net
     environment:
       - DDS_ENV=development
-  
+
+  frontend:
+    platform: linux/amd64
+    image: node:20
+    working_dir: /app
+    command: bash -c "npm install && npm run dev"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - 3000:3000
+    networks:
+      - dds-dev-net
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=false
+      - NODE_ENV=development
+
   db:
     platform: linux/amd64
     image: mariadb:latest
@@ -57,11 +58,10 @@ services:
     networks:
       - dds-dev-net
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
       interval: 3s
       retries: 5
 
 networks:
   dds-dev-net:
     name: dds-dev-net
-  

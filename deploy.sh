@@ -4,7 +4,7 @@
 # Export variables if they were loaded from the deployment env file
 if [ -f .env.deploy.local ]; then
   source .env.deploy.local
-  export DDS_WEBSITE_URL
+  # Variables for configuring the platform
   export NODE_ENV
   export DDS_ENV
   export DDS_WEBSITE_URL
@@ -17,14 +17,22 @@ if [ -f .env.deploy.local ]; then
   export REACT_APP_API_URL
   export REACT_APP_FRONTEND_URL
   export SELF_SIGNED_SSL
+  # Variables for ssh
   export SERVER_SSH_KEY
   export SERVER_USERNAME
   export SERVER_HOST
+  # Variables for deployment
+  export DEPLOY_BRANCH
+  export FRESH_CLONE
 fi
 
-FRONTEND_URL='https://${DDS_WEBSITE_URL}'
-REACT_APP_API_URL='https://${DDS_WEBSITE_URL}/api'
-REACT_APP_FRONTEND_URL='https://${DDS_WEBSITE_URL}'
+# Set variables with default values
+export FRONTEND_URL="${FRONTEND_URL:-https://$DDS_WEBSITE_URL}"
+export REACT_APP_API_URL="${REACT_APP_API_URL:-https://$DDS_WEBSITE_URL/api}"
+export REACT_APP_FRONTEND_URL="${REACT_APP_FRONTEND_URL:-https://$DDS_WEBSITE_URL}"
+export SELF_SIGNED_SSL="${SELF_SIGNED_SSL:-true}"
+export DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
+export FRESH_CLONE="${FRESH_CLONE:-false}"
 
 ssh_address="${SERVER_USERNAME}@${SERVER_HOST}"
 
@@ -47,6 +55,9 @@ vars=(
   "SERVER_SSH_KEY"
   "SERVER_USERNAME"
   "SERVER_HOST"
+  # Variables for deployment
+  "DEPLOY_BRANCH"
+  "FRESH_CLONE"
 )
 missing_vars=()
 
@@ -66,7 +77,23 @@ if (("${#missing_vars[@]}" > 0)); then
   exit 1
 fi
 
-# Create .env.deploy.local in case it doesn't exist
+# Clone the project using current clone for faster cloning
+echo "Cloning project"
+if [ "${FRESH_CLONE:-true}" = "true" ] && [ -d deployment ]; then
+  rm -rf deployment
+fi
+
+# Update deployment or clone repo for deployment
+if [ -d deployment ]; then
+  cd deployment || exit 1
+  echo "Pulling latest changes"
+  git pull
+else
+  git clone --branch "${DEPLOY_BRANCH}" --single-branch .git deployment
+  cd deployment || exit 1
+fi
+
+echo "Create .env.deploy.local"
 cat >.env.deploy.local <<EOF
 # Variables for configuring the platform
 NODE_ENV="${NODE_ENV}"
@@ -85,15 +112,12 @@ SELF_SIGNED_SSL="${SELF_SIGNED_SSL}"
 SERVER_SSH_KEY="${SERVER_SSH_KEY}"
 SERVER_USERNAME="${SERVER_USERNAME}"
 SERVER_HOST="${SERVER_HOST}"
+# Variables for deployment
+DEPLOY_BRANCH="${DEPLOY_BRANCH}"
+FRESH_CLONE="${FRESH_CLONE}"
 EOF
 
-# Clone the project
-# git clone --branch deploy-script --single-branch git@github.com:DataDrivenSurveys/DataDrivenSurveysInternal.git deployment
-
-# cd deployment || exit 1
-
-echo "Generate .env.production.local for ddsurveys and frontend."
-
+echo "Generate .env.production.local for backend and frontend"
 echo DATABASE_URL="${DATABASE_URL}" >ddsurveys/.env.production.local
 echo JWT_SECRET_KEY="${JWT_SECRET_KEY}" >>ddsurveys/.env.production.local
 echo FRONTEND_URL="https://${DDS_WEBSITE_URL}" >>ddsurveys/.env.production.local
@@ -105,31 +129,37 @@ echo REACT_APP_API_URL="https://${DDS_WEBSITE_URL}/api" >frontend/.env.productio
 echo REACT_APP_FRONTEND_URL="https://${DDS_WEBSITE_URL}" >>frontend/.env.production.local
 
 # Build frontend
-echo "Build docker container"
-dos2unix volumes/certbot/certbot-entrypoint.sh
-dos2unix volumes/nginx/nginx-entrypoint.sh
-dos2unix ddsurveys/entrypoint.sh
-chmod +x volumes/certbot/certbot-entrypoint.sh
-chmod +x volumes/nginx/nginx-entrypoint.sh
-chmod +x ddsurveys/entrypoint.sh
+# The frontend is built outside of docker because running snap didn't work in docker.
+# Without running snap, static pages aren't generated so the frontend doesn't work correctly.
+echo "Build frontend"
+cd frontend || exit 1
+npm install
 
-docker compose --env-file .env.deploy.local -f compose.deploy.yml build || exit 1
-# docker compose --env-file .env.deploy.local -f compose.deploy.yml build --pull --no-cache || exit 1
+if [ -d build ]; then
+  rm -rf build
+  mkdir build
+fi
+
+npm run build-extras
+npm run update-browserslist
+npm run build
+npm run snap
+cd .. || exit 1
+
+echo "Build docker container"
+docker compose --env-file .env.deploy.local -f compose.yml build || exit 1
 
 echo "Stop deployment docker and remove old project files/directories"
 ssh -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
-cd /home/admin/dds
-sudo docker compose down
+mkdir -p dds/volumes/db dds/volumes/self-signed-ssl dds/volumes/nginx
+cd dds
+if [ -f compose.yml ]; then
+  sudo docker compose -f compose.yml down
+fi
 EOF
-# cd /home/admin
-# mv dds/volumes ./
-# sudo rm -rf ./dds
-# mkdir dds
-# mv ./volumes ./dds/
 
 echo "Creating production directory structure"
 ssh -o BatchMode=yes -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
-mkdir -p dds/volumes/db dds/volumes/self-signed-ssl
 EOF
 
 echo "Pushing new container to remote"
@@ -158,16 +188,25 @@ else
   done
 fi
 
-scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -p compose.deploy.yml .env.deploy.local "${docker_exported_images[@]}" "${ssh_address}":dds/
+echo "Copying files to server"
+scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -p compose.yml .env.deploy.local "${docker_exported_images[@]}" "${ssh_address}":dds/
 scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -r -p volumes/certbot volumes/nginx "${ssh_address}":dds/volumes
-scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -r -p ddsurveys "${ssh_address}":dds/
 
 ssh -o BatchMode=yes -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
 cd dds
+
+echo "Loading backend container"
 sudo bash -c "cat dds_backend.tar | docker load"
+
+echo "Loading frontend container"
 sudo bash -c "cat dds_frontend.tar | docker load"
+
+echo "Loading certbot container"
 sudo bash -c "cat dds_certbot.tar | docker load"
+
+echo "Loading mariadb container"
 sudo bash -c "cat dds_mariadb.tar | docker load"
-sudo bash -c "docker compose --env-file .env.deploy.local -f compose.deploy.yml up -d"
+
+sudo bash -c "docker compose --env-file .env.deploy.local -f compose.yml up -d"
 sudo bash -c "sudo docker system prune -a -f"
 EOF
