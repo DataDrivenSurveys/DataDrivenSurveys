@@ -120,7 +120,7 @@ jobs:
           eval $(ssh-agent -s)
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
-          rsync -raz --exclude '.git' --exclude '.gitignore' --exclude '.gitattributes' -e "ssh -o BatchMode=yes -i '$HOME/.ssh/id_rsa'" . "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}":dds/
+          rsync -ravz --exclude 'node_modules' --exclude '.git' --exclude '.gitignore' --exclude '.gitattributes' -e "ssh -o BatchMode=yes -i '$HOME/.ssh/id_rsa'" . "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}":dds/
 
       - name: Build frontend static pages
         run: |
@@ -128,9 +128,15 @@ jobs:
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
           ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          if [ -d node_modules ]; then
+            mv node_modules dds/frontend/node_modules
+          fi
           cd dds
           . .env.deploy.local
           cd frontend
+          if [ ! -d node_modules ]; then
+            npm install
+          fi
           npm run snap
           EOF
 
