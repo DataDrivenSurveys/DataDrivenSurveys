@@ -24,17 +24,6 @@ jobs:
         with:
           ref: ${{ github.event.inputs.DEPLOY_BRANCH }}
 
-      - name: Prepare SSH
-        run: |
-          eval $(ssh-agent -s)
-          mkdir -v -m 700 "$HOME/.ssh"
-          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" > "$HOME/.ssh/known_hosts"
-          echo "${{ secrets.SERVER_SSH_KEY }}" > "$HOME/.ssh/id_rsa"
-          chmod 400 "$HOME/.ssh/id_rsa"
-          echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
-          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
-          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
-
       - name: Generate .env files
         run: |
           echo "Create .env.deploy.local"
@@ -62,6 +51,17 @@ jobs:
           echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env
           echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >frontend/.env.production.local
           echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env.production.local
+
+      - name: Copy project to remote
+        run: |
+          eval $(ssh-agent -s)
+          mkdir -v -m 700 "$HOME/.ssh"
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" > "$HOME/.ssh/known_hosts"
+          echo "${{ secrets.SERVER_SSH_KEY }}" > "$HOME/.ssh/id_rsa"
+          chmod 400 "$HOME/.ssh/id_rsa"
+          echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
       # - name: Cache node modules
       #   id: cache-npm
@@ -96,37 +96,38 @@ jobs:
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
           ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
-          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
-          mkdir -p dds/volumes
-          cd dds
-          if [ -f compose.gh-actions.yml ]; then
-            sudo docker compose -f compose.gh-actions.yml down
-          fi
-          cd ..
-          mv dds/volumes ./
-          sudo rm -rf ./dds
-          mkdir dds
-          mv ./volumes ./dds/
-          EOF
-
-      - name: Copy the project to the server
-        run: |
-          ls -lah "$HOME/.ssh"
-          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
-
-      - name: Build the static frontend pages
-        run: |
-          ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
-          cd "~/dds/frontend"
-          NODE_ENV=production bash -c 'npm run snap'
-          EOF
-
-      - name: Run the project on the server
-        run: |
-          ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
-          cd "~/dds"
-          sudo docker compose --env-file .env.deployment.local -f compose.gh-actions.yml up --build -d
-          sudo docker system prune -a -f
-          EOF
+      #     ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+      #     mkdir -p dds/volumes
+      #     cd dds
+      #     if [ -f compose.gh-actions.yml ]; then
+      #       sudo docker compose -f compose.gh-actions.yml down
+      #     fi
+      #     cd ..
+      #     mv dds/volumes ./
+      #     sudo rm -rf ./dds
+      #     mkdir dds
+      #     mv ./volumes ./dds/
+      #     EOF
+      #
+      # - name: Copy the project to the server
+      #   run: |
+      #     ls -lah "$HOME/.ssh"
+      #     scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
+      #
+      # - name: Build the static frontend pages
+      #   run: |
+      #     ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
+      #     cd "~/dds/frontend"
+      #     NODE_ENV=production bash -c 'npm run snap'
+      #     EOF
+      #
+      # - name: Run the project on the server
+      #   run: |
+      #     ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
+      #     cd "~/dds"
+      #     sudo docker compose --env-file .env.deployment.local -f compose.gh-actions.yml up --build -d
+      #     sudo docker system prune -a -f
+      #     EOF
