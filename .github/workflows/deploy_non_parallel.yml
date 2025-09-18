@@ -63,36 +63,36 @@ jobs:
           echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >frontend/.env.production.local
           echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env.production.local
 
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            frontend/node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
-
-      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-        name: List the state of node modules
-        working-directory: frontend
-        continue-on-error: true
-        run: npm list
-
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: |
-          npm install
-
-      - name: Build the Frontend
-        working-directory: frontend
-        env:
-          NODE_ENV: production
-        run: |
-          npm run build-extras
-          npm run update-browserslist
-          npm run build
+      # - name: Cache node modules
+      #   id: cache-npm
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ~/.npm
+      #       frontend/node_modules
+      #     key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-modules-
+      #
+      # - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+      #   name: List the state of node modules
+      #   working-directory: frontend
+      #   continue-on-error: true
+      #   run: npm list
+      #
+      # - name: Install frontend dependencies
+      #   working-directory: frontend
+      #   run: |
+      #     npm install
+      #
+      # - name: Build the Frontend
+      #   working-directory: frontend
+      #   env:
+      #     NODE_ENV: production
+      #   run: |
+      #     npm run build-extras
+      #     npm run update-browserslist
+      #     npm run build
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
@@ -111,6 +111,7 @@ jobs:
 
       - name: Copy the project to the server
         run: |
+          ls -lah "$HOME/.ssh"
           scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
 
       - name: Build the static frontend pages
