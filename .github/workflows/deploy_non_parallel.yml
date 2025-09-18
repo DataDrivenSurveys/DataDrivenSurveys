@@ -25,8 +25,6 @@ jobs:
           ref: ${{ github.event.inputs.DEPLOY_BRANCH }}
 
       - name: Prepare SSH
-        env:
-          ssh_address: "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}"
         run: |
           eval $(ssh-agent -s)
           mkdir -v -m 700 "$HOME/.ssh"
@@ -35,6 +33,7 @@ jobs:
           chmod 400 "$HOME/.ssh/id_rsa"
           echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
       - name: Generate .env files
         run: |
@@ -97,7 +96,7 @@ jobs:
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
-          ssh -i "$HOME/.ssh/id_rsa" "${server_address}" <<EOF
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
           mkdir -p dds/volumes
           cd dds
           if [ -f compose.gh-actions.yml ]; then
@@ -112,7 +111,7 @@ jobs:
 
       - name: Copy the project to the server
         run: |
-          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${ssh_address}:dds/"
+          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
 
       - name: Build the static frontend pages
         run: |
