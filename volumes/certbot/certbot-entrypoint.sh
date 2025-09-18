@@ -12,7 +12,7 @@ if [ "${SELF_SIGNED_SSL}" = "true" ]; then
   while true; do
     if [ -f "$PRIVKEY_PATH" ] && [ -f "$FULLCHAIN_PATH" ]; then
       # Certificate exists, check if expiring within 10 days
-      EXPIRY_DATE_STR=$(openssl x509 -in "$FULLCHAIN_PATH" -noout -checkend 864000)
+      EXPIRY_DATE_STR="$(openssl x509 -in "$FULLCHAIN_PATH" -noout -checkend 864000)"
 
       # Check if renewal is needed
       if [ "$EXPIRY_DATE_STR" = "Certificate will expire" ]; then
