@@ -96,6 +96,7 @@ jobs:
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
+          eval $(ssh-agent -s)
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
           ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
