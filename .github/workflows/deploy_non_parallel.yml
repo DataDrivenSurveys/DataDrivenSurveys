@@ -24,6 +24,18 @@ jobs:
         with:
           ref: ${{ github.event.inputs.DEPLOY_BRANCH }}
 
+      - name: Prepare SSH
+        env:
+          ssh_address: "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}"
+        run: |
+          eval $(ssh-agent -s)
+          mkdir -v -m 700 "$HOME/.ssh"
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" > "$HOME/.ssh/known_hosts"
+          echo "${{ secrets.SERVER_SSH_KEY }}" > "$HOME/.ssh/id_rsa"
+          chmod 400 "$HOME/.ssh/id_rsa"
+          echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+
       - name: Generate .env files
         run: |
           echo "Create .env.deploy.local"
@@ -82,17 +94,6 @@ jobs:
           npm run build-extras
           npm run update-browserslist
           npm run build
-
-      - name: Prepare SSH
-        env:
-          ssh_address: "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}"
-        run: |
-          mkdir -v -m 700 "$HOME/.ssh"
-          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" > "$HOME/.ssh/known_hosts"
-          echo "${{ secrets.SERVER_SSH_KEY }}" > "$HOME/.ssh/id_rsa"
-          chmod 400 "$HOME/.ssh/id_rsa"
-          echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
-          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
       - name: Stop deployment docker and remove old project files/directories
         run: |
