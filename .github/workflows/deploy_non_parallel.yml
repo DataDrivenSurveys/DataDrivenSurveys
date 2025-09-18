@@ -52,7 +52,7 @@ jobs:
           echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >frontend/.env.production.local
           echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env.production.local
 
-      - name: Copy project to remote
+      - name: Set up and test SSH
         run: |
           eval $(ssh-agent -s)
           mkdir -v -m 700 "$HOME/.ssh"
@@ -120,7 +120,7 @@ jobs:
           eval $(ssh-agent -s)
           SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
-          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p * .* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
+          scp -o BatchMode=yes -B -i "$HOME/.ssh/id_rsa" -r -p [!.git]* "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:dds/"
 
       - name: Build frontend
         run: |
