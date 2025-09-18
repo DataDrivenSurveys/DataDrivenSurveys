@@ -133,17 +133,14 @@ echo REACT_APP_FRONTEND_URL="https://${DDS_WEBSITE_URL}" >>frontend/.env.product
 # Without running snap, static pages aren't generated so the frontend doesn't work correctly.
 echo "Build frontend"
 cd frontend || exit 1
-npm install
 
 if [ -d build ]; then
   rm -rf build
   mkdir build
 fi
 
-npm run build-extras
-npm run update-browserslist
-npm run build
-npm run snap
+npm run build-full
+
 cd .. || exit 1
 
 echo "Build docker container"
