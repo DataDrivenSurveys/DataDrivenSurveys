@@ -1,6 +1,9 @@
 #!/bin/sh
 
+# Variable used in nginx config template to create variables for nginx after template expansion
 export DOLLAR='$'
+
+# Source deploy env
 . /.env.deploy.local
 export DDS_WEBSITE_URL="${DDS_WEBSITE_URL}"
 export BACKEND_SERVICE_NAME="${BACKEND_SERVICE_NAME}"
