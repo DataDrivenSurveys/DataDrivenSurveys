@@ -163,6 +163,6 @@ jobs:
           ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
           cd dds
           . .env.deploy.local
-          sudo docker compose --env-file .env.deployment.local up --build -d
+          sudo docker compose --env-file .env.deploy.local up --build -d
           sudo docker system prune -a -f
           EOF
