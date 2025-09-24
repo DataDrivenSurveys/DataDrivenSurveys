@@ -1,13 +1,9 @@
-name: Deploy to Debian Server (non-parallel)
+name: Deploy to Debian Server
 on:
   workflow_dispatch:
     inputs:
-      DEPLOY_BRANCH:
-        description: "Branch to use for deployment"
-        required: true
-        default: "main"
       SELF_SIGNED_SSL:
-        description: "When true: generate a self-signed SSL certificate; when false: use certbot to get a certificate."
+        description: "Generate self-signed SSL? When true: generate a self-signed SSL certificate; when false: use certbot to get a certificate."
         type: choice
         options:
           - "true"
@@ -21,8 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          ref: ${{ github.event.inputs.DEPLOY_BRANCH }}
 
       - name: Generate .env files
         run: |
@@ -137,6 +131,8 @@ jobs:
           if [ ! -d node_modules ]; then
             npm install
           fi
+          # ensure no previous snap process is hanging
+          killall node
           npm run snap
           EOF
 
