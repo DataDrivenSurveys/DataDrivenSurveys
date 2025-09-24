@@ -155,16 +155,12 @@ if [ -f compose.yml ]; then
 fi
 EOF
 
-echo "Creating production directory structure"
-ssh -o BatchMode=yes -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
-EOF
-
 echo "Pushing new container to remote"
 declare -A docker_images
 docker_images=(
   ["dds_backend"]="dds/backend:latest"
   ["dds_frontend"]="dds/frontend:latest"
-  ["dds_certbot"]="certbot/certbot"
+  ["dds_certbot"]="dds/certbot"
   ["dds_mariadb"]="mariadb:latest"
 )
 docker_exported_images=()
@@ -186,8 +182,7 @@ else
 fi
 
 echo "Copying files to server"
-scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -p compose.yml .env.deploy.local "${docker_exported_images[@]}" "${ssh_address}":dds/
-scp -o BatchMode=yes -B -i "${SERVER_SSH_KEY}" -r -p volumes/certbot volumes/nginx "${ssh_address}":dds/volumes
+rsync -ravz --exclude 'node_modules' --exclude '.git' --exclude '.gitignore' --exclude '.gitattributes' -e "ssh -o BatchMode=yes -i '${SERVER_SSH_KEY}'" . "${ssh_address}":dds/
 
 ssh -o BatchMode=yes -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
 cd dds
