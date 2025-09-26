@@ -155,30 +155,47 @@ if [ -f compose.yml ]; then
 fi
 EOF
 
-echo "Pushing new container to remote"
-declare -A docker_images
-docker_images=(
-  ["dds_backend"]="dds/backend:latest"
-  ["dds_frontend"]="dds/frontend:latest"
-  ["dds_certbot"]="dds/certbot"
-  ["dds_mariadb"]="mariadb:latest"
-)
-docker_exported_images=()
-
+echo "Exporting docker containers"
 if [[ -x $(command -v tqdm 2>/dev/null) ]]; then
-  for name in "${!docker_images[@]}"; do
-    image="${docker_images[${name}]}"
-    echo "$image, $name"
-    docker_exported_images+=("$name.tar")
-    docker save "$image" | tqdm --desc "Saving $image image" --bytes --total "$(docker image inspect "$image" --format='{{.Size}}')" >"$name.tar"
-  done
+  image="dds/backend:latest"
+  name="dds_backend"
+  echo "$image, $name"
+  docker save "$image" | tqdm --desc "Saving $image image" --bytes --total "$(docker image inspect "$image" --format='{{.Size}}')" >"$name.tar"
+
+  image="dds/frontend:latest"
+  name="dds_frontend"
+  echo "$image, $name"
+  docker save "$image" | tqdm --desc "Saving $image image" --bytes --total "$(docker image inspect "$image" --format='{{.Size}}')" >"$name.tar"
+
+  image="dds/certbot:latest"
+  name="dds_certbot"
+  echo "$image, $name"
+  docker save "$image" | tqdm --desc "Saving $image image" --bytes --total "$(docker image inspect "$image" --format='{{.Size}}')" >"$name.tar"
+
+  image="mariadb:latest"
+  name="dds_mariadb"
+  echo "$image, $name"
+  docker save "$image" | tqdm --desc "Saving $image image" --bytes --total "$(docker image inspect "$image" --format='{{.Size}}')" >"$name.tar"
 else
-  for name in "${!docker_images[@]}"; do
-    image="${docker_images[${name}]}"
-    docker_exported_images+=("$name.tar")
-    echo "Saving $image image"
-    docker save "$image" >"$name.tar"
-  done
+  image="dds/backend:latest"
+  name="dds_backend"
+  echo "Saving $image image"
+  docker save "$image" >"$name.tar"
+
+  image="dds/frontend:latest"
+  name="dds_frontend"
+  echo "Saving $image image"
+  docker save "$image" >"$name.tar"
+
+  image="dds/certbot:latest"
+  name="dds_certbot"
+  echo "Saving $image image"
+  docker save "$image" >"$name.tar"
+
+  image="mariadb:latest"
+  name="dds_mariadb"
+  echo "Saving $image image"
+  docker save "$image" >"$name.tar"
 fi
 
 echo "Copying files to server"

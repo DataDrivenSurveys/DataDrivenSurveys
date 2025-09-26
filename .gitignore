@@ -4,6 +4,7 @@ volumes/certbot/conf
 volumes/certbot/www
 volumes/self-signed-ssl
 .env.*.local
+deployment/
 
 # Ignore intellij directory
 .idea/

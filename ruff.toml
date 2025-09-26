@@ -99,7 +99,7 @@ select = [
   "W",
   "YTT",
 ]
-ignore = ["TC006", "C901", "COM812"]
+ignore = ["TC006", "C901", "COM812", "PLW1514"]
 
 # extend-select = ["D"]
 
