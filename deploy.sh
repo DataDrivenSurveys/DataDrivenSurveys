@@ -21,6 +21,7 @@ if [ -f .env.deploy.local ]; then
   export SERVER_SSH_KEY
   export SERVER_USERNAME
   export SERVER_HOST
+  export SERVER_SUDO_PASSWORD
   # Variables for deployment
   export DEPLOY_BRANCH
   export FRESH_CLONE
@@ -55,6 +56,7 @@ vars=(
   "SERVER_SSH_KEY"
   "SERVER_USERNAME"
   "SERVER_HOST"
+  "SERVER_SUDO_PASSWORD"
   # Variables for deployment
   "DEPLOY_BRANCH"
   "FRESH_CLONE"
@@ -87,13 +89,14 @@ fi
 if [ -d deployment ]; then
   cd deployment || exit 1
   echo "Pulling latest changes"
+  git reset --hard HEAD
   git pull
 else
   git clone --branch "${DEPLOY_BRANCH}" --single-branch .git deployment
   cd deployment || exit 1
 fi
 
-echo "Create .env.deploy.local"
+echo "Create .env.deploy.local for deployment"
 cat >.env.deploy.local <<EOF
 # Variables for configuring the platform
 NODE_ENV="${NODE_ENV}"
@@ -108,13 +111,6 @@ APP_SURVEY_MONKEY_CLIENT_SECRET="${APP_SURVEY_MONKEY_CLIENT_SECRET}"
 REACT_APP_API_URL="${REACT_APP_API_URL}"
 REACT_APP_FRONTEND_URL="${REACT_APP_FRONTEND_URL}"
 SELF_SIGNED_SSL="${SELF_SIGNED_SSL}"
-# Variables for ssh
-SERVER_SSH_KEY="${SERVER_SSH_KEY}"
-SERVER_USERNAME="${SERVER_USERNAME}"
-SERVER_HOST="${SERVER_HOST}"
-# Variables for deployment
-DEPLOY_BRANCH="${DEPLOY_BRANCH}"
-FRESH_CLONE="${FRESH_CLONE}"
 EOF
 
 echo "Generate .env.production.local for backend and frontend"
@@ -150,8 +146,9 @@ echo "Stop deployment docker and remove old project files/directories"
 ssh -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
 mkdir -p dds/volumes/db dds/volumes/self-signed-ssl dds/volumes/nginx
 cd dds
+
 if [ -f compose.yml ]; then
-  sudo docker compose -f compose.yml down
+  echo '$SERVER_SUDO_PASSWORD' | sudo -S docker compose -f compose.yml down
 fi
 EOF
 
@@ -205,17 +202,17 @@ ssh -o BatchMode=yes -i "${SERVER_SSH_KEY}" "${ssh_address}" <<EOF
 cd dds
 
 echo "Loading backend container"
-sudo bash -c "cat dds_backend.tar | docker load"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "cat dds_backend.tar | docker load"
 
 echo "Loading frontend container"
-sudo bash -c "cat dds_frontend.tar | docker load"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "cat dds_frontend.tar | docker load"
 
 echo "Loading certbot container"
-sudo bash -c "cat dds_certbot.tar | docker load"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "cat dds_certbot.tar | docker load"
 
 echo "Loading mariadb container"
-sudo bash -c "cat dds_mariadb.tar | docker load"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "cat dds_mariadb.tar | docker load"
 
-sudo bash -c "docker compose --env-file .env.deploy.local -f compose.yml up -d"
-sudo bash -c "sudo docker system prune -a -f"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "docker compose --env-file .env.deploy.local -f compose.yml up -d"
+echo '$SERVER_SUDO_PASSWORD' | sudo -S bash -c "docker system prune -a -f"
 EOF
