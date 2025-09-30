@@ -1,6 +1,7 @@
 name: dds
 services:
   backend:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: backend.Dockerfile
@@ -20,6 +21,7 @@ services:
       - BACKEND_SERVICE_NAME=backend
 
   certbot:
+    platform: linux/amd64
     image: dds/certbot:latest
     build:
       context: .
@@ -33,6 +35,7 @@ services:
       - net
 
   db:
+    platform: linux/amd64
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -51,6 +54,7 @@ services:
       retries: 5
 
   frontend:
+    platform: linux/amd64
     image: dds/frontend:latest
     build:
       context: .
