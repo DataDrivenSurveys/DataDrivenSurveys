@@ -1,6 +1,12 @@
 #!/bin/bash
 # Script to build and deploy DDS to a generic server that can run docker
 
+# Prompt user for remote sudo password
+echo "Enter remote sudo password (SERVER_SUDO_PASSWORD). If there is no password, just press ENTER"
+echo -n "Remote sudo password: "
+read -s -r SERVER_SUDO_PASSWORD
+echo
+
 # Export variables if they were loaded from the deployment env file
 if [ -f .env.deploy.local ]; then
   source .env.deploy.local
@@ -21,7 +27,6 @@ if [ -f .env.deploy.local ]; then
   export SERVER_SSH_KEY
   export SERVER_USERNAME
   export SERVER_HOST
-  export SERVER_SUDO_PASSWORD
   # Variables for deployment
   export DEPLOY_BRANCH
   export FRESH_CLONE
@@ -56,7 +61,6 @@ vars=(
   "SERVER_SSH_KEY"
   "SERVER_USERNAME"
   "SERVER_HOST"
-  "SERVER_SUDO_PASSWORD"
   # Variables for deployment
   "DEPLOY_BRANCH"
   "FRESH_CLONE"
