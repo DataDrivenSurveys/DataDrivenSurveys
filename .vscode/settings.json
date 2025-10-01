@@ -67,13 +67,6 @@
   "files.autoSave": "afterDelay",
   "html.format.indentInnerHtml": true,
   "html.format.templating": true,
-  "mypy.configFile": "pyproject.toml",
-  "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
-  "mypy.runUsingActiveInterpreter": true,
-  "mypy.targets": [
-    "./ddsurveys",
-    "./tests"
-  ],
   "python.analysis.autoFormatStrings": true,
   "python.analysis.autoImportCompletions": true,
   "python.analysis.enablePytestSupport": true,
@@ -123,5 +116,6 @@
       "server": "localhost",
       "username": "root"
     }
-  ]
+  ],
+  "python.pyrefly.displayTypeErrors": "force-on"
 }
