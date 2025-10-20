@@ -1,153 +1,164 @@
 name: Deploy to Debian Server
-
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      SELF_SIGNED_SSL:
+        description: "Generate self-signed SSL? When true: generate a self-signed SSL certificate; when false: use certbot to get a certificate."
+        type: choice
+        options:
+          - "true"
+          - "false"
+        default: "false"
 
 jobs:
-  build_frontend:
-    name: Build frontend
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        ref: main
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Generate .env.production.local for ddsurveys and frontend.
-      run: |
-        echo DATABASE_URL="${{ secrets.DATABASE_URL }}" > ddsurveys/.env.production.local
-        echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >> ddsurveys/.env.production.local
-        echo FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> ddsurveys/.env.production.local
-        echo APP_SURVEY_MONKEY_CLIENT_ID="${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }}" >> ddsurveys/.env.production.local
-        echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >> ddsurveys/.env.production.local
-        echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env
-        echo REACT_APP_FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> frontend/.env
-        echo REACT_APP_API_URL="${{ secrets.REACT_APP_API_URL }}" > frontend/.env.production.local
-        echo REACT_APP_FRONTEND_URL="${{ secrets.FRONTEND_URL }}" >> frontend/.env.production.local
+      - name: Generate .env files
+        run: |
+          echo "Create .env.deploy.local"
+          # Variables for configuring the platform
+          echo NODE_ENV="production" >.env.deploy.local
+          echo DDS_ENV="production" >>.env.deploy.local
+          echo DDS_WEBSITE_URL="${{ secrets.DDS_WEBSITE_URL }}" >>.env.deploy.local
+          echo DDS_EMAIL="${{ secrets.DDS_EMAIL }}" >>.env.deploy.local
+          echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >>.env.deploy.local
+          echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >>.env.deploy.local
+          echo FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>.env.deploy.local
+          echo APP_SURVEY_MONKEY_CLIENT_ID="${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }}" >>.env.deploy.local
+          echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >>.env.deploy.local
+          echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >>.env.deploy.local
+          echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>.env.deploy.local
+          echo SELF_SIGNED_SSL="${{ github.event.inputs.SELF_SIGNED_SSL }}" >>.env.deploy.local
 
-    - name: Cache node modules
-      id: cache-npm
-      uses: actions/cache@v3
-      with:
-        path: |
-          ~/.npm
-          frontend/node_modules
-        key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-modules-
+          echo "Generate .env.production.local for backend and frontend"
+          echo DATABASE_URL="${{ secrets.DATABASE_URL }}" >ddsurveys/.env.production.local
+          echo JWT_SECRET_KEY="${{ secrets.JWT_SECRET_KEY }}" >>ddsurveys/.env.production.local
+          echo FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>ddsurveys/.env.production.local
+          echo APP_SURVEY_MONKEY_CLIENT_ID="${{ secrets.APP_SURVEY_MONKEY_CLIENT_ID }}" >>ddsurveys/.env.production.local
+          echo APP_SURVEY_MONKEY_CLIENT_SECRET="${{ secrets.APP_SURVEY_MONKEY_CLIENT_SECRET }}" >>ddsurveys/.env.production.local
+          echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >frontend/.env
+          echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env
+          echo REACT_APP_API_URL="https://${{ secrets.DDS_WEBSITE_URL }}/api" >frontend/.env.production.local
+          echo REACT_APP_FRONTEND_URL="https://${{ secrets.DDS_WEBSITE_URL }}" >>frontend/.env.production.local
 
-    - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-      name: List the state of node modules
-      working-directory: frontend
-      continue-on-error: true
-      run: npm list
+      - name: Set up and test SSH
+        run: |
+          eval $(ssh-agent -s)
+          mkdir -v -m 700 "$HOME/.ssh"
+          ssh-keyscan -H "${{ secrets.SERVER_HOST }}" > "$HOME/.ssh/known_hosts"
+          echo "${{ secrets.SERVER_SSH_KEY }}" > "$HOME/.ssh/id_rsa"
+          chmod 400 "$HOME/.ssh/id_rsa"
+          echo "echo \"${{ secrets.SERVER_SSH_KEY_PASSPHRASE }}\"" > "$HOME/.ssh_askpass" && chmod +x "$HOME/.ssh_askpass"
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" echo "test ssh"
 
-    - name: Install frontend dependencies
-      working-directory: frontend
-      run: |
-        npm install
-        npm install @types/loadable__component
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            frontend/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
 
-    - name: Build the Frontend
-      working-directory: frontend
-      env:
-        NODE_ENV: production
-      run: |
-        npm run build-extras
-        npm run update-browserslist
-        npm run build
+      - if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+        name: List the state of node modules
+        working-directory: frontend
+        continue-on-error: true
+        run: npm list
 
-  stop_existing_deployment:
-    name: Stop current deployment
-    runs-on: ubuntu-latest
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: |
+          npm install
 
-    steps:
-    - name: Stop deployment docker, backup volumes, delete code
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USERNAME }}
-        key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
-        passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
-        script: |
-          cd /home/admin/dds
-          sudo docker compose down
-          cd /home/admin
-          mv ./dds/volumes ./
+      - name: Build the Frontend
+        working-directory: frontend
+        env:
+          NODE_ENV: production
+        run: |
+          npm run build-extras
+          npm run update-browserslist
+          npm run build
+
+      - name: Stop deployment docker and remove old project files/directories
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          mkdir -p dds/volumes
+          cd dds
+          if [ -f compose.yml ]; then
+            sudo docker compose down
+          fi
+          if [ -d frontend/node_modules ]; then
+            mv frontend/node_modules ../
+          fi
+          cd ..
+          mv dds/volumes ./
           sudo rm -rf ./dds
           mkdir dds
           mv ./volumes ./dds/
+          EOF
 
-  copy_project_to_server:
-    name: Copy project to server
-    runs-on: ubuntu-latest
-    needs: [build_frontend, stop_existing_deployment]
-
-    steps:
       - name: Copy the project to the server
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
-          passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
-          source: "*"
-          target: "/home/admin/dds"
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
-  build_static_frontend_pages:
-    name: Prepare the project to run
-    runs-on: ubuntu-latest
+          rsync -ravz --exclude 'node_modules' --exclude '.git' --exclude '.gitignore' --exclude '.gitattributes' -e "ssh -o BatchMode=yes -i '$HOME/.ssh/id_rsa'" . "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}":dds/
 
-    needs: [copy_project_to_server]
+      - name: Build frontend static pages
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
-    steps:
-      - name: Build the static frontend pages
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
-          passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
-          script: |
-            cd /home/admin/dds/frontend
-            NODE_ENV=production bash -c 'npm run snap'
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          if [ -d node_modules ]; then
+            mv node_modules dds/frontend/node_modules
+          fi
+          cd dds
+          . .env.deploy.local
+          cd frontend
+          if [ ! -d node_modules ]; then
+            npm install
+          fi
+          # ensure no previous snap process is hanging
+          killall node
+          npm run snap
+          EOF
 
-  grant_execute_permissions:
-    name: Grant execute permissions
-    runs-on: ubuntu-latest
+      # - name: Build frontend
+      #   run: |
+      #     eval $(ssh-agent -s)
+      #     SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
+      #
+      #     ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+      #     if [ -d node_modules ]; then
+      #       mv node_modules dds/frontend/node_modules
+      #     fi
+      #     cd dds
+      #     . .env.deploy.local
+      #     cd frontend
+      #     npm run build-full
+      #     EOF
 
-    needs: [copy_project_to_server]
+      - name: Build and run docker
+        run: |
+          eval $(ssh-agent -s)
+          SSH_ASKPASS_REQUIRE=force SSH_ASKPASS="$HOME/.ssh_askpass" ssh-add "$HOME/.ssh/id_rsa"
 
-    steps:
-      - name: Grant Execute Permissions to Entrypoints
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
-          passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
-          script: |
-            cd /home/admin/dds
-            sudo chmod +x ./volumes/certbot/certbot-entrypoint.sh
-            sudo chmod +x ./volumes/nginx/nginx-entrypoint.sh
-            sudo chmod +x ./ddsurveys/entrypoint.sh
-
-  run_project:
-    name: Run project on server
-    runs-on: ubuntu-latest
-
-    needs: [build_static_frontend_pages, grant_execute_permissions]
-
-    steps:
-      - name: Run the project on the server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SERVER_SSH_KEY }} # SSH private key
-          passphrase: ${{ secrets.SERVER_SSH_KEY_PASSPHRASE }} # Passphrase for the private key
-          script: |
-            cd /home/admin/dds
-            sudo docker compose up --build -d
-            sudo docker system prune -a -f
+          ssh -i "$HOME/.ssh/id_rsa" "${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}" <<EOF
+          cd dds
+          . .env.deploy.local
+          sudo docker compose --env-file .env.deploy.local up --build -d
+          sudo docker system prune -a -f
+          EOF

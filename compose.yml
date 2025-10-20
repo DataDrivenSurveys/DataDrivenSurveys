@@ -1,10 +1,12 @@
 name: dds
 services:
-  ddsurveys:
-    build: .
+  backend:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    image: dds/backend:latest
     restart: on-failure
-    volumes:
-      - ./ddsurveys:/app/ddsurveys
     ports:
       - "4000:4000" # to be removed
     expose:
@@ -16,39 +18,24 @@ services:
       - net
     environment:
       - DDS_ENV=production
-
-  nginx:
-    image: nginx:latest
-    restart: on-failure
-    volumes:
-      - ./volumes/nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./volumes/certbot/conf:/etc/letsencrypt
-      - ./volumes/certbot/www:/var/www/letsencrypt
-      - ./frontend/build:/var/www/frontend
-      - ./volumes/self-signed-ssl:/etc/self-signed-ssl
-      - ./volumes/nginx/nginx-entrypoint.sh:/nginx-entrypoint.sh
-    ports:
-      - "443:443"
-      - "80:80"
-    entrypoint: /nginx-entrypoint.sh
-    depends_on:
-      - ddsurveys
-    networks:
-      - net
-    environment:
-      - NODE_ENV=production
+      - BACKEND_SERVICE_NAME=backend
 
   certbot:
-    image: certbot/certbot
+    platform: linux/amd64
+    image: dds/certbot:latest
+    build:
+      context: .
+      dockerfile: certbot.Dockerfile
     volumes:
       - ./volumes/certbot/conf:/etc/letsencrypt
       - ./volumes/certbot/www:/var/www/letsencrypt
-      - ./volumes/certbot/certbot-entrypoint.sh:/certbot-entrypoint.sh
+      - ./volumes/self-signed-ssl:/etc/self-signed-ssl
     entrypoint: "/certbot-entrypoint.sh"
     networks:
       - net
 
   db:
+    platform: linux/amd64
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -62,9 +49,34 @@ services:
     networks:
       - net
     healthcheck:
-      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost" ]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
       interval: 3s
       retries: 5
+
+  frontend:
+    platform: linux/amd64
+    image: dds/frontend:latest
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    restart: on-failure
+    volumes:
+      - ./volumes/certbot/conf:/etc/letsencrypt
+      - ./volumes/certbot/www:/var/www/letsencrypt
+      - ./volumes/self-signed-ssl:/etc/self-signed-ssl
+    ports:
+      - "443:443"
+      - "80:80"
+    entrypoint: "/nginx-entrypoint.sh"
+    depends_on:
+      - backend
+      - certbot
+    networks:
+      - net
+    environment:
+      - NODE_ENV=production
+      - DDS_ENV=production
+      - BACKEND_SERVICE_NAME=backend
 
 networks:
   net:
