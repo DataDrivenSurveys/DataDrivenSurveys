@@ -148,7 +148,7 @@ class InstagramDataProvider(OAuthDataProvider):
         # Construct the 'authorize' url
         params = {
             "client_id": self.client_id,
-            "redirect_uri": self.redirect_uri,
+            "redirect_uri": self.get_redirect_uri(),
             "scope": "user_profile,user_media",
             "response_type": "code",
         }
