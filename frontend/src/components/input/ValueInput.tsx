@@ -23,7 +23,7 @@ const ValueInput = ({ data_type, label, value, unit, minWidth = 200, onChange }:
           value={dayjs(value)}
           onChange={value => onChange((value as dayjs.Dayjs).toISOString())}
           sx={{ minWidth: minWidth }}
-          // textField={params => <TextInput {...params} variant="filled" />}
+        // textField={params => <TextInput {...params} variant="filled" />}
         />
       );
     case 'Number':
@@ -34,7 +34,7 @@ const ValueInput = ({ data_type, label, value, unit, minWidth = 200, onChange }:
           value={value}
           onChange={value => onChange(value)}
           sxStack={{ minWidth: minWidth }}
-          inputProps={{
+          InputProps={{
             endAdornment: unit && (
               <InputAdornment position="start">
                 <Typography variant={'caption'}>
