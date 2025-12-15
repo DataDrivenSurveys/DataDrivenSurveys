@@ -2,6 +2,20 @@
 
 A platform supporting the creation of data-driven surveys.
 
+## Demo Videos
+
+### Survey Designer/Researcher Demo
+
+This video shows a demo of how DDS can be used to design data-driven surveys:
+
+[![DDS: Survey Designer/Researcher Flow Demo](https://img.youtube.com/vi/BljK855zT1k/0.jpg)](https://youtu.be/BljK855zT1k)
+
+### Survey Participant Demo
+
+This video shows the demo of how a participant would experience taking a data-driven survey powered by DDS:
+
+[![DDS: Participant Flow Demo](https://img.youtube.com/vi/Dc8AGJXDT4U/0.jpg)](https://youtu.be/Dc8AGJXDT4U)
+
 ## Manual
 
 The manual for this project is maintained as a [wiki](https://github.com/DataDrivenSurveys/DataDrivenSurveys/wiki).
